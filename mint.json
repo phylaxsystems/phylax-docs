@@ -81,6 +81,12 @@
         "api-reference/endpoint/create",
         "api-reference/endpoint/delete"
       ]
+    },
+    {
+      "group": "Phylax Cloud",
+      "pages": [
+        "cloud/introduction"
+      ]
     }
   ],
   "footerSocials": {
