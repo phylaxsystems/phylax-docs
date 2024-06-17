@@ -1,0 +1,31 @@
+name: Aggregate Mintlify Docs
+
+on:
+  push:
+    branches: main, develop
+  schedule:
+    - cron: '0 0 * * *'
+
+concurrency:
+  group: aggregate-mintlify-docs
+  cancel-in-progress: true
+
+jobs:
+  aggregate-docs:
+    runs-on: ubuntu-latest
+    name: Aggregate mintlify docs
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+      - name: Run mintlify action
+        uses: mintlify/multirepo-action@v1.0.0
+        with:
+          token: ${{ secrets.MINTLIFY_PUSH_TOKEN }}
+          target-branch: main
+          subdirectory: .
+          repos: |
+            - owner: phylaxsystems
+              repo: phylax
+            - owner: phylaxsystems
+              repo: phylax-std
+              ref: v1.0.0
