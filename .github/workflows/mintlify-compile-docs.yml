@@ -16,10 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Aggregate mintlify docs
     steps:
-      - name: Set git user
-        run: |
-          git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
-          git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
       - name: Clone repo
         uses: actions/checkout@v4
         with:
