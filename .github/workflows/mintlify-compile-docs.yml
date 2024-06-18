@@ -16,12 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Aggregate mintlify docs
     steps:
-      - name: Clone repo
-        uses: actions/checkout@v4
-      - name: Run mintlify action
+      - name: Set git user
         run: |
           git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+      - name: Clone repo
+        uses: actions/checkout@v4
+      - name: Run mintlify action
         uses: mintlify/multirepo-action@v0.15
         with:
           token: ${{ secrets.MINTLIFY_PUSH_TOKEN }}
