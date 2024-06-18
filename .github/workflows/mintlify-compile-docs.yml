@@ -29,5 +29,7 @@ jobs:
           repos: |
             - owner: phylaxsystems
               repo: phylax
+              ref: develop
             - owner: phylaxsystems
               repo: phylax-std
+              ref: main
