@@ -28,8 +28,8 @@ jobs:
           subdirectory: .
           repos: |
             - owner: phylaxsystems
-              repo: phylax
-              ref: develop
-            - owner: phylaxsystems
               repo: phylax-std
               ref: main
+            - owner: phylaxsystems
+              repo: phylax
+              ref: develop
