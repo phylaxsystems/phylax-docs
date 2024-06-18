@@ -3,7 +3,7 @@ name: Aggregate Mintlify Docs
 on:
   workflow_dispatch:
   push:
-    branches: [main, develop]
+    branches: main
   schedule:
     - cron: '0 0 * * *'
 
