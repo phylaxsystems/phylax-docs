@@ -31,4 +31,3 @@ jobs:
               repo: phylax
             - owner: phylaxsystems
               repo: phylax-std
-              ref: v1.0.0
