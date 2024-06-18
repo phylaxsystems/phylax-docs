@@ -30,7 +30,7 @@ jobs:
           subdirectory: .
           repos: |
             - owner: phylaxsystems
-              repo: phylax
+              repo: phylaxsystems/phylax
             - owner: phylaxsystems
-              repo: phylax-std
+              repo: phylaxsystems/phylax-std
               ref: v1.0.0
