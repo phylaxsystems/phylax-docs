@@ -22,6 +22,8 @@ jobs:
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
       - name: Clone repo
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.MINTLIFY_PUSH_TOKEN }}
       - name: Run mintlify action
         uses: mintlify/multirepo-action@v0.15
         with:
@@ -30,7 +32,7 @@ jobs:
           subdirectory: .
           repos: |
             - owner: phylaxsystems
-              repo: phylaxsystems/phylax
+              repo: phylax
             - owner: phylaxsystems
-              repo: phylaxsystems/phylax-std
+              repo: phylax-std
               ref: v1.0.0
