@@ -21,7 +21,7 @@ jobs:
         with:
           token: ${{ secrets.MINTLIFY_PUSH_TOKEN }}
       - name: Run mintlify action
-        uses: staringispolite/multirepo-action@v0.15
+        uses: staringispolite/multirepo-action@main
         with:
           token: ${{ secrets.MINTLIFY_PUSH_TOKEN }}
           target-branch: main
