@@ -92,9 +92,9 @@
       "group": "Phylax Node",
       "pages": [
         "phylax/introduction",
-        "phylax/quickstart",
-        "phylax/development"
-      ]
+        "phylax/quickstart"
+      ],
+      "testKey": "value"
     },
     {
       "group": "Phylax Standard Library",

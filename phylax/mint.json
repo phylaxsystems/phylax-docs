@@ -4,9 +4,9 @@
       "group": "Phylax Node",
       "pages": [
         "introduction",
-        "quickstart",
-        "development"
-      ]
+        "quickstart"
+      ],
+      "testKey": "value"
     }
   ]
 }
