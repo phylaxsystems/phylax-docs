@@ -20,6 +20,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.MINTLIFY_PUSH_TOKEN }}
+      - name: Testing
+        runs: echo "new version"
       - name: Run mintlify action
         uses: staringispolite/multirepo-action@main
         with:
