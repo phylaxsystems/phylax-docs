@@ -26,7 +26,7 @@ jobs:
         uses: staringispolite/multirepo-action@main
         with:
           token: ${{ secrets.MINTLIFY_PUSH_TOKEN }}
-          target-branch: main
+          target-branch: docs-prod
           subdirectory: .
           repos: |
             - owner: phylaxsystems
