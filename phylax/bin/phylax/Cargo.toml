@@ -1,0 +1,56 @@
+[package]
+name = "phylax"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+build = "build.rs"
+
+[dependencies]
+
+# Internal Foundry Alert imports
+phylax-config.workspace = true
+phylax-common.workspace = true
+phylax-core.workspace = true
+phylax-tracing.workspace = true
+
+
+# io
+serde.workspace = true
+serde_json.workspace = true
+shellexpand = "3.0.0"
+url = "2.4.0"
+dotenvy = "0.15.7"
+
+# async
+tokio = { workspace = true, features = ["full"] }
+futures.workspace = true
+futures-timer = "3.0"
+sisyphus-tasks.workspace = true
+
+
+# misc
+eyre.workspace = true
+color-eyre.workspace = true
+clap.workspace = true
+thiserror.workspace = true
+crossterm = { version = "0.26.1", features = ["event-stream"] }
+const-str = "0.5.6"
+
+[dev-dependencies]
+tempfile = "3.2"
+
+[build-dependencies]
+vergen = { version = "8", features = [
+  "build",
+  "cargo",
+  "git",
+  "gitcl",
+], default-features = false }
+
+
+[[bin]]
+path = "src/main.rs"
+name = "phylax"

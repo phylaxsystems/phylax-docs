@@ -1,0 +1,50 @@
+[package]
+name = "phylax-api"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "gen_docs"
+path = "src/gen_docs.rs"
+
+[dependencies]
+
+# phylax
+phylax-config.workspace = true
+phylax-common.workspace = true
+phylax-tracing.workspace = true
+
+# axum
+axum = { version = "0.7.1", features = ["macros"] }
+axum-core = "0.4.1"
+axum-extra = { version = "0.9", features = ["erased-json", "typed-header"] }
+axum-jwt-auth = { git = "https://github.com/odyslam/axum-jwt-auth" }
+axum-auth = "0.7"
+tower-http = { version = "0.5", features = ["trace"] }
+utoipa = { version = "4.0.0", features = ["axum_extras"] }
+utoipa-rapidoc = { version = "2.0.0", features = ["axum"] }
+jsonwebtoken = "8"
+chrono = "0.4"
+
+# error handling
+color-eyre.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+# futures, runtime, channels
+tokio.workspace = true
+tokio-stream = { version = "0.1", features = ["full"] }
+flume.workspace = true
+futures.workspace = true
+
+serde.workspace = true                                # for auth
+serde_json.workspace = true
+dashmap = { version = "5.5.0", features = ["serde"] }
+
+[dev-dependencies]
+tower = "0.4"

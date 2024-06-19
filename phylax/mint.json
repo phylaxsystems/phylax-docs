@@ -1,0 +1,12 @@
+{
+  "navigation": [
+    {
+      "group": "Phylax Node",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "development"
+      ]
+    }
+  ]
+}

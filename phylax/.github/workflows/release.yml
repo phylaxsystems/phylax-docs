@@ -1,0 +1,187 @@
+# This workflow is borrowed from Lighthouse: https://github.com/sigp/lighthouse/blob/693886b94176faa4cb450f024696cb69cda2fe58/.github/workflows/release.yml
+
+name: release
+
+on:
+  push:
+    tags:
+      - v*
+
+env:
+  REPO_NAME: ${{ github.repository_owner }}/phylax
+  IMAGE_NAME: ${{ github.repository_owner }}/phylax
+  CARGO_TERM_COLOR: always
+
+jobs:
+  extract-version:
+    name: extract version
+    runs-on: self-hosted
+    steps:
+      - name: Extract version
+        run: echo "VERSION=$(echo ${GITHUB_REF#refs/tags/})" >> $GITHUB_OUTPUT
+        id: extract_version
+    outputs:
+      VERSION: ${{ steps.extract_version.outputs.VERSION }}
+
+  build:
+    name: build release
+    strategy:
+      matrix:
+        arch: [aarch64-unknown-linux-gnu, x86_64-unknown-linux-gnu]
+        include:
+          - target: aarch64-unknown-linux-gnu
+            os: self-hosted
+            profile: maxperf
+          - target: x86_64-unknown-linux-gnu
+            os: self-hosted
+            profile: maxperf
+    runs-on: ${{ matrix.os}}
+    needs: extract-version
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          target: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - uses: taiki-e/install-action@cross
+
+      - name: Build phylax for ${{ matrix.arch }}
+        run: |
+          PROFILE=${{ matrix.profile }} make build-${{ matrix.arch }}
+
+      - name: Move cross-compiled binary
+        run: |
+          mkdir artifacts
+          mv target/${{ matrix.arch }}/${{ matrix.profile }}/phylax ./artifacts
+
+      # ==============================
+      #       Signing
+      # ==============================
+
+      - name: Configure GPG and create artifacts
+        env:
+          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          export GPG_TTY=$(tty)
+          echo -n "$GPG_SIGNING_KEY" | base64 --decode | gpg --batch --import
+          cd artifacts
+          tar -czf phylax-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz phylax*
+          echo "$GPG_PASSPHRASE" | gpg --passphrase-fd 0 --pinentry-mode loopback --batch -ab phylax-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz
+          mv *tar.gz* ..
+        shell: bash
+
+      # =======================================================================
+      # Upload artifacts
+      # This is required to share artifacts between different jobs
+      # =======================================================================
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: phylax-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz
+          path: phylax-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz
+
+      - name: Upload signature
+        uses: actions/upload-artifact@v3
+        with:
+          name: phylax-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz.asc
+          path: phylax-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz.asc
+
+  draft-release:
+    name: draft release
+    needs: [build, extract-version]
+    runs-on: self-hosted
+    env:
+      VERSION: ${{ needs.extract-version.outputs.VERSION }}
+    permissions:
+      # Required to post the release
+      contents: write
+    steps:
+      # This is necessary for generating the changelog. It has to come before "Download Artifacts" or else it deletes the artifacts.
+      - name: Checkout sources
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # ==============================
+      #       Download artifacts
+      # ==============================
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+
+      # ==============================
+      #       Create release draft
+      # ==============================
+      - name: Generate full changelog
+        id: changelog
+        run: |
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "$(git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 ${{ env.VERSION }}^)..${{ env.VERSION }})" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create release draft
+        env:
+          GITHUB_USER: ${{ github.repository_owner }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+        # The formatting here is borrowed from Lighthouse (which is borrowed from OpenEthereum):
+        # https://github.com/openethereum/openethereum/blob/main/.github/workflows/build.yml
+        run: |
+          body=$(cat <<- "ENDBODY"
+          <Release Name>
+
+          ## Testing Checklist (DELETE ME)
+
+          - [ ] Run on testnet for 1-3 days.
+          - [ ] Resync a mainnet node.
+          - [ ] Ensure all CI checks pass.
+
+          ## Release Checklist (DELETE ME)
+
+          - [ ] Ensure all crates have had their versions bumped.
+          - [ ] Write the summary.
+          - [ ] Fill out the update priority.
+          - [ ] Ensure all binaries have been added.
+          - [ ] Prepare release posts (Twitter, ...).
+
+          ## Summary
+
+          Add a summary, including:
+
+          - Critical bug fixes
+          - New features
+          - Any breaking changes (and what to expect)
+
+          ## All Changes
+
+          ${{ steps.changelog.outputs.CHANGELOG }}
+
+          ## Binaries
+
+          [See pre-built binaries documentation.](TODO)
+
+          The binaries are signed with the PGP key: `A3AE 097C 8909 3A12 4049  DF1F 5391 A3C4 1005 30B4`
+
+          | System | Architecture | Binary | PGP Signature |
+          |:---:|:---:|:---:|:---|
+          | <img src="https://simpleicons.org/icons/linux.svg" style="width: 32px;"/> | x86_64 | [phylax-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/phylax-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz) | [PGP Signature](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/phylax-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz.asc) |
+          | <img src="https://simpleicons.org/icons/linux.svg" style="width: 32px;"/> | aarch64 | [phylax-${{ env.VERSION }}-aarch64-unknown-linux-gnu.tar.gz](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/phylax-${{ env.VERSION }}-aarch64-unknown-linux-gnu.tar.gz) | [PGP Signature](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/phylax-${{ env.VERSION }}-aarch64-unknown-linux-gnu.tar.gz.asc) |
+          | <img src="https://simpleicons.org/icons/apple.svg" style="width: 32px;"/> | x86_64 | [phylax-${{ env.VERSION }}-x86_64-apple-darwin.tar.gz](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/phylax-${{ env.VERSION }}-x86_64-apple-darwin.tar.gz) | [PGP Signature](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/phylax-${{ env.VERSION }}-x86_64-apple-darwin.tar.gz.asc) |
+          | <img src="https://simpleicons.org/icons/apple.svg" style="width: 32px;"/> | aarch64 | [phylax-${{ env.VERSION }}-aarch64-apple-darwin.tar.gz](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/phylax-${{ env.VERSION }}-aarch64-apple-darwin.tar.gz) | [PGP Signature](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/phylax-${{ env.VERSION }}-aarch64-apple-darwin.tar.gz.asc) |
+          | | | | |
+          | **System** | **Option** | - | **Resource** |
+          | <img src="https://simpleicons.org/icons/docker.svg" style="width: 32px;"/> | Docker | [${{ env.VERSION }}](https://github.com/paradigmxyz/phylax/pkgs/container/phylax/102974600?tag=${{ env.VERSION }}) | [${{ env.IMAGE_NAME }}](https://github.com/phylax-systems/phylax/pkgs/container/phylax) |
+          ENDBODY
+          )
+          assets=()
+          for asset in ./phylax-*.tar.gz*; do
+              assets+=("$asset/$asset")
+          done
+          tag_name="${{ env.VERSION }}"
+          echo "$body" | gh release create --draft -F "-" "$tag_name" "${assets[@]}"

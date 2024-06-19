@@ -1,0 +1,17 @@
+[package]
+name = "phylax-tracing"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+
+[dependencies]
+tracing.workspace = true
+reth-tracing = { git = "https://github.com/paradigmxyz/reth/" }
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+tracing-journald = "0.3.0"
+tracing-appender = "0.2.3"
+rolling-file = "0.2.0"

@@ -1,0 +1,24 @@
+# exclude everything
+*
+
+# include source files
+!/bin
+!/crates
+!/testing
+!Cargo.lock
+!Cargo.toml
+!Cross.toml
+!Makefile
+!entrypoint.sh
+
+# include for vergen constants
+!/.git
+
+# include dist directory, where the phylax binary is located after compilation
+!/dist
+
+# include licenses
+!LICENSE-*
+
+# include example files
+!/examples

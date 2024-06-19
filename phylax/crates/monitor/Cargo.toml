@@ -1,0 +1,39 @@
+[package]
+name = "phylax-monitor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+# phylax
+phylax-config.workspace = true
+phylax-common.workspace = true
+phylax-tracing.workspace = true
+
+# eth
+ethers-providers.workspace = true
+ethers-core.workspace = true
+ethers.workspace = true
+
+forge.workspace = true
+foundry-common.workspace = true
+foundry-evm.workspace = true
+foundry-cli.workspace = true
+foundry-config.workspace = true
+foundry-compilers.workspace = true
+
+# utils 
+thiserror.workspace = true
+color-eyre.workspace = true
+serde.workspace = true
+futures-util.workspace = true
+flume.workspace = true
+regex.workspace = true
+serde_json.workspace = true
+
+url = { version = "2.3.1", features = ["serde"] }
+futures-core = "0.3.25"
+tokio.workspace = true

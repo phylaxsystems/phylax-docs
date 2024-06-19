@@ -1,0 +1,63 @@
+[package]
+name = "phylax-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+
+# phylax 
+phylax-api.workspace = true
+phylax-common.workspace = true
+phylax-config.workspace = true
+phylax-monitor.workspace = true
+phylax-respond.workspace = true
+phylax-tracing.workspace = true
+
+# tracing
+tracing.workspace = true
+# foundry, eth
+foundry-common.workspace = true
+ethers-core.workspace = true
+ethers-solc.workspace = true
+
+# runtime, futures, channels
+tokio.workspace = true
+tokio-stream.workspace = true
+futures.workspace = true
+futures-util.workspace = true
+flume.workspace = true
+sisyphus-tasks.workspace = true
+
+# Error handling
+eyre.workspace = true
+color-eyre.workspace = true
+thiserror.workspace = true
+
+evalexpr = { version = "=11.1.0", features = [
+  "regex_support",
+  "serde_support",
+] }
+regex = "1"
+chrono = "0.4.26"
+async-trait = "0.1.61"
+serde.workspace = true
+serde_json.workspace = true
+dashmap = "5.4.0"
+notify = { version = "6.0.1", default-features = false, features = [
+  "macos_kqueue",
+] }
+ringbuf = "0.3.3"
+url = "2.4.1"
+once_cell.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+anvil.workspace = true
+clap.workspace = true
+mockito.workspace = true
+reqwest.workspace = true
+tracing-test.workspace = true

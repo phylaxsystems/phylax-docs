@@ -1,0 +1,17 @@
+# This image is meant to enable cross-architecture builds.
+# It assumes the phylax binary has already been compiled for `$TARGETPLATFORM` and is
+# locatable in `./dist/bin/$TARGETARCH`
+FROM --platform=$TARGETPLATFORM debian:stable-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
+
+LABEL org.opencontainers.image.source=https://github.com/phylax-systems/phylax
+LABEL org.opencontainers.image.licenses="AGPLv3"
+
+# Filled by docker buildx
+ARG TARGETARCH
+
+COPY ./dist/bin/$TARGETARCH/phylax /usr/local/bin/phylax
+
+EXPOSE 4269
+ENTRYPOINT ["/usr/local/bin/phylax"]

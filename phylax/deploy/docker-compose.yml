@@ -1,0 +1,55 @@
+version: "3.9"
+name: "phylax"
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  phylax_logs:
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"
+    ports:
+      - 9090:9090
+  grafana:
+    restart: unless-stopped
+    image: grafana/grafana
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    environment:
+      PROMETHEUS_URL: http://prometheus:9090
+    volumes:
+      - grafana_data:/var/lib/grafana
+  phylax:
+    restart: unless-stopped
+    image: ghcr.io/phylax-systems/phylax:latest
+    ports:
+      - 4269:4269
+    environment:
+      - CONFIG_URL
+      - CONFIG_BRANCH
+    volumes:
+      - phylax_logs:/root/phylax_logs
+    command: >
+      --config.watch
+      --config.url $CONFIG_URL
+      --config.branch $CONFIG_BRANCH
+      --log.persistent
+      --log.directory /root/phylax_logs
+      node
+      --enable-api
+      --bind-ip 0.0.0.0:4269
+      
