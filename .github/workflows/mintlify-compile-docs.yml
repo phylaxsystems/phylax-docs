@@ -27,7 +27,7 @@ jobs:
         with:
           token: ${{ secrets.MINTLIFY_PUSH_TOKEN }}
           target-branch: docs-prod
-          subdirectory: .
+          subdirectory: ./docs-prod
           repos: |
             - owner: phylaxsystems
               repo: phylax
