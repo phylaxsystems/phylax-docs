@@ -23,7 +23,7 @@ jobs:
       - name: Testing
         run: echo "new version"
       - name: Run mintlify action
-        uses: staringispolite/multirepo-action@main
+        uses: staringispolite/multirepo-action@nav-fix
         with:
           token: ${{ secrets.MINTLIFY_PUSH_TOKEN }}
           target-branch: docs-prod
