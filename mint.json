@@ -359,6 +359,22 @@
         "phylax-std/quickstart",
         "phylax-std/reference"
       ]
+    },
+    {
+      "group": "Phylax Node",
+      "pages": [
+        "phylax/introduction",
+        "phylax/quickstart",
+        "phylax/development"
+      ]
+    },
+    {
+      "group": "Phylax Standard Library",
+      "pages": [
+        "phylax-std/introduction",
+        "phylax-std/quickstart",
+        "phylax-std/reference"
+      ]
     }
   ],
   "footerSocials": {
