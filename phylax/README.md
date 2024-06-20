@@ -75,6 +75,28 @@ Basically:
 - Find the issues that are labeled as `good first issue`
 - If you want to chat, join our [Telegram dev channel](ttps://t.me/+m1u_Qz3M33gyN2Y0)
 
+## Documentation
+
+### Setting up
+As part of "docs-driven development", we're going to document code
+as we commit it and enforce that in the PR approvals flow.
+
+It's easy to add to the docs! Either add markdown/MDX syntax to an
+existing file in /docs, or add a new one (feel free to copy from an
+existing one of the same style). 
+
+To add a new file:
+ - Create ./docs/mynewfile.mdx
+ - If you want it to show in the sidebar menu, add it to Navigation in ./mint.js
+
+### Testing
+
+We don't have a staging site set up for docs yet, so it'll be a bit manual
+ - Commit and push the new docs to this repo
+ - Go to the [github action](https://github.com/phylaxsystems/phylax-docs/actions/workflows/mintlify-compile-docs.yml) for the docs repo
+ - At the top of the table showing past workflow runs, on the right side, hit the "Run Workflow" button and run on the main branch
+ - cd to the docs repo, checkout the latest from the `docs-prod` branch, and run `mintlify dev` to see the resulting website
+
 ## Support
 
 - If you have a bug, open a [GitHub issue](https://github.com/phylax-systems/phylax/issues/new?assignees=&labels=C-bug,S-needs-triage,plane&projects=&template=bug.yml)

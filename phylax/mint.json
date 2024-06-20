@@ -3,10 +3,8 @@
     {
       "group": "Phylax Node",
       "pages": [
-        "introduction",
-        "quickstart"
-      ],
-      "testKey": "value"
+        "docs/introduction"
+      ]
     }
   ]
 }
