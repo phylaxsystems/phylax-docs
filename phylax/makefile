@@ -16,6 +16,9 @@ CARGO_INSTALL_EXTRA_FLAGS ?=
 # The docker image name
 DOCKER_IMAGE_NAME ?= ghcr.io/phylax-systems/phylax
 
+# Features
+FEATURES = := min-error-logs min-warn-logs min-info-logs min-debug-logs min-trace-logs
+
 ##@ Help
 
 .PHONY: help

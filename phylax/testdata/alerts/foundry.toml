@@ -1,23 +1,10 @@
 [profile.default]
 optimizer = true
 optimizer_runs = 20_000
+out = "out"
+src = "./"
+test = "./"
 
 [rpc_endpoints]
-ethereum = "https://eth.merkle.io"
-
-[profile.simple]
-test = "./simple"
-out = "./out/simple"
-cache_path = "./cache/simple"
-
-
-[profile.firing]
-test = "./firing"
-out = "./out/firing"
-cache_path = "./cache/firing"
-
-
-[profile.import]
-test = "./import"
-out = "./out/import"
-cache_path = "./cache/import"
+ethereum = "https://eth-mainnet.g.alchemy.com/v2/jPALvRRJ_DwXYhaRiZ2cVvEU0SVkkiPj"
+optimism = "https://opt-mainnet.g.alchemy.com/v2/5hzmBSry-Moy0wPWY2i9YLJZ2hoy3wD8"

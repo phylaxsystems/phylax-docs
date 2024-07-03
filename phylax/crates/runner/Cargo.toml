@@ -1,0 +1,49 @@
+[package]
+name = "phylax-runner"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+exclude.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap.workspace = true
+regex.workspace = true
+tokio.workspace = true
+phylax-tracing.workspace = true
+rayon.workspace = true
+thiserror.workspace = true
+dashmap.workspace = true
+
+#foundry
+forge.workspace = true
+forge-cmd.workspace = true
+foundry-evm.workspace = true
+foundry-cli.workspace = true
+foundry-common.workspace = true
+foundry-config.workspace = true
+foundry-linking.workspace = true
+foundry-compilers = { workspace = true, features = ["full"] }
+
+#alloy
+alloy-chains.workspace = true
+alloy-sol-macro.workspace = true
+alloy-sol-types.workspace = true
+alloy-primitives.workspace = true
+
+#revm
+revm-primitives.workspace = true
+
+[dev-dependencies]
+# TODO: Change package name back to 'test-utils' after it is possible to rename crates inherited by a workspace: 
+# https://github.com/rust-lang/cargo/issues/12546#issuecomment-1764570239
+phylax-test-utils.workspace = true
+
+
+[lints]
+workspace = true

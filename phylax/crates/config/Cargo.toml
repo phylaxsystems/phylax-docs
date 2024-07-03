@@ -1,40 +1,24 @@
 [package]
 name = "phylax-config"
 version.workspace = true
+authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+exclude.workspace = true
 
 [dependencies]
-
-phylax-tracing.workspace = true
-phylax-common.workspace = true
-
-ethers-core.workspace = true
-
-# error handling
-eyre.workspace = true
-color-eyre.workspace = true
+phylax-interfaces.workspace = true
 thiserror.workspace = true
-
-config = { version = "0.13.3", features = ["yaml"] }
 serde.workspace = true
 serde_json.workspace = true
-serde_yaml = "0.9.17"
-http-serde = "1"
-toml = "0.8"
-serde_path_to_error.workspace = true
-
-
-url = { version = "2.3.1", features = ["serde"] }
-# http version is set to 0.2, cause reqwest still uses that
-# reqwest is used in phylax-actions
-http.workspace = true
-shellexpand = "3.0"
-path-absolutize = "3.0.14"
-dirs-next = "2.0.0"
+toml = { workspace = true, features = ["parse"] }
+regex = { workspace = true }
 
 [dev-dependencies]
 tempfile.workspace = true
+phylax-test-utils.workspace = true
+phylax-tasks.workspace = true
+tokio.workspace = true

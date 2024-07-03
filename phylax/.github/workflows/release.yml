@@ -15,7 +15,7 @@ env:
 jobs:
   extract-version:
     name: extract version
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Extract version
         run: echo "VERSION=$(echo ${GITHUB_REF#refs/tags/})" >> $GITHUB_OUTPUT
@@ -30,10 +30,10 @@ jobs:
         arch: [aarch64-unknown-linux-gnu, x86_64-unknown-linux-gnu]
         include:
           - target: aarch64-unknown-linux-gnu
-            os: self-hosted
+            os: ubuntu-latest
             profile: maxperf
           - target: x86_64-unknown-linux-gnu
-            os: self-hosted
+            os: ubuntu-latest
             profile: maxperf
     runs-on: ${{ matrix.os}}
     needs: extract-version
@@ -96,7 +96,7 @@ jobs:
   draft-release:
     name: draft release
     needs: [build, extract-version]
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.extract-version.outputs.VERSION }}
     permissions:

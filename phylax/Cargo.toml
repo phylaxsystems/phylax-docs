@@ -2,22 +2,91 @@
 [workspace]
 members = [
   "bin/phylax",
-  "crates/api",
-  "crates/config",
-  "crates/monitor",
-  "crates/respond",
-  "crates/common",
+  "crates/core",
+  "crates/interfaces",
+  "crates/runner",
+  "crates/tasks",
+  "crates/test-utils",
   "crates/tracing",
-  "crates/coreNG",
+  "crates/config",
+  "crates/notifications", 
+  "crates/evm",
 ]
+default-members = ["bin/phylax"]
 resolver = '2'
 
 
+[workspace.lints]
+rust.missing_debug_implementations = "warn"
+rust.missing_docs = "warn"
+rust.unreachable_pub = "warn"
+rust.unused_must_use = "deny"
+rust.rust_2018_idioms = { level = "deny", priority = -1 }
+rustdoc.all = "warn"
+
+[workspace.lints.clippy]
+# These are some of clippy's nursery (i.e., experimental) lints that we like.
+# By default, nursery lints are allowed. Some of the lints below have made good
+# suggestions which we fixed. The others didn't have any findings, so we can
+# assume they don't have that many false positives. Let's enable them to
+# prevent future problems.
+branches_sharing_code = "warn"
+clear_with_drain = "warn"
+derive_partial_eq_without_eq = "warn"
+empty_line_after_outer_attr = "warn"
+equatable_if_let = "warn"
+imprecise_flops = "warn"
+iter_on_empty_collections = "warn"
+iter_with_drain = "warn"
+large_stack_frames = "warn"
+manual_clamp = "warn"
+mutex_integer = "warn"
+needless_pass_by_ref_mut = "warn"
+nonstandard_macro_braces = "warn"
+or_fun_call = "warn"
+path_buf_push_overwrite = "warn"
+read_zero_byte_vec = "warn"
+redundant_clone = "warn"
+suboptimal_flops = "warn"
+suspicious_operation_groupings = "warn"
+trailing_empty_array = "warn"
+trait_duplication_in_bounds = "warn"
+transmute_undefined_repr = "warn"
+tuple_array_conversions = "warn"
+uninhabited_references = "warn"
+unused_peekable = "warn"
+unused_rounding = "warn"
+useless_let_if_seq = "warn"
+
+# These are nursery lints which have findings. Allow them for now. Some are not
+# quite mature enough for use in our codebase and some we don't really want.
+# Explicitly listing should make it easier to fix in the future.
+trivial_regex = "allow"
+as_ptr_cast_mut = "allow"
+cognitive_complexity = "allow"
+collection_is_never_read = "allow"
+debug_assert_with_mut_call = "allow"
+empty_line_after_doc_comments = "allow"
+fallible_impl_from = "allow"
+future_not_send = "allow"
+iter_on_single_items = "allow"
+missing_const_for_fn = "allow"
+needless_collect = "allow"
+non_send_fields_in_send_ty = "allow"
+option_if_let_else = "allow"
+redundant_pub_crate = "allow"
+significant_drop_in_scrutinee = "allow"
+significant_drop_tightening = "allow"
+string_lit_as_bytes = "allow"
+type_repetition_in_bounds = "allow"
+unnecessary_struct_initialization = "allow"
+use_self = "allow"
+
 [workspace.package]
 version = "0.0.1"
-authors = ["Odysseas <odysseas@phylax.watch>"]
+authors = ["Phylax Systems Inc"]
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.76"
 license = "GPL-3.0-only	"
 homepage = "https://phylax-systems.github.io/phylax"
 repository = "https://github.com/phylax-systems/phylax"
@@ -34,133 +103,104 @@ codegen-units = 1
 incremental = false
 
 [workspace.dependencies]
-## phylax
-phylax = { path = "./bin/phylax" }
-phylax-core = { path = "./crates/coreNG" }
-phylax-monitor = { path = "./crates/monitor" }
-phylax-respond = { path = "./crates/respond" }
-phylax-common = { path = "./crates/common" }
-phylax-api = { path = "./crates/api" }
-phylax-config = { path = "./crates/config" }
-phylax-tracing = { path = "./crates/tracing" }
 
-## eth
-ethers-core = { version = "2.0", default-features = false }
-ethers-solc = { version = "2.0", default-features = false, features = [
-  "project-util",
-  "svm-solc",
-] }
-ethers-providers = { version = "2.0", features = ["ws"] }
-ethers = { version = "2.0" }
+
+# phylax
+phylax-core = { path = "./crates/core" }
+phylax-interfaces = { path = "./crates/interfaces" }
+phylax-tasks = { path = "./crates/tasks" }
+phylax-tracing = { path = "./crates/tracing" }
+phylax-test-utils = { path = "./crates/test-utils" }
+phylax-config = { path = "./crates/config" }
+phylax-evm = { path = "./crates/evm" }
+phylax-notifications = { path = "./crates/notifications" }
+phylax-runner = { path = "./crates/runner" }
+
+# reth
+
+# commit: https://github.com/paradigmxyz/reth/commit/199503531c4e66cba702844a5a8224620ee0e877
+reth-cli-runner = { git = "https://github.com/paradigmxyz/reth.git", rev = "1995035" }
+reth-tasks = { git = "https://github.com/paradigmxyz/reth.git", rev = "1995035" }
+reth-metrics = { git = "https://github.com/paradigmxyz/reth.git", rev = "1995035" }
+
+# foundry
+foundry-evm = { git = "https://github.com/phylax-systems/phoundry", rev = "e889bf" }
+foundry-cli = { git = "https://github.com/phylax-systems/phoundry", rev = "e889bf" }
+foundry-common = { git = "https://github.com/phylax-systems/phoundry", rev = "e889bf" }
+foundry-linking = { git = "https://github.com/phylax-systems/phoundry", rev = "e889bf" }
+foundry-config = { git = "https://github.com/phylax-systems/phoundry", rev = "e889bf" }
+forge = { git = "https://github.com/phylax-systems/phoundry", rev = "e889bf" }
+forge-cmd = { git = "https://github.com/phylax-systems/phoundry", rev = "e889bf" }
+foundry-compilers = { version = "=0.8.0", default-features = false }
 
 ## alloy
-alloy-primitives = "0.4.1"
-alloy-dyn-abi = "0.4.1"
-alloy-json-abi = "0.4.1"
-alloy-sol-types = "0.4.1"
-syn-solidity = "0.4.1"
+alloy-sol-macro = "0.7.1"
+alloy-sol-types = "0.7.1"
+alloy-primitives = "0.7.1"
+alloy-chains = "0.1.2"
+alloy-provider = { version  = "0.1.2",features = ["reqwest", "ws", "ipc"]}
+alloy-rpc-types-eth = "0.1.2"
+alloy-network = "0.1.2"
+alloy-transport = "0.1.2"
 
-## foundry
-foundry-common = { git = "https://github.com/odyslam/foundry", branch = "minimal_fork" }
-anvil = { git = "https://github.com/odyslam/foundry", branch = "minimal_fork" }
-foundry-evm = { git = "https://github.com/odyslam/foundry", branch = "minimal_fork" }
-forge = { git = "https://github.com/odyslam/foundry", branch = "minimal_fork" }
-foundry-config = { git = "https://github.com/odyslam/foundry", branch = "minimal_fork" }
-foundry-cli = { git = "https://github.com/odyslam/foundry", branch = "minimal_fork" }
-foundry-utils = { git = "https://github.com/odyslam/foundry", branch = "minimal_fork" }
-foundry-test-utils = { git = "https://github.com/odyslam/foundry", branch = "minimal_fork" }
-
-# solc utils
-foundry-compilers = { version = "0.1", default-features = false }
-# block explorer utils
-foundry-block-explorers = { version = "0.1", default-features = false }
-
+## revm
+revm-primitives = { version = "=4.0.0", default-features = false }
 
 ## misc
-tracing = "0.1.0"
-tracing-appender = "0.2"
 thiserror = "1.0.37"
 eyre = "0.6"
 color-eyre = "0.6"
 serde_json = "1.0.94"
-serde = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+kanal = "=0.1.0-pre8"
 serde_path_to_error = "0.1"
 regex = "1.0"
 once_cell = "1"
 clap = { version = "4.0", features = ["derive", "env", "unicode", "wrap_help"] }
 
+## tracing/metrics/logging
+tracing = "0.1.4"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+    "env-filter",
+    "fmt",
+    "json",
+] }
+tracing-journald = "0.3"
+tracing-logfmt = "0.3.3"
+rolling-file = "0.2.0"
+opentelemetry = { version = "0.23.0", features = ["trace", "logs", "metrics"] }
+opentelemetry_sdk = { version = "0.23.0", features = ["trace", "logs", "metrics", "rt-tokio"] }
+opentelemetry-stdout = { version = "0.4.0", features = ["trace", "logs", "metrics"] }
+
 ## tokio
 tokio = { version = "1.21", features = ["full"] }
-tokio-stream = "0.1.11"
-reqwest = { version = "0.11.22", default-features = false, features = [
+tokio-stream = "0.1.15"
+tokio-util = "0.7.11"
+reqwest = { version = "0.12.0", default-features = false, features = [
   "rustls-tls",
 ] }
-http = "0.2"
+http = "1.1"
 
 ## async
 async-trait = "0.1.68"
-futures = "0.3.26"
-futures-util = "0.3.25"
-flume = "0.11.0"
+dashmap = "5.5.3"
+futures = "0.3.30"
+futures-core = "0.3.30"
+futures-util = "0.3.30"
+rayon = "1.10.0"
 
 ## testing
 tempfile = "3.2.0"
+tokio-test = "0.4.4"
 tracing-test = "0.2.4"
 mockito = "1.2.0"
+const-str = "0.5.6"
+dirs-next = "2.0.0"
+http-serde = "2.1.0"
+itertools = "0.12.1"
+shellexpand = "3.1.0"
+strum = "0.26.2"
+toml = "0.8.12"
+vergen = "8.3.1"
 
-sisyphus-tasks = "0.1.1"
-
-
-## Patches
-
-[patch.crates-io]
-
-# sisyphus-tasks = { path = "../../odyslam/sisyphus" }
-
-ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "949feb7a37f511b3f5a21dc23dc51ef29b33b949" }
-ethers-addressbook = { git = "https://github.com/gakonst/ethers-rs", rev = "949feb7a37f511b3f5a21dc23dc51ef29b33b949" }
-ethers-core = { git = "https://github.com/gakonst/ethers-rs", rev = "949feb7a37f511b3f5a21dc23dc51ef29b33b949" }
-ethers-contract = { git = "https://github.com/gakonst/ethers-rs", rev = "949feb7a37f511b3f5a21dc23dc51ef29b33b949" }
-ethers-contract-abigen = { git = "https://github.com/gakonst/ethers-rs", rev = "949feb7a37f511b3f5a21dc23dc51ef29b33b949" }
-ethers-providers = { git = "https://github.com/gakonst/ethers-rs", rev = "949feb7a37f511b3f5a21dc23dc51ef29b33b949" }
-ethers-signers = { git = "https://github.com/gakonst/ethers-rs", rev = "949feb7a37f511b3f5a21dc23dc51ef29b33b949" }
-ethers-middleware = { git = "https://github.com/gakonst/ethers-rs", rev = "949feb7a37f511b3f5a21dc23dc51ef29b33b949" }
-ethers-etherscan = { git = "https://github.com/gakonst/ethers-rs", rev = "949feb7a37f511b3f5a21dc23dc51ef29b33b949" }
-ethers-solc = { git = "https://github.com/gakonst/ethers-rs", rev = "949feb7a37f511b3f5a21dc23dc51ef29b33b949" }
-
-foundry-compilers = { git = "https://github.com/foundry-rs/compilers", rev = "0fc9af798b0eb92290796ec078b6e29f1e1fb844" }
-foundry-block-explorers = { git = "https://github.com/foundry-rs/block-explorers", rev = "191a53ec7206c6a9d5c6a6a017718bfab68be" }
-
-alloy-dyn-abi = { git = "https://github.com/alloy-rs/core/", rev = "8971476b27e5c1e3f6dfefa06f46b63bde89fe80" }
-alloy-primitives = { git = "https://github.com/alloy-rs/core/", rev = "8971476b27e5c1e3f6dfefa06f46b63bde89fe80" }
-alloy-json-abi = { git = "https://github.com/alloy-rs/core/", rev = "8971476b27e5c1e3f6dfefa06f46b63bde89fe80" }
-alloy-sol-types = { git = "https://github.com/alloy-rs/core/", rev = "8971476b27e5c1e3f6dfefa06f46b63bde89fe80" }
-
-
-# # Patch ethers-rs with a local checkout then run `cargo update -p ethers`
-# [patch."https://github.com/gakonst/ethers-rs"]
-# ethers = { path = "../ethers-rs" }
-# ethers-addressbook = { path = "../ethers-rs/ethers-addressbook" }
-# ethers-core = { path = "../ethers-rs/ethers-core" }
-# ethers-contract = { path = "../ethers-rs/ethers-contract" }
-# ethers-providers = { path = "../ethers-rs/ethers-providers" }
-# ethers-signers = { path = "../ethers-rs/ethers-signers" }
-# ethers-etherscan = { path = "../ethers-rs/ethers-etherscan" }
-# ethers-solc = { path = "../ethers-rs/ethers-solc" }
-
-# [patch.crates-io]
-# revm = { path = "../revm/crates/revm" }
-
-# [patch.crates-io]
-# revm = { git = "https://github.com/bluealloy/revm" }
-# revm-primitives = { git = "https://github.com/bluealloy/revm" }
-# # patched for quantity U256 responses <https://github.com/recmo/uint/issues/224>
-# ruint = { git = "https://github.com/mattsse/uint", branch = "matt/skip-leading-zeros" }
-
-
-# [patch."https://github.com/odyslam/foundry"]
-# foundry-cli = { path = "../phoundry/crates/cli" }
-# foundry-common = { path = "../phoundry/crates/common" }
-# foundry-evm = { path = "../phoundry/crates/evm" }
-# foundry-config = { path = "../phoundry/crates/config" }
-# forge = { path = "../phoundry/crates/forge" }

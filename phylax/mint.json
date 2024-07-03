@@ -3,7 +3,13 @@
     {
       "group": "Phylax Node",
       "pages": [
-        "docs/introduction"
+        "docs/introduction",
+        {
+          "group": "SDK Reference",
+          "pages": [
+            "sdk-reference/sample-feature.mdx"
+          ]
+        }
       ]
     }
   ]

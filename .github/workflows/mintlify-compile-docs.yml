@@ -31,7 +31,7 @@ jobs:
           repos: |
             - owner: phylaxsystems
               repo: phylax
-              ref: jon/docs-setup
+              ref: jon/docs-api-reference
             - owner: phylaxsystems
               repo: phylax-std
               ref: jon/docs-setup

@@ -1,0 +1,21 @@
+[package]
+name = "phylax-test-utils"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+exclude.workspace = true
+
+[dependencies]
+foundry-cli.workspace = true
+
+phylax-interfaces.workspace = true
+phylax-runner.workspace = true
+phylax-tasks.workspace = true
+
+
+opentelemetry.workspace = true 
+

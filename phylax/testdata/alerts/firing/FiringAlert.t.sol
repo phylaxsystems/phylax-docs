@@ -4,7 +4,7 @@ import {Alert} from "phylax-std/Alert.sol";
 contract FiringAlert is Alert {
     uint256 $ethereum;
 
-    function setUp() public {
+    function setUp() public override {
         $ethereum = enableChain("ethereum", 19999);
     }
 

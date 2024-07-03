@@ -19,7 +19,7 @@ jobs:
   build:
     name: build and push
     if: github.event_name == 'push' # This line ensures this job only runs on push events
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       packages: write
       contents: read
@@ -52,7 +52,7 @@ jobs:
   nightly:
     name: nightly build and push
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       packages: write
       contents: read

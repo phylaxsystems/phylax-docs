@@ -1,0 +1,47 @@
+[package]
+name = "phylax-evm"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+exclude.workspace = true
+
+[dependencies]
+#phylax
+phylax-core.workspace = true
+phylax-config.workspace = true
+phylax-interfaces.workspace = true
+phylax-runner.workspace = true
+phylax-tracing.workspace = true
+
+#foundry
+foundry-common.workspace = true
+
+#alloy
+alloy-chains = { workspace = true, features=["serde"]}
+alloy-rpc-types-eth.workspace = true
+alloy-network.workspace = true
+alloy-transport.workspace = true
+alloy-provider = { workspace  = true,features = ["reqwest", "ws", "ipc"]}
+
+
+#misc
+serde.workspace = true
+thiserror.workspace = true
+reqwest.workspace = true
+
+#async
+tokio.workspace = true
+futures-util.workspace = true
+
+
+[dev-dependencies]
+phylax-test-utils.workspace = true
+forge-cmd.workspace = true
+regex.workspace = true
+
+[lints]
+workspace = true
