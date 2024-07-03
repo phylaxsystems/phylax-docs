@@ -70,7 +70,7 @@
         {
           "group": "SDK Reference",
           "pages": [
-            "phylax/docs/sdk-reference/sample-feature.mdx"
+            "phylax/docs/sdk-reference/sample-feature"
           ]
         }
       ]
@@ -82,7 +82,7 @@
         {
           "group": "SDK Reference",
           "pages": [
-            "phylax-std/docs/sdk-reference/sample-feature.mdx"
+            "phylax-std/docs/sdk-reference/sample-feature"
           ]
         }
       ]
