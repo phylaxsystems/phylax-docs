@@ -78,9 +78,13 @@
     {
       "group": "Phylax Standard Library",
       "pages": [
-        "phylax-std/introduction",
-        "phylax-std/quickstart",
-        "phylax-std/reference"
+        "phylax-std/docs/introduction",
+        {
+          "group": "SDK Reference",
+          "pages": [
+            "phylax-std/sdk-reference/sample-feature.mdx"
+          ]
+        }
       ]
     }
   ],
