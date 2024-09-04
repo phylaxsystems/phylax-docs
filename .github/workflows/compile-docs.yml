@@ -20,6 +20,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fetch docs from repositories
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           mkdir -p aggregated-docs
           
@@ -30,7 +32,7 @@ jobs:
             local ref=$3
             local docs_dir=$4
             
-            git clone --depth 1 --branch $ref https://github.com/$owner/$repo.git temp-repo
+            git clone --depth 1 --branch $ref https://${GH_PAT}@github.com/$owner/$repo.git temp-repo
             cp -R temp-repo/$docs_dir ../aggregated-docs/$repo
             rm -rf temp-repo
           }

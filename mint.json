@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "Starter Kit",
+  "name": "Phylax documentation website",
   "logo": {
     "dark": "/logo/dark.png",
     "light": "/logo/light.png"
@@ -33,11 +33,6 @@
   ],
   "anchors": [
     {
-      "name": "Documentation",
-      "icon": "book-open-cover",
-      "url": "https://mintlify.com/docs"
-    },
-    {
       "name": "Community",
       "icon": "slack",
       "url": "https://mintlify.com/community"
@@ -45,7 +40,7 @@
     {
       "name": "Blog",
       "icon": "newspaper",
-      "url": "https://mintlify.com/blog"
+      "url": "https://blog.phylax.watch"
     }
   ],
   "navigation": [
@@ -58,9 +53,9 @@
       ]
     },
     {
-      "group": "Phylax Cloud",
+      "group": "Phylax Monitor",
       "pages": [
-        "cloud/introduction"
+        "monitor/introduction"
       ]
     }
   ],
