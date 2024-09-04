@@ -1,0 +1,59 @@
+name: Aggregate Phylax Docs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: main
+  schedule:
+    - cron: '0 0 * * *'
+
+concurrency:
+  group: aggregate-phylax-docs
+  cancel-in-progress: true
+
+jobs:
+  aggregate-docs:
+    runs-on: ubuntu-latest
+    name: Aggregate Phylax docs
+    steps:
+      - name: Checkout docs repo
+        uses: actions/checkout@v4
+
+      - name: Fetch docs from repositories
+        run: |
+          mkdir -p aggregated-docs
+          
+          # Function to clone and copy docs
+          fetch_docs() {
+            local owner=$1
+            local repo=$2
+            local ref=$3
+            local docs_dir=$4
+            
+            git clone --depth 1 --branch $ref https://github.com/$owner/$repo.git temp-repo
+            cp -R temp-repo/$docs_dir ../aggregated-docs/$repo
+            rm -rf temp-repo
+          }
+          
+          # Fetch docs from each repository
+          fetch_docs phylaxsystems phylax main docs/reference
+          fetch_docs phylaxsystems phylax-std main docs
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Mintlify
+        run: npm install -g mintlify
+
+      - name: Build docs website
+        run: |
+          cd docs
+          mintlify build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./.mintlify/build
