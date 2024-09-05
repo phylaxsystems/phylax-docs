@@ -53,3 +53,7 @@ jobs:
         with:
           commit_message: Update docs
           file_pattern: '**/*'
+
+      - name: Remove temp directory
+        if: always()
+        run: rm -rf temp
