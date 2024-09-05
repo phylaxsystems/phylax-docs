@@ -34,25 +34,21 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
-      - name: Check for changes
-        id: check_changes
-        run: |
-          git -C temp/phylax fetch origin
-          UPSTREAM_CHANGES=$(git -C temp/phylax rev-list HEAD...origin/main --count)
-          if [ $UPSTREAM_CHANGES -gt 0 ]; then
-            echo "changes_detected=true" >> $GITHUB_OUTPUT
-          else
-            echo "changes_detected=false" >> $GITHUB_OUTPUT
-          fi
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+          path: temp/phylax
+          files: docs/**
 
       - name: Organize docs
-        if: steps.check_changes.outputs.changes_detected == 'true'
+        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           mkdir -p phylax
           cp -R temp/phylax/docs/* phylax/
 
       - name: Commit and push changes
-        if: steps.check_changes.outputs.changes_detected == 'true'
+        if: steps.changed-files.outputs.any_changed == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Update docs
