@@ -18,25 +18,24 @@
   "topbarLinks": [
     {
       "name": "Support",
-      "url": "mailto:hi@mintlify.com"
+      "url": "mailto:info@phylax.watch"
     }
   ],
   "topbarCtaButton": {
-    "name": "Dashboard",
-    "url": "https://dashboard.mintlify.com"
+    "name": "Website",
+    "url": "https://phylax.watch"
   },
   "tabs": [
     {
-      "name": "API Reference",
-      "url": "api-reference"
+      "name": "Phylax Monitor",
+      "url": "phylax"
+    },
+    {
+      "name": "Credible Layer",
+      "url": "credible-layer"
     }
   ],
   "anchors": [
-    {
-      "name": "Community",
-      "icon": "slack",
-      "url": "https://mintlify.com/community"
-    },
     {
       "name": "Blog",
       "icon": "newspaper",
@@ -45,7 +44,7 @@
   ],
   "navigation": [
     {
-      "group": "Get Started",
+      "group": "Welcome",
       "pages": [
         "introduction",
         "quickstart",
@@ -53,9 +52,9 @@
       ]
     },
     {
-      "group": "Phylax Monitor",
+      "group": "Get Started",
       "pages": [
-        "monitor/introduction"
+        "phylax/introduction"
       ]
     }
   ],
