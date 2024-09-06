@@ -24,15 +24,28 @@ jobs:
         uses: tj-actions/branch-names@v8
 
       - name: Fetch docs from phylax repo
-        uses: actions/checkout@v4
-        with:
-          repository: phylaxsystems/phylax
-          path: temp/phylax
-          sparse-checkout: |
-            docs
-          sparse-checkout-cone-mode: false
-          token: ${{ secrets.GH_PAT }}
-          ref: ${{ steps.branch-name.outputs.current_branch }}
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://${{ secrets.GH_PAT }}@github.com/phylaxsystems/phylax.git temp/phylax
+          cd temp/phylax
+          git sparse-checkout set docs
+          git checkout ${{ steps.branch-name.outputs.current_branch }} || git checkout main
+          cd ../..
+          echo "Contents of temp/phylax:"
+          ls -R temp/phylax
+        continue-on-error: true
+
+      - name: Debug Phylax repo fetch
+        if: failure()
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Contents of temp directory:"
+          ls -R temp
+          echo "Git status in phylax repo:"
+          cd temp/phylax
+          git status
+          git branch
+          cd ../..
 
       - name: Organize docs
         run: |
