@@ -4,12 +4,15 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - develop
+      - main
+  pull_request:
+    branches:
+      - main
   schedule:
     - cron: '0 0 * * *'
 
 concurrency:
-  group: aggregate-phylax-docs
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -48,7 +51,7 @@ jobs:
           cp -R temp/phylax/docs/* phylax/
 
       - name: Commit and push changes
-        if: steps.changed-files.outputs.any_changed == 'true'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.changed-files.outputs.any_changed == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Update docs
@@ -57,3 +60,19 @@ jobs:
       - name: Remove temp directory
         if: always()
         run: rm -rf temp
+
+      - name: Deploy to staging
+        if: github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          echo "Deploying to staging for PR #${PR_NUMBER} (Branch: ${BRANCH_NAME})"
+          # Add your staging deployment steps here
+          # Use ${PR_NUMBER} and ${BRANCH_NAME} to create a unique staging environment
+
+      - name: Deploy to production
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "Deploying to production"
+          # Add your production deployment steps here
