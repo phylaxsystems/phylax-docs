@@ -28,7 +28,17 @@ jobs:
           git clone --depth 1 --filter=blob:none --sparse https://${{ secrets.GH_PAT }}@github.com/phylaxsystems/phylax.git temp/phylax
           cd temp/phylax
           git sparse-checkout set docs
-          git checkout ${{ steps.branch-name.outputs.current_branch }} || git checkout main
+          
+          # Try to checkout the current branch, then main, then list available branches
+          if ! git checkout ${{ steps.branch-name.outputs.current_branch }}; then
+            if ! git checkout main; then
+              echo "Failed to checkout main branch. Available branches:"
+              git branch -r
+              echo "Checking out the default branch:"
+              git checkout $(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+            fi
+          fi
+          
           cd ../..
           echo "Contents of temp/phylax:"
           ls -R temp/phylax
@@ -44,7 +54,9 @@ jobs:
           echo "Git status in phylax repo:"
           cd temp/phylax
           git status
-          git branch
+          git branch -a
+          echo "Default branch:"
+          git symbolic-ref refs/remotes/origin/HEAD
           cd ../..
 
       - name: Organize docs
