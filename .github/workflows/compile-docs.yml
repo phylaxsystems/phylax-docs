@@ -26,6 +26,12 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
+      - name: Debug - List contents
+        run: ls -la
+
+      - name: Debug - Print Git config
+        run: git config --list
+
       - name: Checkout phylax docs
         uses: actions/checkout@v4
         with:
@@ -36,6 +42,9 @@ jobs:
           sparse-checkout-cone-mode: false
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
+
+      - name: Debug - List temp contents
+        run: ls -la temp/phylax
 
       - name: Get changed files
         id: changed-files
@@ -52,10 +61,12 @@ jobs:
 
       - name: Commit and push changes
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.changed-files.outputs.any_changed == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: Update docs
-          file_pattern: '**/*'
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add .
+          git commit -m "Update docs" || echo "No changes to commit"
+          git push || (echo "Push failed" && git push --force)
 
       - name: Remove temp directory
         if: always()
