@@ -16,7 +16,7 @@ jobs:
       - name: Checkout docs repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.GH_TOKEN }}
           fetch-depth: 0
 
       - name: Get current branch name
@@ -25,7 +25,7 @@ jobs:
 
       - name: Fetch docs from phylax-monitor repo
         run: |
-          git clone --depth 1 --filter=blob:none --sparse https://${{ secrets.GH_PAT }}@github.com/phylaxsystems/phylax-monitor.git temp/phylax-monitor
+          git clone --depth 1 --filter=blob:none --sparse https://${{ secrets.GH_TOKEN }}@github.com/phylaxsystems/phylax-monitor.git temp/phylax-monitor
           cd temp/phylax-monitor
           git sparse-checkout set docs
 
