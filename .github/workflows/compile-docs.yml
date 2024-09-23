@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - '**'
+      - "**"
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
 
 jobs:
   aggregate-docs:
@@ -23,12 +23,12 @@ jobs:
         id: branch-name
         uses: tj-actions/branch-names@v8
 
-      - name: Fetch docs from phylax repo
+      - name: Fetch docs from phylax-monitor repo
         run: |
-          git clone --depth 1 --filter=blob:none --sparse https://${{ secrets.GH_PAT }}@github.com/phylaxsystems/phylax.git temp/phylax
-          cd temp/phylax
+          git clone --depth 1 --filter=blob:none --sparse https://${{ secrets.GH_PAT }}@github.com/phylaxsystems/phylax-monitor.git temp/phylax-monitor
+          cd temp/phylax-monitor
           git sparse-checkout set docs
-          
+
           # Try to checkout the current branch, then main, then list available branches
           if ! git checkout ${{ steps.branch-name.outputs.current_branch }}; then
             if ! git checkout main; then
@@ -38,21 +38,21 @@ jobs:
               git checkout $(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
             fi
           fi
-          
+
           cd ../..
-          echo "Contents of temp/phylax:"
-          ls -R temp/phylax
+          echo "Contents of temp/phylax-monitor:"
+          ls -R temp/phylax-monitor
         continue-on-error: true
 
-      - name: Debug Phylax repo fetch
+      - name: Debug Phylax Monitor repo fetch
         if: failure()
         run: |
           echo "Current directory:"
           pwd
           echo "Contents of temp directory:"
           ls -R temp
-          echo "Git status in phylax repo:"
-          cd temp/phylax
+          echo "Git status in phylax-monitor repo:"
+          cd temp/phylax-monitor
           git status
           git branch -a
           echo "Default branch:"
@@ -61,8 +61,8 @@ jobs:
 
       - name: Organize docs
         run: |
-          mkdir -p phylax
-          cp -R temp/phylax/docs/* phylax/
+          mkdir -p phylax-monitor
+          cp -R temp/phylax-monitor/docs/* phylax-monitor/
           rm -rf temp
 
       - name: Update mint.json
@@ -81,5 +81,5 @@ jobs:
         with:
           commit_message: |
             Update docs
-          file_pattern: '**/*'
+          file_pattern: "**/*"
           branch: ${{ steps.branch-name.outputs.current_branch }}
