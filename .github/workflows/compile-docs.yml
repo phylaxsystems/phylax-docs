@@ -10,8 +10,7 @@ on:
 
 env:
   GITHUB_ORG: phylaxsystems
-  REPO_LIST: >
-    ["phylax-monitor", "phylax-std"]
+  REPO_LIST: '["phylax-monitor", "phylax-std"]'
 
 jobs:
   aggregate-docs:
@@ -30,7 +29,8 @@ jobs:
 
       - name: Fetch docs from multiple repos
         run: |
-          for repo in $(echo ${{ env.REPO_LIST }} | jq -r '.[]'); do
+          REPOS=$(echo $REPO_LIST | jq -r '.[]')
+          for repo in $REPOS; do
             echo "Fetching docs from $repo"
             git clone --depth 1 --filter=blob:none --sparse https://${{ secrets.GH_TOKEN }}@github.com/${{ env.GITHUB_ORG }}/$repo.git temp/$repo
             cd temp/$repo
@@ -54,7 +54,8 @@ jobs:
       - name: Debug repo fetches
         if: failure()
         run: |
-          for repo in $(echo ${{ env.REPO_LIST }} | jq -r '.[]'); do
+          REPOS=$(echo $REPO_LIST | jq -r '.[]')
+          for repo in $REPOS; do
             echo "Debugging $repo:"
             echo "Contents of temp/$repo:"
             ls -R temp/$repo
@@ -69,7 +70,8 @@ jobs:
 
       - name: Organize docs
         run: |
-          for repo in $(echo ${{ env.REPO_LIST }} | jq -r '.[]'); do
+          REPOS=$(echo $REPO_LIST | jq -r '.[]')
+          for repo in $REPOS; do
             mkdir -p $repo
             if [ -d "temp/$repo/docs" ]; then
               cp -R temp/$repo/docs/* $repo/
