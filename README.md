@@ -26,7 +26,6 @@ To add a new file:
 We don't have a staging site set up for docs yet, so it'll be a bit manual
 
 - Commit and push the new docs to this repo or a product-specific repo
-<!-- markdown-link-check-disable-next-line -->
 - The [github action](https://github.com/phylaxsystems/phylax-docs/actions/workflows/compile-docs.yml) should auto-run
 - run `mintlify dev`
 
