@@ -30,42 +30,36 @@ jobs:
       - name: Fetch docs from multiple repos
         run: |
           REPOS=$(echo $REPO_LIST | jq -r '.[]')
+          CURRENT_BRANCH="${{ steps.branch-name.outputs.current_branch }}"
+          echo "Current branch: $CURRENT_BRANCH"
+
           for repo in $REPOS; do
             echo "Fetching docs from $repo"
             git clone --depth 1 --filter=blob:none --sparse https://${{ secrets.GH_TOKEN }}@github.com/${{ env.GITHUB_ORG }}/$repo.git temp/$repo
             cd temp/$repo
             git sparse-checkout set docs
 
-            if ! git checkout ${{ steps.branch-name.outputs.current_branch }}; then
-              if ! git checkout main; then
-                echo "Failed to checkout main branch. Available branches:"
+            # Try to checkout branches in this order: current branch, main, master, default branch
+            if git checkout $CURRENT_BRANCH 2>/dev/null; then
+              echo "Checked out $CURRENT_BRANCH in $repo"
+            elif git checkout main 2>/dev/null; then
+              echo "Checked out main in $repo"
+            elif git checkout master 2>/dev/null; then
+              echo "Checked out master in $repo"
+            else
+              DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+              if git checkout $DEFAULT_BRANCH 2>/dev/null; then
+                echo "Checked out $DEFAULT_BRANCH (default branch) in $repo"
+              else
+                echo "Failed to checkout any branch in $repo. Using current HEAD."
+                echo "Available branches:"
                 git branch -r
-                echo "Checking out the default branch:"
-                git checkout $(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
               fi
             fi
 
             cd ../..
-            echo "Contents of temp/$repo:"
-            ls -R temp/$repo
-          done
-        continue-on-error: true
-
-      - name: Debug repo fetches
-        if: failure()
-        run: |
-          REPOS=$(echo $REPO_LIST | jq -r '.[]')
-          for repo in $REPOS; do
-            echo "Debugging $repo:"
-            echo "Contents of temp/$repo:"
-            ls -R temp/$repo
-            echo "Git status in $repo:"
-            cd temp/$repo
-            git status
-            git branch -a
-            echo "Default branch:"
-            git symbolic-ref refs/remotes/origin/HEAD
-            cd ../..
+            echo "Contents of temp/$repo/docs:"
+            ls -R temp/$repo/docs || echo "No docs directory found in $repo"
           done
 
       - name: Organize docs
@@ -75,6 +69,7 @@ jobs:
             mkdir -p $repo
             if [ -d "temp/$repo/docs" ]; then
               cp -R temp/$repo/docs/* $repo/
+              echo "Copied docs from $repo"
             else
               echo "No docs folder found in $repo"
             fi
