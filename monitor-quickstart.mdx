@@ -1,13 +1,45 @@
 ---
-title: 'Quickstart'
-description: 'Start building awesome documentation in under 5 minutes'
+title: 'Monitor Quick Start'
+description: 'How to get started monitoring smart contracts with the Phylax Monitor'
 ---
+TODO: This doc should be moved to the phylax-monitor repo eventually and updated once final install instructions are available
+## Prerequisites
 
-## Setup your development
+It is assumed that you're running Linux or MacOS.
 
-Learn how to update your docs locally and and deploy them to the public.
+## Install
 
-### Edit and preview
+First we need to make sure rust is install on your system. You can install it by running the following command:
+
+```bash
+curl https://sh.rustup.rs -sSf | sh -s -- -y
+```
+Once this is done we need to clone the `phylax-monitor` git repository. You can do this by running the following command:
+
+```bash
+git clone https://github.com/phylaxsystems/phylax-monitor.git
+```
+Then we need to navigate to the `phylax-monitor` directory:
+
+```bash
+cd phylax-monitor
+```
+
+Now we need to initialize the repository settings:
+
+```bash
+make init
+```
+
+Lastly we need to build the Phylax Monitor:
+  
+```bash
+cargo build --release
+```
+This last step might take a bit of time, so go grab a drink and come back in a few minutes.
+
+## Run
+Currently 
 
 <AccordionGroup>
   <Accordion icon="github" title="Clone your docs locally">

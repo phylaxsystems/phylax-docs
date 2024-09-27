@@ -1,0 +1,50 @@
+---
+title: Monitor Overview
+description: 'What is the Phylax Monitor and why should you use it?'
+---
+TODO: This doc should be moved to the phylax-monitor repo eventually
+
+## Introduction
+The Phylax Monitor is a new way of monitoring your smart contracts. We've spent a lot of time thinking about how to make monitoring easier and more intuitive for developers. 
+We've built the Monitor to be a powerful tool that helps you keep track of your contracts and alerts you when something goes wrong.
+Some of the problems that led us to build the Monitor are:
+
+#### Existing tools are too rigid or not expressive enough
+* Alert definitions must be written in a language that is different from the language the contracts and tests are written in
+* Existing incident-response tooling may not support the user's desired workflows
+* The user can access some insights for some contract code but cannot connect it to metrics
+
+#### Abstraction level does not match the user's needs
+* The user cannot gain insight into their app or protocol on an ongoing basis due to limitations on pricing, rate-limiting, richness
+* An existing solution may be too simple for the user's use case; it is not extendable or customizable
+* An existing solution may be too complex for a user that is just starting out, leading them to give up
+
+#### Events don't emit information that the user needs
+* Data from events are not structured in a manner that provides insight about the app's performance and reliability over time
+
+## How is the Phylax Monitor solving this?
+First and foremost the Phylax Monitor is meant to feel intuitive and familiar to use from the get to.
+Anyone who is familiar with Foundry cheatcodes will feel right at home, since the Monitor uses cheatcodes, and hence, Solidity to create assertions and alerts for EVM state.
+This means users don't have to waste time learning a new language or tool before they can start monitoring their contracts and prevent millions of dollars being lost.
+
+
+It is possible to configure multiple different notification methods, so that users can be alerted in the way that suits them best.
+The way that an alert is triggered is by running assertions on the EVM state of each new block for the contracts that are being monitored.
+If an assertion fails an alert will be triggered and the user will be notified. 
+Futhermore it's possible to setup actions that will be carried out when an alert is triggered. 
+An `action` is a presigned transaction that will be executed on the user's behalf when an alert is triggered.
+This could for example be a transaction that pauses a smart contract or disables certain features to prevent further damage.
+
+The Phylax Monitor also provides a dashboard where users can see the status of their contracts and alerts in real-time.
+The dashboard can show charts that are written in Solidity. 
+The data shown is the data that the user defines as being is important to the user and their dApp.
+
+## Why should you use the Phylax Monitor?
+In a nutshell, the Phylax Monitor is a powerful, customizable and intuitive tool that allow users to monitor the state of their contracts
+as well as reacting if their contracts are in an undesired state.
+
+You should use the Phylax Monitor if you want to:
+* Monitor the state of your contracts in real-time
+* Be alerted when something goes wrong
+* Write assertions and charts in a language you are already familiar with
+* Be able to react with presigned transactions when an alert is triggered

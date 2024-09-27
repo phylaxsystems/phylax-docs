@@ -1,11 +1,11 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "Phylax documentation website",
+  "name": "Phylax Documentation",
   "logo": {
-    "dark": "/logo/dark.png",
-    "light": "/logo/light.png"
+    "dark": "/logo/full-white.png",
+    "light": "/logo/full-black.png"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.png",
   "colors": {
     "primary": "#0D9373",
     "light": "#07C983",
@@ -15,26 +15,17 @@
       "to": "#07C983"
     }
   },
+
   "topbarLinks": [
     {
-      "name": "Support",
-      "url": "mailto:info@phylax.watch"
+      "name": "Community",
+      "url": "https://t.me/phylax_monitoring"
     }
   ],
   "topbarCtaButton": {
-    "name": "Website",
-    "url": "https://phylax.watch"
+    "name": "Get Started",
+    "url": "quickstart"
   },
-  "tabs": [
-    {
-      "name": "Phylax Monitor",
-      "url": "phylax"
-    },
-    {
-      "name": "Credible Layer",
-      "url": "credible-layer"
-    }
-  ],
   "anchors": [
     {
       "name": "Blog",
@@ -45,22 +36,42 @@
   "navigation": [
     {
       "group": "Welcome",
+      "pages": ["introduction", "monitor-overview", "credible-overview"]
+    },
+    {
+      "group": "Getting Started",
+      "pages": ["overview", "monitor-quickstart", "support", "faq"]
+    },
+    {
+      "group": "Phylax Monitor",
       "pages": [
-        "introduction",
-        "quickstart",
-        "development"
+        "phylax-monitor/introduction",
+        "monitor-installation",
+        "monitor-config",
+        "monitor-assertions",
+        "monitor-actions",
+        "monitor-notifications",
+        "monitor-charts",
+        "monitor-extending",
+        "monitor-architecture",
+        "monitor-hosting",
+        "monitor-dashboard",
+        "monitor-prometheus",
+        "monitor-api",
+        "monitor-cheatcodes"
       ]
     },
     {
-      "group": "Get Started",
-      "pages": [
-        "phylax/introduction"
-      ]
+      "group": "Credible Layer",
+      "pages": ["credible-introduction", "credible-install", "credible-config"]
+    },
+    {
+      "group": "Phylax STD",
+      "pages": ["std-introduction", "std-sdk-reference"]
     }
   ],
   "footerSocials": {
     "x": "https://x.com/phylaxsystems",
-    "github": "https://github.com/phylaxsystems",
-    "linkedin": "https://jobs.ashbyhq.com/phylax"
+    "github": "https://github.com/phylaxsystems"
   }
 }
