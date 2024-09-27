@@ -41,10 +41,15 @@
   ],
   "topbarCtaButton": {
     "name": "Get Started",
-    "url": "monitor-quickstart"
+    "url": "monitor/guides/monitor-quickstart"
   },
 
   "anchors": [
+    {
+      "name": "Website",
+      "icon": "globe",
+      "url": "https://phylax.watch"
+    },
     {
       "name": "Blog",
       "icon": "newspaper",
@@ -60,8 +65,11 @@
         "credible/credible-overview",
         "monitor/guides/monitor-quickstart",
         "monitor/monitor-introduction",
+        "smart-contract-security",
         "support",
-        "faq"
+        "faq",
+        "glossary",
+        "contribute"
       ]
     },
     {
