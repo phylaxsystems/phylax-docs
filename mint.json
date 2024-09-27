@@ -15,7 +15,24 @@
       "to": "#07C983"
     }
   },
+  "primaryTab": {
+    "name": "General"
+  },
 
+  "tabs": [
+    {
+      "name": "Phylax Monitor",
+      "url": "monitor"
+    },
+    {
+      "name": "Credible Layer",
+      "url": "credible"
+    },
+    {
+      "name": "Phylax STD",
+      "url": "std"
+    }
+  ],
   "topbarLinks": [
     {
       "name": "Community",
@@ -26,6 +43,7 @@
     "name": "Get Started",
     "url": "monitor-quickstart"
   },
+
   "anchors": [
     {
       "name": "Blog",
@@ -35,39 +53,51 @@
   ],
   "navigation": [
     {
-      "group": "Welcome",
-      "pages": ["introduction", "monitor-overview", "credible-overview"]
-    },
-    {
       "group": "Getting Started",
-      "pages": ["overview", "monitor-quickstart", "support", "faq"]
+      "pages": [
+        "introduction",
+        "monitor/monitor-overview",
+        "credible/credible-overview",
+        "monitor/guides/monitor-quickstart",
+        "monitor/monitor-introduction",
+        "support",
+        "faq"
+      ]
     },
     {
-      "group": "Phylax Monitor",
+      "group": "Guides",
       "pages": [
-        "phylax-monitor/introduction",
-        "monitor-installation",
-        "monitor-config",
-        "monitor-assertions",
-        "monitor-actions",
-        "monitor-notifications",
-        "monitor-charts",
-        "monitor-extending",
-        "monitor-architecture",
-        "monitor-hosting",
-        "monitor-dashboard",
-        "monitor-prometheus",
-        "monitor-api",
-        "monitor-cheatcodes"
+        "monitor/guides/monitor-installation",
+        "monitor/guides/monitor-config",
+        "monitor/guides/monitor-assertions",
+        "monitor/guides/monitor-actions",
+        "monitor/guides/monitor-notifications",
+        "monitor/guides/monitor-charts",
+        "monitor/guides/monitor-extending",
+        "monitor/guides/monitor-hosting",
+        "monitor/guides/monitor-dashboard",
+        "monitor/guides/monitor-prometheus"
+      ]
+    },
+    {
+      "group": "References",
+      "pages": [
+        "monitor/references/monitor-api",
+        "monitor/references/monitor-cheatcodes",
+        "monitor/references/monitor-architecture"
       ]
     },
     {
       "group": "Credible Layer",
-      "pages": ["credible-introduction", "credible-install", "credible-config"]
+      "pages": [
+        "credible/credible-introduction",
+        "credible/credible-install",
+        "credible/credible-config"
+      ]
     },
     {
       "group": "Phylax STD",
-      "pages": ["std-introduction", "std-sdk-reference"]
+      "pages": ["std/std-introduction", "std/std-sdk-reference"]
     }
   ],
   "footerSocials": {
