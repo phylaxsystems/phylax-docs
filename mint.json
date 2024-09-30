@@ -77,10 +77,10 @@
       "pages": [
         "monitor/guides/monitor-installation",
         "monitor/guides/monitor-config",
-        "monitor/guides/monitor-assertions",
-        "monitor/guides/monitor-actions",
-        "monitor/guides/monitor-notifications",
-        "monitor/guides/monitor-charts",
+        "monitor/guides/monitor-guide-assertions",
+        "monitor/guides/monitor-guide-charts",
+        "monitor/guides/monitor-guide-actions",
+
         "monitor/guides/monitor-extending",
         "monitor/guides/monitor-hosting",
         "monitor/guides/monitor-dashboard",
@@ -90,7 +90,12 @@
     {
       "group": "References",
       "pages": [
+        "monitor/references/monitor-assertions",
+        "monitor/references/monitor-charts",
+        "monitor/references/monitor-actions",
+        "monitor/guides/monitor-notifications",
         "monitor/references/monitor-api",
+        "monitor/references/monitor-cli",
         "monitor/references/monitor-cheatcodes",
         "monitor/references/monitor-architecture"
       ]
