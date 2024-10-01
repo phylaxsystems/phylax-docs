@@ -80,7 +80,6 @@
         "monitor/guides/monitor-guide-assertions",
         "monitor/guides/monitor-guide-charts",
         "monitor/guides/monitor-guide-actions",
-
         "monitor/guides/monitor-extending",
         "monitor/guides/monitor-hosting",
         "monitor/guides/monitor-dashboard",
@@ -90,14 +89,14 @@
     {
       "group": "References",
       "pages": [
-        "monitor/references/monitor-assertions",
-        "monitor/references/monitor-charts",
-        "monitor/references/monitor-actions",
-        "monitor/guides/monitor-notifications",
-        "monitor/references/monitor-api",
-        "monitor/references/monitor-cli",
-        "monitor/references/monitor-cheatcodes",
-        "monitor/references/monitor-architecture"
+        "phylax-monitor/references/alerts",
+        "phylax-monitor/references/charts",
+        "phylax-monitor/references/actions",
+        "phylax-monitor/references/notifications",
+        "phylax-monitor/references/api",
+        "phylax-monitor/references/cli",
+        "phylax-monitor/references/cheatcodes",
+        "phylax-monitor/references/architecture"
       ]
     },
     {
