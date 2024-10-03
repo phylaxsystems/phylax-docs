@@ -1,0 +1,150 @@
+---
+title: 'How to Write Alerts'
+description: 'In this section you will learn how to write alerts for your smart contracts'
+---
+
+## Introduction
+One of the most powerful features of the Phylax Monitor is `Alerts`. They give the user the ability to specify certain states that they never want their smart contract to reach.
+If any of those states for some reason are reached the Phylax Monitor will [notify](monitor/guides/monitor-how-to-notifications) the user and the user can act accordingly.
+It is possible to setup a variety of different [actions](../../phylax-monitor/references/actions). For example you can receive notifications on a range of different chat applications and you can even configure and pre-sign a transaction to be executed to pause your smart contracts or whatever kind of behavior you desire if things go south.
+
+In this guide you will learn how to write a couple of `Alerts` for an [ERC4626 Vault](https://eips.ethereum.org/EIPS/eip-4626) in order to be notified if some undesired state should be reached.
+
+Please consult the [alerts reference](../../phylax-monitor/references/alerts) and the [notifications reference](../../phylax-monitor/references/notifications) for detailed documentation.
+
+## What is an Alert?
+Before we start the guide, we will very quickly explain what an `Alert` is.
+
+You can think of an alert as a check in your code that defines a state that should never be true.
+The Phylax Monitor will run the code defined by the alert on every new block and check if the condition is still true.
+If it's not true the defined notifications and actions can be triggered.
+
+Below is a very simple example of an alert function that checks if the admin of contract remains the same:
+
+```solidity
+function alertAdminChange() public view returns (bool) {
+    return PREDEFINED_DESIRED_ADMIN == vault.getAdmin();
+}
+```
+
+It is important to understand that an alert is run for every new block on the chain it's configured to monitor.
+
+## Writing Alerts
+Let's get started writing `Alerts`!
+We will start with a very simple alert that checks for each new block if a ERC4626 vault still has a balance that's higher than `0`. If not it could mean that the vault has been drained somehow and that's definitely something that the owners of the vault would be interested in being notified about.
+
+First we import the `Alert` and `Notification` contracts from the `phylax-std` library. The `Alert` contract works similarly to Foundry's forge tests, in that the function name should start with `alert`.
+We also import the ERC4626 interface and make sure that the `VaultAlert` contract inherits `Alert` and `Notification`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
+
+import {Alert} from "phylax-std/Alert.sol";
+import {Notification} from "phylax-std/Notification.sol";
+import {IERC4626} from "openzeppelin-contracts/contracts/interfaces/IERC4626.sol";
+
+contract VaultAlert is Alert, Notification {
+    
+    // code goes here 
+
+}
+
+```
+
+As with Foundry forge tests, you can also define a `setUp()` function that is invoked before each alert is run. In this case we just define the vault type and address.
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
+
+import {Alert} from "phylax-std/Alert.sol";
+import {Notification} from "phylax-std/Notification.sol";   
+import {IERC4626} from "openzeppelin-contracts/contracts/interfaces/IERC4626.sol";
+
+contract VaultAlert is Alert, Notification {
+    
+    IERC20 public asset;
+    IERC4626 public vault;
+    address VAULT_ADDRESS = YOUR_VAULT_ADDRESS;
+
+    function setUp() public {
+        vault = IERC4626(VAULT_ADDRESS);
+    }
+}
+
+```
+
+Now we're ready to add an alert function.
+In order for the Phylax Monitor to register the function as an alert the function name should be prefixed with `alert`.
+We then add an `assert` that checks that the `totalAssets()` of the vault is higher than `0`.
+
+```solidity 
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
+
+import {Alert} from "phylax-std/Alert.sol";
+import {Notification} from "phylax-std/Notification.sol";
+import {IERC4626} from "openzeppelin-contracts/contracts/interfaces/IERC4626.sol";
+
+contract VaultAlert is Alert, Notification {
+    
+    IERC20 public asset;
+    IERC4626 public vault;
+    address VAULT_ADDRESS = YOUR_VAULT_ADDRESS;
+
+    function setUp() public {
+        vault = IERC4626(VAULT_ADDRESS);
+    }
+    
+    function alertVaultDrain() public returns (bool) {
+        // Check that the vault balance is higher than 0
+        return vault.totalAssets() > 0;
+    }  
+
+}
+
+```
+
+We've now created a very basic alert. However, it's not very useful to have an alert without triggering a notification, so let's do that too.
+If for some reason the asserts fails a notification can be triggered.
+Notice that we change the return signature of the `alertVaultDrain` function to include a `NotificationMessage`. We also add the `info()` message to the return statement to define the notification to be triggered.
+
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
+
+import {Alert} from "phylax-std/Alert.sol";
+import {Notification} from "phylax-std/Notification.sol";
+import {IERC4626} from "openzeppelin-contracts/contracts/interfaces/IERC4626.sol";
+
+contract VaultAlert is Alert, Notification {
+    
+    IERC20 public asset;
+    IERC4626 public vault;
+    address VAULT_ADDRESS = YOUR_VAULT_ADDRESS;
+
+    function setUp() public {
+        vault = IERC4626(VAULT_ADDRESS);
+    }
+    
+    function alertVaultDrain() public returns (bool, Notification.NotificationMessage) {
+        // Check that the vault balance is higher than 0
+        if (vault.totalAssets() > 0) {
+            return true, info("The balance of the vault is higher than 0");
+        } else {
+            return (false, info("The balance of the vault has reached 0",
+                                "This could be caused by malicious actors or 
+                                just the fact that all tokens have been withdrawn
+                                by users."));
+        }
+    }  
+}
+
+```
+
+Please consult the [notifications reference](../../phylax-monitor/references/notifications) to understand how the `info()` function works in detail.
+
+That's it. Now we have an alert set up that triggers a notification, if the condition in the alert fails.
+As you can see, you don't need many lines of Solidity code to achieve some very powerful functionality and this is exactly the power of the Phylax Monitor.
