@@ -1,41 +1,55 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "Phylax documentation website",
+  "name": "Phylax Documentation",
   "logo": {
-    "dark": "/logo/dark.png",
-    "light": "/logo/light.png"
+    "dark": "/logo/full-white.png",
+    "light": "/logo/full-black.png"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.png",
   "colors": {
-    "primary": "#0D9373",
-    "light": "#07C983",
-    "dark": "#0D9373",
+    "primary": "#000000",
+    "light": "#808080",
+    "dark": "#808080",
     "anchors": {
       "from": "#0D9373",
       "to": "#07C983"
     }
   },
-  "topbarLinks": [
-    {
-      "name": "Support",
-      "url": "mailto:info@phylax.watch"
-    }
-  ],
-  "topbarCtaButton": {
-    "name": "Website",
-    "url": "https://phylax.watch"
+  "primaryTab": {
+    "name": "General"
   },
+
   "tabs": [
     {
       "name": "Phylax Monitor",
-      "url": "phylax"
+      "url": "monitor"
     },
     {
       "name": "Credible Layer",
-      "url": "credible-layer"
+      "url": "credible"
+    },
+    {
+      "name": "Phylax STD",
+      "url": "std"
     }
   ],
+  "topbarLinks": [
+    {
+      "name": "Community",
+      "url": "https://t.me/phylax_monitoring"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "monitor/guides/monitor-quickstart"
+  },
+
   "anchors": [
+    {
+      "name": "Website",
+      "icon": "globe",
+      "url": "https://phylax.watch"
+    },
     {
       "name": "Blog",
       "icon": "newspaper",
@@ -44,23 +58,62 @@
   ],
   "navigation": [
     {
-      "group": "Welcome",
+      "group": "Getting Started",
       "pages": [
         "introduction",
-        "quickstart",
-        "development"
+        "monitor/monitor-overview",
+        "credible/credible-overview",
+        "monitor/guides/monitor-quickstart",
+        "monitor/monitor-introduction",
+        "smart-contract-security",
+        "support",
+        "faq",
+        "glossary",
+        "contribute"
       ]
     },
     {
-      "group": "Get Started",
+      "group": "Guides",
       "pages": [
-        "phylax/introduction"
+        "monitor/guides/monitor-how-to-install",
+        "monitor/guides/monitor-how-to-config",
+        "monitor/guides/monitor-guide-assertions",
+        "monitor/guides/monitor-guide-charts",
+        "monitor/guides/monitor-guide-actions",
+        "monitor/guides/monitor-how-to-extend",
+        "monitor/guides/monitor-how-to-host",
+        "monitor/guides/monitor-dashboard",
+        "monitor/guides/monitor-prometheus"
       ]
+    },
+    {
+      "group": "References",
+      "pages": [
+        "phylax-monitor/references/alerts",
+        "phylax-monitor/references/charts",
+        "phylax-monitor/references/actions",
+        "phylax-monitor/references/notifications",
+        "phylax-monitor/references/api",
+        "phylax-monitor/references/cli",
+        "phylax-monitor/references/cheatcodes",
+        "phylax-monitor/references/architecture"
+      ]
+    },
+    {
+      "group": "Credible Layer",
+      "pages": [
+        "credible/credible-introduction",
+        "credible/credible-install",
+        "credible/credible-config"
+      ]
+    },
+    {
+      "group": "Phylax STD",
+      "pages": ["std/std-introduction"]
     }
   ],
   "footerSocials": {
     "x": "https://x.com/phylaxsystems",
-    "github": "https://github.com/phylaxsystems",
-    "linkedin": "https://jobs.ashbyhq.com/phylax"
+    "github": "https://github.com/phylaxsystems"
   }
 }
