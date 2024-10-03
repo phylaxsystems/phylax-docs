@@ -1,41 +1,49 @@
 ---
 title: "Quickstart"
-description: "Run Phylax Monitor in 5 minutes"
+description: "Run the Phylax Monitor in 5 minutes"
 ---
 
 ## Prerequisites
 
-It is assumed that you're running Linux or MacOS.
+It is assumed that you're running Linux or MacOS and have the following installed on your system:
+
+```text
+- Rust / Cargo
+- git
+- npm
+```
+
 ## Install
 
-First we need to make sure rust is install on your system. You can install it by running the following command:
+We've created a convenient installer for you called Phylum. It will install `phylax` on your system in a couple of minutes and then you're good to go.
+
+To install run:
 
 ```bash
-curl https://sh.rustup.rs -sSf | sh -s -- -y
+curl -L http://phylaxsystems.github.io/phylum/install | bash
 ```
-Once this is done we need to clone the `phylax-monitor` git repository. You can do this by running the following command:
+
+This will take a couple of moments, so go grab a drink and come back in a few minutes.
+
+You can verify that `phylax` is correctly installed by running:
 
 ```bash
-git clone https://github.com/phylaxsystems/phylax-monitor.git
-```
-Then we need to navigate to the `phylax-monitor` directory:
-
-```bash
-cd phylax-monitor
+phylax --version
 ```
 
-Now we need to initialize the repository settings:
-
-```bash
-make init
-```
-
-Lastly we need to build the Phylax Monitor:
-  
-```bash
-cargo build --release
-```
-This last step might take a bit of time, so go grab a drink and come back in a few minutes.
+This should give you a result containing `phylax Version`, `Commit SHA` and some other values.
 
 ## Run
-Currently 
+
+You're now all set and ready to run the Phylax Monitor. To do this go to your Phylax project and run the following:
+
+```bash
+phylax run
+```
+
+This will compile your contracts, start the monitoring server and host the dashboard.
+
+## Next Steps
+
+Now that you have a working Phylax Monitor install, we encourage you to explore the rest of the docs to get familiar with the power of the Phylax Monitor. 
+A good place to start is the [How to Write Alerts](guides/monitor-guide-alerts) guide.
