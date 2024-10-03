@@ -77,7 +77,7 @@
       "pages": [
         "monitor/guides/monitor-how-to-install",
         "monitor/guides/monitor-how-to-config",
-        "monitor/guides/monitor-guide-assertions",
+        "monitor/guides/monitor-how-to-alerts",
         "monitor/guides/monitor-guide-charts",
         "monitor/guides/monitor-guide-actions",
         "monitor/guides/monitor-how-to-extend",
