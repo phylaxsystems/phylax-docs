@@ -7,9 +7,9 @@
   },
   "favicon": "/favicon.png",
   "colors": {
-    "primary": "#0D9373",
-    "light": "#07C983",
-    "dark": "#0D9373",
+    "primary": "#000000",
+    "light": "#808080",
+    "dark": "#808080",
     "anchors": {
       "from": "#0D9373",
       "to": "#07C983"
@@ -75,13 +75,13 @@
     {
       "group": "Guides",
       "pages": [
-        "monitor/guides/monitor-installation",
-        "monitor/guides/monitor-config",
+        "monitor/guides/monitor-how-to-install",
+        "monitor/guides/monitor-how-to-config",
         "monitor/guides/monitor-guide-assertions",
         "monitor/guides/monitor-guide-charts",
         "monitor/guides/monitor-guide-actions",
-        "monitor/guides/monitor-extending",
-        "monitor/guides/monitor-hosting",
+        "monitor/guides/monitor-how-to-extend",
+        "monitor/guides/monitor-how-to-host",
         "monitor/guides/monitor-dashboard",
         "monitor/guides/monitor-prometheus"
       ]
@@ -109,7 +109,7 @@
     },
     {
       "group": "Phylax STD",
-      "pages": ["std/std-introduction", "std/std-sdk-reference"]
+      "pages": ["std/std-introduction"]
     }
   ],
   "footerSocials": {
