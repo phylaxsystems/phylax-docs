@@ -1,0 +1,156 @@
+---
+title: 'How to Create Charts'
+description: 'How to create charts for monitoring your dApp in pure Solidity'
+---
+
+## Introduction
+The Phylax Monitor allows you to write real time chart in Solidity. It's very easy to create charts, since it's done in Solidity which means that you don't need to acquire any new skills to create charts in some obscure language, and hence can get stuff done quicker.
+
+In this guide you will learn how to create charts for smart contracts in order to monitor said contracts in real time.
+
+For an extensive reference on charts you can consult the [Chart Reference](../../phylax-monitor/references/charts).
+
+## Why Use Charts?
+In the [Alert Guide](monitor/guides/monitor-how-to-alerts) we explained how `Alerts` can be used to monitor your dApp so that you can react as quickly as possible in case some undesired state should be reached in your smart contracts. 
+However in cases where you are only interested in visualizing data, `Charts` is a better solution.
+They allow you to create real time charts in Solidity, which means that there is basically no learning curve for you as a developer. For now, charts can visualize anything that can be read from the state of a smart contract. It does not currently allow for using transactions or events as data points.
+
+For example you could not use a Phylax Monitor `Chart` to visualize the amount of unique addresses that has sent ETH to some smart contract, because this is not stored in the state of the receiving smart contract (unless specifically implemented).
+
+But you could use it to track the total amount of DAI held in a smart contract over time by querying the `balanceOf()` of the address of the smart contract.
+
+
+## Creating a Chart
+Adding a chart to your dApp is easy. In this guide we will focus on adding a simple chart, but adding more complex synthetic charts isn't much different.
+
+Let's assume that we want to monitor the admin of an ERC1967 proxy contract over time. If some evil actor manages to change the admin of a proxy contract to an account that they control a lot of bad things can happen, so we want to be notified ASAP if something like that happens in order to react as quickly as possible.
+
+So let's setup a chart that shows the admin address of a proxy contract over time. The chart will update for each new block.
+
+First we import the Alert and Chart contracts from `phylax-std` and then we import the ERC1967 interface that we use to showcase a proxy contract example. 
+
+We also make sure that the AlertContract uses `Chart` and `Alert`.
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
+
+import {Alert} from "phylax-std/Alert.sol";
+import {Chart} from "phylax-std/Chart.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
+
+contract AlertContract is Chart, Alert {
+    // code goes here
+}
+
+```
+Next we define the `setUp` function that runs before each defined assertion case. In this example we define an ERC1967 proxy contract at a desired address that corresponds to the proxy contract you want to monitor:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
+
+import {Alert} from "phylax-std/Alert.sol";
+import {Chart} from "phylax-std/Chart.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
+
+contract AlertContract is Chart, Alert {
+    
+    function setUp() public {
+        proxyContract = IERC1967(YOUR_PROXY_CONTRACT_ADDRESS);
+    }
+    
+}
+
+```
+Now we're ready to define our chart. There are 5 values to define in the `createChart` function:
+
+`description`: A short description of the chart
+
+`xAxis`: The value type of the x-axis. We will use `BlockNumber`, since we want to check if the admin changes for each new block
+
+`yAxis`: The type of the y-axis. In this case it will be a string.
+
+`yAxisName`: A unique name and identifier for the y-axis and chart.
+
+`visualization`: The kind of chart we want. Here we want it visualized as a table.
+
+Let's create the chart:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
+
+import {Alert} from "phylax-std/Alert.sol";
+import {Chart} from "phylax-std/Chart.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
+
+contract AlertContract is Chart, Alert {
+    
+    function setUp() public {
+        proxyContract = IERC1967(YOUR_PROXY_CONTRACT_ADDRESS);
+    }
+    
+    function charts() public virtual override {
+        createChart({
+            description: "The current proxy admin",
+            xAxis: XAxis.BlockNumber,
+            yAxis: YAxis.String,
+            yAxisName: "proxy admin",
+            visualization: Visualization.Table
+        });
+    }
+}
+
+```
+
+All that's left to do now is to define the data that should be written to the chart for each new block.
+In our case we want to check the admin of the `proxyContract` that we defined in the `setUp()` function.
+We do this by calling `get_admin()` on the contract:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
+
+import {Alert} from "phylax-std/Alert.sol";
+import {Chart} from "phylax-std/Chart.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
+
+contract AlertContract is Chart, Alert {
+    
+    function setUp() public {
+        proxyContract = IERC1967(YOUR_PROXY_CONTRACT_ADDRESS);
+    }
+    
+    function charts() public virtual override {
+        createChart({
+            description: "The current proxy admin",
+            xAxis: XAxis.BlockNumber,
+            yAxis: YAxis.String,
+            yAxisName: "proxy admin",
+            visualization: Visualization.Table
+        });
+    }
+
+    function chart_example() public {
+        // Write the current admin of the proxy to the chart
+        writeToChart("proxy admin", proxyContract.get_admin());
+
+    }
+}
+
+```
+
+TODO: Update code and text if code is not correct or more needs to be added
+
+The above code is a complete minimal example of what you need in order to get real time charts that monitor your smart contracts. Simple, but very powerful, right?
+
+You can now see the chart in the [Helmet](link_to_helmet) dashboard. It should look something like this:
+
+[INSERT PICTURE OF CHART](link_to_image_of_chart_in_helmet)
+
+## Different Kinds of Charts
+It's worth noting that there is a variety of different charts available in the Phylax Monitor.
+Different kinds of charts fit different kinds of content better than others.
+For example in the case above we're using a `Table` to represent the admin of a proxy contract. This makes sense in this case, since it's a single variable that we're interested in monitoring.
+If we on the other hand wanted to keep track of the total amount of funds locked in some contract over time you might want to use a `Line` chart instead since it would better show the development of value over time.
+You can consult the [Chart Reference](../../phylax-monitor/references/charts) to see all the available chart types.
