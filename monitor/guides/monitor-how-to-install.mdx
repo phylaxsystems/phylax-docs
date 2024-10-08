@@ -1,8 +1,49 @@
 ---
 title: 'Installation'
-description: 'Advanced guide on how to install the Phylax Monitor'
+description: 'Install Phylax Syn in a couple of minutes'
 ---
 
-## Introduction
-This page will go through the installation process in more detail.
-If you just want to get going as quickly as possible please see the [Monitor Quick Start Guide](monitor/guides/monitor-quickstart).
+## Prerequisites
+
+It is assumed that you're running Linux or MacOS and have the following installed on your system:
+
+```text
+- Rust / Cargo
+- git
+- npm
+```
+
+## Install
+
+We've created a convenient installer for you called Phylum. It will install `phylax` on your system in a couple of minutes and then you're good to go.
+
+To install run:
+
+```bash
+curl -L http://phylaxsystems.github.io/phylum/install | bash
+```
+
+This will take a couple of moments, so go grab a drink and come back in a few minutes.
+
+You can verify that `phylax` is correctly installed by running:
+
+```bash
+phylax --version
+```
+
+This should give you a result containing `phylax Version`, `Commit SHA` and some other values.
+
+## Run
+
+You're now all set and ready to run the Phylax Monitor. To do this go to your Phylax project and run the following:
+
+```bash
+phylax run
+```
+
+This will compile your contracts, start the monitoring server and host the dashboard.
+
+## Next Steps
+
+Now that you have a working Phylax Monitor install you can continue with the [Quickstart Guide](monitor/guides/monitor-quickstart) to learn how to setup your Phylax Syn project and start monitoring your smart contracts.
+

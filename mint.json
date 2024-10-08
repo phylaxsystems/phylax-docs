@@ -63,6 +63,7 @@
         "introduction",
         "monitor/monitor-overview",
         "credible/credible-overview",
+        "monitor/guides/monitor-how-to-install",
         "monitor/guides/monitor-quickstart",
         "monitor/monitor-introduction",
         "smart-contract-security",
@@ -75,7 +76,6 @@
     {
       "group": "Guides",
       "pages": [
-        "monitor/guides/monitor-how-to-install",
         "monitor/guides/monitor-how-to-config",
         "monitor/guides/monitor-how-to-alerts",
         "monitor/guides/monitor-guide-charts",

@@ -1,49 +1,78 @@
 ---
 title: "Quickstart"
-description: "Run the Phylax Monitor in 5 minutes"
+description: "Set up a Phylax Syn project"
 ---
+## Getting Started
 
-## Prerequisites
+If you haven't installed Phylax yet, follow the [installation instructions](monitor/guides/monitor-how-to-install) before proceeding.
 
-It is assumed that you're running Linux or MacOS and have the following installed on your system:
+Follow these steps to quickly set up and run the Phylax Monitor for your project:
 
-```text
-- Rust / Cargo
-- git
-- npm
-```
+1. Create a new Phylax project:
 
-## Install
+   ```bash
+   phylax init my-project
+   cd my-project
+   ```
 
-We've created a convenient installer for you called Phylum. It will install `phylax` on your system in a couple of minutes and then you're good to go.
+2. Configure your project:
+   
+   Open the `phylax.toml` file in your project directory and adjust the settings as needed. You can specify the blockchain network, contract addresses, and other monitoring parameters.
+   For a complete list of options, see the [Configuration Reference](../../phylax-monitor/references/configuration).
 
-To install run:
+3. Write your first alert:
+   
+   Let's create a simple alert contract that creates a chart that shows the amount of stETH currently restaked on Eigenlayer.
+   Create a new file, for example `stethRestaked.a.sol`:
 
-```bash
-curl -L http://phylaxsystems.github.io/phylum/install | bash
-```
+    ```solidity
+        // SPDX-License-Identifier: MIT
+        pragma solidity ^0.8.0;
 
-This will take a couple of moments, so go grab a drink and come back in a few minutes.
+        import "phylax-std/Alert.sol";
+        import "phylax-std/Chart.sol";
+        import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-You can verify that `phylax` is correctly installed by running:
+        contract StethRestaked is Alert {
+            IERC20 public rethToken;
+            address public rethEigenPoolAddress;
 
-```bash
-phylax --version
-```
+            function setUp() public {
+                rethEigenPoolAddress = 0x1BeE69b7dFFfA4E2d53C2a2Df135C388AD25dCD2;
+                rethToken = IERC20(0xae78736Cd615f374D3085123A210448E74Fc6393); // rETH erc20 contract
+            }
+        
+            function charts() public virtual override {
+                createChart({
+                    description: "Amount of rETH restaked on Eigenlayer",
+                    xAxis: XAxis.BlockNumber,
+                    yAxis: YAxis.Uint256,
+                    yAxisName: "rETH restaked",
+                    visualization: Visualization.Line
+                });
+            }
 
-This should give you a result containing `phylax Version`, `Commit SHA` and some other values.
+            function chart_example() public {
+                writeToChart("rETH restaked", rethToken.balanceOf(rethEigenPoolAddress));
+            }
 
-## Run
+            function alertPoolEmpty() public view returns (bool) {
+                return rethToken.balanceOf(rethEigenPoolAddress) == 0;
+            }
+        }
+   ```
 
-You're now all set and ready to run the Phylax Monitor. To do this go to your Phylax project and run the following:
+4. Run the Phylax Monitor:
 
-```bash
-phylax run
-```
+   ```bash
+   phylax run
+   ```
 
-This will compile your contracts, start the monitoring server and host the dashboard.
+   This command will compile your contracts, start the monitoring server, and host the dashboard.
 
-## Next Steps
+5. Access the dashboard:
+   
+   Open your web browser and navigate to `http://localhost:3000` to view the Phylax Syn dashboard.
 
-Now that you have a working Phylax Monitor install, we encourage you to explore the rest of the docs to get familiar with the power of the Phylax Monitor. 
-A good place to start is the [How to Write Alerts](monitor/guides/monitor-how-to-alerts) guide.
+
+You're now ready to start writing alerts and monitoring your smart contracts. A good place to start is the [How to Write Alerts](monitor/guides/monitor-how-to-alerts) guide.
