@@ -17,15 +17,19 @@ Before we start the guide, we will very quickly explain what an `Alert` is.
 
 You can think of an alert as a check in your code that defines a state that should never be true.
 The Phylax Monitor will run the code defined by the alert on every new block and check if the condition is still true.
-If it's not true the defined notifications and actions can be triggered.
+Since the default `bool` value of Solidity is `false` the alert will trigger a notification if the condition is `true`.
+This might seem a bit counter-intuitive at first but it makes sense, since we don't want any false negatives.
 
-Below is a very simple example of an alert function that checks if the admin of contract remains the same:
+Below is a very simple example of an alert function that checks if the admin of the contract remains the same:
 
 ```solidity
 function alertAdminChange() public view returns (bool) {
-    return PREDEFINED_DESIRED_ADMIN == vault.getAdmin();
+    return PREDEFINED_DESIRED_ADMIN != vault.getAdmin();
 }
 ```
+
+This will return `false` as long as the admin of the contract is the same as the `PREDEFINED_DESIRED_ADMIN`.
+If the admin is changed the alert will return `true` and a notification can be triggered.
 
 It is important to understand that an alert is run for every new block on the chain it's configured to monitor.
 
@@ -44,10 +48,8 @@ import {Alert} from "phylax-std/Alert.sol";
 import {Notification} from "phylax-std/Notification.sol";
 import {IERC4626} from "openzeppelin-contracts/contracts/interfaces/IERC4626.sol";
 
-contract VaultAlert is Alert, Notification {
-    
+contract VaultAlert is Alert, Notification {   
     // code goes here 
-
 }
 
 ```
@@ -77,7 +79,8 @@ contract VaultAlert is Alert, Notification {
 
 Now we're ready to add an alert function.
 In order for the Phylax Monitor to register the function as an alert the function name should be prefixed with `alert`.
-We then add an `assert` that checks that the `totalAssets()` of the vault is higher than `0`.
+We then check that the `totalAssets()` of the vault is not `0`. It is unlikely that the vault should reach a balance of `0`, so we want to be notified if that should happen. 
+It could mean that someone has drained the vault or that the vault has been exploited.
 
 ```solidity 
 // SPDX-License-Identifier: MIT
@@ -99,7 +102,7 @@ contract VaultAlert is Alert, Notification {
     
     function alertVaultDrain() public returns (bool) {
         // Check that the vault balance is higher than 0
-        return vault.totalAssets() > 0;
+        return vault.totalAssets() != 0;
     }  
 
 }
@@ -131,8 +134,8 @@ contract VaultAlert is Alert, Notification {
     
     function alertVaultDrain() public returns (bool, Notification.NotificationMessage) {
         // Check that the vault balance is higher than 0
-        if (vault.totalAssets() > 0) {
-            return true, info("The balance of the vault is higher than 0");
+        if (vault.totalAssets() != 0) {
+            return true, info("All good! The balance of the vault is higher than 0");
         } else {
             return (false, info("The balance of the vault has reached 0",
                                 "This could be caused by malicious actors or 
@@ -145,6 +148,8 @@ contract VaultAlert is Alert, Notification {
 ```
 
 Please consult the [notifications reference](../../phylax-monitor/references/notifications) to understand how the `info()` function works in detail.
+
+You can find many examples of alerts for popular protocols in the [phylax-std GitHub](https://github.com/phylax-labs/phylax-std/tree/main/examples/alerts).
 
 That's it. Now we have an alert set up that triggers a notification, if the condition in the alert fails.
 As you can see, you don't need many lines of Solidity code to achieve some very powerful functionality and this is exactly the power of the Phylax Monitor.
