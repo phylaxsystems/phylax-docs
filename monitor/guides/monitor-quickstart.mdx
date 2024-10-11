@@ -10,65 +10,97 @@ Follow these steps to quickly set up and run the Phylax Monitor for your project
 
 1. Create a new Phylax project:
 
-   ```bash
-   phylax init my-project
-   cd my-project
-   ```
+    ```bash
+    phylax init my-project
+    cd my-project
+    ```
 
 2. Configure your project:
    
-   Open the `phylax.toml` file in your project directory and adjust the settings as needed. You can specify the blockchain network, contract addresses, and other monitoring parameters.
-   For a complete list of options, see the [Configuration Reference](../../phylax-monitor/references/configuration).
+    Open the `phylax.toml` file in your project directory and adjust the settings as needed. You can specify the blockchain network, contract addresses, and other monitoring parameters.
+    For a complete list of options, see the [Configuration Reference](../../phylax-monitor/references/configuration).
+
+    A bare minimum `phylax.toml` file for a project that monitors the rETH contract on Ethereum Mainnet is:
+
+    ```toml
+    [[watchers]]
+    name = "ETH"
+    chain = "mainnet"
+    endpoint = "${YOUR_RPC_URL}"
+
+    [[alerts]]
+    name = "rethRestaked"
+    alert_path = "RethRestaked.a.sol"
+    on_watchers = ["ETH"]
+    ```
+
+    Above it enough to have a working configuration for your project. Here's a quick explanation of the above configuration:
+
+    - `[[watchers]]`: Watchers represent a source of data, which may send data for downstream alerts or actions to process.
+    - `name`: A unique name for the watcher.
+    - `chain`: The chain to monitor.
+    - `endpoint`: Your RPC URL for the blockchain.
+
+    - `[[alerts]]`: An alert is the process that analyzes the data fetched by the watcher and triggers notifications if conditions are met.
+    - `name`: A unique name for the alert.
+    - `alert_path`: The path to the alert contract.
+    - `on_watchers`: The unique names of the watcher that the alert should be run on.
 
 3. Write your first alert:
    
-   Let's create a simple alert contract that creates a chart that shows the amount of stETH currently restaked on Eigenlayer.
-   Create a new file, for example `stethRestaked.a.sol`:
+   Let's create a simple alert contract that creates a chart that shows the amount of rETH currently restaked on Eigenlayer on Ethereum Mainnet.
+   Create a new file, for example `rethRestaked.a.sol`:
 
     ```solidity
-        // SPDX-License-Identifier: MIT
-        pragma solidity ^0.8.0;
+    // SPDX-License-Identifier: MIT
+    pragma solidity ^0.8.0;
 
-        import "phylax-std/Alert.sol";
-        import "phylax-std/Chart.sol";
-        import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+    import "phylax-std/Alert.sol";
+    import "phylax-std/Chart.sol";
+    import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-        contract StethRestaked is Alert {
-            IERC20 public rethToken;
-            address public rethEigenPoolAddress;
+    contract RethRestaked is Alert {
+        IERC20 public rethToken;
+        address public rethEigenPoolAddress;
 
-            function setUp() public {
-                rethEigenPoolAddress = 0x1BeE69b7dFFfA4E2d53C2a2Df135C388AD25dCD2;
-                rethToken = IERC20(0xae78736Cd615f374D3085123A210448E74Fc6393); // rETH erc20 contract
-            }
-        
-            function charts() public virtual override {
-                createChart({
-                    description: "Amount of rETH restaked on Eigenlayer",
-                    xAxis: XAxis.BlockNumber,
-                    yAxis: YAxis.Uint256,
-                    yAxisName: "rETH restaked",
-                    visualization: Visualization.Line
-                });
-            }
-
-            function chart_example() public {
-                writeToChart("rETH restaked", rethToken.balanceOf(rethEigenPoolAddress));
-            }
-
-            function alertPoolEmpty() public view returns (bool) {
-                return rethToken.balanceOf(rethEigenPoolAddress) == 0;
-            }
+        function setUp() public {
+            rethEigenPoolAddress = 0x1BeE69b7dFFfA4E2d53C2a2Df135C388AD25dCD2;
+            rethToken = IERC20(0xae78736Cd615f374D3085123A210448E74Fc6393); // rETH erc20 contract
         }
+    
+        function charts() public virtual override {
+            createChart({
+                description: "Amount of rETH restaked on Eigenlayer",
+                xAxis: XAxis.BlockNumber,
+                yAxis: YAxis.Uint256,
+                yAxisName: "rETH restaked",
+                visualization: Visualization.Line
+            });
+        }
+
+        function chart_example() public {
+            writeToChart("rETH restaked", rethToken.balanceOf(rethEigenPoolAddress));
+        }
+
+        function alertPoolEmpty() public view returns (bool) {
+            return rethToken.balanceOf(rethEigenPoolAddress) == 0;
+        }
+    }
    ```
 
-4. Run the Phylax Monitor:
+   The above contract creates a chart that shows the amount of rETH restaked on Eigenlayer and an alert that triggers if the amount of rETH restaked is 0.
+   The `setUp` function will be run before each function is run. In this case it initializes the rETH contract and Eigenlayer rETH pool address.
+   The `charts` function is used to declare the charts that will be displayed in the dashboard.
+   The `chart_example` function is used to write data to the chart.
+   The `alertPoolEmpty` function is used to trigger the alert.
+
+4. Run Phylax Syn:
 
    ```bash
    phylax run
    ```
 
-   This command will compile your contracts, start the monitoring server, and host the dashboard.
+   This command will compile your contracts, start Phylax Syn, and host the dashboard.
 
 5. Access the dashboard:
    
