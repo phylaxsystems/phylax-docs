@@ -1,0 +1,26 @@
+---
+title: 'Correct Withdraw'
+description: 'Make sure that a user cannot withdraw more than they should'
+---
+
+## Use Case
+
+Users being able to withdraw assets from DeFi protocols is the bread and butter of DeFi.
+Users are willing to deposit assets into DeFi protocols because they can withdraw them at a later point in time, hopefully with a profit.
+Making sure that users cannot withdraw more than they should is crucial for the protocol to function correctly.
+If an attacker has found a way to withdraw more than they should due to a bug, it can be disastrous for the protocol.
+An assertions that checks that amounts withdrawn are always correct can save the protocol.
+
+## Explanation
+
+Check that the amount withdrawn from a given protocol is always correct.
+
+## Code Example
+
+pre-state: Calculate the amount that a user should be able to withdraw
+
+post-state: Check if the amount withdrawn is correct
+
+```solidity
+
+```

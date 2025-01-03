@@ -1,0 +1,45 @@
+---
+title: Implementation / Address Change
+description: Assert that an address of an implementation has changed
+---
+
+## Use Case
+Check that the implementation of a contract does not change. This works similarly when checking if the owner of a contract has changed.
+
+This assertions is useful if you want to make sure that a contract is not unexpectedly upgraded or changed to an undesired implementation.
+For example it would be possible to define a list of allowed implementations that would be whitelisted and any other implementation would be considered an invalid state.
+
+## Explanation
+The assertion checks if the address of a contract has changed after a transaction has been executed.
+
+## Code Example
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "../lib/credible-std/Assertion.sol";
+
+interface IImplementation {
+    function implementation() external view returns (address);
+}
+
+contract ImplementationChange is Assertion {
+    IImplementation public implementation = IImplementation(address(0xbeef));
+
+    function fnSelectors() external pure override returns (Trigger[] memory) {
+        Trigger[] memory triggers = new Trigger[](1); // Define the number of triggers
+        triggers[0] = Trigger(TriggerType.STORAGE, this.implementationChange.selector); // Define the trigger
+        return triggers;
+    }
+
+    // Asssert that the implementation contract address doesn't change
+    // during the state transition
+    function implementationChange() external returns (bool) {
+        ph.forkPreState();
+        address preImpl = implementation.implementation();
+        ph.forkPostState();
+        address postImpl = implementation.implementation();
+        return preImpl == postImpl;
+    }
+}
+```
