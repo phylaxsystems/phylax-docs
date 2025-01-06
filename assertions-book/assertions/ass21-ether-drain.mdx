@@ -1,0 +1,26 @@
+---
+title: 'Ether Drain'
+description: 'Make sure that ether is not drained from a contract'
+---
+
+## Use Case
+
+Many protocols use ether as a collateral asset. If the protocol is exploited, the attacker can drain all the ether from the protocol.
+Having assertions in place that prevent draining can be helpful to prevent or at the very least slow down the rate at which a protocol is drained.
+
+## Explanation
+
+Check that the ether balance of a contract does not decrease by more than 50% in a single transaction.
+
+Note: This does not prevent draining from happening, as a somewhat capable attacker would just drain 49% of the ether in a single transaction.
+It's better than nothing and if mitigation is in place it could pause the protocol on a draining attempt.
+
+## Code Example
+
+```solidity
+
+```
+
+pre: Get ether balance of contract before transaction
+
+post: Ether balance of contract is not decreased by more than 50%

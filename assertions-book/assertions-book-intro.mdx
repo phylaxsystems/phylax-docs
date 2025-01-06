@@ -1,0 +1,81 @@
+---
+title: Introduction to Assertions
+description: Resource for assertion use cases and patterns
+---
+
+# Assertions Book
+
+This resource is a collection of use cases and patterns for assertions.
+Each assertions is named after the use case it is intended to solve and will be accompanied by an explanation and a code example.
+
+In the menu to the left you can find all the assertions.
+
+If you have any questions or issues getting things to work please reach out on telegram [@phylax_credible_layer](https://t.me/phylax_credible_layer).
+
+If you think that an assertion is missing, please don't hesitate to open a PR or reach out.
+
+## Introduction to Assertions
+
+Assertions are a way to define states that should never be reached in your smart contracts. 
+You can think of them as opposite intents. Instead of defining what you want to happen, you define what you don't want to happen.
+
+In the use case and patterns of this book, we will only show the functions of the assertions. Below is a full example of an assertion contract for reference:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "../lib/credible-std/Assertion.sol";
+
+interface IOwnership {
+    function owner() external view returns (address);
+
+    function admin() external view returns (address);
+}
+
+// This is a simple example of an assertion that checks if the owner has changed.
+// You can import your own ownership contract and modify the assertion accordingly.
+contract OwnerChange is Assertion {
+    IOwnership public ownership = IOwnership(address(0xbeef));
+
+    function fnSelectors() external pure override returns (Trigger[] memory) {
+        Trigger[] memory triggers = new Trigger[](2); // Define the number of triggers
+        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionOwnerChange.selector); // Define the trigger
+        triggers[1] = Trigger(TriggerType.STORAGE, this.assertionAdminChange.selector); // Example of another trigger
+        return triggers;
+    }
+
+    // This function is used to check if the owner has changed.
+    // return true indicates a valid state
+    // return false indicates an invalid state
+    function assertionOwnerChange() external returns (bool) {
+        ph.forkPreState(); // fork the pre state - the state before the transaction
+        address preOwner = ownership.owner(); // get the owner before the transaction
+        ph.forkPostState(); // fork the post state - the state after the transaction
+        address postOwner = ownership.owner(); // get the owner after the transaction
+        return preOwner == postOwner; // return false if the owner has changed (invalid state)
+    }
+
+    // This function is used to check if the admin has changed.
+    // It works in the same way as the ownerChange function, and here it's used as
+    // an example of how to add another trigger to the assertion.
+    function assertionAdminChange() external virtual returns (bool) {
+        ph.forkPreState(); // fork the pre state - the state before the transaction
+        address preAdmin = ownership.admin(); // get the admin before the transaction
+        ph.forkPostState(); // fork the post state - the state after the transaction
+        address postAdmin = ownership.admin(); // get the admin after the transaction
+        return preAdmin == postAdmin; // return false if the admin has changed (invalid state)
+    }
+}
+```
+
+It can be assumed that all assertion examples will have a similar structure, but only the assertions functions will be shown.
+
+For the actual example listed above see the [Owner Change](/assertions-book/assertions/ass5-ownership-change.mdx) assertion.
+
+The `ph` keyword is a global keyword that is used to interact with the Phylax Credible Layer. It is imported from the `credible-std` library.
+
+The `Trigger` struct is a struct that is used to define the triggers for the assertion. It is imported from the `credible-std` library.
+
+The `TriggerType` enum is an enum that is used to define the type of trigger. It is imported from the `credible-std` library.
+

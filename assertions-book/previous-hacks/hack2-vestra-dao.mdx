@@ -1,0 +1,75 @@
+---
+title: Vestra DAO Hack
+description: Unchecked isActive flag in maturity
+---
+
+## Overview
+In December 2024, VestraDAO was hacked. The hacker exploited a vulnerability in the `unStake` function which allowed users to stake and unstake without waiting for the maturity period.
+For an in-depth analysis of the hack, you can read this [post](https://x.com/_czepluch/status/1866112404242743590).
+
+In a nutshell, there was an `isActive` flag that was set to `false` correctly in the `unStake` function. However, the `isActive` flag was never checked if someone called the `unStake` function again.
+This resulted in an attacker being able to repeatedly call `unStake` and get additional yield from the protocol until it was drained.
+
+It should be noted that there were no tests for the code base and the code was not audited. However, with an assertion it would be possible to patch the vulnerability until a new version of the code is deployed.
+The assertion would simply check if the `isActive` flag is `false` before calling the `unStake` function.
+
+## Use Case
+In this hack, a simple require statement would have been enough to prevent the vulnerability. Usually, a contract redeployment is needed to fix a vulnerability like this.
+With an assertion, it is possible to patch this directly an make sure that all calls to the `unStake` function check the `isActive` flag.
+
+This is a very powerful concept and can be useful in many situations. Imagine a security researcher reports a vulnerability in a protocol before anyone has exploited it. 
+In that case the protocol can publish an assertion that guards against the vulnerability until the team has had the time to fix the vulnerability in the best way possible.
+
+## Assertion
+This assertions checks if the `isActive` flag is `false` before calling the `unStake` function if it's false the transaction will not be included in the block.
+Alternatively, there could be an assertion that checks that the `totalStaked` is always equal to the sum of all `stakeAmount` in the `stakes` mapping. 
+This would require a way to iterate over all the stakes and sum them up, which is not yet supported by a cheatcode.
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "../lib/credible-std/Assertion.sol";
+
+// VestraDAO interface
+interface IVestraDAO {
+    struct Stake {
+        uint64 startTime;
+        uint256 stakeAmount;
+        uint256 yield;
+        uint256 penalty;
+        uint64 endTime;
+        bool isActive;
+    }
+
+    mapping(address => mapping(uint8 => Stake)) public stakes;
+
+    function unStake(uint8 maturity) external;
+}
+
+// TODO: Explain the assertion
+contract VestraDAOHack is Assertion {
+    IVestraDAO public vestraDAO = IVestraDAO(address(0xbeef));
+
+    function fnSelectors() external pure override returns (Trigger[] memory) {
+        Trigger[] memory triggers = new Trigger[](1); // Define the number of triggers
+        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionExample.selector); // Define the trigger
+        return triggers;
+    }
+
+    // Check if the user has already unstaked for a maturity
+    // return true indicates a valid state
+    // return false indicates an invalid state
+    function assertionExample() external returns (bool) {
+        ph.forkPostState();
+        (address from, , , bytes memory data) = ph.getTransaction(); // TODO: Check if this works once we have the cheatcode
+        bytes4 functionSelector = bytes4(data[:4]);
+        if (functionSelector != vestraDAO.unStake.selector) {
+            return true; // Skip the assertion if the function is not withdrawCollateral
+        }
+        uint8 maturity = abi.decode(data[4:], (uint8));
+        IVestraDAO.Stake storage user = vestraDAO.stakes[from][maturity];
+        return user.isActive;
+    }
+}
+```

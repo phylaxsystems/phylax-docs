@@ -1,0 +1,26 @@
+---
+title: 'ERC20 Drain'
+description: 'Make sure that all tokens are drained from a contract'
+---
+
+## Use Case
+
+One of the most common things that happen when a protocol is exploited is that the attacker drains all the tokens from the protocol.
+Having assertions in place that prevent draining can be helpful to prevent or at the very least slow down the rate at which a protocol is drained.  
+
+## Explanation
+
+Check that the token balance of a contract does not decrease by more than 50% in a single transaction.
+
+Note: This does not prevent draining from happening, as a somewhat capable attacker would just drain 49% of the tokens in a single transaction.
+It's better than nothing and if mitigation is in place it could pause the protocol on a draining attempt.
+
+## Code Example
+
+```solidity
+
+```
+
+pre: Get erc20 token balance of contract before transaction
+
+post: erc20 token balance of contract is not decreased by more than 50%

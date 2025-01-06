@@ -1,0 +1,62 @@
+---
+title: Oracle Validation
+description: Assert that an oracle is working as expected
+---
+
+## Use Case
+An oracle is a mechanism used to fetch data from an external source and use it to make decisions within a protocol.
+Make sure that an oracle is working as expected. Manipulation of oracles is a very common attack vector.
+An oracle can be manipulated to return a price that is not representative of the true price of an asset.
+Oracles are used in many DeFi protocols, including lending protocols, derivatives protocols, and more.
+
+## Explanation
+This assertion makes sure that the oracle has been updated within the last 10 minutes and that the price doesn't deviate more than 10% from the pre-state price.
+There are two triggers, one for the liveness of the oracle and one for the price.
+
+## Code Example
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "../lib/credible-std/Assertion.sol";
+
+interface IOracle {
+    function lastUpdated() external view returns (uint256);
+    function price() external view returns (uint256);
+}
+
+// Checks that the oracle is live
+contract OracleLivenessAssertion is Assertion {
+    IOracle public oracle = IOracle(address(0xbeef));
+
+    function fnSelectors() external pure override returns (Trigger[] memory) {
+        Trigger[] memory triggers = new Trigger[](2); // Define the number of triggers
+        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionOracleLiveness.selector); // Define the trigger
+        triggers[1] = Trigger(TriggerType.STORAGE, this.assertionOraclePrice.selector); // Define the trigger
+        return triggers;
+    }
+
+    // Make sure that the oracle has been updated within the last 10 minutes
+    // return true indicates a valid state
+    // return false indicates an invalid state
+    function assertionOracleLiveness() external returns (bool) {
+        ph.forkPreState();
+        uint256 preTimestamp = oracle.lastUpdated();
+        ph.forkPostState();
+        uint256 postTimestamp = oracle.lastUpdated();
+        return postTimestamp - preTimestamp <= 10 minutes; // Could be whatever time frame your protocol requires
+    }
+
+    // Make sure that price doesn't deviate more than 10%
+    // return true indicates a valid state
+    // return false indicates an invalid state
+    function assertionOraclePrice() external returns (bool) {
+        ph.forkPreState();
+        uint256 prePrice = oracle.price();
+        ph.forkPostState();
+        uint256 postPrice = oracle.price();
+        uint256 deviation = (((postPrice > prePrice) ? postPrice - prePrice : prePrice - postPrice) * 100) / prePrice;
+        return deviation <= 10; // Could be whatever deviation your protocol requires
+    }
+}
+```

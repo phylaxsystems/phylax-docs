@@ -1,0 +1,46 @@
+---
+title: Constant Product
+description: Assert that a constant product is maintained in an AMM pool
+---
+
+## Use Case
+Check if the constant product is maintained in an AMM pool. This is useful in cases where you want to make sure that the AMM pool is not manipulated.
+
+## Explanation
+The assertion checks if the constant product is maintained in an AMM pool after a transaction has been executed.
+
+## Code Example
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "../lib/credible-std/Assertion.sol";
+
+// We assume Aerodrome style pool
+interface IAmm {
+    function getReserves() external view returns (uint256, uint256);
+
+    function getK() external view returns (uint256);
+}
+
+contract ConstantProductAssertion is Assertion {
+    IAmm public amm = IAmm(address(0xbeef));
+
+    function fnSelectors() external pure override returns (Trigger[] memory) {
+        Trigger[] memory triggers = new Trigger[](1); // Define the number of triggers
+        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionConstantProduct.selector); // Define the trigger
+        return triggers;
+    }
+
+    // Make sure that the product of the reserves is equal to the constant product
+    // note: fees might have to be handled depending on the pool
+    // return true indicates a valid state
+    // return false indicates an invalid state
+    function assertionConstantProduct() external returns (bool) {
+        ph.forkPostState(); // Fork the post state
+        (uint256 reserve0, uint256 reserve1) = amm.getReserves();
+        uint k = reserve0 * reserve1;
+        return k == amm.getK();
+    }
+}
+```

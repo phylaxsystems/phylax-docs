@@ -1,0 +1,22 @@
+---
+title: 'Panic State Validation'
+description: 'Make sure that pool works as expected in panic state'
+---
+
+## Use Case
+
+Many DeFi protocols have functionality to pause or panic their protocols. This is useful in case of emergencies.
+It's important to make sure that the protocol works as expected in panic state.
+
+## Explanation
+Check that it's not possible to deposit assets into the pool during panic state.
+
+Withdrawals should still be possible, so we can allow transactions that decrease the balance of the pool.
+
+## Code Example
+
+pre: Get balances
+
+post: Balance of the pool does not increase, but it can decrease (withdrawals)
+
+TODO: Add code example

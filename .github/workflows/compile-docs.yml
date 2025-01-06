@@ -10,7 +10,7 @@ on:
 
 env:
   GITHUB_ORG: phylaxsystems
-  REPO_LIST: '["phylax-monitor", "phylax-std"]'
+  REPO_LIST: '["phylax-std"]'
 
 jobs:
   aggregate-docs:
