@@ -67,43 +67,55 @@
     },
     {
       "group": "Introduction",
-      "pages": ["assertions-book/assertions-book-intro"]
-    },
-    {
-      "group": "Dapp Use Cases",
       "pages": [
-        "assertions-book/assertions/ass1-impl-addr-change",
-        "assertions-book/assertions/ass5-ownership-change",
-        "assertions-book/assertions/ass6-constant-product",
-        "assertions-book/assertions/ass7-lending-health-factor",
-        "assertions-book/assertions/ass8-sum-of-all-positions",
-        "assertions-book/assertions/ass9-timelock-verification",
-        "assertions-book/assertions/ass10-oracle-validation",
-        "assertions-book/assertions/ass11-twap-deviation",
-        "assertions-book/assertions/ass12-erc4626-assets-to-shares",
-        "assertions-book/assertions/ass13-erc4626-deposit-withdraw",
-        "assertions-book/assertions/ass14-fee-calculations",
-        "assertions-book/assertions/ass15-price-within-ticks",
-        "assertions-book/assertions/ass16-liquidation-health-factor",
-        "assertions-book/assertions/ass17-panic-state-validation",
-        "assertions-book/assertions/ass18-harvest-increases-balance",
-        "assertions-book/assertions/ass19-tokens-borrowed-invariant",
-        "assertions-book/assertions/ass20-erc20-drain",
-        "assertions-book/assertions/ass21-ether-drain",
-        "assertions-book/assertions/ass22-farcaster-message-validity",
-        "assertions-book/assertions/ass23-farcaster-unique-username",
-        "assertions-book/assertions/ass24-recovery-address-check",
-        "assertions-book/assertions/ass25-farcaster-rate-limits",
-        "assertions-book/assertions/ass26-correct-withdraw"
+        "assertions-book/assertions-book-intro",
+        "assertions-book/precompiles"
       ]
     },
     {
-      "group": "Previous Hacks",
-      "pages": ["assertions-book/previous-hacks"]
-    },
-    {
-      "group": "Patterns",
-      "pages": ["assertions-book/patterns-intro"]
+      "group": "Assertions",
+      "pages": [
+        {
+          "group": "Dapp Use Cases",
+          "pages": [
+            "assertions-book/assertions/ass1-impl-addr-change",
+            "assertions-book/assertions/ass5-ownership-change",
+            "assertions-book/assertions/ass6-constant-product",
+            "assertions-book/assertions/ass7-lending-health-factor",
+            "assertions-book/assertions/ass8-sum-of-all-positions",
+            "assertions-book/assertions/ass9-timelock-verification",
+            "assertions-book/assertions/ass10-oracle-validation",
+            "assertions-book/assertions/ass11-twap-deviation",
+            "assertions-book/assertions/ass12-erc4626-assets-to-shares",
+            "assertions-book/assertions/ass13-erc4626-deposit-withdraw",
+            "assertions-book/assertions/ass14-fee-calculations",
+            "assertions-book/assertions/ass15-price-within-ticks",
+            "assertions-book/assertions/ass16-liquidation-health-factor",
+            "assertions-book/assertions/ass17-panic-state-validation",
+            "assertions-book/assertions/ass18-harvest-increases-balance",
+            "assertions-book/assertions/ass19-tokens-borrowed-invariant",
+            "assertions-book/assertions/ass20-erc20-drain",
+            "assertions-book/assertions/ass21-ether-drain",
+            "assertions-book/assertions/ass22-farcaster-message-validity",
+            "assertions-book/assertions/ass23-farcaster-unique-username",
+            "assertions-book/assertions/ass24-recovery-address-check",
+            "assertions-book/assertions/ass25-farcaster-rate-limits",
+            "assertions-book/assertions/ass26-correct-withdraw"
+          ]
+        },
+        {
+          "group": "Patterns",
+          "pages": ["assertions-book/patterns-intro"]
+        },
+        {
+          "group": "Previous Hacks Assertions",
+          "pages": [
+            "assertions-book/previous-hacks-intro",
+            "assertions-book/previous-hacks/hack1-radiant-capital",
+            "assertions-book/previous-hacks/hack2-vestra-dao"
+          ]
+        }
+      ]
     }
   ],
   "footerSocials": {

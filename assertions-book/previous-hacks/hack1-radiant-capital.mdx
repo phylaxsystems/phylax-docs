@@ -1,0 +1,83 @@
+---
+title: Radiant Capital Hack
+description: Ownership change of lending pools lead to drain
+---
+
+## Overview
+
+In October 2024, Radiant Capital was hacked. You can read more about the hack on [Rekt](https://rekt.news/radiant-capital-rekt2/).
+In short, the attacker managed to gain control over 3 signers of the Radiant Capital multisig, which allowed the attacker to change ownership of the lending pools and ultimately drain the pools.
+Had there been an assertion in place that checked that the ownership of the lending pools didn't change, the hack would have been prevented.
+
+## Use Case
+
+This use case is a good example of how to use assertions to detect ownership changes. A lot of DeFi protocols have the concept of owners and admins that can change the protocol's behavior.
+Usually these are controlled by a multisig, which is best practice, but it is not always enough. Especially if the multisig setup is not done in an optimal way.
+
+The assertion shown below is easy to generalize and use in any protocol that wants to make sure that the ownership of critical contracts don't change.
+It would also be possible to add define a whitelist of contracts that the ownership can be changed to. If not defined, there is a cooldown period before an assertion can be paused and a new owner can be set.
+
+## Assertion
+
+This assertions checks if the owner, emergency admin and pool admin of the lending pool have changed.
+It's a good example of how a simple assertion can be used to prevent disastrous hacks.
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "../lib/credible-std/Assertion.sol";
+
+interface ILendingPoolAddressesProvider {
+    function owner() external view returns (address);
+    function getEmergencyAdmin() external view returns (address);
+    function getPoolAdmin() external view returns (address);
+}
+
+// Radiant Lending Pool on Arbitrum that got hacked and drained
+contract LendingPoolAddressesProviderAssertions is Assertion {
+    ILendingPoolAddressesProvider public lendingPoolAddressesProvider =
+        ILendingPoolAddressesProvider(0x091d52CacE1edc5527C99cDCFA6937C1635330E4); //arbitrum
+
+    function fnSelectors() external pure override returns (Trigger[] memory) {
+        Trigger[] memory triggers = new Trigger[](3);
+        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionOwnerChange.selector);
+        triggers[1] = Trigger(TriggerType.STORAGE, this.assertionEmergencyAdminChange.selector);
+        triggers[2] = Trigger(TriggerType.STORAGE, this.assertionPoolAdminChange.selector);
+        return triggers;
+    }
+
+    // Check if the owner has changed
+    // return true indicates a valid state -> owner is the same
+    // return false indicates an invalid state -> owner is different
+    function assertionOwnerChange() external returns (bool) {
+        ph.forkPreState();
+        address prevOwner = lendingPoolAddressesProvider.owner();
+        ph.forkPostState();
+        address newOwner = lendingPoolAddressesProvider.owner();
+        return prevOwner == newOwner;
+    }
+
+    // Check if the emergency admin has changed
+    // return true indicates a valid state -> emergency admin is the same
+    // return false indicates an invalid state -> emergency admin is different
+    function assertionEmergencyAdminChange() external returns (bool) {
+        ph.forkPreState();
+        address prevEmergencyAdmin = lendingPoolAddressesProvider.getEmergencyAdmin();
+        ph.forkPostState();
+        address newEmergencyAdmin = lendingPoolAddressesProvider.getEmergencyAdmin();
+        return prevEmergencyAdmin == newEmergencyAdmin;
+    }
+
+    // Check if the pool admin has changed
+    // return true indicates a valid state -> pool admin is the same
+    // return false indicates an invalid state -> pool admin is different
+    function assertionPoolAdminChange() external returns (bool) {
+        ph.forkPreState();
+        address prevPoolAdmin = lendingPoolAddressesProvider.getPoolAdmin();
+        ph.forkPostState();
+        address newPoolAdmin = lendingPoolAddressesProvider.getPoolAdmin();
+        return prevPoolAdmin == newPoolAdmin;
+    }
+}
+```
