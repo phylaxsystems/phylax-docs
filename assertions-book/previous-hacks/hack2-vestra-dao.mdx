@@ -15,7 +15,7 @@ The assertion would simply check if the `isActive` flag is `false` before callin
 
 ## Use Case
 In this hack, a simple require statement would have been enough to prevent the vulnerability. Usually, a contract redeployment is needed to fix a vulnerability like this.
-With an assertion, it is possible to patch this directly an make sure that all calls to the `unStake` function check the `isActive` flag.
+With an assertion, it is possible to patch this directly and make sure that all calls to the `unStake` function check the `isActive` flag.
 
 This is a very powerful concept and can be useful in many situations. Imagine a security researcher reports a vulnerability in a protocol before anyone has exploited it. 
 In that case the protocol can publish an assertion that guards against the vulnerability until the team has had the time to fix the vulnerability in the best way possible.
