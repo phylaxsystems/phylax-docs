@@ -18,10 +18,11 @@ There are two triggers, one for the liveness of the oracle and one for the price
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
 
 interface IOracle {
     function lastUpdated() external view returns (uint256);
+
     function price() external view returns (uint256);
 }
 
@@ -29,11 +30,10 @@ interface IOracle {
 contract OracleLivenessAssertion is Assertion {
     IOracle public oracle = IOracle(address(0xbeef));
 
-    function fnSelectors() external pure override returns (Trigger[] memory) {
-        Trigger[] memory triggers = new Trigger[](2); // Define the number of triggers
-        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionOracleLiveness.selector); // Define the trigger
-        triggers[1] = Trigger(TriggerType.STORAGE, this.assertionOraclePrice.selector); // Define the trigger
-        return triggers;
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](2);
+        assertions[0] = this.assertionOracleLiveness.selector;
+        assertions[1] = this.assertionOraclePrice.selector;
     }
 
     // Make sure that the oracle has been updated within the last 10 minutes

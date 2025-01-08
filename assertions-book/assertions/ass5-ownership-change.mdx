@@ -16,7 +16,7 @@ The assertion checks if the owner of a contract has changed after a transaction 
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
 
 interface IOwnership {
     function owner() external view returns (address);
@@ -29,11 +29,10 @@ interface IOwnership {
 contract OwnerChange is Assertion {
     IOwnership public ownership = IOwnership(address(0xbeef));
 
-    function fnSelectors() external pure override returns (Trigger[] memory) {
-        Trigger[] memory triggers = new Trigger[](2); // Define the number of triggers
-        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionOwnerChange.selector); // Define the trigger
-        triggers[1] = Trigger(TriggerType.STORAGE, this.assertionAdminChange.selector); // Example of another trigger
-        return triggers;
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](2);
+        assertions[0] = this.assertionOwnerChange.selector;
+        assertions[1] = this.assertionAdminChange.selector;
     }
 
     // This function is used to check if the owner has changed.
@@ -58,4 +57,5 @@ contract OwnerChange is Assertion {
         return preAdmin == postAdmin; // return false if the admin has changed (invalid state)
     }
 }
+
 ```

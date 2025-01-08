@@ -15,7 +15,7 @@ This assertion makes sure that the total shares are not more than the total asse
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
 
 interface IERC4626 {
     function totalAssets() external view returns (uint256);
@@ -29,10 +29,9 @@ interface IERC4626 {
 contract ERC4626AssetsSharesAssertion is Assertion {
     IERC4626 public erc4626 = IERC4626(address(0xbeef));
 
-    function fnSelectors() external pure override returns (Trigger[] memory) {
-        Trigger[] memory triggers = new Trigger[](1); // Define the number of triggers
-        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionAssetsShares.selector); // Define the trigger
-        return triggers;
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1);
+        assertions[0] = this.assertionAssetsShares.selector;
     }
 
     // Make sure that the total shares are not more than the total assets
