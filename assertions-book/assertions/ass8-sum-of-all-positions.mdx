@@ -18,7 +18,7 @@ This assertion assumes a cheatcode that allows iteration over all non-zero entri
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
 
 // We use Morpho as an example, but this could be any lending protocol
 interface IMorpho {
@@ -29,10 +29,9 @@ interface IMorpho {
 contract PositionSumAssertion is Assertion {
     IMorpho morpho = IMorpho(address(0xbeef));
 
-    function fnSelectors() external pure override returns (Trigger[] memory) {
-        Trigger[] memory triggers = new Trigger[](1); // Define the number of triggers
-        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionPositionsSum.selector); // Define the trigger
-        return triggers;
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1);
+        assertions[0] = this.assertionPositionsSum.selector;
     }
 
     // Compare the sum of all positions to the total supply reported by the protocol

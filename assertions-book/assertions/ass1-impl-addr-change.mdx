@@ -17,7 +17,7 @@ The assertion checks if the address of a contract has changed after a transactio
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
 
 interface IImplementation {
     function implementation() external view returns (address);
@@ -26,10 +26,9 @@ interface IImplementation {
 contract ImplementationChange is Assertion {
     IImplementation public implementation = IImplementation(address(0xbeef));
 
-    function fnSelectors() external pure override returns (Trigger[] memory) {
-        Trigger[] memory triggers = new Trigger[](1); // Define the number of triggers
-        triggers[0] = Trigger(TriggerType.STORAGE, this.implementationChange.selector); // Define the trigger
-        return triggers;
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1);
+        assertions[0] = this.implementationChange.selector;
     }
 
     // Asssert that the implementation contract address doesn't change
@@ -42,4 +41,5 @@ contract ImplementationChange is Assertion {
         return preImpl == postImpl;
     }
 }
+
 ```

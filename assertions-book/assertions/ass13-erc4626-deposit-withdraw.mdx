@@ -14,9 +14,10 @@ This assertion makes sure that the `deposit` and `withdraw` functions are correc
 ## Code Example
 ```solidity
 // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
 
 interface IERC4626 {
     function previewDeposit(uint256 assets) external view returns (uint256);
@@ -32,11 +33,10 @@ interface IERC4626 {
 contract ERC4626DepositWithdrawAssertion is Assertion {
     IERC4626 public erc4626 = IERC4626(address(0xbeef));
 
-    function fnSelectors() external pure override returns (Trigger[] memory) {
-        Trigger[] memory triggers = new Trigger[](2); // Define the number of triggers
-        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionDeposit.selector); // Define the trigger
-        triggers[1] = Trigger(TriggerType.STORAGE, this.assertionWithdraw.selector); // Define the trigger
-        return triggers;
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](2);
+        assertions[0] = this.assertionDeposit.selector;
+        assertions[1] = this.assertionWithdraw.selector;
     }
 
     // Make sure that the preview deposit is correct

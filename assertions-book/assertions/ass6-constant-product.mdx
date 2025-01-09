@@ -14,7 +14,7 @@ The assertion checks if the constant product is maintained in an AMM pool after 
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
+import {Assertion} from "lib/credible-std/Assertion.sol";
 
 // We assume Aerodrome style pool
 interface IAmm {
@@ -26,10 +26,9 @@ interface IAmm {
 contract ConstantProductAssertion is Assertion {
     IAmm public amm = IAmm(address(0xbeef));
 
-    function fnSelectors() external pure override returns (Trigger[] memory) {
-        Trigger[] memory triggers = new Trigger[](1); // Define the number of triggers
-        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionConstantProduct.selector); // Define the trigger
-        return triggers;
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1);
+        assertions[0] = this.assertionConstantProduct.selector;
     }
 
     // Make sure that the product of the reserves is equal to the constant product
@@ -43,4 +42,5 @@ contract ConstantProductAssertion is Assertion {
         return k == amm.getK();
     }
 }
+
 ```

@@ -15,7 +15,7 @@ The health factor is a measure of the riskiness of a position in a lending proto
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
 
 // We use Morpho as an example, but this could be any lending protocol
 interface IMorpho {
@@ -32,10 +32,9 @@ interface IMorpho {
 contract LendingHealthFactorAssertion is Assertion {
     IMorpho public morpho = IMorpho(address(0xbeef));
 
-    function fnSelectors() external pure override returns (Trigger[] memory) {
-        Trigger[] memory triggers = new Trigger[](1); // Define the number of triggers
-        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionHealthFactor.selector); // Define the trigger
-        return triggers;
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1);
+        assertions[0] = this.assertionHealthFactor.selector;
     }
 
     // Check that the position is still healthy after the transaction
