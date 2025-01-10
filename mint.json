@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "Phylax Documentation",
+  "name": "Phylax Credible Layer Documentation",
   "logo": {
     "dark": "/logo/full-white.png",
     "light": "/logo/full-black.png"
@@ -29,7 +29,7 @@
       "url": "credible"
     },
     {
-      "name": "Phylax STD",
+      "name": "phylax-std",
       "url": "std"
     }
   ],
@@ -48,12 +48,12 @@
     {
       "name": "Website",
       "icon": "globe",
-      "url": "https://phylax.watch"
+      "url": "https://phylax.systems"
     },
     {
       "name": "Blog",
       "icon": "newspaper",
-      "url": "https://blog.phylax.watch"
+      "url": "https://phylax.systems/blog"
     }
   ],
   "navigation": [

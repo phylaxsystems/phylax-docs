@@ -6,7 +6,7 @@ description: Overview of the precompiles made available for the Phylax Credible 
 
 ## Overview
 
-Precompiles are PhEVM(Phylax EVM) specific instructions that are implemented in native code instead of EVM bytecode. Precompiles additionally can communicate with Internal APIs. Currently the PhEVM supports all existing precompiles in Ethereum up to Dancun, and introduces a few new classes of precompiles:
+Precompiles are PhEVM (Phylax EVM) specific instructions that are implemented in native code instead of EVM bytecode. Precompiles additionally can communicate with Internal APIs. Currently the PhEVM supports all existing precompiles in Ethereum up to Dancun, and introduces a few new classes of precompiles:
 
 1. Manipulation of the PhEVM state
 2. Forking of the state of one or multiple EVM networks
@@ -50,6 +50,8 @@ Updates the currently active fork to the state after the transaction that trigge
 function forkPostState() external
 ```
 
+### Getters
+
 #### `getLogs`
 
 Gets all the logs that were emitted by the latest applied transaction.
@@ -88,30 +90,3 @@ struct Transaction {
 
 function getTransaction() external returns (Transaction memory tx)
 ```
-
-### Implementation Notes
-
-Precompiles are implemented in PhEVM. Assertions are able to call a pre-specified address or set of addresses that implement the interface described above.
-
-Example usage, not finalized interface:
-
-```solidity
-
-interface PrecompileInterface {
-  function assertEq(bool left, bool right) external pure;
-  ...
-}
-
-abstract contract AssertionBase {
-  PrecompileInterface phEVM;
-}
-
-contract Assertion is AssertionBase {
-
-  function assertion_foo() external {
-    phEVM.assertEq(true, true);
-  }
-}
-```
-
-

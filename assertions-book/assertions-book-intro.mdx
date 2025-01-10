@@ -5,19 +5,23 @@ description: Resource for assertion use cases and patterns
 
 # Assertions Book
 
-This resource is a collection of use cases and patterns for assertions.
+This resource is a collection of use cases and patterns for assertions. The goal is to show how assertions can be used to prevent hacks and vulnerabilities in smart contracts and protocols.
+Some examples are designed for specific protocols, while others are more generally applicable to certain architectures.
+We also added a category where we show how assertions could have been used to prevent historical hacks.
+
 Each assertions is named after the use case it is intended to solve and will be accompanied by an explanation and a code example.
 
 In the menu to the left you can find all the assertions.
 
 If you have any questions or issues getting things to work please reach out on telegram [@phylax_credible_layer](https://t.me/phylax_credible_layer).
 
-If you think that an assertion is missing, please don't hesitate to open a PR or reach out.
+If you think that an assertion is missing, please don't hesitate to open a PR or reach out. We love digging into new use cases and writing assertions for them!
 
 ## Introduction to Assertions
 
 Assertions are a way to define states that should never be reached in your smart contracts. 
 You can think of them as opposite intents. Instead of defining what you want to happen, you define what you don't want to happen.
+In other words we enable dApps to define hacks.
 
 In the use case and patterns of this book, we will only show the functions of the assertions. Below is a full example of an assertion contract for reference:
 

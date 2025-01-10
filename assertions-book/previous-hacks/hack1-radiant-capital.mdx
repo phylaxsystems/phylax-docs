@@ -15,7 +15,7 @@ This use case is a good example of how to use assertions to detect ownership cha
 Usually these are controlled by a multisig, which is best practice, but it is not always enough. Especially if the multisig setup is not done in an optimal way.
 
 The assertion shown below is easy to generalize and use in any protocol that wants to make sure that the ownership of critical contracts don't change.
-It would also be possible to add define a whitelist of contracts that the ownership can be changed to. If not defined, there is a cooldown period before an assertion can be paused and a new owner can be set.
+It would also be possible to define a whitelist of contracts that the ownership can be changed to. By default there is a cooldown period before an assertion can be paused or removed, so protocols need to plan ahead if they don't have a whitelist defined.
 
 ## Assertion
 
