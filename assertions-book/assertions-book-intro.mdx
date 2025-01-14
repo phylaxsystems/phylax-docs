@@ -42,11 +42,10 @@ interface IOwnership {
 contract OwnerChange is Assertion {
     IOwnership public ownership = IOwnership(address(0xbeef));
 
-    function fnSelectors() external pure override returns (Trigger[] memory) {
-        Trigger[] memory triggers = new Trigger[](2); // Define the number of triggers
-        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionOwnerChange.selector); // Define the trigger
-        triggers[1] = Trigger(TriggerType.STORAGE, this.assertionAdminChange.selector); // Example of another trigger
-        return triggers;
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](2);
+        assertions[0] = this.assertionOwnerChange.selector;
+        assertions[1] = this.assertionAdminChange.selector;
     }
 
     // This function is used to check if the owner has changed.
@@ -79,7 +78,15 @@ For the actual example listed above see the [Owner Change](/assertions-book/asse
 
 The `ph` keyword is a global keyword that is used to interact with the Phylax Credible Layer. It is imported from the `credible-std` library.
 
-The `Trigger` struct is a struct that is used to define the triggers for the assertion. It is imported from the `credible-std` library.
+For a video explainer of the above example and assertions in general check out the video below:
 
-The `TriggerType` enum is an enum that is used to define the type of trigger. It is imported from the `credible-std` library.
-
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/9sOn9yvn6I8?si=Td4-QenV8hbhVc4G"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerpolicy="strict-origin-when-cross-origin"
+  allowfullscreen
+></iframe>
