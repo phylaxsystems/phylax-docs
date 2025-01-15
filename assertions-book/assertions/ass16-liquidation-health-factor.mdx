@@ -1,21 +1,95 @@
 ---
 title: 'Liquidation Health Factor'
-description: 'Make sure that the health factor is above the liquidation threshold'
+description: 'Make sure that liquidations can only happen if the position is unhealthy'
 ---
 
 ## Use Case
 
-In DeFi protocols, users can borrow assets. To prevent users from borrowing too much and being unable to repay, protocols use a health factor.
-The health factor is a ratio of the user's collateral to the user's debt. If the health factor is below the liquidation threshold, the user's position is liquidatable.
+In DeFi protocols, users can borrow assets. This happens through overcollateralized borrowing.
+If a position loses value, the health factor of the position will decrease.
+If the health factor is below the liquidation threshold, the position can be liquidated.
+It's important to make sure that it's not possible to liquidate a position if the health factor is above the liquidation threshold.
 
 ## Explanation
 
-Check the health factor of a user's position before and after a trade to make sure that the health factor is above the liquidation threshold.
+This assertions checks if the health factor is below the liquidation threshold before a liquidation is performed to
+make sure that the liquidation can't happen if the position is healthy. Furthermore it checks that the health factor
+improves after the liquidation.
 
 ## Code Example
 
-pre: Health factor is above the liquidation threshold
+```
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
 
-post: Health factor is above the liquidation threshold
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
 
-TODO: Add code example
+// Using Morpho as an example, but this could be any lending protocol
+interface IMorpho {
+    struct MarketParams {
+        Id id;
+    }
+
+    struct Id {
+        uint256 marketId;
+    }
+
+    function liquidate(
+        MarketParams memory marketParams,
+        address borrower,
+        uint256 seizedAssets,
+        uint256 repaidShares,
+        bytes memory data
+    ) external returns (uint256, uint256);
+
+    function isHealthy(MarketParams memory marketParams, address borrower) external view returns (bool);
+    function healthFactor(MarketParams memory marketParams, address borrower) external view returns (uint256);
+}
+
+contract MorphoHealthFactorAssertion is Assertion {
+    IMorpho public morpho = IMorpho(address(0xbeef));
+
+    // Morpho's health factor is scaled by 1e18
+    uint256 constant LIQUIDATION_THRESHOLD = 1e18; // 1.0
+    uint256 constant MIN_HEALTH_FACTOR = 1.02e18; // 1.02 - small buffer above liquidation
+
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1);
+        assertions[0] = this.assertHealthFactor.selector;
+    }
+
+    // Make sure that liquidation can't happen if the position is healthy
+    // Check that the health factor is improved after liquidation
+    function assertHealthFactor() external {
+        // Get transaction data to identify borrower
+        (,,, bytes memory data) = ph.getTransaction(); // TODO: Update once cheatcode is implemented
+        bytes4 selector = bytes4(data[:4]);
+
+        // Decode based on function type
+        address borrower;
+        IMorpho.MarketParams memory marketParams;
+
+        if (selector == IMorpho.liquidate.selector) {
+            // Decode liquidation parameters
+            (marketParams, borrower,,,) = abi.decode(data[4:], (IMorpho.MarketParams, address, uint256, uint256, bytes));
+        } else {
+            // For other operations (borrow, withdraw, etc.) let the assertion pass
+            return;
+        }
+
+        // Check health factor before
+        ph.forkPreState();
+        uint256 preHealthFactor = morpho.healthFactor(marketParams, borrower);
+        require(preHealthFactor <= LIQUIDATION_THRESHOLD, "Account not eligible for liquidation");
+
+        // Check health factor after
+        ph.forkPostState();
+        uint256 postHealthFactor = morpho.healthFactor(marketParams, borrower);
+
+        // Verify improvements
+        require(postHealthFactor > preHealthFactor, "Health factor did not improve after liquidation");
+
+        require(postHealthFactor >= MIN_HEALTH_FACTOR, "Health factor still too low after liquidation");
+    }
+}
+```

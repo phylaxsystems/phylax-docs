@@ -5,15 +5,86 @@ description: 'Make sure that the price is within the tick range'
 
 ## Use Case
 
-In some AMMs, the price is represented by a tick. A tick is a unit of measurement for the price of an asset. It is important to make sure that the price is within the tick range.
+In some AMMs, the price is represented by a tick. A tick is a unit of measurement for the price of an asset.
+It is important to make sure that the price is within the tick range.
 
 ## Explanation
 
 Check the exact boundaries of the tick range before and after a trade to make sure that the price is within the tick range.
 
 ## Code Example
-pre: Exact tick ranges (lower and upper ticks)
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
 
-post: Position boundaries haven't been violated (price within ticks)
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
 
-TODO: Add code example
+// Uniswap v3 pool style interface
+interface IUniswapV3Pool {
+    function slot0()
+        external
+        view
+        returns (
+            uint160 sqrtPriceX96,
+            int24 tick,
+            uint16 observationIndex,
+            uint16 observationCardinality,
+            uint16 observationCardinalityNext,
+            uint8 feeProtocol,
+            bool unlocked
+        );
+    function tickSpacing() external view returns (int24);
+    function tickToPrice(int24 tick) external view returns (uint256);
+}
+
+// Check that the price is within the tick bounds
+contract ExampleAssertion is Assertion {
+    IUniswapV3Pool public pool = IUniswapV3Pool(address(0xbeef));
+
+    // Uniswap V3 tick bounds
+    int24 constant MIN_TICK = -887272;
+    int24 constant MAX_TICK = 887272;
+
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1); // Define the number of triggers
+        assertions[0] = this.assertionExample.selector; // Define the trigger
+    }
+
+    // Check that the price is within the tick bounds and that the tick is divisible by the tick spacing
+    function assertionExample() external {
+        // Get pre-swap state
+        ph.forkPreState();
+        (, int24 preTick,,,,,) = pool.slot0();
+
+        // Get post-swap state
+        ph.forkPostState();
+        (, int24 postTick,,,,,) = pool.slot0();
+        int24 spacing = pool.tickSpacing();
+
+        // Check 1: Tick must be within global bounds
+        require(postTick >= MIN_TICK && postTick <= MAX_TICK, "Tick outside global bounds");
+
+        // Check 2: Tick must be divisible by tickSpacing
+        require(postTick % spacing == 0, "Tick not aligned with spacing");
+
+        // Check 3: Tick movement should be reasonable
+        int24 tickDelta = postTick - preTick;
+        require(tickDelta < 1000 && tickDelta > -1000, "Suspicious tick movement");
+
+        // Check price impact
+        uint256 prePrice = pool.tickToPrice(preTick);
+        uint256 postPrice = pool.tickToPrice(postTick);
+        uint256 priceChange;
+
+        if (postPrice > prePrice) {
+            priceChange = ((postPrice - prePrice) * 10000) / prePrice;
+        } else {
+            priceChange = ((prePrice - postPrice) * 10000) / prePrice;
+        }
+
+        // Alert on large price impacts (e.g., > 10%)
+        require(priceChange <= 1000, "Price impact too high"); // Should be what the protocol defines
+    }
+}
+
+```
