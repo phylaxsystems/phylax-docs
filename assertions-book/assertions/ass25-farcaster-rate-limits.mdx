@@ -15,9 +15,41 @@ Check that rate limits are respected.
 ## Code Example
 
 ```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
 
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
+
+interface IFarcaster {
+    function getLastPostTimestamp(address user) external view returns (uint256);
+    function getUserPostCount(address user, uint256 timeWindow) external view returns (uint256);
+}
+
+contract FarcasterRateLimitAssertion is Assertion {
+    IFarcaster public farcaster = IFarcaster(address(0xbeef));
+
+    // Rate limit constants
+    uint256 constant POST_COOLDOWN = 1 minutes;
+    uint256 constant MAX_POSTS_PER_HOUR = 60;
+    uint256 constant HOUR = 1 hours;
+
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1);
+        assertions[0] = this.assertRateLimit.selector;
+    }
+
+    function assertRateLimit() external {
+        (address user,,,) = ph.getData();
+
+        ph.forkPreState();
+
+        // Check cooldown between posts
+        uint256 lastPostTime = farcaster.getLastPostTimestamp(user);
+        require(block.timestamp >= lastPostTime + POST_COOLDOWN, "Posting too quickly");
+
+        // Check hourly post limit
+        uint256 hourlyPosts = farcaster.getUserPostCount(user, HOUR);
+        require(hourlyPosts < MAX_POSTS_PER_HOUR, "Exceeded hourly post limit");
+    }
+}
 ```
-
-pre: Record message chain state
-
-post: Check if rate limits are respected

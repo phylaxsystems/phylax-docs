@@ -13,13 +13,63 @@ Check that a message is valid by checking the signature of the message as well a
 ## Code Example
 
 ```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
 
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
+
+interface IFarcaster {
+    struct Message {
+        uint256 id;
+        address author;
+        bytes content;
+        uint256 timestamp;
+        bytes signature;
+    }
+
+    function isValidMessage(Message memory message) external view returns (bool);
+    function verifySignature(Message memory message) external view returns (bool);
+    function postMessage(Message memory message) external;
+}
+
+contract FarcasterMessageAssertion is Assertion {
+    IFarcaster public farcaster = IFarcaster(address(0xbeef));
+
+    bytes4 constant POST_MESSAGE = bytes4(keccak256("postMessage((uint256,address,bytes,uint256,bytes))"));
+    uint256 constant MAX_CONTENT_LENGTH = 320; // Farcaster's max message length
+
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1);
+        assertions[0] = this.assertMessageValidity.selector;
+    }
+
+    function assertMessageValidity() external {
+        (,,, bytes memory data) = ph.getData();
+        bytes4 selector = bytes4(data[:4]);
+
+        if (selector != POST_MESSAGE) {
+            return;
+        }
+
+        // Decode the message
+        IFarcaster.Message memory message = abi.decode(data[4:], (IFarcaster.Message));
+
+        ph.forkPostState();
+
+        // Check basic message validity
+        require(message.author != address(0), "Invalid author");
+        require(message.content.length > 0, "Empty content");
+        require(message.content.length <= MAX_CONTENT_LENGTH, "Content too long");
+        require(message.timestamp > 0, "Invalid timestamp");
+        require(message.signature.length > 0, "Missing signature");
+
+        // Verify message signature
+        require(farcaster.verifySignature(message), "Invalid signature");
+
+        // Check overall message validity
+        require(farcaster.isValidMessage(message), "Message failed validation");
+    }
+}
 ```
 
-- Pre-state: Record message chain state
-- Post-state: After message creation:
-    - Signature validity
-    - Parent message existence for replies
-    - Content size limits respected
-    - Rate limits enforced
 

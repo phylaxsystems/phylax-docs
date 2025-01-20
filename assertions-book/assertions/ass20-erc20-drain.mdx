@@ -10,17 +10,43 @@ Having assertions in place that prevent draining can be helpful to prevent or at
 
 ## Explanation
 
-Check that the token balance of a contract does not decrease by more than 50% in a single transaction.
+Check that the token balance of a contract does not decrease by more than X% in a single transaction.
+Each individual protocol should define their own percentage based on user patterns and expected behavior.
 
-Note: This does not prevent draining from happening, as a somewhat capable attacker would just drain 49% of the tokens in a single transaction.
+Note: This does not prevent draining from happening, as a somewhat capable attacker would just drain X-1% of the tokens in a single transaction.
 It's better than nothing and if mitigation is in place it could pause the protocol on a draining attempt.
 
 ## Code Example
 
 ```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
 
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
+
+interface IERC20 {
+    function balanceOf(address account) external view returns (uint256);
+}
+
+contract ERC20DrainAssertion is Assertion {
+    IERC20 public erc20 = IERC20(address(0xbeef));
+
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1); // Define the number of triggers
+        assertions[0] = this.assertionERC20Drain.selector; // Define the trigger
+    }
+
+    // Don't allow for more than x% of the total balance to be transferred out in a single transaction
+    // revert if the assertion fails
+    function assertionERC20Drain() external {
+        ph.forkPreState();
+        uint256 preBalance = erc20.balanceOf(address(this));
+        ph.forkPostState();
+        uint256 postBalance = erc20.balanceOf(address(this));
+        uint256 drainAmount = preBalance - postBalance;
+        uint256 tenPercentOfPreBalance = preBalance / 10; // Change according to the percentage you want to allow
+        require(drainAmount <= tenPercentOfPreBalance, "Drain amount is greater than 10% of the pre-balance");
+    }
+}
 ```
 
-pre: Get erc20 token balance of contract before transaction
-
-post: erc20 token balance of contract is not decreased by more than 50%

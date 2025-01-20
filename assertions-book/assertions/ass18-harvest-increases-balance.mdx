@@ -11,12 +11,56 @@ It's expected that the balance of a vault is higher after a harvest.
 
 ## Explanation
 
-Check that the balance of a vault is higher after a harvest.
+Check that the balance of a vault is higher after a harvest and that the price per share doesn't decrease.
 
 ## Code Example
 
-pre: Get balance before harvest
+```solidity
+pragma solidity 0.8.28;
 
-post: Balance is higher after harvest
+import {Assertion} from "../../lib/credible-std/Assertion.sol";
 
-TODO: Add code example
+// TODO: Import the contract / interface you want to assert against
+interface IBeefyVault {
+    function balance() external view returns (uint256);
+    function getPricePerFullShare() external view returns (uint256);
+    function harvest() external;
+}
+
+// Assert that the balance of the vault increases after a harvest
+// Inspired by // https://github.com/beefyfinance/beefy-contracts/blob/master/forge/test/vault/ChainVaultsTest.t.sol#L77-L110
+contract BeefyHarvestAssertion is Assertion {
+    IBeefyVault public vault = IBeefyVault(address(0xbeef));
+
+    bytes4 constant HARVEST = IBeefyVault.harvest.selector;
+
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1); // Define the number of triggers
+        assertions[0] = this.assertionHarvestIncreasesBalance.selector; // Define the trigger
+    }
+
+    // Assert that the balance of the vault increases after a harvest and that the price per share increases or stays the same
+    function assertionHarvestIncreasesBalance() external {
+        (,,, bytes memory data) = ph.getData(); // TODO; Fix once implemented
+        bytes4 selector = bytes4(data[:4]);
+
+        // Only check harvest calls
+        if (selector != HARVEST) {
+            return;
+        }
+        ph.forkPreState();
+        uint256 preBalance = vault.balance();
+        uint256 prePricePerShare = vault.getPricePerFullShare();
+
+        ph.forkPostState();
+        uint256 postBalance = vault.balance();
+        uint256 postPricePerShare = vault.getPricePerFullShare();
+
+        // Balance should increase after harvest
+        require(postBalance > preBalance, "Harvest did not increase balance");
+
+        // Price per share should increase or stay the same
+        require(postPricePerShare >= prePricePerShare, "Price per share decreased after harvest");
+    }
+}
+```
