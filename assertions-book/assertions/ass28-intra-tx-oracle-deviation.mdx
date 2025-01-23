@@ -1,0 +1,74 @@
+---
+title: Intra-tx Oracle Deviation
+---
+
+## Description
+
+This assertion checks if the price of an oracle has changed more than 10% within a transaction that requests several price updates from an oracle.
+
+## Use Case
+
+Many protocols rely on oracles to get the price of assets. If the price of an asset is manipulated within a transaction, it can lead to losses for the protocol.
+This assertion analyzes all calls to updatePrice from an oracle in order to make sure that the price isn't deviating more than X% within a transaction.
+
+## Code Example
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
+
+interface IOracle {
+    function updatePrice(uint256 price) external;
+    function price() external view returns (uint256);
+}
+
+contract IntraTxOracleDeviationAssertion is Assertion {
+    IOracle public oracle = IOracle(address(0xbeef));
+
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1); // Define the number of triggers
+        assertions[0] = this.assertionIntraTxOracleDeviation.selector; // Define the trigger
+    }
+
+    // Go through all the updatePrice calls in a transaction and check for large deviations
+    // If a deviation is bigger than 10% (could be whatever), revert
+    function assertionIntraTxOracleDeviation() external {
+        ph.forkPreState();
+        uint256 lastPrice = oracle.price(); // Get the most recent price prior to the transaction
+        uint256 maxDeviation = lastPrice * 110 / 100; // 10% deviation
+        uint256 minDeviation = lastPrice * 90 / 100; // 10% deviation
+        // Get the callInputs for the updatePrice calls
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(oracle), oracle.updatePrice.selector);
+        // If less than 2 updatePrice calls, we can cover the case with pre and post state instead
+        if (callInputs.length < 2) {
+            if (callInputs.length == 0) {
+                return;
+            }
+            ph.forkPostState();
+            uint256 postPrice = oracle.price();
+            // Check that the price after the transaction is within the deviation
+            require(postPrice >= minDeviation && postPrice <= maxDeviation, "Price deviation is too large");
+            return;
+        }
+        for (uint256 i = 0; i < callInputs.length; i++) {
+            bytes memory data = callInputs[i].input;
+            (uint256 price) = abi.decode(stripSelector(data), (uint256));
+            // Compare new price with the price prior to the transaction
+            require(price >= minDeviation && price <= maxDeviation, "Price deviation is too large");
+        }
+    }
+
+    function stripSelector(bytes memory input) internal pure returns (bytes memory) {
+        // Create a new bytes memory and copy everything after the selector
+        bytes memory paramData = new bytes(32);
+        for (uint256 i = 4; i < input.length; i++) {
+            paramData[i - 4] = input[i];
+        }
+        return paramData;
+    }
+}
+
+```
