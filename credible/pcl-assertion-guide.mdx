@@ -1,0 +1,311 @@
+---
+title: 'PCL Assertion Guide'
+description: 'Write assertions and test them with the PCL'
+---
+
+## Introduction
+
+This guide assumes that you have already installed the PCL. If you haven't, please see the [PCL Quickstart](/credible/pcl-quickstart) for instructions.
+
+We will use a simple ownership protocol as an example that demonstrates how to protect against unauthorized ownership transfers - a critical security concern in smart contracts.
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+// Do not use this in production, it is just an example!!!
+contract Ownable {
+    address private _owner;
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+    constructor() {
+        _owner = address(0xdead);
+        emit OwnershipTransferred(address(0), _owner);
+    }
+
+    modifier onlyOwner() {
+        require(_owner == msg.sender, "Ownable: caller is not the owner");
+        _;
+    }
+
+    // Get the current owner
+    function owner() public view returns (address) {
+        return _owner;
+    }
+
+    // Transfer ownership to a new address
+    // Can only be called by the current owner
+    function transferOwnership(address newOwner) public onlyOwner {
+        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        emit OwnershipTransferred(_owner, newOwner);
+        _owner = newOwner;
+    }
+}
+```
+In the above code, we have a simple contract that manages ownership transfers. While ownership transfer functionality is common in protocols, it should be carefully controlled since unauthorized changes can be catastrophic. For example, in 2024, Radiant Capital lost $50M when an attacker gained access to their multisig and changed the protocol owner.
+
+To prevent such incidents, we can write an assertion that monitors ownership changes. The assertion will fail if ownership changes unexpectedly, though it can be temporarily paused when legitimate ownership transfers are planned.
+
+**Our assertion will verify that the contract owner remains unchanged after each transaction.**
+
+### Project Structure
+
+When using PCL assertions, your project should follow this structure:
+```
+|-- assertions
+|    |-- src
+|    |    |-- OwnableAssertion.sol
+|    |
+|    |-- test
+|         |-- OwnableAssertion.t.sol
+|-- src
+     |
+     |-- Ownable.sol
+```
+
+The `phorge` command takes the `assertions` directory location as an argument and should be run from the project root containing both `assertions` and `src` directories.
+
+## Writing the Assertion
+
+Let's create our assertion in `OwnableAssertion.sol`. Here's the complete code first, followed by a detailed breakdown:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol"; // Credible Layer precompiles
+import {Ownable} from "../../src/Ownable.sol"; // Ownable contract
+
+contract OwnableAssertion is Assertion {
+    Ownable ownable;
+
+    constructor(address ownable_) {
+        ownable = Ownable(ownable_); // Define address of Ownable contract
+    }
+
+    // Define selectors for the assertions, several assertions can be defined here
+    // This function is required by the Assertion interface
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1); // Define an array of selectors
+        assertions[0] = this.assertionOwnershipChange.selector; // Define the selector for the assertionOwnershipChange function
+    }
+
+    // This function is used to check if the ownership has changed
+    // Get the owner of the contract before and after the transaction
+    // Revert if the ownership has changed
+    function assertionOwnershipChange() external {
+        ph.forkPreState(); // Fork the pre-state of the transaction
+        address preOwner = ownable.owner(); // Get the owner of the contract before the transaction
+        ph.forkPostState(); // Fork the post-state of the transaction
+        address postOwner = ownable.owner(); // Get the owner of the contract after the transaction
+        require(postOwner == preOwner, "Ownership has changed"); // If revert, the ownership has changed
+    }
+}
+```
+
+### How Assertions Work
+
+The key principle of assertions is simple: if an assertion reverts, it means the assertion failed and an undesired state was detected. In our case, the assertion will revert if the contract's owner changes, allowing us to catch unauthorized ownership transfers.
+
+### Anatomy of the Assertion
+
+Let's break down the key components of our assertion:
+
+#### 1. Imports and Contract Definition
+```solidity
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {Ownable} from "../../src/Ownable.sol";
+
+contract OwnableAssertion is Assertion {
+```
+- The contract inherits from `Assertion`, which provides the base functionality for assertions
+- We import the contract we want to monitor (`Ownable`)
+
+#### 2. State Variables and Constructor
+```solidity
+Ownable ownable;
+
+constructor(address ownable_) {
+    ownable = Ownable(ownable_);
+}
+```
+- State variables store the addresses of contracts we need to interact with
+- The constructor initializes these variables when the assertion is deployed
+
+#### 3. Function Selectors
+```solidity
+function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+    assertions = new bytes4[](1);
+    assertions[0] = this.assertionOwnershipChange.selector;
+}
+```
+- This required function defines which functions in your contract are assertions
+- Each assertion function must be registered here via its function selector
+- Multiple assertions can be defined in a single contract
+
+#### 4. Assertion Logic
+```solidity
+function assertionOwnershipChange() external {
+    ph.forkPreState();                    // Take snapshot before transaction
+    address preOwner = ownable.owner();   // Get pre-transaction owner
+    ph.forkPostState();                   // Take snapshot after transaction
+    address postOwner = ownable.owner();  // Get post-transaction owner
+    require(postOwner == preOwner, "Ownership has changed");
+}
+```
+- The main assertion logic uses special features:
+  - `ph.forkPreState()`: Examines state before the transaction
+  - `ph.forkPostState()`: Examines state after the transaction
+- The assertion reverts if the condition is not met
+
+### Best Practices for Writing Assertions
+
+1. **Single Responsibility**: Each assertion should verify one specific property or invariant
+2. **State Management**: Use `forkPreState()` and `forkPostState()` to compare values before and after transactions
+3. **Comprehensive Testing**: Write thorough tests to verify both positive and negative cases
+
+## Testing the Assertion
+
+Testing assertions is a critical step in developing effective security monitoring. Since assertions act as automated watchdogs for your protocol, it's essential to verify they correctly identify both safe and unsafe conditions. A false positive could unnecessarily halt protocol operations, while a false negative could miss critical security violations.
+
+To run the tests, you can use the following command:
+
+```bash
+pcl -d assertions phorge test
+```
+
+Good assertion tests should:
+- Verify that assertions fail when they should (e.g., when detecting unauthorized changes)
+- Confirm that assertions pass during normal operation
+- Simulate realistic protocol interactions
+
+Let's break down how to test our assertion:
+
+### Test Contract Structure
+
+```solidity
+contract TestOwnableAssertion is CredibleTest {
+    address public newOwner = address(0xdeadbeef);
+    bytes[] public assertions;
+    Ownable public assertionAdopter;
+}
+```
+- Inherits from `CredibleTest` which provides testing utilities
+- `assertionAdopter` is the contract we're monitoring
+- `newOwner` is used to test ownership transfers
+
+### Setup
+
+```solidity
+function setUp() public {
+    assertionAdopter = new Ownable();
+    vm.deal(assertionAdopter.owner(), 1 ether);
+}
+```
+- Creates a new instance of the `Ownable` contract for testing
+- Gives the owner some ETH using Forge's `vm.deal`
+
+### Testing Assertion Failure
+
+```solidity
+function test_assertionOwnershipChanged() public {
+    address aaAddress = address(assertionAdopter);
+
+    // Associate the assertion with the protocol
+    cl.addAssertion(aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
+
+    vm.prank(assertionAdopter.owner());
+    bool result = cl.validate(
+        aaAddress, 
+        0, 
+        abi.encodePacked(assertionAdopter.transferOwnership.selector, abi.encode(newOwner))
+    );
+    assertFalse(result);
+}
+```
+Key components:
+1. `cl.addAssertion()`: Links the assertion to the contract being monitored
+   - First argument: Address of contract to monitor
+   - Second argument: Bytecode of the assertion contract
+   - Third argument: Constructor arguments for the assertion
+2. `vm.prank()`: Simulates a call from the owner's address
+3. `cl.validate()`: Tests how the assertion responds to a transaction
+   - First argument: Contract address
+   - Second argument: ETH value (0 in this case)
+   - Third argument: Encoded function call (transferOwnership in this case)
+4. `assertFalse(result)`: Verifies the assertion fails when ownership changes
+
+### Testing Assertion Success
+
+```solidity
+function test_assertionOwnershipNotChanged() public {
+    address aaAddress = address(assertionAdopter);
+
+    cl.addAssertion(aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
+
+    vm.prank(assertionAdopter.owner());
+    bool result = cl.validate(aaAddress, 0, new bytes(0)); // no transaction
+    assertTrue(result); // assert that the ownership has not changed
+}
+```
+- Similar setup but tests the case where no ownership change occurs
+- Uses empty bytes (`new bytes(0)`) to simulate no transaction
+- `assertTrue(result)`: Verifies the assertion passes when ownership remains unchanged
+
+### Full Test Contract
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Credible} from "../../lib/credible-std/src/Credible.sol";
+import {OwnableAssertion} from "../src/OwnableAssertion.sol";
+import {Ownable} from "../../src/Ownable.sol";
+import {console} from "../../lib/credible-std/lib/forge-std/src/console.sol";
+import {CredibleTest} from "../../lib/credible-std/src/CredibleTest.sol";
+
+contract TestOwnableAssertion is CredibleTest {
+    address public newOwner = address(0xdeadbeef);
+    bytes[] public assertions;
+    Ownable public assertionAdopter;
+
+    function setUp() public {
+        assertionAdopter = new Ownable();
+        vm.deal(assertionAdopter.owner(), 1 ether);
+    }
+
+    function test_assertionOwnershipChanged() public {
+        address aaAddress = address(assertionAdopter);
+
+        // Associate the assertion with the protocol
+        // cl will manage the correct assertion execution under the hood when the protocol is being called
+        cl.addAssertion(aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
+
+        vm.prank(assertionAdopter.owner());
+        bool result = cl.validate(
+            aaAddress, 0, abi.encodePacked(assertionAdopter.transferOwnership.selector, abi.encode(newOwner))
+        );
+        assertFalse(result);
+    }
+
+    function test_assertionOwnershipNotChanged() public {
+        address aaAddress = address(assertionAdopter);
+
+        cl.addAssertion(aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
+
+        vm.prank(assertionAdopter.owner());
+        bool result = cl.validate(aaAddress, 0, new bytes(0)); // no transaction
+        assertTrue(result); // assert that the ownership has not changed
+    }
+}
+```
+
+### Key Testing Concepts
+
+1. **Assertion Registration**: Use `cl.addAssertion()` to register assertions with contracts
+2. **Transaction Simulation**: Use `cl.validate()` to test how assertions respond to transactions
+3. **State Manipulation**: Use Forge's cheatcodes (`vm.prank`, `vm.deal`) to set up test scenarios
+4. **Verification**: Use standard assertions (`assertTrue`, `assertFalse`) to verify outcomes
+
+
