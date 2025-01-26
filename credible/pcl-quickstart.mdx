@@ -26,7 +26,7 @@ cd pcl
 just build-all
 ```
 
-This will build the CLI and install it in the `target/release` directory.
+This will build the CLI and make it available as `pcl`.
 
 ### Usage
 
@@ -68,4 +68,4 @@ Phorge expects the following directory structure:
 
 Assertion source files should be in the `src` directory, and test files should be in the `test` directory. Test files should have the `.t.sol` extension, and test functions should start with `test_`. As a minimal fork of Forge, it behaves identically to Forge.
 
-By definining the assertions directory, the CLI will automatically add the `src` and `test` directories to the phorge command. That way, you can share a `foundry.toml` and `lib` directory between the sources and tests of the smart contracts and the assertions.
+By defining the assertions directory, the CLI will automatically add the `src` and `test` directories to the phorge command. That way, you can share a `foundry.toml` and `lib` directory between the sources and tests of the smart contracts and the assertions.
