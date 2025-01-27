@@ -15,18 +15,25 @@ The health factor is a measure of the riskiness of a position in a lending proto
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
 
 // We use Morpho as an example, but this could be any lending protocol
 interface IMorpho {
     struct MarketParams {
         Id id;
     }
+
     struct Id {
         uint256 marketId;
     }
 
-    function _isHealthy(MarketParams memory marketParams, Id memory id, address borrower) external view returns (bool);
+    function _isHealthy(MarketParams memory marketParams, Id memory id, address borrower)
+        external
+        view
+        returns (bool);
+
+    function withdrawCollateral(MarketParams memory marketParams, uint256 assets, address receiver) external;
 }
 
 contract LendingHealthFactorAssertion is Assertion {
@@ -44,21 +51,30 @@ contract LendingHealthFactorAssertion is Assertion {
     // be used to check if the health factor is still healthy after the transaction
     // return true indicates a valid state
     // return false indicates an invalid state
-    function assertionHealthFactor() external returns (bool) {
+    function assertionHealthFactor() external {
         ph.forkPostState();
-        (, , , bytes memory data) = ph.getTransaction(); // TODO: Check if this works once we have the cheatcode
-        bytes4 functionSelector = bytes4(data[:4]);
-        if (functionSelector != morpho.withdrawCollateral.selector) {
-            return true; // Skip the assertion if the function is not withdrawCollateral
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(morpho), morpho.withdrawCollateral.selector);
+        if (callInputs.length == 0) {
+            return; // Skip the assertion if the function is not withdrawCollateral
         }
 
-        // Skip the first 4 bytes (function selector) by passing the full calldata to decode
-        (IMorpho.MarketParams memory marketParams, uint256 assets, address onBehalf, address receiver) = abi.decode(
-            data[4:],
-            (IMorpho.MarketParams, uint256, address, address)
-        );
+        for (uint256 i = 0; i < callInputs.length; i++) {
+            bytes memory data = callInputs[i].input;
+            // Skip the first 4 bytes (function selector) by passing the full calldata to decode
+            (IMorpho.MarketParams memory marketParams, , address onBehalf,) =
+                abi.decode(stripSelector(data), (IMorpho.MarketParams, uint256, address, address));
 
-        return morpho._isHealthy(marketParams, marketParams.id, onBehalf);
+            require(morpho._isHealthy(marketParams, marketParams.id, onBehalf), "Health factor is not healthy");
+        }
+    }
+
+    function stripSelector(bytes memory input) internal pure returns (bytes memory) {
+        // Create a new bytes memory and copy everything after the selector
+        bytes memory paramData = new bytes(32);
+        for (uint256 i = 4; i < input.length; i++) {
+            paramData[i - 4] = input[i];
+        }
+        return paramData;
     }
 }
 

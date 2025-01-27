@@ -17,7 +17,7 @@ Check the exact boundaries of the tick range before and after a trade to make su
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
 
 // Uniswap v3 pool style interface
 interface IUniswapV3Pool {
@@ -38,7 +38,7 @@ interface IUniswapV3Pool {
 }
 
 // Check that the price is within the tick bounds
-contract ExampleAssertion is Assertion {
+contract PriceWithinTicksAssertion is Assertion {
     IUniswapV3Pool public pool = IUniswapV3Pool(address(0xbeef));
 
     // Uniswap V3 tick bounds
@@ -47,11 +47,11 @@ contract ExampleAssertion is Assertion {
 
     function fnSelectors() external pure override returns (bytes4[] memory assertions) {
         assertions = new bytes4[](1); // Define the number of triggers
-        assertions[0] = this.assertionExample.selector; // Define the trigger
+        assertions[0] = this.priceWithinTicks.selector; // Define the trigger
     }
 
     // Check that the price is within the tick bounds and that the tick is divisible by the tick spacing
-    function assertionExample() external {
+    function priceWithinTicks() external {
         // Get pre-swap state
         ph.forkPreState();
         (, int24 preTick,,,,,) = pool.slot0();

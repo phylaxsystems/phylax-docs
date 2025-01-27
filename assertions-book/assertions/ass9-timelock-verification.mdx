@@ -16,7 +16,7 @@ It also check that the admin is the same as the pre-state admin.
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
 
 interface IGovernance {
     struct Timelock {
@@ -41,11 +41,11 @@ contract TimelockVerification is Assertion {
     // and that the admin is the same as the pre-state admin
     // return true indicates a valid state
     // return false indicates an invalid state
-    function assertionTimelock() external returns (bool) {
+    function assertionTimelock() external {
         address preAdmin = governance.timelock().admin;
         ph.forkPreState();
         if (governance.timelock().isActive) {
-            return true; // Timelock is already active prior to the transaction, so we don't need to check anything
+            return; // Timelock is already active prior to the transaction, so we don't need to check anything
         }
 
         ph.forkPostState();
@@ -54,9 +54,12 @@ contract TimelockVerification is Assertion {
             bool minDelayCorrect = governance.timelock().timelockDelay >= 1 days; // Choose whatever fits your protocol
             bool maxDelayCorrect = governance.timelock().timelockDelay <= 2 weeks; // Choose whatever fits your protocol
             bool adminCorrect = governance.timelock().admin == preAdmin;
-            return minDelayCorrect && maxDelayCorrect && adminCorrect;
+            require(
+                minDelayCorrect && maxDelayCorrect && adminCorrect,
+                "Timelock is not active after the transaction, so there's nothing to check"
+            );
         } else {
-            return true; // Timelock is not active after the transaction, so there's nothing to check
+            return; // Timelock is not active after the transaction, so there's nothing to check
         }
     }
 }

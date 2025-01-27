@@ -19,7 +19,8 @@ Check that the amount of tokens received after a swap is correct according to th
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
 
 interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
@@ -52,37 +53,44 @@ contract MorphoSwapPriceAssertion is Assertion {
     }
 
     function assertSwapPrice() external {
-        // Get pre-swap state
-        ph.forkPreState();
-        (address swapper,,, bytes memory data) = ph.getData();
-
-        // Require swap function called
-        bytes4 selector = bytes4(data[:4]);
-        if (selector != morpho.swap.selector) {
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(morpho), morpho.swap.selector);
+        if (callInputs.length == 0) {
             return;
         }
 
-        // Decode swap parameters
-        (IMorpho.MarketParams memory marketParams, uint256 amountIn, uint256 minAmountOut,) =
-            abi.decode(data[4:], (IMorpho.MarketParams, uint256, uint256, bytes));
+        for (uint256 i = 0; i < callInputs.length; i++) {
+            bytes memory data = callInputs[i].input;
+            address swapper = callInputs[i].caller;
 
-        // Get tokens involved in swap
-        (address tokenIn, address tokenOut) = morpho.getTokens(marketParams);
+            // Decode swap parameters
+            (IMorpho.MarketParams memory marketParams, uint256 amountIn,,) =
+                abi.decode(stripSelector(data), (IMorpho.MarketParams, uint256, uint256, bytes));
 
-        // Record pre-swap balances
-        uint256 preBalanceIn = IERC20(tokenIn).balanceOf(swapper);
-        uint256 preBalanceOut = IERC20(tokenOut).balanceOf(swapper);
-        uint256 quotedAmountOut = morpho.getAmountOut(marketParams, amountIn);
+            // Get tokens involved in swap
+            (address tokenIn, address tokenOut) = morpho.getTokens(marketParams);
 
-        // Check post-swap state
-        ph.forkPostState();
-        uint256 postBalanceIn = IERC20(tokenIn).balanceOf(swapper);
-        uint256 postBalanceOut = IERC20(tokenOut).balanceOf(swapper);
+            // Record pre-swap balances
+            uint256 preBalanceIn = IERC20(tokenIn).balanceOf(swapper);
+            uint256 quotedAmountOut = morpho.getAmountOut(marketParams, amountIn);
 
-        require(postBalanceOut >= quotedAmountOut, "Swap price is lower than quoted");
+            // Check post-swap state
+            ph.forkPostState();
+            uint256 postBalanceIn = IERC20(tokenIn).balanceOf(swapper);
+            uint256 postBalanceOut = IERC20(tokenOut).balanceOf(swapper);
 
-        // Verify token in decreased correctly
-        require(preBalanceIn - postBalanceIn == amountIn, "Incorrect amount in");
+            require(postBalanceOut >= quotedAmountOut, "Swap price is lower than quoted");
+
+            // Verify token in decreased correctly
+            require(preBalanceIn - postBalanceIn == amountIn, "Incorrect amount in");
+        }
+    }
+
+    function stripSelector(bytes memory input) internal pure returns (bytes memory) {
+        bytes memory paramData = new bytes(32);
+        for (uint256 i = 4; i < input.length; i++) {
+            paramData[i - 4] = input[i];
+        }
+        return paramData;
     }
 }
 ```

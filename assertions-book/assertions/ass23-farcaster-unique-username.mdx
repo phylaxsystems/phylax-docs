@@ -20,7 +20,8 @@ Check that a username is unique and that the owner of the username is the same a
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
 
 interface IFarcaster {
     function register(string calldata username, address owner) external;
@@ -31,34 +32,41 @@ interface IFarcaster {
 contract FarcasterUsernameAssertion is Assertion {
     IFarcaster public farcaster = IFarcaster(address(0xbeef));
 
-    bytes4 constant REGISTER = bytes4(keccak256("register(string,address)"));
-
     function fnSelectors() external pure override returns (bytes4[] memory assertions) {
         assertions = new bytes4[](1);
         assertions[0] = this.assertUniqueUsername.selector;
     }
 
     function assertUniqueUsername() external {
-        (,,, bytes memory data) = ph.getData();
-        bytes4 selector = bytes4(data[:4]);
-
-        if (selector != REGISTER) {
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(farcaster), farcaster.register.selector);
+        if (callInputs.length == 0) {
             return;
         }
 
-        // Decode registration parameters
-        (string memory username, address owner) = abi.decode(data[4:], (string, address));
+        for (uint256 i = 0; i < callInputs.length; i++) {
+            bytes memory data = callInputs[i].input;
 
-        // Check pre-registration state
-        ph.forkPreState();
-        require(!farcaster.isRegistered(username), "Username already registered");
+            // Decode registration parameters
+            (string memory username, address owner) = abi.decode(stripSelector(data), (string, address));
 
-        // Check post-registration state
-        ph.forkPostState();
-        require(farcaster.isRegistered(username), "Registration failed");
+            // Check pre-registration state
+            ph.forkPreState();
+            require(!farcaster.isRegistered(username), "Username already registered");
 
-        require(farcaster.getUsernameOwner(username) == owner, "Owner mismatch");
+            // Check post-registration state
+            ph.forkPostState();
+            require(farcaster.isRegistered(username), "Registration failed");
+
+            require(farcaster.getUsernameOwner(username) == owner, "Owner mismatch");
+        }
+    }
+
+    function stripSelector(bytes memory input) internal pure returns (bytes memory) {
+        bytes memory paramData = new bytes(32);
+        for (uint256 i = 4; i < input.length; i++) {
+            paramData[i - 4] = input[i];
+        }
+        return paramData;
     }
 }
-
 ```

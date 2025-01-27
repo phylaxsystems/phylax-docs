@@ -16,7 +16,8 @@ Check that a message is valid by checking the signature of the message as well a
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
 
 interface IFarcaster {
     struct Message {
@@ -44,32 +45,43 @@ contract FarcasterMessageAssertion is Assertion {
     }
 
     function assertMessageValidity() external {
-        (,,, bytes memory data) = ph.getData();
-        bytes4 selector = bytes4(data[:4]);
-
-        if (selector != POST_MESSAGE) {
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(farcaster), farcaster.postMessage.selector);
+        if (callInputs.length == 0) {
             return;
         }
 
-        // Decode the message
-        IFarcaster.Message memory message = abi.decode(data[4:], (IFarcaster.Message));
+        for (uint256 i = 0; i < callInputs.length; i++) {
+            bytes memory data = callInputs[i].input;
 
-        ph.forkPostState();
+            // Decode the message
+            IFarcaster.Message memory message = abi.decode(stripSelector(data), (IFarcaster.Message));
 
-        // Check basic message validity
-        require(message.author != address(0), "Invalid author");
-        require(message.content.length > 0, "Empty content");
-        require(message.content.length <= MAX_CONTENT_LENGTH, "Content too long");
-        require(message.timestamp > 0, "Invalid timestamp");
-        require(message.signature.length > 0, "Missing signature");
+            ph.forkPostState();
 
-        // Verify message signature
-        require(farcaster.verifySignature(message), "Invalid signature");
+            // Check basic message validity
+            require(message.author != address(0), "Invalid author");
+            require(message.content.length > 0, "Empty content");
+            require(message.content.length <= MAX_CONTENT_LENGTH, "Content too long");
+            require(message.timestamp > 0, "Invalid timestamp");
+            require(message.signature.length > 0, "Missing signature");
 
-        // Check overall message validity
-        require(farcaster.isValidMessage(message), "Message failed validation");
+            // Verify message signature
+            require(farcaster.verifySignature(message), "Invalid signature");
+
+            // Check overall message validity
+            require(farcaster.isValidMessage(message), "Message failed validation");
+        }
+    }
+
+    function stripSelector(bytes memory input) internal pure returns (bytes memory) {
+        bytes memory paramData = new bytes(32);
+        for (uint256 i = 4; i < input.length; i++) {
+            paramData[i - 4] = input[i];
+        }
+        return paramData;
     }
 }
+
 ```
 
 

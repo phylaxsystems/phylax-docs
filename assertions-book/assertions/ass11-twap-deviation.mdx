@@ -15,7 +15,7 @@ In this example we check that the TWAP price doesn't deviate more than 5% from t
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
 
 interface IPool {
     function price() external view returns (uint256);
@@ -35,15 +35,14 @@ contract TwapDeviationAssertion is Assertion {
     // Make sure that the price doesn't deviate more than 5% from the twap
     // return true indicates a valid state
     // return false indicates an invalid state
-    function assertionTwapDeviation() external returns (bool) {
+    function assertionTwapDeviation() external {
         ph.forkPostState();
         uint256 currentPrice = pool.price();
         uint256 twapPrice = pool.twap();
         uint256 maxDeviation = 5; // 5% deviation, define this according to your protocol
-        uint256 deviation = (((currentPrice > twapPrice) ? currentPrice - twapPrice : twapPrice - currentPrice) * 100) /
-            twapPrice;
-        return deviation <= maxDeviation;
+        uint256 deviation =
+            (((currentPrice > twapPrice) ? currentPrice - twapPrice : twapPrice - currentPrice) * 100) / twapPrice;
+        require(deviation <= maxDeviation, "Price deviation is too large");
     }
 }
-
 ```

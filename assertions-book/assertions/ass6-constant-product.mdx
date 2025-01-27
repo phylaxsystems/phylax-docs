@@ -14,7 +14,7 @@ The assertion checks if the constant product is maintained in an AMM pool after 
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
 
 // We assume Aerodrome style pool
 interface IAmm {
@@ -33,14 +33,11 @@ contract ConstantProductAssertion is Assertion {
 
     // Make sure that the product of the reserves is equal to the constant product
     // note: fees might have to be handled depending on the pool
-    // return true indicates a valid state
-    // return false indicates an invalid state
-    function assertionConstantProduct() external returns (bool) {
+    function assertionConstantProduct() external {
         ph.forkPostState(); // Fork the post state
         (uint256 reserve0, uint256 reserve1) = amm.getReserves();
-        uint k = reserve0 * reserve1;
-        return k == amm.getK();
+        uint256 k = reserve0 * reserve1;
+        require(k == amm.getK(), "Constant product does not hold");
     }
 }
-
 ```
