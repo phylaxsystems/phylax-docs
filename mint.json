@@ -98,7 +98,6 @@
             "assertions-book/assertions/ass21-ether-drain",
             "assertions-book/assertions/ass22-farcaster-message-validity",
             "assertions-book/assertions/ass23-farcaster-unique-username",
-            "assertions-book/assertions/ass24-recovery-address-check",
             "assertions-book/assertions/ass25-farcaster-rate-limits",
             "assertions-book/assertions/ass26-correct-withdraw",
             "assertions-book/assertions/ass28-intra-tx-oracle-deviation"
