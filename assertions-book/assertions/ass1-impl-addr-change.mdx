@@ -33,12 +33,12 @@ contract ImplementationChange is Assertion {
 
     // Asssert that the implementation contract address doesn't change
     // during the state transition
-    function implementationChange() external returns (bool) {
+    function implementationChange() external {
         ph.forkPreState();
         address preImpl = implementation.implementation();
         ph.forkPostState();
         address postImpl = implementation.implementation();
-        return preImpl == postImpl;
+        require(preImpl == postImpl, "Implementation changed");
     }
 }
 

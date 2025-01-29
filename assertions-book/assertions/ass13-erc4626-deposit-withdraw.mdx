@@ -35,8 +35,7 @@ contract ERC4626DepositAssertion is Assertion {
     }
 
     // Make sure that the preview deposit is correct
-    // return true indicates a valid state
-    // return false indicates an invalid state
+    // revert if the deposit is not correct
     function assertionDeposit() external {
         // Get the sender of the transaction and the calldata
         PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(erc4626), erc4626.deposit.selector);
