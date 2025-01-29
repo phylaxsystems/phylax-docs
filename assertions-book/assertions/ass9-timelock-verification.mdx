@@ -57,9 +57,7 @@ contract TimelockVerification is Assertion {
                 minDelayCorrect && maxDelayCorrect && adminCorrect,
                 "Timelock is not active after the transaction, so there's nothing to check"
             );
-        } else {
-            return; // Timelock is not active after the transaction, so there's nothing to check
-        }
+        } 
     }
 }
 ```
