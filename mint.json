@@ -116,7 +116,13 @@
           "pages": [
             "assertions-book/previous-hacks-intro",
             "assertions-book/previous-hacks/hack1-radiant-capital",
-            "assertions-book/previous-hacks/hack2-vestra-dao"
+            "assertions-book/previous-hacks/hack2-vestra-dao",
+            "assertions-book/previous-hacks/compound-upgrade-bug",
+            "assertions-book/previous-hacks/cream-finance-2",
+            "assertions-book/previous-hacks/visor-finance-unrestricted-mint",
+            "assertions-book/previous-hacks/first-depositor",
+            "assertions-book/previous-hacks/abracadabra-rounding-error",
+            "assertions-book/previous-hacks/euler-finance-donation-hack"
           ]
         }
       ]

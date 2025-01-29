@@ -1,0 +1,73 @@
+---
+title: First Depositor Bug
+description: First depositor bug in Compound / Aave v2 lending protocols
+---
+
+Background: https://akshaysrivastav.hashnode.dev/first-deposit-bug-in-compoundv2-and-its-forks
+
+The First Depositor Attack in Compound / Aave v2 lending protocols:
+
+Key points:
+
+- First depositor supplies a tiny amount (e.g. 1 wei) of assets
+- First depositor donates a large amount directly to the lending pool (bypassing supply)
+- This artificially inflates the exchange rate between shares and assets
+- Next depositor will receive very few shares for their deposit
+- If next depositor's amount is smaller than exchange rate, they will receive 0 shares due to rounding error
+- First depositor owns all shares, so they can withdraw all assets
+
+Example:
+
+1. Attacker deposits 1 wei, gets 1 share
+2. Attacker donates 1000 tokens directly
+3. Exchange rate is now 1000.00..01 tokens : 1 share
+4. Victim deposits 100 tokens, gets only ~0.1 shares due to inflated rate -> will be rounded down to 0
+5. Attacker withdraws 1 share and gets 1100 tokens, stealing all of victim's deposit
+
+Traditional prevention :
+
+- Attack only makes sense if attacker owns all shares (or close to it)
+  - If he owns all shares, donating tokens to the pool will still be owned by the attacker
+- Protocols typically deposit with opening the market atomically
+  - This means not all shares are owned by the attacker
+  - Adjustments to the protocol could mint tokens to 0x0 upon first mint/deposit
+- Many forks fail to combine these actions
+
+## How can assertions help?
+
+- History has shown that an old vulnerability has found its way into many protocols
+- Many succesfull attacks leveraged this vulnerability
+  - Sonne Finance
+  - Radiant Capital
+  - Hundred Finance
+- Assertions can be used to easily prevent known vulnerabilities in forked protocols
+  - Enforce existing workarounds
+  - I.e. Sonne Finance planned to execute deploying the market and depositing atomically, however,
+    their governance process let the attacker execute the transactions out of order
+- Low entry barrier to enable publicly known assertions for famous protocols to your own fork
+
+### Example: Enforce atomically opening the market and depositing first assets
+
+```solidity
+function assertionHasMinimumSupply() public view {
+  Market market = Market(address(0x1234));
+  require(market.totalSupply() > MINIMUM_SUPPLY, "Market has no supply");
+}
+```
+
+### Example: Enforce exchange rate < deposit amount
+
+```solidity
+function assertionExchangeRate() public view {
+  Market market = Market(address(0x1234));
+
+
+  PhEvm.CallInputs[] memory inputs = PhEvm.CallInputs(address(cToken),abi.encodeWithSelector(cToken.mint.selector));
+
+  for (uint256 i = 0; i < inputs.length; i++) {
+    PhEvm.CallInputs memory input = inputs[i];
+    (address target, uint256 amount) = abi.decode(input.data, (address, uint256));
+    require(amount / market.exchangeRate() > 0, "Did not receive any shares");
+  }
+}
+```

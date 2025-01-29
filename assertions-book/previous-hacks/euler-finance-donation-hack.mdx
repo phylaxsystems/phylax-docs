@@ -1,0 +1,90 @@
+---
+title: Euler Finance Donation Hack
+description: Euler Finance forgot to add a health check to the donation function
+---
+
+## Description
+
+The Euler Finance hack exploited two key protocol features:
+
+1. Users could create artificial leverage by minting and depositing assets in the same transaction via `EToken::mint`
+
+2. Users could donate their balance to protocol reserves via `EToken::donateToReserves` without any health checks
+
+The attack worked by:
+
+1. Creating an over-leveraged position by minting excess tokens
+2. Donating collateral to intentionally make the position under-collateralized
+3. Self-liquidating the position to take advantage of the 20% liquidation discount
+
+This resulted in the attacker keeping significant "bad debt" while their liquidator account received discounted collateral, profiting from the protocol's liquidation incentives.
+
+**Attack Explanation:**
+The attack was executed through two main contracts:
+
+1. Primary Contract:
+
+- Got a 30M DAI flash loan from AAVE V2
+- Deployed violator and liquidator contracts
+- Sent the DAI to the violator
+
+2. Violator Contract:
+
+- Deposited 20M DAI to get ~19.56M eDAI
+- Created artificial leverage twice:
+  - First time: Minted ~195.68M eDAI and 200M dDAI
+  - Second time: Minted another ~195.68M eDAI and 200M dDAI
+- Repaid 10M DAI to reduce dDAI to 190M
+- Donated 100M eDAI to reserves
+
+This left the violator with:
+
+- ~310.93M eDAI
+- 390M dDAI
+
+The key vulnerability was that the donation created an under-collateralized position (more dDAI than eDAI).
+
+3. Liquidator Contract:
+
+- Liquidated the violator's position
+- Due to liquidation discount (20%), got ~310.93M eDAI but only ~259.31M dDAI
+- Withdrew DAI by burning eDAI at a favorable rate
+
+The attacker profited ~8.88M DAI (~$8.78M USD) from this attack, with their liquidator contract maintaining a healthy collateralization ratio of ~1.05.
+
+Attack was carried out for several different assets, including DAI, WETH, and USDC.
+
+## Proposed Solution
+
+Proper health checks should be performed on the account that is performing the donation.
+It is worth noting that the below assertion checks for modifications made by the user in the transaction.
+The user should never be allowed to make changes to their own collateral or debt that brings their positions under water.
+Assuming we can check run assertions on each call in the transaction and that we can get all modified accounts in the transaction, we can implement the following assertion:
+
+```solidity
+function assertionNoUnsafeDebt() external {
+    ph.forkPostState();
+    
+    // Get all accounts that were modified in this tx
+    address[] memory accounts = ph.getModifiedAccounts();
+    
+    for (uint256 i = 0; i < accounts.length; i++) {
+        address account = accounts[i];
+        
+        // Core invariant: Collateral must always be >= Debt
+        require(euler.healthCheck(account), "Account has more debt than collateral");
+    }
+}
+```
+
+This assertion ensures that users don't have more debt than collateral after the transaction.
+
+## Additional Considerations
+
+The Euler devs forgot to add a health check to the `donateToReserves` function, so why would they have added an assertion for this?
+
+The answer is that they wouldn't. They would have added the assertion way in the beginning when the protocol was deployed first as an additional layer of security.
+They would have done that to exactly prevent what happened. Someone forgot to perform basic invariant checks at a protocol extension, and that's why the assertion acts as an additional layer of security which enforces protocol wide invariants, exactly to prevent insufficient checks in protocol extensions.
+
+In other words, regardless of whether the devs simply forgot to do the checks or if they thought they don't need to do the checks, it shows that extensions are prone to forgetting protocol wide checks.
+Whereas assertions implicitly check protocol wide assertions by default.
