@@ -1,0 +1,99 @@
+---
+title: Lending Health Factor
+description: Assert that the health factor of a lending protocol is above a certain threshold
+---
+
+## Use Case
+Check that the health factor of a position in a lending protocol is above a certain threshold.
+In this specific example we use Morpho as a lending protocol, but this could be any lending protocol.
+The Morpho protocol is very well implemented in general and they follow all the best practices. 
+
+## Explanation
+The health factor is a measure of the riskiness of a position in a lending protocol. It is calculated as the ratio of the total value of the collateral to the total value of the debt.
+
+In this example we use a cheatcode that gives us all defined state changes. In this case the state changes of all positions.
+We then iterate over all the state changes and check if the health factor is still healthy after each state change.
+Morpho have correctly implemented the health factor in all functions that update positions,
+but if we assume that the check was mistakenly removed for a future upgrade.
+This assertion could be used to check that positions are still healthy after the transaction.
+It wouldn't be the first time that a protocol has mistakenly removed a check or forgotten to add it to a new function (Euler).
+
+## Code Example
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
+
+// We use Morpho as an example, but this could be any lending protocol
+interface IMorpho {
+    struct MarketParams {
+        Id id;
+    }
+
+    struct Id {
+        uint256 marketId;
+    }
+
+    struct Position {
+        uint256 supplyShares;
+        uint128 borrowShares;
+        uint128 collateral;
+    }
+
+    mapping(Id => MarketParams) public idToMarketParams;
+
+    function _isHealthy(MarketParams memory marketParams, Id memory id, address borrower)
+        external
+        view
+        returns (bool);
+
+    mapping(Id => mapping(address => Position)) public position;
+}
+
+contract LendingHealthFactorAssertion is Assertion {
+    IMorpho public morpho = IMorpho(address(0xbeef));
+
+    struct ChangedPositionKeys2Mappings {
+        bytes32 id;
+        bytes32[] borrowers;
+    }
+
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1);
+        assertions[0] = this.assertionHealthFactor.selector;
+    }
+
+    // Check that all updated positions are still healthy
+    // Morpho correctly checks the health factor in all functions that update positions
+    // but if we assume that the check was mistakenly removed for a future upgrade, this assertion could
+    // be used to check that positions are still healthy after the transaction
+    // revert if the health factor is not healthy
+    function assertionHealthFactor() external {
+        ph.forkPostState();
+
+        // Assume cheatcode exists that can get the state changes from the mapping
+        ChangedPositionKeys2Mappings[] memory keys = ph.getStateChangesFromMapping(type(morpho.position));
+
+        for (uint256 i = 0; i < keys.length; i++) {
+            Id id = Id(keys[i].id);
+            MarketParams memory marketParams = morpho.idToMarketParams[id];
+            for (uint256 j = 0; j < keys[i].borrowers.length; j++) {
+                address borrower = keys[i].borrowers[j];
+                require(morpho._isHealthy(marketParams, id, borrower), "Health factor is not healthy");
+            }
+        }
+    }
+
+    function stripSelector(bytes memory input) internal pure returns (bytes memory) {
+        // Create a new bytes memory and copy everything after the selector
+        bytes memory paramData = new bytes(32);
+        for (uint256 i = 4; i < input.length; i++) {
+            paramData[i - 4] = input[i];
+        }
+        return paramData;
+    }
+}
+
+```

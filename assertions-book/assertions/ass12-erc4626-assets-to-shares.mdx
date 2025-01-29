@@ -15,17 +15,17 @@ This assertion makes sure that the total shares are not more than the total asse
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../../lib/credible-std/Assertion.sol";
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
 
 interface IERC4626 {
     function totalAssets() external view returns (uint256);
 
-    function totalShares() external view returns (uint256);
+    function totalSupply() external view returns (uint256);
 
     function convertToShares(uint256 assets) external view returns (uint256);
 }
 
-// TODO: Explain the assertion
+// Checks that the total shares are not more than the total assets
 contract ERC4626AssetsSharesAssertion is Assertion {
     IERC4626 public erc4626 = IERC4626(address(0xbeef));
 
@@ -35,14 +35,13 @@ contract ERC4626AssetsSharesAssertion is Assertion {
     }
 
     // Make sure that the total shares are not more than the total assets
-    // return true indicates a valid state
-    // return false indicates an invalid state
-    function assertionAssetsShares() external returns (bool) {
+    // revert if total shares is greater than total assets
+    function assertionAssetsShares() external {
         ph.forkPostState();
         uint256 totalAssets = erc4626.totalAssets();
-        uint256 totalShares = erc4626.totalShares();
+        uint256 totalShares = erc4626.totalSupply();
         uint256 totalAssetsInShares = erc4626.convertToShares(totalAssets);
-        return totalShares == 0 || totalAssetsInShares <= totalShares; // edge case: total shares is 0
+        require(totalAssetsInShares >= totalShares, "Total shares is greater than total assets");
     }
 }
 ```

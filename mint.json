@@ -82,12 +82,12 @@
         {
           "group": "Dapp Use Cases",
           "pages": [
-            "assertions-book/assertions/ass1-impl-addr-change",
-            "assertions-book/assertions/ass5-ownership-change",
-            "assertions-book/assertions/ass6-constant-product",
-            "assertions-book/assertions/ass7-lending-health-factor",
-            "assertions-book/assertions/ass8-sum-of-all-positions",
-            "assertions-book/assertions/ass9-timelock-verification",
+            "assertions-book/assertions/ass01-impl-addr-change",
+            "assertions-book/assertions/ass05-ownership-change",
+            "assertions-book/assertions/ass06-constant-product",
+            "assertions-book/assertions/ass07-lending-health-factor",
+            "assertions-book/assertions/ass08-sum-of-all-positions",
+            "assertions-book/assertions/ass09-timelock-verification",
             "assertions-book/assertions/ass10-oracle-validation",
             "assertions-book/assertions/ass11-twap-deviation",
             "assertions-book/assertions/ass12-erc4626-assets-to-shares",
@@ -102,9 +102,9 @@
             "assertions-book/assertions/ass21-ether-drain",
             "assertions-book/assertions/ass22-farcaster-message-validity",
             "assertions-book/assertions/ass23-farcaster-unique-username",
-            "assertions-book/assertions/ass24-recovery-address-check",
             "assertions-book/assertions/ass25-farcaster-rate-limits",
-            "assertions-book/assertions/ass26-correct-withdraw"
+            "assertions-book/assertions/ass26-correct-withdraw",
+            "assertions-book/assertions/ass28-intra-tx-oracle-deviation"
           ]
         },
         {

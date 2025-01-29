@@ -1,13 +1,57 @@
 ---
 title: 'Fee Calculations'
-description: 'Make sure that the fee calculations are correct for the given protocol'
+description: 'Make sure that the fees do not change unexpectedly'
 ---
 
 ## Use Case
-In AMMs users pay a fee when they trade. This fee is usually a percentage of the trade amount. It is important to make sure that the fee is calculated correctly.
+In AMMs users pay a fee when they trade. This fee is usually a percentage of the trade amount.
+It is important to make sure that the fees don't change unexpectedly.
 
 ## Explanation
-Check the fees of a Uniswap V3 pool before and after a trade to make sure that the fee is calculated correctly.
+Check that the fees of a Velodrome / Aerodrome style pool don't change before and after a transaction.
 
 ## Code Example
-TODO: Add code example
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+
+// Aerodrome style interface
+interface IPool {
+    function fee() external view returns (uint256);
+    function stable() external view returns (bool);
+}
+
+// Check that fee invariants are maintained
+contract AmmFeeVerificationAssertion is Assertion {
+    IPool public pool = IPool(address(0xbeef));
+
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](1);
+        assertions[0] = this.feeVerification.selector;
+    }
+
+    // Check that the fee is the same before and after the transaction
+    // and that they maintain correct percentage based on stable or not
+    // revert if the fee is not the same before and after the transaction
+    function feeVerification() external {
+        ph.forkPreState();
+        uint256 preFee = pool.fee();
+        bool preStable = pool.stable(); // check pool is stable or not
+        ph.forkPostState();
+        uint256 postFee = pool.fee();
+        bool postStable = pool.stable(); // check pool is stable or not
+        // Fee should be the same before and after the transaction
+        require(preFee == postFee, "Fee is not the same before and after the transaction");
+        // Pool should be stable before and after the transaction
+        require(preStable == postStable, "Pool is not stable before and after the transaction");
+        if (postStable) {
+            require(postFee == 1, "Fee is not 0.1% for stable pool"); // Should be what the protocol defines
+        } else {
+            require(postFee == 25, "Fee is not 0.25% for non-stable pool"); // Should be what the protocol defines
+        }
+    }
+}
+```
