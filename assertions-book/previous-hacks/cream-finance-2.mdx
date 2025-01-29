@@ -1,0 +1,69 @@
+---
+title: Cream Finance 2
+description: Cream Finance suffered a price manipulation hack
+---
+
+Cream Finance suffered a 130M USD hack in October 2021.
+
+Detailed Analysis: https://www.chainalysis.com/blog/cream-finance-hack-analysis/
+
+## Description
+
+The attack stem from a sudden price manipulation of a supported asset (yUSDVault) in the protocol.
+The attacker built up leveraged positions and then manipulated the price of the asset by donating
+the underlying into the yUSDVault.
+
+# Solution
+
+One possible solution is to check price deviations from touched assets in the protocol during the transaction.
+This would avoid flashloan price manipulation attacks.
+
+```solidity
+function assertion_priceDeviation() public view {
+    PhEvm.Logs[] memory logs = PhEvm.getLogs();
+    bytes32[] memory topics = [
+        CTokenInterface.Redeem.selector,
+        CTokenInterface.Borrow.selector,
+        CTokenInterface.RepayBorrow.selector,
+        CTokenInterface.LiquidateBorrow.selector
+    ];
+
+
+    address[] memory touchedAssets = new address[];
+    for (uint256 i = 0; i < logs.length; i++) {
+
+        if(logs[i].topics[0] == CTokenInterface.Mint.selector) {
+            touchedAssets.push(getAssetFromMintLog(logs[i]));
+            continue;
+        }
+        if(logs[i].topics[0] == CTokenInterface.Redeem.selector) {
+            touchedAssets.push(getAssetFromRedeemLog(logs[i]));
+            continue;
+        }
+        if(logs[i].topics[0] == CTokenInterface.Borrow.selector) {
+            touchedAssets.push(getAssetFromBorrowLog(logs[i]));
+            continue;
+        }
+        if(logs[i].topics[0] == CTokenInterface.RepayBorrow.selector) {
+            touchedAssets.push(getAssetFromRepayBorrowLog(logs[i]));
+            continue;
+        }
+
+    }
+
+    uint256[] memory postPrices = new uint256[](touchedAssets);
+    for (uint256 i = 0; i < touchedAssets.length; i++) {
+        postPrices.push(priceOracle.getPrice(touchedAssets[i]));
+    }
+
+    ph.forkPreState();
+
+    for (uint256 i = 0; i < touchedAssets.length; i++) {
+        uint256 prePrice = priceOracle.getPrice(touchedAssets[i]);
+        require(
+            postPrice[i] < prePrice * (1 + MAX_DEVIATION_FACTOR) &&
+            postPrice[i] > prePrice * (1 - MAX_DEVIATION_FACTOR),
+            "Price deviation too high"
+            );
+}
+```

@@ -1,0 +1,48 @@
+---
+title: Visor Finance Unrestricted Mint
+description: Visor Finance allowed anyone to mint rewardTokens
+---
+
+This is a fairly simple bug that let anyone mint rewardTokens.
+
+Background: https://x.com/storming0x/status/1473321779250802693
+
+# Description
+
+- The deposit function lets anyone mint rewardTokens if
+  - the from address is a contract and has an owner and where msg.sender == owner
+- It is intended that the from address sends the underlying token to this contract
+  - But it does not check whether delegatedTransferERC20 is implemented correctly
+  - it can be a noop
+- The attacker can mint rewardTokens to himself
+
+## Solution
+
+While this is an obvious bug, an invariant could have prevented an exploit of the bug.
+
+Invariant:
+
+```solidity
+function assertionIsSolvent() public view {
+  require(visr.balanceOf(address(assertionAdopter)) >= vvisr.totalSupply(), "Reward tokens are undercollateralized");
+}
+```
+
+Alternatively, the assertion could test the correct behavior of the previous transaction.
+The assertion could be triggered by a call to the deposit function.
+
+```solidity
+function assertion_triggerDeposit_remainsSolvent() public view {
+
+  uint256 postBalanceCollateral = visr.balanceOf(address(adopter));
+  uint256 postTotalSupplyRewards = vvisr.totalSupply();
+  uint256 postRatio = postBalanceCollateral / postTotalSupplyRewards;
+  ph.forkPreState();
+
+  uint256 preBalanceCollateral = visr.balanceOf(address(adopter));
+  uint256 preTotalSupplyRewards = vvisr.totalSupply();
+  uint256 preRatio = preBalanceCollateral / preTotalSupplyRewards;
+
+  require(preRatio == postRatio, "Reward tokens are undercollateralized");
+}
+```

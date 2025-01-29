@@ -1,0 +1,50 @@
+---
+title: Abracadabra Rounding Error Attack
+description: Rounding error in Abracadabra protocol allowed attacker to inflate base value without corresponding adjustment of elastic value
+---
+
+## Description
+
+The vulnerability stems from an intricate implementation of a RebaseToken mechanism in the Abracadabra protocol:
+
+- The protocol used a [RebaseToken](https://github.com/boringcrypto/BoringSolidity/blob/78f4817d9c0d95fe9c45cd42e307ccd22cf5f4fc/contracts/libraries/BoringRebase.sol) with two key components:
+  - Elastic value: Represents the actual assets in debt
+  - Base value: Represents total borrowed shares
+
+- The [`User borrow mapping`](https://github.com/Abracadabra-money/abracadabra-money-contracts/blob/cb97c71c8fbfecbd0080e0cfa877f2dc37f56950/src/cauldrons/CauldronV4.sol#L308) only stored borrowed shares per user, not the actual assets
+
+- The design appeared to intentionally allow the protocol (or anyone) to modify the assets owed by users by changing the elastic value of the RebaseToken
+
+- The [`repayForAll()`](https://github.com/Abracadabra-money/abracadabra-money-contracts/blob/cb97c71c8fbfecbd0080e0cfa877f2dc37f56950/src/cauldrons/CauldronV4.sol#L688) function made this feature accessible to everyone
+
+**Attack Mechanism:**
+1. A critical rounding error allowed the attacker to inflate the base value without correspondingly adjusting the elastic value
+2. This rounding error only manifests when elastic and base values significantly deviate from each other
+3. The [`repayForAll()`](https://github.com/Abracadabra-money/abracadabra-money-contracts/blob/cb97c71c8fbfecbd0080e0cfa877f2dc37f56950/src/cauldrons/CauldronV4.sol#L703) function was instrumental in creating this deviation
+
+**Exploitation Steps:**
+1. Inflate the base value (getting to elastic = 1, base = infinite)
+2. Repay the outstanding assets (elastic = 0)
+3. Leverage the [first depositor problem](https://github.com/boringcrypto/BoringSolidity/blob/78f4817d9c0d95fe9c45cd42e307ccd22cf5f4fc/contracts/libraries/BoringRebase.sol#L18), when elastic = 0, shares minted will be base = elastic
+4. Borrow all assets in the protocol, because of first depositor problem, shares minted will be 1:1.
+5. The attacker now has all assets in the protocol, but only owes a negligble share ratio to all outstanding shares.
+
+**Vulnerability Details:**
+- The solvency check [`_isSolvent()`](https://github.com/Abracadabra-money/abracadabra-money-contracts/blob/cb97c71c8fbfecbd0080e0cfa877f2dc37f56950/src/cauldrons/CauldronV4.sol#L203) relied on comparing the attacker's ratio of total borrowed shares
+- The solvency check implicitly assumed elastic and base values would remain closely aligned
+- With base set to infinite, the attacker's debt ratio becomes negligible
+
+
+## Proposed Solution
+
+Assuming the original implementation was well-intentioned but flawed, a simple invariant check could have prevented the attack:
+
+```solidity
+function assertionNoDebtSharesIfNoDebt() public view {
+    if (elastic == 0) {
+        require(base == 0, "No debt shares if no debt");
+    }
+}
+```
+
+This assertion ensures that when no assets are owed (elastic = 0), there should be no debt shares (base = 0), thereby preventing the exploit.

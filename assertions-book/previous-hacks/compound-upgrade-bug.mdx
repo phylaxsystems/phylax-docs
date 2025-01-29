@@ -1,0 +1,59 @@
+---
+title: Compound Upgrade Bug
+description: Compound comptroller contract had a one letter bug that allowed users to receive massive amounts of COMP rewards
+---
+
+## Description
+
+Compound upgraded their comptroller contract to https://etherscan.io/address/0x374abb8ce19a73f2c4efad642bda76c797f19233 which had a one letter bug on L1217.
+
+The bug occurred when users supplied tokens to markets with zero COMP rewards before initialization. In these cases, the supplyIndex equaled compInitialIndex (1e36), but the reward calculation logic was skipped due to the incorrect comparison operator.
+
+```solidity
+if (supplierIndex == 0 && supplyIndex > compInitialIndex) {
+    // Covers the case where users supplied tokens before the market's supply state index was set.
+    // Rewards the user with COMP accrued from the start of when supplier rewards were first
+    // set for the market.
+    supplierIndex = compInitialIndex;
+}
+```
+
+The bug was caused by using > instead of >= in the check. This meant that when supplyIndex equaled compInitialIndex (1e36), the if block was skipped, leaving supplierIndex at 0. The large difference between supplierIndex (0) and supplyIndex (1e36) caused the protocol to pay out massive unintended rewards.
+
+The previous version worked because supplyIndex started at 0 instead of 1e36, though >= would have been more correct.
+
+## Proposed Solution
+
+It would have made sense for the developers to make sure that the COMPS accrual never exceeds the maximum possible rate.
+This way even if a bug is introduced, it will be caught by the assertion.
+
+The assertion below calculates the maximum possible rate of COMP accrual and checks that a distribution does not exceed this rate.
+
+```solidity
+// Verify that COMP accrual never exceeds the maximum possible rate
+function assertionValidCompAccrual() external {
+    PhEvm.CallInputs[] memory distributions = ph.getCallInputs(address(compound), Comptroller.distributeSupplierComp.selector);
+
+    for (uint256 i = 0; i < distributions.length; i++) {
+        bytes memory data = distributions[i].input;
+        (address cToken, address supplier) = abi.decode(stripSelector(data), (address, address));
+
+        // Check COMP accrued before and after distribution
+        ph.forkPreCallState();
+        uint256 preAccrued = compound.compAccrued[supplier];
+        CompMarketState storage supplyState = comptroller.compSupplyState[cToken];
+        uint supplyIndex = supplyState.index;
+        uint maxDeltaPerToken = sub_(supplyIndex, comptroller.compInitialIndex);
+        uint supplierTokens = CToken(cToken).balanceOf(supplier);
+        uint maxIncrease = mul_(supplierTokens, maxDeltaPerToken);
+
+        ph.forkPostCallState();
+        uint256 postAccrued = compound.compAccrued[supplier];
+
+        if (postAccrued > preAccrued) {
+            uint256 increase = postAccrued - preAccrued;
+            require(increase <= maxIncrease, "COMP accrual increase exceeds maximum possible rate");
+        }
+    }
+}
+```
