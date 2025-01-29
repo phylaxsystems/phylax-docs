@@ -28,8 +28,11 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
+interface IExampleContract {}
+
 contract ERC20DrainAssertion is Assertion {
     IERC20 public erc20 = IERC20(address(0xbeef));
+    IExampleContract public example = IExampleContract(address(0xf00));
 
     function fnSelectors() external pure override returns (bytes4[] memory assertions) {
         assertions = new bytes4[](1); // Define the number of triggers
@@ -42,7 +45,7 @@ contract ERC20DrainAssertion is Assertion {
         ph.forkPreState();
         uint256 preBalance = erc20.balanceOf(address(this));
         ph.forkPostState();
-        uint256 postBalance = address(example).balance;
+        uint256 postBalance = erc20.balanceOf(address(this));
         if (preBalance > postBalance) {
             uint256 drainAmount = preBalance - postBalance;
             uint256 tenPercentOfPreBalance = preBalance / 10; // Change according to the percentage you want to allow
