@@ -42,10 +42,12 @@ contract ERC20DrainAssertion is Assertion {
         ph.forkPreState();
         uint256 preBalance = erc20.balanceOf(address(this));
         ph.forkPostState();
-        uint256 postBalance = erc20.balanceOf(address(this));
-        uint256 drainAmount = preBalance - postBalance;
-        uint256 tenPercentOfPreBalance = preBalance / 10; // Change according to the percentage you want to allow
-        require(drainAmount <= tenPercentOfPreBalance, "Drain amount is greater than 10% of the pre-balance");
+        uint256 postBalance = address(example).balance;
+        if (preBalance > postBalance) {
+            uint256 drainAmount = preBalance - postBalance;
+            uint256 tenPercentOfPreBalance = preBalance / 10; // Change according to the percentage you want to allow
+            require(drainAmount <= tenPercentOfPreBalance, "Drain amount is greater than 10% of the pre-balance");
+        }
     }
 }
 ```

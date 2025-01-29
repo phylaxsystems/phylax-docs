@@ -41,9 +41,11 @@ contract EtherDrainAssertion is Assertion {
         uint256 preBalance = address(example).balance;
         ph.forkPostState();
         uint256 postBalance = address(example).balance;
-        uint256 drainAmount = preBalance - postBalance;
-        uint256 tenPercentOfPreBalance = preBalance / 10; // Change according to the percentage you want to allow
-        require(drainAmount <= tenPercentOfPreBalance, "Drain amount is greater than 10% of the pre-balance");
+        if (preBalance > postBalance) {
+            uint256 drainAmount = preBalance - postBalance;
+            uint256 tenPercentOfPreBalance = preBalance / 10; // Change according to the percentage you want to allow
+            require(drainAmount <= tenPercentOfPreBalance, "Drain amount is greater than 10% of the pre-balance");
+        }
     }
 }
 ```

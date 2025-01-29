@@ -49,10 +49,11 @@ contract ERC4626DepositAssertion is Assertion {
             (uint256 assets, address receiver) = abi.decode(stripSelector(data), (uint256, address));
             uint256 expectedShares = erc4626.previewDeposit(assets);
             uint256 preTotalAssets = erc4626.totalAssets();
+            uint256 preBalance = erc4626.balanceOf(receiver);
             ph.forkPostState();
             uint256 postBalance = erc4626.balanceOf(receiver);
             uint256 postTotalAssets = erc4626.totalAssets();
-            require(postBalance == expectedShares, "Deposit assertion failed");
+            require(postBalance == expectedShares + preBalance, "Deposit assertion failed");
             require(postTotalAssets == preTotalAssets + assets, "Total assets assertion failed");
         }
     }
