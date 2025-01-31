@@ -8,11 +8,11 @@
   "favicon": "/favicon.png",
   "colors": {
     "primary": "#000000",
-    "light": "#808080",
-    "dark": "#808080",
+    "light": "#898A86",
+    "dark": "#898A86",
     "anchors": {
-      "from": "#0D9373",
-      "to": "#07C983"
+      "from": "#D0D0D0",
+      "to": "#D0D0D0"
     }
   },
   "primaryTab": {
@@ -40,8 +40,8 @@
     }
   ],
   "topbarCtaButton": {
-    "name": "Assertions Book",
-    "url": "assertions-book"
+    "name": "Quickstart",
+    "url": "credible/pcl-quickstart"
   },
 
   "anchors": [
@@ -63,11 +63,7 @@
     },
     {
       "group": "Credible Layer",
-      "pages": [
-        "credible/credible-introduction",
-        "credible/pcl-quickstart",
-        "credible/pcl-assertion-guide"
-      ]
+      "pages": ["credible/pcl-quickstart", "credible/pcl-assertion-guide"]
     },
     {
       "group": "Introduction",
