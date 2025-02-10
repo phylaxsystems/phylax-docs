@@ -1,0 +1,91 @@
+---
+title: Testing Assertions
+---
+
+# Testing Assertions
+
+Testing assertions is very similar to writing regular Forge tests. If you're familiar with Forge testing, you'll feel right at home. You get access to all the same testing utilities:
+
+- Standard assertions (`assertEq`, `assertTrue`, etc.)
+- Cheatcodes (`vm.prank`, `vm.deal`, `vm.warp`, etc.)
+- Console logging
+- Test setup with `setUp()` function
+
+## PCL Testing Interface
+
+PCL extends Forge's testing capabilities with additional utilities specifically for testing assertions. Here's the key interface:
+
+```solidity
+contract CLTestEnv {
+    // Represents a transaction to test against assertions
+    struct AssertionTransaction {
+        address from;
+        address to;
+        uint256 value;
+        bytes data;
+    }
+
+    // Add an assertion to monitor a contract
+    function addAssertion(
+        string memory label,          // Identifier for the assertion
+        address assertionAdopter,     // Contract to monitor
+        bytes memory assertionCode,   // Assertion contract bytecode
+        bytes memory constructorArgs  // Constructor arguments
+    ) external;
+
+    // Test if a transaction would pass assertions
+    function validate(
+        string memory label,    // Assertion identifier
+        address to,             // Transaction target
+        uint256 value,          // ETH value
+        bytes calldata data     // Transaction calldata
+    ) external;
+}
+```
+
+## Using the Testing Interface
+
+Here's how to use these utilities in your tests:
+
+```solidity
+import { CLTestEnv } from "@phylax/pcl/CredibleTest.sol";
+import { Test } from "forge-std/Test.sol";
+
+contract TestOwnableAssertion is Test {
+    address public newOwner = address(0xdeadbeef);
+    Ownable public assertionAdopter;
+
+    function setUp() public {
+        assertionAdopter = new Ownable();
+        vm.deal(assertionAdopter.owner(), 1 ether);       
+    }
+
+    function test_assertionOwnershipChanged() public {
+        // Add assertion to monitor a contract
+        cl.addAssertion(
+            "OwnershipAssertion",                   // Label for this assertion
+            address(contractToMonitor),             // Contract to watch
+            type(OwnableAssertion).creationCode,    // Assertion bytecode
+            abi.encode(constructorArgs)             // Constructor args
+        );
+
+        // Test a transaction that should fail assertions
+        vm.expectRevert(); // Assertion should revert
+        cl.validate(
+            "OwnershipAssertion",
+            address(contractToMonitor),
+            0,  // No ETH value
+            abi.encodeCall(contractToMonitor.transferOwnership, (newOwner))
+        );
+    }
+}
+```
+
+Key concepts:
+- Use `addAssertion()` to register assertions with contracts you want to monitor
+- Use `validate()` to test how assertions respond to transactions
+- No return value from `validate()`, but you can use `vm.expectRevert()` to check if it reverts
+- Multiple assertions can monitor the same contract
+- One assertion can monitor multiple contracts
+
+This means you can leverage your existing Forge testing knowledge while using these additional features to verify your assertions work correctly.
