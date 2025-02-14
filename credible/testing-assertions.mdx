@@ -23,7 +23,7 @@ contract CLTestEnv {
         bytes data;
     }
 
-    // Add an assertion to monitor a contract
+    // Add an assertion to a contract
     function addAssertion(
         string memory label,          // Identifier for the assertion
         address assertionAdopter,     // Contract to monitor
@@ -46,10 +46,10 @@ contract CLTestEnv {
 Here's how to use these utilities in your tests:
 
 ```solidity
-import { CLTestEnv } from "@phylax/pcl/CredibleTest.sol";
+import { CredibleTest } from "@phylax/pcl/CredibleTest.sol";
 import { Test } from "forge-std/Test.sol";
 
-contract TestOwnableAssertion is Test {
+contract TestOwnableAssertion is Test, CredibleTest {
     address public newOwner = address(0xdeadbeef);
     Ownable public assertionAdopter;
 
@@ -59,21 +59,21 @@ contract TestOwnableAssertion is Test {
     }
 
     function test_assertionOwnershipChanged() public {
-        // Add assertion to monitor a contract
+        // Add assertion to a contract
         cl.addAssertion(
             "OwnershipAssertion",                   // Label for this assertion
-            address(contractToMonitor),             // Contract to watch
+            address(assertionAdopter),              // Contract to assert on
             type(OwnableAssertion).creationCode,    // Assertion bytecode
             abi.encode(constructorArgs)             // Constructor args
         );
 
-        // Test a transaction that should fail assertions
-        vm.expectRevert(); // Assertion should revert
+        // Test a transaction that should invalidate the assertion
+        vm.expectRevert(); // Expect assertions validation to revert
         cl.validate(
-            "OwnershipAssertion",
-            address(contractToMonitor),
-            0,  // No ETH value
-            abi.encodeCall(contractToMonitor.transferOwnership, (newOwner))
+            "OwnershipAssertion",                                           // Label for this assertion
+            address(assertionAdopter),                                      // Contract to assert on
+            0,                                                              // No ETH value
+            abi.encodeCall(assertionAdopter.transferOwnership, (newOwner))  // Transaction to run assertions on
         );
     }
 }
@@ -83,7 +83,6 @@ Key concepts:
 - Use `addAssertion()` to register assertions with contracts you want to monitor
 - Use `validate()` to test how assertions respond to transactions
 - No return value from `validate()`, but you can use `vm.expectRevert()` to check if it reverts
-- Multiple assertions can monitor the same contract
-- One assertion can monitor multiple contracts
+- Multiple assertions can be linked to the same contract
 
 This means you can leverage your existing Forge testing knowledge while using these additional features to verify your assertions work correctly.
