@@ -1,0 +1,193 @@
+---
+title: Generate Assertions with AI
+description: How to use AI to generate assertions
+---
+
+## Guide for generating assertions with AI
+
+AI tools can significantly enhance your workflow when defining protocol invariants and assertions. We've conducted experiments using the Phylax assertion examples library and documentation to generate assertions automatically.
+
+As the number of example assertions grows, we expect the quality of the generated assertions to improve.
+Similarly, we hope that more and more protocols will start clearly documenting their invariants, as it's both an important step towards better security in general and towards more efficient assertions generation.
+
+### Setup
+
+1. Clone your repo and open it in Cursor
+2. Configure Cursor settings:
+   - Add Phylax docs: [https://docs.phylax.systems](https://docs.phylax.systems/)
+3. Let Cursor's model index your project files
+4. Generate assertions by prompting Cursor AI with either:
+   - Your protocol's existing documentation and source code
+   - Only your protocol's source code
+
+### Example: Origin Protocol
+
+We'll demonstrate using [Origin Protocol's contracts](https://github.com/OriginProtocol/origin-dollar) as an example. These contracts are well-documented and include clear invariant definitions in their [token logic documentation](https://github.com/OriginProtocol/origin-dollar/blob/master/contracts/contracts/token/README-token-logic.md#account-invariants).
+
+#### Sample Prompt
+```
+Based on the invariants defined in this document[the documentation of invariants], write assertions according to the syntax in the Phylax documentation. The assertions should be for the Token contract of the Origin Protocol.
+```
+
+The prompt references:
+- The protocol's invariant documentation
+- The Phylax assertions documentation
+- The smart contract code of the protocol
+
+#### Generated Assertions
+
+Using Claude 3.5 Sonnet, we generated the assertions shown below. While the generated assertions may need refinement, they give a good starting point for interesting aspects and invariants of the protocol that there should be assertions for.
+
+```
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.7;
+
+import {Assertion} from "credible-std/src/Assertion.sol";
+
+interface IOUSD {
+    function rebaseState(address) external view returns (uint8);
+    function alternativeCreditsPerToken(address) external view returns (uint256);
+    function _creditBalances(address) external view returns (uint256);
+    function yieldTo(address) external view returns (address);
+    function yieldFrom(address) external view returns (address);
+    function balanceOf(address) external view returns (uint256);
+    function totalSupply() external view returns (uint256);
+    function nonRebasingSupply() external view returns (uint256);
+    function rebasingCredits() external view returns (uint256);
+    function _rebasingCreditsPerToken() external view returns (uint256);
+}
+
+contract OUSDAssertions is Assertion {
+    IOUSD public ousd;
+    
+    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
+        assertions = new bytes4[](5);
+        assertions[0] = this.assertionAccountTypeInvariants.selector;
+        assertions[1] = this.assertionYieldDelegationLinks.selector;
+        assertions[2] = this.assertionBalanceInvariants.selector;
+        assertions[3] = this.assertionRebaseInvariants.selector;
+        assertions[4] = this.assertionRebaseOptInOutInvariants.selector;
+    }
+
+    // Check account type and credits per token relationships
+    function assertionAccountTypeInvariants(address account) external {
+        ph.forkPostState();
+        uint256 altCreditsPerToken = ousd.alternativeCreditsPerToken(account);
+        uint8 state = ousd.rebaseState(account);
+
+        // Check alternativeCreditsPerToken can only be 0 or 1e18
+        require(
+            altCreditsPerToken == 0 || altCreditsPerToken == 1e18,
+            "Invalid alternativeCreditsPerToken value"
+        );
+
+        // Check state alignment for zero alternativeCreditsPerToken
+        if (altCreditsPerToken == 0) {
+            require(
+                state == 0 || // NotSet
+                state == 1 || // StdRebasing
+                state == 4,   // YieldDelegationTarget
+                "Invalid state for zero alternativeCreditsPerToken"
+            );
+        }
+
+        // Check state alignment for 1e18 alternativeCreditsPerToken
+        if (altCreditsPerToken == 1e18) {
+            require(
+                state == 2 || // StdNonRebasing
+                state == 3,   // YieldDelegationSource
+                "Invalid state for 1e18 alternativeCreditsPerToken"
+            );
+        }
+    }
+
+    // Verify yield delegation relationships
+    function assertionYieldDelegationLinks() external {
+        ph.forkPostState();
+        address account = address(this); // Example account to check
+
+        if (ousd.rebaseState(account) == 3) { // YieldDelegationSource
+            require(
+                ousd.yieldTo(account) != address(0),
+                "YieldDelegationSource must have non-zero yieldTo"
+            );
+        }
+
+        if (ousd.rebaseState(account) == 4) { // YieldDelegationTarget
+            require(
+                ousd.yieldFrom(account) != address(0),
+                "YieldDelegationTarget must have non-zero yieldFrom"
+            );
+        }
+
+        // Check bidirectional links
+        address yieldFrom = ousd.yieldFrom(account);
+        if (yieldFrom != address(0)) {
+            require(
+                ousd.yieldTo(yieldFrom) == account,
+                "Invalid yield delegation linkage"
+            );
+        }
+    }
+
+    // Verify balance invariants during operations
+    function assertionBalanceInvariants() external {
+        ph.forkPreState();
+        uint256 preTotalSupply = ousd.totalSupply();
+        uint256 preNonRebasingSupply = ousd.nonRebasingSupply();
+        
+        ph.forkPostState();
+        uint256 postTotalSupply = ousd.totalSupply();
+        uint256 postNonRebasingSupply = ousd.nonRebasingSupply();
+
+        // Sum of all balances should not exceed total supply
+        require(
+            postNonRebasingSupply <= postTotalSupply,
+            "NonRebasingSupply exceeds TotalSupply"
+        );
+
+        // Non-vault operations should not change total supply
+        if (!isVaultOperation()) {
+            require(
+                preTotalSupply == postTotalSupply,
+                "Total supply changed in non-vault operation"
+            );
+        }
+    }
+
+    // Verify rebase operation invariants
+    function assertionRebaseInvariants() external {
+        ph.forkPostState();
+        uint256 nonRebasingCredits = ousd.nonRebasingSupply();
+        uint256 rebasingCredits = ousd.rebasingCredits();
+        uint256 rebasingCreditsPerToken = ousd._rebasingCreditsPerToken();
+        uint256 totalSupply = ousd.totalSupply();
+
+        require(
+            nonRebasingCredits + (rebasingCredits / rebasingCreditsPerToken) <= totalSupply,
+            "Credits/supply mismatch after rebase"
+        );
+    }
+
+    // Verify rebase opt-in/out operations maintain balances
+    function assertionRebaseOptInOutInvariants(address account) external {
+        ph.forkPreState();
+        uint256 preBalance = ousd.balanceOf(account);
+        
+        ph.forkPostState();
+        uint256 postBalance = ousd.balanceOf(account);
+
+        require(
+            preBalance == postBalance,
+            "Balance changed during rebase opt in/out"
+        );
+    }
+
+    // Helper function to determine if operation is from vault
+    function isVaultOperation() internal pure returns (bool) {
+        // Implementation would check if msg.sender is vault
+        return false;
+    }
+} 
+```
+
