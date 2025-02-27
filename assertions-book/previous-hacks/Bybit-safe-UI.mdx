@@ -101,3 +101,33 @@ contract SafeAssertion is Assertion {
     }
 }
 ```
+
+To even enhance security properties, a complentary assertion could enforce transfers to a whitelist
+of addresses. In the below example, the assertion checks if the balance of the safe decreased while
+the balance of the whitelisted addresses increased with the respective amount.
+
+```solidity
+ function assertionSafeDrain() external {
+        ph.forkPreState();
+        uint256 preBalance = address(bybitSafeAddress).balance;
+        uint256[] memory preWhitelistBalances = new uint256[](whitelistedAddresses.length);
+        for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
+            preWhitelistBalances[i] = address(whitelistedAddresses[i]).balance;
+        }
+
+        ph.forkPostState();
+        uint256 postBalance = address(bybitSafeAddress).balance;
+        if (postBalance > preBalance) {
+            return; // Balance increased, not a hack
+        }
+        uint256 diff = preBalance - postBalance;
+        for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
+            uint256 postWhitelistBalance = address(whitelistedAddresses[i]).balance;
+            if (postWhitelistBalance == preWhitelistBalances[i] + diff) {
+                return; // Balance increased, not a hack
+            }
+        }
+        // None of the whitelisted addresses have increased in balance, so it's a hack
+        revert("Bybit safe address balance decreased");
+    }
+```
