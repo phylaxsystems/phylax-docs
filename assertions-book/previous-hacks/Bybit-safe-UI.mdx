@@ -1,0 +1,133 @@
+---
+title: Bybit - Compromised Safe Wallet UI
+description: Safe Wallet UI was compromised by gaining access to the host machine.
+---
+
+## Description
+
+Bybit suffered from a security breach in Safe's hosting infrastructure losing 1.4bn USD.
+
+The attackers, the lazarus group, gained access to the server and was able to modify the served Safe
+Wallet frontend.
+More on the attack: https://x.com/safe/status/1894768522720350673
+
+The malicious code was specifically targeting Bybit's next transaction.
+As of today, it is commonly agreed that the signers of the transaction were shown a fake UI, seeming
+to be the intended transaction to sign, but in fact it was a malicious transaction.
+
+Unfortunately, it is often very hard to verify the correctness of the message that is signed in
+software or hardware wallets.
+
+**Attack steps:**
+
+1. Attackers gained access to the hosting server by compromising a developer's machine.
+2. A malicious frontend was uploaded to the server, which targeted Bybit's next transaction.
+3. The frontend would show the intended transaction but in fact the message to be signed was malicious
+4. The malicious message was a delegate call which would change the implementation of the Safe's proxycontract
+
+## How assertions could have prevented this
+
+In Safe's proxy implementation, the first storage slot is the implementation address.
+
+```solidity
+/**
+ * @title Singleton - Base for singleton contracts (should always be the first super contract)
+ *        This contract is tightly coupled to our proxy contract (see `proxies/SafeProxy.sol`)
+ * @author Richard Meissner - @rmeissner
+ */
+abstract contract Singleton {
+    // singleton always has to be the first declared variable to ensure the same location as in the Proxy contract.
+    // It should also always be ensured the address is stored alone (uses a full word)
+    address private singleton;
+}
+```
+
+The malicious transaction was executing a delegate call to a malicious contract, effectively
+changing the implementation address of Bybit's proxy contract.
+A change of the implementation address allows an attacker to almost completely exchange the logic
+of the contract.
+Therefore it was possible to be able to drain all the assets of the Safe without the need of any
+additional approvals by the original owners.
+
+It should be highlighted that even if there is no logic to change the implemenation address in the
+implementation by safe, delegate calls can modify storage slots of the calling contract.
+This allows for full flexibility but opens up the possibility for attacks.
+
+### Preventing attacks through assertions
+
+It might be fair to assume that most users of safes would never actually want to change the
+implementation address of their safe, but they have no way to express their preferences.
+
+Assertions give users the ability to express additional invariants on the state of the contract.
+A change of the implementation address could be prevented by analyzing the state changes within
+a transaction.
+
+PhEvm precompiles used:
+
+- _forkPreState_ allowing to fork the state of the contract before a transaction
+- _load_ reading specific storage slots
+- _getStateChangesAddress_ getting all state changes within a transaction for a given slot
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol"; // Credible Layer precompiles
+import {Safe} from "../../lib/safe-contracts/src/Safe.sol"; // Safe contract
+import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
+
+contract SafeAssertion is Assertion {
+    Safe safe;
+
+    constructor(address payable safe_) {
+        safe = Safe(safe_); // Define address of Safe contract
+    }
+
+    // Define the triggers for the assertions
+    function triggers() public view override {
+        triggerRecorder.registerStateChangeTrigger(this.implementationAddressChange.selector, 0x0);
+    }
+
+    function implementationAddressChange() external view {
+        ph.forkPreState();
+        address preImplementationAddress = address(uint160(uint256(ph.load(address(safe), bytes32(0x0)))));
+
+        address[] memory addresses = getStateChangesAddress(address(safe), bytes32(0x0));
+        for (uint256 i = 0; i < addresses.length; i++) {
+            if (addresses[i] != preImplementationAddress) {
+                revert("Implementation address has changed within transaction");
+            }
+        }
+    }
+}
+```
+
+To even enhance security properties, a complentary assertion could enforce transfers to a whitelist
+of addresses. In the below example, the assertion checks if the balance of the safe decreased while
+the balance of the whitelisted addresses increased with the respective amount.
+
+```solidity
+ function assertionSafeDrain() external {
+        ph.forkPreState();
+        uint256 preBalance = address(bybitSafeAddress).balance;
+        uint256[] memory preWhitelistBalances = new uint256[](whitelistedAddresses.length);
+        for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
+            preWhitelistBalances[i] = address(whitelistedAddresses[i]).balance;
+        }
+
+        ph.forkPostState();
+        uint256 postBalance = address(bybitSafeAddress).balance;
+        if (postBalance > preBalance) {
+            return; // Balance increased, not a hack
+        }
+        uint256 diff = preBalance - postBalance;
+        for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
+            uint256 postWhitelistBalance = address(whitelistedAddresses[i]).balance;
+            if (postWhitelistBalance == preWhitelistBalances[i] + diff) {
+                return; // Balance increased, not a hack
+            }
+        }
+        // None of the whitelisted addresses have increased in balance, so it's a hack
+        revert("Bybit safe address balance decreased");
+    }
+```
