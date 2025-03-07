@@ -61,19 +61,23 @@ contract TestOwnableAssertion is Test, CredibleTest {
     function test_assertionOwnershipChanged() public {
         // Add assertion to a contract
         cl.addAssertion(
-            "OwnershipAssertion",                   // Label for this assertion
-            address(assertionAdopter),              // Contract to assert on
-            type(OwnableAssertion).creationCode,    // Assertion bytecode
-            abi.encode(constructorArgs)             // Constructor args
+            "OwnershipAssertion",                  // Label
+            address(assertionAdopter),             // Target contract
+            type(OwnableAssertion).creationCode,   // Assertion bytecode
+            abi.encode(constructorArgs)            // Constructor args
         );
 
         // Test a transaction that should invalidate the assertion
         vm.expectRevert(); // Expect assertions validation to revert
+        
         cl.validate(
-            "OwnershipAssertion",                                           // Label for this assertion
-            address(assertionAdopter),                                      // Contract to assert on
-            0,                                                              // No ETH value
-            abi.encodeCall(assertionAdopter.transferOwnership, (newOwner))  // Transaction to run assertions on
+            "OwnershipAssertion",                   // Label
+            address(assertionAdopter),              // Target contract
+            0,                                      // No ETH value
+            abi.encodeCall(                         // Transaction data
+                assertionAdopter.transferOwnership, 
+                (newOwner)
+            )
         );
     }
 }
