@@ -1,0 +1,205 @@
+---
+title: PhEVM Cheatcodes
+description: Overview of the cheatcodes made available for the Phylax Credible Layer
+---
+
+## Overview
+
+Cheatcodes are PhEVM (Phylax EVM) specific instructions implemented in native code instead of EVM 
+bytecode. They can communicate with Internal APIs and support all existing Ethereum cheatcodes up 
+to Dancun, plus new capabilities for:
+
+1. Manipulation of the PhEVM state
+2. Forking of state from one or multiple EVM networks
+3. Utilities for writing and managing assertions
+
+## Storage Operations
+
+### `load`
+
+Loads a storage slot from an address.
+
+```solidity
+function load(
+    address target, 
+    bytes32 slot
+) external view returns (bytes32 data)
+```
+
+## State Management
+
+### `forkPreState`
+
+Updates the active fork to the state before the triggering transaction. Useful for:
+- Checking chain state before a transaction
+- Comparing values between pre and post states
+
+```solidity
+function forkPreState() external
+```
+
+### `forkPostState`
+
+Updates the active fork to the state after the triggering transaction. Useful for:
+- Verifying chain state after a transaction
+- Comparing values between pre and post states
+
+```solidity
+function forkPostState() external
+```
+
+## Transaction Data
+
+### `getLogs`
+
+Retrieves all logs emitted by the latest transaction.
+
+```solidity
+struct Log {
+    bytes32[] topics;   // Log topics, including signature
+    bytes data;         // Raw log data
+    address emitter;    // Log emitter address
+}
+
+function getLogs() external returns (Log[] memory logs)
+```
+
+### `getCallInputs`
+
+Gets the call inputs of all the calls made in the current transaction and returns them in an array of `CallInputs` structs.
+This is a useful precompile to use for intra-transaction assertions such as checking if the price reported by an oracle deviates from an allowed range, which could be a sign of an oracle manipulation.
+
+```solidity
+struct CallInputs {
+    bytes input;          // Call data
+    uint64 gas_limit;     // Gas limit
+    address bytecode_address;  // Code execution address
+    address target_address;    // Storage modification target
+    address caller;       // Transaction caller
+    uint256 value;       // Call value
+}
+
+function getCallInputs(
+    address target, 
+    bytes4 selector
+) external view returns (CallInputs[] memory calls);
+```
+
+## State Change Tracking
+
+### `getStateChanges`
+
+Returns state changes for a contract's storage slot within the current call stack.
+
+```solidity
+function getStateChanges(
+    address contractAddress,
+    bytes32 slot
+) external view returns (bytes32[] memory stateChanges);
+```
+
+### Helper Functions
+
+The following helpers convert state changes to specific types. Each has three variants:
+- Basic: Get changes for a single slot
+- Mapping: Get changes using a mapping key
+- Mapping with Offset: Get changes using a key and offset for complex storage
+
+#### `getStateChangesUint`
+
+```solidity
+// Basic
+function getStateChangesUint(
+    address target,
+    bytes32 slot
+) internal view returns (uint256[] memory)
+
+// With mapping
+function getStateChangesUint(
+    address target,
+    bytes32 slot,
+    uint256 key
+) internal view returns (uint256[] memory)
+```
+
+Similar helper functions exist for:
+- `getStateChangesAddress`: Convert to address values
+- `getStateChangesBool`: Convert to boolean values
+- `getStateChangesBytes32`: Get raw bytes32 values
+
+## Triggers
+
+Triggers determine when assertions execute. Configure them in your `triggers()` function.
+
+### Call Triggers
+
+```solidity
+// Any contract call
+function registerCallTrigger(
+    bytes4 assertionFnSelector
+) internal view
+
+// Specific function calls
+function registerCallTrigger(
+    bytes4 assertionFnSelector,
+    bytes4 triggerSelector
+) internal view
+```
+
+Example:
+```solidity
+function triggers() external view override {
+    // Run on all calls
+    registerCallTrigger(this.checkInvariant.selector);
+    
+    // Run only on transfers
+    registerCallTrigger(
+        this.checkTransfer.selector,
+        IERC20.transfer.selector
+    );
+}
+```
+
+### Storage Triggers
+
+```solidity
+// Any storage change
+function registerStorageChangeTrigger(
+    bytes4 assertionFnSelector
+) internal view
+
+// Specific slot changes
+function registerStorageChangeTrigger(
+    bytes4 assertionFnSelector,
+    bytes32 slot
+) internal view
+```
+
+### Balance Triggers
+
+Executes assertion on ETH balance changes.
+
+```solidity
+function registerBalanceChangeTrigger(
+    bytes4 assertionFnSelector
+) internal view
+```
+
+### Combining Triggers
+
+Triggers can be combined for comprehensive coverage:
+
+```solidity
+function triggers() external view override {
+    // Multiple triggers for one assertion
+    registerStorageChangeTrigger(this.mainInvariant.selector);
+    registerCallTrigger(this.mainInvariant.selector);
+    
+    // Different assertions for different events
+    registerBalanceChangeTrigger(this.checkBalances.selector);
+    registerCallTrigger(
+        this.checkCalls.selector,
+        IERC20.transfer.selector
+    );
+}
+```
