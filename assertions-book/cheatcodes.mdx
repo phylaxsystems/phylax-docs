@@ -71,12 +71,12 @@ This is a useful precompile to use for intra-transaction assertions such as chec
 
 ```solidity
 struct CallInputs {
-    bytes input;          // Call data
-    uint64 gas_limit;     // Gas limit
-    address bytecode_address;  // Code execution address
-    address target_address;    // Storage modification target
-    address caller;       // Transaction caller
-    uint256 value;       // Call value
+    bytes input;                // Call data
+    uint64 gas_limit;           // Gas limit
+    address bytecode_address;   // Code execution address
+    address target_address;     // Storage modification target
+    address caller;             // Transaction caller
+    uint256 value;              // Call value
 }
 
 function getCallInputs(
