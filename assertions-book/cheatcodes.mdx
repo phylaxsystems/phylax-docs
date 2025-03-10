@@ -107,6 +107,8 @@ The following helpers convert state changes to specific types. Each has three va
 
 #### `getStateChangesUint`
 
+Gets state changes for a storage slot as uint256 values.
+
 ```solidity
 // Basic
 function getStateChangesUint(
@@ -120,6 +122,14 @@ function getStateChangesUint(
     bytes32 slot,
     uint256 key
 ) internal view returns (uint256[] memory)
+
+// With mapping and offset
+function getStateChangesUint(
+    address target,
+    bytes32 slot,
+    uint256 key,
+    uint256 offset
+) internal view returns (uint256[] memory)
 ```
 
 Similar helper functions exist for:
@@ -127,19 +137,25 @@ Similar helper functions exist for:
 - `getStateChangesBool`: Convert to boolean values
 - `getStateChangesBytes32`: Get raw bytes32 values
 
+Each of these functions follows the same pattern with basic, mapping, and 
+mapping-with-offset variants.
+
 ## Triggers
 
-Triggers determine when assertions execute. Configure them in your `triggers()` function.
+Triggers determine when your assertion functions will be executed. You can register 
+different types of triggers in your assertion's `triggers()` function.
 
 ### Call Triggers
 
+Call triggers execute your assertion when specific contract calls occur.
+
 ```solidity
-// Any contract call
+// Trigger on any call to the contract
 function registerCallTrigger(
     bytes4 assertionFnSelector
 ) internal view
 
-// Specific function calls
+// Trigger on specific function calls
 function registerCallTrigger(
     bytes4 assertionFnSelector,
     bytes4 triggerSelector
@@ -149,10 +165,10 @@ function registerCallTrigger(
 Example:
 ```solidity
 function triggers() external view override {
-    // Run on all calls
-    registerCallTrigger(this.checkInvariant.selector);
+    // Run assertion on ALL calls to the contract
+    registerCallTrigger(this.checkAllCalls.selector);
     
-    // Run only on transfers
+    // Run assertion only on transfer calls
     registerCallTrigger(
         this.checkTransfer.selector,
         IERC20.transfer.selector
@@ -162,17 +178,33 @@ function triggers() external view override {
 
 ### Storage Triggers
 
+Storage triggers execute your assertion when contract storage changes.
+
 ```solidity
-// Any storage change
+// Trigger on ANY storage slot change
 function registerStorageChangeTrigger(
     bytes4 assertionFnSelector
 ) internal view
 
-// Specific slot changes
+// Trigger on changes to a specific storage slot
 function registerStorageChangeTrigger(
     bytes4 assertionFnSelector,
     bytes32 slot
 ) internal view
+```
+
+Example:
+```solidity
+function triggers() external view override {
+    // Run assertion on ANY storage change
+    registerStorageChangeTrigger(this.checkAllStorage.selector);
+    
+    // Run assertion when totalSupply slot changes
+    registerStorageChangeTrigger(
+        this.checkSupply.selector,
+        TOTAL_SUPPLY_SLOT
+    );
+}
 ```
 
 ### Balance Triggers
