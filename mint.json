@@ -63,7 +63,13 @@
     },
     {
       "group": "Credible Layer",
-      "pages": ["credible/pcl-quickstart", "credible/pcl-assertion-guide"]
+      "pages": [
+        "credible/credible-introduction",
+        "credible/pcl-quickstart",
+        "credible/pcl-assertion-guide",
+        "credible/testing-assertions"
+      ]
+
     },
     {
       "group": "Introduction",
