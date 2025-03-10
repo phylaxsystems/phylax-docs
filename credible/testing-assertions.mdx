@@ -84,9 +84,9 @@ contract TestOwnableAssertion is Test, CredibleTest {
 ```
 
 Key concepts:
-- Use `addAssertion()` to register assertions with contracts you want to monitor
-- Use `validate()` to test how assertions respond to transactions
-- No return value from `validate()`, but you can use `vm.expectRevert()` to check if it reverts
+- Use `cl.addAssertion()` to register assertions with contracts you want to monitor
+- Use `cl.validate()` to test how assertions respond to transactions
+- No return value from `cl.validate()`, but you can use `vm.expectRevert()` to check if it reverts
 - Multiple assertions can be linked to the same contract
 
 This means you can leverage your existing Forge testing knowledge while using these additional features to verify your assertions work correctly.
