@@ -1,6 +1,161 @@
 ---
 title: 'Frequently Asked Questions'
-description: 'Here you can find answers to the most common questions'
+description: 'Common questions about the Phylax Credible Layer'
 ---
 
-If you can't find what you're looking for, please reach out according to the [Support](support) page.
+## General Questions
+
+### What is the Phylax Credible Layer (PCL)?
+The Phylax Credible Layer is a security framework that prevents smart contract exploits by enforcing user-defined security rules (assertions) at the sequencer level. It stops malicious transactions before they can affect your protocol.
+
+### Why do I need the Credible Layer when I can write rules in my contracts?
+There are several key advantages:
+1. **Off-chain Execution**: Rules that would be too expensive or impossible to express on-chain 
+   can be implemented as assertions
+2. **Simpler Security Model**: Instead of handling all edge cases in your contract, you define 
+   states that should never occur
+3. **No Redeployment**: Add new security rules without modifying your existing contracts
+4. **Comprehensive Protection**: Define protocol-wide invariants that span multiple contracts
+
+### How does PCL differ from other security approaches?
+The Credible Layer offers several key advantages:
+
+1. **Prevention First**: Stops attacks before they happen by filtering invalid transactions, rather than detecting them after the fact
+2. **Protocol-Defined Security**: Your team defines exact security rules in Solidity, eliminating false positives from generic heuristics
+3. **No Contract Changes**: Add new security rules without modifying or redeploying your contracts
+4. **Comprehensive Coverage**: Define rules that span multiple contracts and complex interactions
+5. **Economic Incentives**: Creates a market where sequencers earn fees for enforcing security rules
+
+### What's the difference between assertions and traditional audits?
+While audits provide one-time code reviews, assertions offer continuous protection against:
+- New attack vectors discovered after deployment
+- Unexpected contract interactions
+- Changes in market conditions
+- Updates to protocol parameters
+- Governance decisions
+
+## Technical Details
+
+### What exactly is an assertion?
+An assertion is a Solidity contract that defines invalid states your protocol should never reach. Common examples include:
+- Unauthorized admin changes
+- Suspicious price movements
+- Violation of core protocol invariants
+- Complex cross-contract validations
+
+### What are invariants and why are they important?
+
+Invariants are properties of your protocol that must always remain true. They are fundamental to 
+the Credible Layer's approach to security:
+
+1. **Definition**: 
+   - Mathematical properties that must hold true throughout execution
+   - Core rules that define valid vs. invalid protocol states
+   - Security guarantees that shouldn't be violated
+
+2. **Common Examples**:
+   - Total supply must equal sum of all balances
+   - Pool balance should never drop below initial deposit
+   - Admin privileges can't be granted without proper authorization
+   - Price changes must stay within acceptable bounds
+
+3. **Advantages**:
+   - More robust than trying to catch all possible exploits
+   - Easier to reason about security properties
+   - Can catch novel attack vectors
+   - Provides clear security boundaries
+
+For a good explainer on invariants see [this article](https://blog.trailofbits.com/2025/02/12/the-call-for-invariant-driven-development/)
+
+### How do assertions work?
+Assertions run off-chain through the PhEVM (Phylax EVM) and can:
+1. Compare state before and after transactions
+2. Monitor specific function calls
+3. Track changes to storage slots
+4. Analyze transaction patterns
+5. Enforce protocol-wide invariants
+
+### What are cheatcodes and how do they help?
+
+Cheatcodes are special functions provided by the PhEVM that give assertions powerful capabilities 
+beyond standard Solidity:
+
+1. **State Inspection**: 
+   - Examine blockchain state at any point in a transaction
+   - Compare values before and after execution
+   - Access historical state data
+
+2. **Transaction Analysis**:
+   - Inspect call data and function parameters
+   - Track emitted events
+   - Monitor internal transactions
+   - Analyze call traces
+
+3. **Storage Access**:
+   - Monitor specific storage slots
+   - Track state changes across contracts
+   - Access complex data structures
+   - Monitor cross-contract interactions
+
+4. **Testing Utilities**:
+   - Simulate different scenarios
+   - Mock contract responses
+   - Manipulate execution environment
+   - Debug assertion behavior
+
+For detailed documentation and examples of all available cheatcodes, see our 
+[Cheatcodes Reference Guide](/assertions-bookgit/cheatcodes).
+
+### How do I upgrade assertions?
+Updating assertions is straightforward:
+1. Disable current assertion
+2. Deploy new assertion pointing to upgraded contract
+3. Enable new assertion
+4. Include these steps in your upgrade process
+
+## Implementation and Adoption
+
+### Why would sequencers or block builders implement the Credible Layer?
+The Credible Layer creates value in multiple ways:
+1. **Economic Incentives**: Assertion Enforcers earn fees through the Assertion Enforcement Market
+2. **Network Value**: Increases transaction and network value by enabling additional security rules
+3. **Market Creation**: Enables a new market for security services
+
+### How does PCL work at the sequencer level?
+The Credible Layer uses a modified Flashbots builder that:
+1. Simulates each transaction against relevant assertions
+2. Allows valid transactions to proceed
+3. Filters out transactions that violate assertions
+4. Maintains Superchain compliance for L2 compatibility
+
+### How are forced inclusion transactions handled?
+For L1->L2 deposits and other forced transactions, PCL:
+1. Intercepts incoming L1 blocks
+2. Validates deposit transactions
+3. Manages state progression during validation
+4. Applies mitigations if needed
+5. Ensures the L2 chain never stalls
+
+### Does this introduce new trust assumptions?
+No. For single-sequencer L2s, users already trust the sequencer. PCL simply extends the sequencer's validation logic with protocol-defined rules.
+
+Need more help? Join our [Telegram](https://t.me/phylax_credible_layer).
+
+### What are some example use cases for assertions?
+1. **DeFi Protection**
+   - Prevent flash loan attacks
+   - Monitor liquidity pool ratios
+   - Enforce borrowing limits
+   - Detect price manipulation
+
+2. **Governance Safety**
+   - Validate proposal execution
+   - Monitor admin actions
+   - Enforce timelock requirements
+   - Track parameter changes
+
+3. **Cross-Protocol Security**
+   - Monitor oracle data feeds
+   - Track cross-chain messages
+   - Validate bridge transactions
+   - Enforce protocol dependencies
