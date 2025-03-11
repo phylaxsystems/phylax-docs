@@ -3,10 +3,18 @@ title: 'Frequently Asked Questions'
 description: 'Common questions about the Phylax Credible Layer'
 ---
 
+# Frequently Asked Questions (FAQ)
+
+Welcome to the Phylax Credible Layer FAQ! Here you'll find answers to common questions about PCL's 
+features, capabilities, and usage. If you can't find what you're looking for, please reach out in 
+our [Telegram](https://t.me/phylax_credible_layer).
+
 ## General Questions
 
 ### What is the Phylax Credible Layer (PCL)?
-The Phylax Credible Layer is a security framework that prevents smart contract exploits by enforcing user-defined security rules (assertions) at the sequencer level. It stops malicious transactions before they can affect your protocol.
+PCL is a security framework that prevents smart contract exploits by enforcing user-defined security 
+rules (assertions) at the sequencer level. It stops malicious transactions before they can affect 
+your protocol.
 
 ### Why do I need the Credible Layer when I can write rules in my contracts?
 There are several key advantages:
@@ -37,7 +45,10 @@ While audits provide one-time code reviews, assertions offer continuous protecti
 ## Technical Details
 
 ### What exactly is an assertion?
-An assertion is a Solidity contract that defines invalid states your protocol should never reach. Common examples include:
+An assertion is a Solidity contract that defines invalid states your protocol should never reach.
+You can think of it as an inverse intent. You define something you don't want to happen without specifying or caring about all the edge cases that could lead to it.
+
+Common examples include:
 - Unauthorized admin changes
 - Suspicious price movements
 - Violation of core protocol invariants
@@ -45,8 +56,7 @@ An assertion is a Solidity contract that defines invalid states your protocol sh
 
 ### What are invariants and why are they important?
 
-Invariants are properties of your protocol that must always remain true. They are fundamental to 
-the Credible Layer's approach to security:
+Invariants are properties of your protocol that must always remain true. They are fundamental to the Credible Layer's approach to security:
 
 1. **Definition**: 
    - Mathematical properties that must hold true throughout execution
@@ -104,7 +114,7 @@ beyond standard Solidity:
    - Debug assertion behavior
 
 For detailed documentation and examples of all available cheatcodes, see our 
-[Cheatcodes Reference Guide](/assertions-bookgit/cheatcodes).
+[Cheatcodes Reference Guide](/assertions-book/cheatcodes).
 
 ### How do I upgrade assertions?
 Updating assertions is straightforward:
@@ -122,7 +132,7 @@ The Credible Layer creates value in multiple ways:
 3. **Market Creation**: Enables a new market for security services
 
 ### How does PCL work at the sequencer level?
-The Credible Layer uses a modified Flashbots builder that:
+PCL uses a modified Flashbots builder that:
 1. Simulates each transaction against relevant assertions
 2. Allows valid transactions to proceed
 3. Filters out transactions that violate assertions
@@ -138,8 +148,6 @@ For L1->L2 deposits and other forced transactions, PCL:
 
 ### Does this introduce new trust assumptions?
 No. For single-sequencer L2s, users already trust the sequencer. PCL simply extends the sequencer's validation logic with protocol-defined rules.
-
-Need more help? Join our [Telegram](https://t.me/phylax_credible_layer).
 
 ### What are some example use cases for assertions?
 1. **DeFi Protection**
@@ -159,3 +167,19 @@ Need more help? Join our [Telegram](https://t.me/phylax_credible_layer).
    - Track cross-chain messages
    - Validate bridge transactions
    - Enforce protocol dependencies
+### How do I test my assertions?
+
+Testing assertions is similar to standard Forge testing, with additional PCL-specific features:
+
+1. **Standard Testing Tools**:
+   - Use familiar Forge assertions (`assertEq`, `assertTrue`)
+   - Access standard cheatcodes (`vm.prank`, `vm.deal`)
+   - Leverage console logging for debugging
+
+2. **PCL-Specific Testing**:
+   - Register assertions using `cl.addAssertion()`
+   - Validate transactions with `cl.validate()`
+   - Test both positive and negative cases
+   - Verify assertion behavior across different scenarios
+
+For detailed examples and testing patterns, see our [Testing Guide](/credible/testing-assertions).
