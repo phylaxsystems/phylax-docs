@@ -5,7 +5,7 @@ description: 'Common questions about the Phylax Credible Layer'
 
 # Frequently Asked Questions (FAQ)
 
-Welcome to the Phylax Credible Layer FAQ! Here you'll find answers to common questions about PCL's 
+Welcome to the Phylax Credible Layer FAQ! Here you'll find answers to common questions about the PCL's 
 features, capabilities, and usage. If you can't find what you're looking for, please reach out in 
 our [Telegram](https://t.me/phylax_credible_layer).
 
@@ -19,7 +19,7 @@ your protocol.
 ### Why do I need the Credible Layer when I can write rules in my contracts?
 There are several key advantages:
 1. **Off-chain Execution**: Rules that would be too expensive or impossible to express on-chain 
-   can be implemented as assertions
+   can be implemented as assertions. Our current benchmarks show around 1000x efficiency gains.
 2. **Simpler Security Model**: Instead of handling all edge cases in your contract, you define 
    states that should never occur
 3. **No Redeployment**: Add new security rules without modifying your existing contracts
@@ -32,7 +32,8 @@ The Credible Layer offers several key advantages:
 2. **Protocol-Defined Security**: Your team defines exact security rules in Solidity, eliminating false positives from generic heuristics
 3. **No Contract Changes**: Add new security rules without modifying or redeploying your contracts
 4. **Comprehensive Coverage**: Define rules that span multiple contracts and complex interactions
-5. **Economic Incentives**: Creates a market where sequencers earn fees for enforcing security rules
+5. **Full Transparency**: Unlike AI/LLM analysis which operates as black boxes, assertions are written in Solidity and their logic is fully transparent and verifiable
+6. **Economic Incentives**: Creates a market where sequencers earn fees for enforcing security rules
 
 ### What's the difference between assertions and traditional audits?
 While audits provide one-time code reviews, assertions offer continuous protection against:
@@ -42,11 +43,23 @@ While audits provide one-time code reviews, assertions offer continuous protecti
 - Updates to protocol parameters
 - Governance decisions
 
+### What is the transparency dashboard?
+The transparency dashboard is a tool that allows you to view and browse all assertions deployed by different protocols.
+It is a useful tool for understanding the security posture of a protocol.
+
 ## Technical Details
 
 ### What exactly is an assertion?
-An assertion is a Solidity contract that defines invalid states your protocol should never reach.
-You can think of it as an inverse intent. You define something you don't want to happen without specifying or caring about all the edge cases that could lead to it.
+An assertion is a Solidity contract that defines invalid states your protocol should never reach. 
+You can think of it as an inverse intent - you define something you don't want to happen without 
+specifying or caring about all the edge cases that could lead to it.
+
+Assertions are binary in nature, implemented through Solidity's `require` statements:
+- If the `require` condition is met, the transaction is valid
+- If the `require` fails, the transaction is invalid and will be filtered out
+
+This simple binary approach makes assertions both powerful and easy to reason about - there's no 
+ambiguity about what constitutes a violation.
 
 Common examples include:
 - Unauthorized admin changes
@@ -56,7 +69,10 @@ Common examples include:
 
 ### What are invariants and why are they important?
 
-Invariants are properties of your protocol that must always remain true. They are fundamental to the Credible Layer's approach to security:
+Invariants are properties of your protocol that must always remain true. They are fundamental to 
+the Credible Layer's approach to security, and assertions are the perfect tool to enforce them. 
+While invariants define what should always be true, assertions give you the practical means to 
+enforce these rules across your entire protocol:
 
 1. **Definition**: 
    - Mathematical properties that must hold true throughout execution
@@ -78,7 +94,7 @@ Invariants are properties of your protocol that must always remain true. They ar
 For a good explainer on invariants see [this article](https://blog.trailofbits.com/2025/02/12/the-call-for-invariant-driven-development/)
 
 ### How do assertions work?
-Assertions run off-chain through the PhEVM (Phylax EVM) and can:
+Assertions run off-chain through the PhEVM (Phylax EVM) and:
 1. Compare state before and after transactions
 2. Monitor specific function calls
 3. Track changes to storage slots
@@ -123,13 +139,12 @@ Updating assertions is straightforward:
 3. Enable new assertion
 4. Include these steps in your upgrade process
 
-## Implementation and Adoption
+### Can I copy assertions from other protocols?
+Yes, you can copy assertions from other protocols and use them in your own protocol. You should make sure that the assertions are compatible with your protocol.
+It will make the most sense to copy assertions for standard libraries and interfaces.
+You will be able to see all assertions deployed by other protocols on the transparency dashboard.
 
-### Why would sequencers or block builders implement the Credible Layer?
-The Credible Layer creates value in multiple ways:
-1. **Economic Incentives**: Assertion Enforcers earn fees through the Assertion Enforcement Market
-2. **Network Value**: Increases transaction and network value by enabling additional security rules
-3. **Market Creation**: Enables a new market for security services
+## Implementation and Adoption
 
 ### How does PCL work at the sequencer level?
 PCL uses a modified Flashbots builder that:
@@ -142,9 +157,8 @@ PCL uses a modified Flashbots builder that:
 For L1->L2 deposits and other forced transactions, PCL:
 1. Intercepts incoming L1 blocks
 2. Validates deposit transactions
-3. Manages state progression during validation
-4. Applies mitigations if needed
-5. Ensures the L2 chain never stalls
+3. Applies mitigations if needed
+4. Ensures the L2 chain never stalls
 
 ### Does this introduce new trust assumptions?
 No. For single-sequencer L2s, users already trust the sequencer. PCL simply extends the sequencer's validation logic with protocol-defined rules.
