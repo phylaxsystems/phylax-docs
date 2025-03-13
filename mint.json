@@ -66,6 +66,8 @@
       "pages": [
         "credible/credible-introduction",
         "credible/pcl-reference-guide",
+        "credible/credible-install",
+        "credible/pcl-quickstart",
         "credible/pcl-assertion-guide",
         "credible/testing-assertions"
       ]

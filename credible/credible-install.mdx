@@ -1,9 +1,55 @@
 ---
-title: 'Installation'
-description: 'This page explains how to install the Phylax Credible Layer'
+title: 'Install PCL'
+description: 'This page explains how to install the Phylax Credible Layer (PCL) CLI'
 ---
+
+The PCL (Phylax Credible Layer) CLI is a command-line tool for interacting with the Phylax Credible Layer.
 
 ## Prerequisites
 
+Before installing PCL, ensure you have the following installed:
+
+- **Rust** (version 1.86 nightly or later)
+- **Git**
+
 ## Installation
 
+### Option 1: Build from Source
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/phylax-systems/credible-cli
+   cd credible-cli
+   ```
+
+2. Build the CLI:
+   ```bash
+   make build
+   ```
+
+3. The compiled binary will be available in the `target/release` directory.
+
+4. (Optional) Add the binary to your PATH for easier access:
+   ```bash
+   cp target/release/pcl /usr/local/bin/
+   # Or for a user-local installation
+   cp target/release/pcl ~/.local/bin/
+   ```
+
+### Option 2: Download Pre-built Binary
+
+*Coming soon*
+
+## Verifying Installation
+
+To verify that PCL is installed correctly, run:
+
+```bash
+pcl --version
+```
+
+You should see the version number of the installed PCL CLI.
+
+## Next Steps
+
+Now that you have PCL installed, you can learn how to [get started](/credible/pcl-quickstart) with the Credible Layer.

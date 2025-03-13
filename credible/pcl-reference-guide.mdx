@@ -1,14 +1,14 @@
 ---
-title: CLI Reference
-description: Complete reference documentation for the PCL command-line interface
+title: PCL CLI Reference
+description: Reference documentation for the PCL command-line interface
 ---
 
 ## Overview
 
-PCL (Phylax Credible Layer) CLI is a command-line tool for interacting with the Credible Layer. This guide covers all available commands and their usage.
+PCL (Phylax Credible Layer) CLI is a command-line tool for interacting with the Credible Layer.
 
-For installation instructions, see the [Installation Guide](./credible-install.mdx).
-For a getting started tutorial, see the [Quick Start Guide](./credible-quickstart.mdx).
+- For installation: [Installation Guide](/credible/credible-install)
+- For getting started: [Quick Start Guide](/credible/pcl-quickstart)
 
 ## Global Options
 
@@ -16,30 +16,20 @@ For a getting started tutorial, see the [Quick Start Guide](./credible-quickstar
 pcl [OPTIONS] <COMMAND>
 
 Options:
-  -r, --root <ROOT_DIR>              The root directory for the project. Defaults to the current directory [env: PCL_ROOT_DIR=]
-  -a, --assertions <ASSERTIONS_DIR>  The directory containing assertions 'src' and 'test' directories. Defaults to '/assertions' in the root directory [env: PCL_ASSERTIONS_DIR=]
+  -r, --root <ROOT_DIR>              Project root directory [env: PCL_ROOT_DIR=]
+  -a, --assertions <ASSERTIONS_DIR>  Assertions directory [env: PCL_ASSERTIONS_DIR=]
   -h, --help                         Print help
-  -V, --version                      Print version information
+  -V, --version                      Print version
 ```
 
 ## Commands
 
 ### phorge
 
-A minimal fork of Forge that includes a cheatcode for assertion execution.
+A minimal fork of Forge with functionality for assertion execution.
 
 ```bash
-pcl phorge [OPTIONS] <COMMAND>
-
-Commands:
-  test     Run tests
-  script   Run scripts
-  deploy   Deploy contracts
-```
-
-Example:
-```bash
-pcl phorge test
+pcl phorge test|script|deploy [OPTIONS]
 ```
 
 ### build
@@ -52,22 +42,10 @@ pcl build [OPTIONS]
 
 ### store
 
-Submit the Assertion bytecode and source code to be stored by the Assertion DA.
+Submit Assertion bytecode and source code to the Assertion DA.
 
 ```bash
-pcl store [OPTIONS] <ASSERTION>
-
-Arguments:
-  <ASSERTION>    Name of the assertion contract to submit
-
-Options:
-  --url <URL>    URL of the assertion-DA [env: PCL_DA_URL=]
-```
-
-Example:
-```bash
-# Store an assertion named "MyAssertion"
-pcl store MyAssertion
+pcl store <ASSERTION> [--url <URL>]
 ```
 
 ### submit
@@ -78,27 +56,19 @@ Submit assertions to the Credible Layer dApp.
 pcl submit [OPTIONS]
 
 Options:
-  -s, --project-name <NAME>     Name of the target project
-  -a, --assertion-name <NAME>   Name of the assertion to submit
-  --dapp-url <URL>              URL of the Credible Layer dApp [default: "https://credible-layer-dapp.pages.dev/api/v1"]
+  -s, --project-name <NAME>     Target project name
+  -a, --assertion-name <NAME>   Assertion to submit
+  --dapp-url <URL>              Credible Layer dApp URL
 ```
 
 If not specified, the command will prompt interactively to select the project and assertion(s).
 
 ### auth
 
-Authenticate with your Credible Layer dApp account.
+Manage authentication with your Credible Layer dApp account.
 
 ```bash
-pcl auth [OPTIONS] <COMMAND>
-
-Options:
-  --base-url <URL>    Base URL for authentication service [env: AUTH_BASE_URL=]
-
-Commands:
-  login     Login using your wallet
-  logout    Remove stored credentials
-  status    Check authentication status
+pcl auth login|logout|status [--base-url <URL>]
 ```
 
 ## Project Structure
@@ -114,22 +84,16 @@ root-dir/
 
 ## Environment Variables
 
-- `PCL_ROOT_DIR`: Set the root directory
-- `PCL_ASSERTIONS_DIR`: Set the assertions directory
-- `PCL_DA_URL`: Set the Assertion DA URL
-- `AUTH_BASE_URL`: Override authentication service URL
+- `PCL_ROOT_DIR`: Root directory
+- `PCL_ASSERTIONS_DIR`: Assertions directory
+- `PCL_DA_URL`: Assertion DA URL
+- `AUTH_BASE_URL`: Authentication service URL
 
 ## Configuration
 
-PCL stores configuration in `~/.pcl/config.toml`. This includes:
+PCL stores configuration in `~/.pcl/config.toml`, including authentication credentials, prepared assertions, and user preferences.
 
-- Authentication credentials (tokens and wallet address)
-- Assertions prepared for submission
-- User preferences
-
-The configuration is automatically managed through CLI commands, particularly during authentication and assertion submission. Environment variables (like `PCL_ROOT_DIR`, `AUTH_BASE_URL`) will override settings from the config file.
-
-## Support
+## Getting Help
 
 For detailed help on any command:
 ```bash
@@ -138,12 +102,5 @@ pcl <command> --help
 
 ## Troubleshooting
 
-Common issues and solutions:
-
-### Authentication Errors
-- **Error**: "Authentication required"
-- **Solution**: Run `pcl auth login` to authenticate
-
-### Build Failures
-- **Error**: "Assertion compilation failed"
-- **Solution**: Check assertion syntax and dependencies
+- **Authentication Errors**: Run `pcl auth login`
+- **Build Failures**: Check assertion syntax and dependencies
