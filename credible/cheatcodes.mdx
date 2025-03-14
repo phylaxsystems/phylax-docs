@@ -85,6 +85,24 @@ function getCallInputs(
 ) external view returns (CallInputs[] memory calls);
 ```
 
+<Info> Note on Internal Calls </Info>
+>Internal calls are not actual EVM calls but rather a Solidity language feature. They are not traced by the CallTracer and will not result in `CallInputs` or trigger call-based assertions. However, using the `this` keyword (e.g., `this.functionName()`) creates an external call that will be traced and can trigger assertions.
+>
+> Example:
+> ```solidity
+> function foo() external {
+>   // Internal call - not traced, no CallInputs generated
+>   bar();
+>   
+>   // External call via 'this' - traced, generates CallInputs
+>   this.bar();
+> }
+>
+> function bar() public {
+>   // Function implementation
+> }
+> ```
+
 ## State Change Tracking
 
 ### `getStateChanges`

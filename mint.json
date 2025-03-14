@@ -67,15 +67,14 @@
         "credible/credible-introduction",
         "credible/pcl-quickstart",
         "credible/pcl-assertion-guide",
-        "credible/testing-assertions"
+        "credible/testing-assertions",
+        "credible/cheatcodes"
       ]
-
     },
     {
       "group": "Introduction",
       "pages": [
-        "assertions-book/assertions-book-intro",
-        "assertions-book/cheatcodes"
+        "assertions-book/assertions-book-intro"
       ]
     },
     {
