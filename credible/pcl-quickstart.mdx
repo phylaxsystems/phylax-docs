@@ -38,6 +38,23 @@ cd pcl-tutorial-project
 mkdir -p assertions/src assertions/test src lib
 ```
 
+### Installing the credible-std Library
+
+Next, you need to install the `credible-std` library, which provides the base contracts and utilities for writing assertions:
+
+```bash
+phoundry install https://github.com/phylaxsystems/credible-std/
+```
+
+After installation, create a `remappings.txt` file at the root of your project with the following content:
+
+```
+credible-std/=lib/credible-std/src/
+forge-std/=lib/credible-std/lib/forge-std/src/
+```
+
+These remappings will ensure that your imports work correctly when referencing the credible-std library. The PCL CLI will automatically detect and use these remappings when compiling your contracts.
+
 Next, let's create the smart contract that our assertion will monitor. This is a simple `Ownable` contract that tracks ownership of a contract.
 
 Create a file `src/Ownable.sol`:
@@ -86,7 +103,7 @@ Create a file `assertions/src/OwnableAssertion.a.sol`:
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol"; // Credible Layer precompiles
+import {Assertion} from "credible-std/Assertion.sol"; // Using remapping for credible-std
 import {Ownable} from "../../src/Ownable.sol"; // Ownable contract
 
 contract OwnableAssertion is Assertion {
@@ -143,12 +160,11 @@ Create a file `assertions/test/OwnableAssertion.t.sol`:
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Credible} from "../../lib/credible-std/src/Credible.sol";
+import {Credible} from "credible-std/Credible.sol";
 import {OwnableAssertion} from "../src/OwnableAssertion.sol";
 import {Ownable} from "../../src/Ownable.sol";
-import {console} from "../../lib/credible-std/lib/forge-std/src/console.sol";
-import {CredibleTest} from "../../lib/credible-std/src/CredibleTest.sol";
-import {Test} from "../../lib/credible-std/lib/forge-std/src/Test.sol";
+import {CredibleTest} from "credible-std/CredibleTest.sol";
+import {Test} from "forge-std/Test.sol";
 
 contract TestOwnableAssertion is CredibleTest, Test {
     // Contract state variables

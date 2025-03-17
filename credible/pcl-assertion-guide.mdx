@@ -66,6 +66,23 @@ When using PCL assertions, your project should follow this structure:
 
 The `phorge` command takes the `assertions` directory location as an argument and should be run from the project root containing both `assertions` and `src` directories.
 
+### Installing the credible-std Library
+
+Before writing assertions, you need to install the `credible-std` library which provides the base contracts and utilities for PCL assertions:
+
+```bash
+phoundry install https://github.com/phylaxsystems/credible-std/
+```
+
+After installation, create a `remappings.txt` file at the root of your project with the following content:
+
+```
+credible-std/=lib/credible-std/src/
+forge-std/=lib/credible-std/lib/forge-std/src/
+```
+
+These remappings will ensure that your imports work correctly when referencing the credible-std library. The PCL CLI will automatically detect and use these remappings when compiling your contracts, so no additional configuration is needed.
+
 ## Writing the Assertion
 
 Let's create our assertion in `OwnableAssertion.sol`. Here's the complete code first, followed by a detailed breakdown:
@@ -74,7 +91,7 @@ Let's create our assertion in `OwnableAssertion.sol`. Here's the complete code f
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol"; // Credible Layer precompiles
+import {Assertion} from "credible-std/Assertion.sol"; // Credible Layer precompiles
 import {Ownable} from "../../src/Ownable.sol"; // Ownable contract
 
 contract OwnableAssertion is Assertion {
@@ -114,7 +131,7 @@ Let's break down the key components of our assertion:
 
 #### 1. Imports and Contract Definition
 ```solidity
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {Assertion} from "credible-std/Assertion.sol";
 import {Ownable} from "../../src/Ownable.sol";
 
 contract OwnableAssertion is Assertion {
@@ -259,11 +276,11 @@ function test_assertionOwnershipNotChanged() public {
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Credible} from "../../lib/credible-std/src/Credible.sol";
+import {Credible} from "credible-std/Credible.sol";
 import {OwnableAssertion} from "../src/OwnableAssertion.sol";
 import {Ownable} from "../../src/Ownable.sol";
-import {console} from "../../lib/credible-std/lib/forge-std/src/console.sol";
-import {CredibleTest} from "../../lib/credible-std/src/CredibleTest.sol";
+import {console} from "forge-std/console.sol";
+import {CredibleTest} from "credible-std/CredibleTest.sol";
 
 contract TestOwnableAssertion is CredibleTest {
     address public newOwner = address(0xdeadbeef);
@@ -307,5 +324,3 @@ contract TestOwnableAssertion is CredibleTest {
 2. **Transaction Simulation**: Use `cl.validate()` to test how assertions respond to transactions
 3. **State Manipulation**: Use Forge's cheatcodes (`vm.prank`, `vm.deal`) to set up test scenarios
 4. **Verification**: Use standard assertions (`assertTrue`, `assertFalse`) to verify outcomes
-
-
