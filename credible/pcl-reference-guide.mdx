@@ -1,0 +1,106 @@
+---
+title: PCL CLI Reference
+description: Reference documentation for the PCL command-line interface
+---
+
+## Overview
+
+PCL (Phylax Credible Layer) CLI is a command-line tool for interacting with the Credible Layer.
+
+- For installation: [Installation Guide](/credible/credible-install)
+- For getting started: [Quick Start Guide](/credible/pcl-quickstart)
+
+## Global Options
+
+```bash
+pcl [OPTIONS] <COMMAND>
+
+Options:
+  -r, --root <ROOT_DIR>              Project root directory [env: PCL_ROOT_DIR=]
+  -a, --assertions <ASSERTIONS_DIR>  Assertions directory [env: PCL_ASSERTIONS_DIR=]
+  -h, --help                         Print help
+  -V, --version                      Print version
+```
+
+## Commands
+
+### phorge
+
+A minimal fork of Forge with functionality for assertion execution.
+
+```bash
+pcl phorge test|script [OPTIONS]
+```
+
+### build
+
+Build the project and assertions.
+
+```bash
+pcl build [OPTIONS]
+```
+
+### store
+
+Submit Assertion bytecode and source code to the Assertion DA.
+
+```bash
+pcl store <ASSERTION> [--url <URL>]
+```
+
+### submit
+
+Submit assertions to the Credible Layer dApp.
+
+```bash
+pcl submit [OPTIONS]
+
+Options:
+  -s, --project-name <NAME>     Target project name
+  -a, --assertion-name <NAME>   Assertion to submit
+  --dapp-url <URL>              Credible Layer dApp URL
+```
+
+If not specified, the command will prompt interactively to select the project and assertion(s).
+
+### auth
+
+Manage authentication with your Credible Layer dApp account.
+
+```bash
+pcl auth login|logout|status [--base-url <URL>]
+```
+
+## Project Structure
+
+PCL expects the following directory structure:
+
+```text
+root-dir/
+  assertions-dir/
+    src/      # Assertion source files (.a.sol)
+    test/     # Test files (.t.sol)
+```
+
+## Environment Variables
+
+- `PCL_ROOT_DIR`: Root directory
+- `PCL_ASSERTIONS_DIR`: Assertions directory
+- `PCL_DA_URL`: Assertion DA URL
+- `AUTH_BASE_URL`: Authentication service URL
+
+## Configuration
+
+PCL stores configuration in `~/.pcl/config.toml`, including authentication credentials, prepared assertions, and user preferences.
+
+## Getting Help
+
+For detailed help on any command:
+```bash
+pcl <command> --help
+```
+
+## Troubleshooting
+
+- **Authentication Errors**: Run `pcl auth login`
+- **Build Failures**: Check assertion syntax and dependencies

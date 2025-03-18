@@ -1,9 +1,85 @@
 ---
-title: 'Installation'
-description: 'This page explains how to install the Phylax Credible Layer'
+title: 'Install PCL'
+description: 'This page explains how to install the Phylax Credible Layer (PCL) CLI'
 ---
+
+The PCL (Phylax Credible Layer) CLI is a command-line tool for interacting with the Phylax Credible Layer.
 
 ## Prerequisites
 
+Before installing PCL, ensure you have the following installed:
+
+- **Rust** (version 1.86 nightly or later)
+- **Git**
+
 ## Installation
 
+### Option 1: Build from Source
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/phylaxsystems/pcl
+   cd pcl
+   ```
+
+2. Build the CLI:
+   ```bash
+   make build
+   ```
+
+3. The compiled binaries will be available in the `target/release` directory. PCL relies on two main binaries:
+   - `pcl`: The main CLI tool
+   - `phorge`: A supporting binary required for PCL functionality
+
+4. (Optional) Add the binaries to your PATH for easier access:
+   ```bash
+   # System-wide installation (requires admin privileges)
+   cp target/release/pcl /usr/local/bin/
+   cp target/release/phorge /usr/local/bin/
+   
+   # Or for a user-local installation
+   cp target/release/pcl ~/.local/bin/
+   cp target/release/phorge ~/.local/bin/
+   ```
+
+   You can place these binaries in any directory that's in your PATH. Choose a location that works best for your system configuration.
+
+### Option 2: Download Pre-built Binary
+
+Pre-built binaries are available for download from the [GitHub releases page](https://github.com/phylaxsystems/pcl/releases).
+
+1. Download the appropriate binary for your platform.
+
+2. Make the binaries executable:
+   ```bash
+   chmod +x pcl
+   chmod +x phorge
+   ```
+
+**Note:** The binaries might have slightly different names depending on the platform.
+For example, on Linux, they might be named `pcl-aarch64-apple` and `phorge-aarch64-apple`.
+
+3. Move the binaries to a location in your PATH:
+   ```bash
+   # System-wide installation (requires admin privileges)
+   mv pcl /usr/local/bin/
+   mv phorge /usr/local/bin/
+   
+   # Or for a user-local installation
+   mv pcl ~/.local/bin/
+   mv phorge ~/.local/bin/
+   ```
+
+## Verifying Installation
+
+To verify that PCL is installed correctly, run:
+
+```bash
+pcl --version
+```
+
+You should see the version number of the installed PCL CLI.
+
+## Next Steps
+
+Now that you have PCL installed, you can learn how to [get started](/credible/pcl-quickstart) with the Credible Layer.
