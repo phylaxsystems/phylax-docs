@@ -23,7 +23,7 @@ Before you begin, make sure you have:
 - Solidity knowledge (basic understanding of contracts and functions)
 - A wallet for authentication (MetaMask or similar)
 - Taken a look at the [Assertion Guide](credible/pcl-assertion-guide) to understand the basics of assertions
-
+- Foundry installed (see the [Foundry Installation Guide](https://book.getfoundry.sh/getting-started/installation))
 
 
 ## 1. Project Setup
@@ -38,12 +38,18 @@ cd pcl-tutorial-project
 mkdir -p assertions/src assertions/test src lib
 ```
 
+Next, in order to make sure that forge works correctly, we need to the root folder of the project to be a git repository.
+
+```bash
+git init
+```
+
 ### Installing the credible-std Library
 
 Next, you need to install the `credible-std` library, which provides the base contracts and utilities for writing assertions:
 
 ```bash
-phoundry install https://github.com/phylaxsystems/credible-std/
+forge install https://github.com/phylaxsystems/credible-std/
 ```
 
 After installation, create a `remappings.txt` file at the root of your project with the following content:
@@ -97,6 +103,8 @@ Assertions in PCL are Solidity contracts that inherit from the `Assertion` base 
 
 Let's create a simple assertion that checks if an `Ownable` contract's ownership has changed after a transaction.
 
+For a detailed breakdown of the assertion code, see the [Assertion Guide](credible/pcl-assertion-guide).
+
 Create a file `assertions/src/OwnableAssertion.a.sol`:
 
 ```solidity
@@ -146,7 +154,7 @@ contract OwnableAssertion is Assertion {
 ### Key Components of an Assertion:
 
 1. **Inheritance**: All assertions must inherit from the `Assertion` base contract.
-2. **Constructor**: Initialize the contract(s) you want to check.
+2. **Constructor**: Initialize references to the contracts you want to monitor.
 3. **Triggers Function**: Register which assertion functions should be triggered.
 4. **Assertion Functions**: Implement the actual checks using pre and post transaction states.
 
@@ -246,7 +254,7 @@ Before you can submit your assertion, you need to build it:
 pcl build
 ```
 
-This will compile your assertion and generate the necessary artifacts in the `.pcl` directory.
+This will compile your assertion and generate the necessary artifacts.
 
 ## 6. Authenticating with PCL
 
@@ -307,4 +315,4 @@ For more detailed information about the PCL CLI and its commands, see the [CLI R
 - **PCL (Phylax Credible Layer)**: The system that executes and verifies assertions
 - **Assertion DA**: Data Availability layer that stores assertion code and metadata
 - **Pre-state/Post-state**: Snapshots of blockchain state before and after a transaction
-- **Trigger**: A function that determines when an assertion should be executed
+- **Trigger**: A function that determines the conditions under which an assertion should be executed
