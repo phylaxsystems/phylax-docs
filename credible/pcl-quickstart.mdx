@@ -3,5 +3,316 @@ title: 'PCL Quickstart'
 description: 'A quickstart guide to using the PCL CLI'
 ---
 
+## Introduction
+
+This guide will walk you through the process of creating, testing, and submitting an assertion using the PCL (Phylax Credible Layer) CLI. By the end of this tutorial, you'll understand how to:
+
+1. Set up your project structure
+2. Write a simple assertion
+3. Test your assertion
+4. Build and store your assertion
+5. Submit your assertion to the Credible Layer
+
+You can find the example used in this guide plus some additional examples in the [pcl](https://github.com/phylaxsystems/pcl/tree/main/testdata/mock-protocol) repository.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- PCL CLI installed (see the [Installation Guide](credible/credible-install))
+- Solidity knowledge (basic understanding of contracts and functions)
+- A wallet for authentication (MetaMask or similar)
+- Taken a look at the [Assertion Guide](credible/pcl-assertion-guide) to understand the basics of assertions
+- Foundry installed (see the [Foundry Installation Guide](https://book.getfoundry.sh/getting-started/installation))
 
 
+## 1. Project Setup
+
+First, let's set up a project with the correct directory structure:
+
+```bash
+mkdir pcl-tutorial-project
+cd pcl-tutorial-project
+
+# Create the required directories
+mkdir -p assertions/src assertions/test src lib
+```
+
+Next, in order to make sure that forge works correctly, we need to the root folder of the project to be a git repository.
+
+```bash
+git init
+```
+
+### Installing the credible-std Library
+
+Next, you need to install the `credible-std` library, which provides the base contracts and utilities for writing assertions:
+
+```bash
+forge install https://github.com/phylaxsystems/credible-std/
+```
+
+After installation, create a `remappings.txt` file at the root of your project with the following content:
+
+```
+credible-std/=lib/credible-std/src/
+forge-std/=lib/credible-std/lib/forge-std/src/
+```
+
+These remappings will ensure that your imports work correctly when referencing the credible-std library. The PCL CLI will automatically detect and use these remappings when compiling your contracts.
+
+Next, let's create the smart contract that our assertion will monitor. This is a simple `Ownable` contract that tracks ownership of a contract.
+
+Create a file `src/Ownable.sol`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+contract Ownable {
+    address private _owner;
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+    constructor() {
+        _owner = address(0xdead);
+        emit OwnershipTransferred(address(0), _owner);
+    }
+
+    modifier onlyOwner() {
+        require(_owner == msg.sender, "Ownable: caller is not the owner");
+        _;
+    }
+
+    // Get the current owner
+    function owner() public view returns (address) {
+        return _owner;
+    }
+
+    function transferOwnership(address newOwner) public onlyOwner {
+        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        emit OwnershipTransferred(_owner, newOwner);
+        _owner = newOwner;
+    }
+}
+```
+
+## 2. Writing Your First Assertion
+
+Assertions in PCL are Solidity contracts that inherit from the `Assertion` base contract. They define checks that can be run against smart contracts to verify specific properties.
+
+Let's create a simple assertion that checks if an `Ownable` contract's ownership has changed after a transaction.
+
+For a detailed breakdown of the assertion code, see the [Assertion Guide](credible/pcl-assertion-guide).
+
+Create a file `assertions/src/OwnableAssertion.a.sol`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "credible-std/Assertion.sol"; // Using remapping for credible-std
+import {Ownable} from "../../src/Ownable.sol"; // Ownable contract
+
+contract OwnableAssertion is Assertion {
+    // The contract we're monitoring
+    Ownable ownable;
+
+    // Constructor takes the address of the contract to monitor
+    constructor(address ownable_) {
+        ownable = Ownable(ownable_); // Initialize the Ownable contract reference
+    }
+
+    // The triggers function tells the Credible Layer which assertion functions to run
+    // This is required by the Assertion interface
+    function triggers() external view override {
+        // Register our assertion function to be called when transactions interact with the Ownable contract
+        registerCallTrigger(this.assertionOwnershipChange.selector);
+    }
+
+    // This assertion checks if ownership has changed between pre and post transaction states
+    function assertionOwnershipChange() external {
+        // Create a snapshot of the blockchain state before the transaction
+        ph.forkPreState(); // For more details on cheatcodes like this, see [PCL Cheatcodes Reference](credible/cheatcodes)
+        
+        // Get the owner before the transaction
+        address preOwner = ownable.owner();
+        
+        // Create a snapshot of the blockchain state after the transaction
+        ph.forkPostState();
+        
+        // Get the owner after the transaction
+        address postOwner = ownable.owner();
+        
+        // Assert that the owner hasn't changed
+        // If this requirement fails, the assertion will revert
+        require(postOwner == preOwner, "Ownership has changed");
+    }
+}
+```
+
+### Key Components of an Assertion:
+
+1. **Inheritance**: All assertions must inherit from the `Assertion` base contract.
+2. **Constructor**: Initialize references to the contracts you want to monitor.
+3. **Triggers Function**: Register which assertion functions should be triggered.
+4. **Assertion Functions**: Implement the actual checks using pre and post transaction states.
+
+## 3. Testing Your Assertion
+
+To test your assertion, create a test file in the `assertions/test` directory:
+
+Create a file `assertions/test/OwnableAssertion.t.sol`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Credible} from "credible-std/Credible.sol";
+import {OwnableAssertion} from "../src/OwnableAssertion.sol";
+import {Ownable} from "../../src/Ownable.sol";
+import {CredibleTest} from "credible-std/CredibleTest.sol";
+import {Test} from "forge-std/Test.sol";
+
+contract TestOwnableAssertion is CredibleTest, Test {
+    // Contract state variables
+    Ownable public assertionAdopter;
+    address public initialOwner = address(0xdead);
+    address public newOwner = address(0xdeadbeef);
+
+    // Set up the test environment
+    function setUp() public {
+        assertionAdopter = new Ownable();
+        vm.deal(initialOwner, 1 ether);
+    }
+
+    // Test case: Ownership changes should trigger the assertion
+    function test_assertionOwnershipChanged() public {
+        address aaAddress = address(assertionAdopter);
+        string memory label = "Ownership has changed";
+
+        // Associate the assertion with the protocol
+        // cl will manage the correct assertion execution when the protocol is called
+        cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
+
+        // Simulate a transaction that changes ownership
+        vm.prank(initialOwner);
+        vm.expectRevert("Assertions Reverted");
+        cl.validate(
+            label, aaAddress, 0, abi.encodePacked(assertionAdopter.transferOwnership.selector, abi.encode(newOwner))
+        );
+    }
+
+    // Test case: No ownership change should pass the assertion
+    function test_assertionOwnershipNotChanged() public {
+        string memory label = "Ownership has not changed";
+        address aaAddress = address(assertionAdopter);
+
+        cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
+
+        // Simulate a transaction that doesn't change ownership (transferring to same owner)
+        vm.prank(initialOwner);
+        cl.validate(
+            label, aaAddress, 0, abi.encodePacked(assertionAdopter.transferOwnership.selector, abi.encode(initialOwner))
+        );
+    }
+}
+```
+
+## 4. Running Tests
+
+Use the PCL CLI to run your tests:
+
+```bash
+pcl phorge test
+```
+
+This command will compile your assertion and run the tests.
+You should see output looking like this indicating that the tests have passed:
+
+```bash
+Ran 2 tests for assertions/test/OwnableAssertion.t.sol:TestOwnableAssertion
+[PASS] test_assertionOwnershipChanged() (gas: 806650)
+[PASS] test_assertionOwnershipNotChanged() (gas: 804708)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 648.17ms (1.11s CPU time)
+```
+
+### Troubleshooting Test Issues
+
+If your tests fail, check for these common issues:
+
+- **Compilation errors**: Ensure your Solidity syntax is correct
+- **Incorrect imports**: Verify all import paths are correct
+- **State mismatch**: Make sure your test properly sets up the initial state
+- **Assertion logic**: Double-check the logic in your assertion function
+
+## 5. Building Your Assertion
+
+Before you can submit your assertion, you need to build it:
+
+```bash
+pcl build
+```
+
+This will compile your assertion and generate the necessary artifacts.
+
+## 6. Authenticating with PCL
+
+Before submitting your assertion, you need to authenticate:
+
+```bash
+pcl auth login
+```
+
+This will open a browser window where you can connect your wallet and authenticate with the Credible Layer.
+
+If authentication fails, ensure:
+- Your wallet has the correct network selected
+- You have an internet connection
+- The PCL CLI is properly installed
+
+## 7. Storing Your Assertion
+
+Next, store your assertion in the Assertion Data Availability layer (Assertion DA):
+
+```bash
+pcl store OwnableAssertion
+```
+
+This command submits your assertion's bytecode and source code to be stored by the Assertion DA, making it available for verification by the network.
+
+## 8. Submitting Your Assertion
+
+Finally, submit your assertion to the Credible Layer dApp:
+
+```bash
+pcl submit
+```
+
+This will prompt you to select the project and assertion(s) you want to submit. Follow the interactive prompts to complete the submission.
+
+Alternatively, you can specify the project and assertion directly:
+
+```bash
+pcl submit --project-name "MyProject" --assertion-name "OwnableAssertion"
+```
+
+## Conclusion
+
+Congratulations! You've successfully created, tested, and submitted your first assertion using the PCL CLI. You can now create more complex assertions to verify various properties of smart contracts.
+
+### Next Steps
+
+1. **Try more complex assertions**: Check out the [examples repository](https://github.com/phylaxsystems/pcl/tree/main/testdata/mock-protocol) for more advanced assertion patterns
+2. **Integrate with your own projects**: Apply assertions to your existing smart contracts
+3. **Join the community**: Share your assertions and learn from others in the [Phylax Telegram](https://t.me/phylax_credible_layer)
+
+For more detailed information about the PCL CLI and its commands, see the [CLI Reference Guide](credible/pcl-reference-guide).
+
+## Glossary
+
+- **Assertion**: A smart contract that verifies properties of other contracts
+- **PCL (Phylax Credible Layer)**: The system that executes and verifies assertions
+- **Assertion DA**: Data Availability layer that stores assertion code and metadata
+- **Pre-state/Post-state**: Snapshots of blockchain state before and after a transaction
+- **Trigger**: A function that determines the conditions under which an assertion should be executed
