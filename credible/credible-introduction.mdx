@@ -5,7 +5,7 @@ description: 'What is the Phylax Credible Layer?'
 
 # The Phylax Credible Layer
 
-The Phylax Credible Layer is a powerful security protocol that enhances blockchain applications without requiring any modifications to your existing smart contracts. It provides a non-invasive layer of protection that allows developers to define security rules and conditions that operate alongside their dApps, preventing potentially harmful operations before they occur.
+The Credible Layer is security infrastructure that enables developers to link security rules to their smart contracts on-chain. Then, the network validates every transaction that interacts with their smart contracts against their security rules, dropping any invalidating transaction. Unlike traditional security approaches that merely monitor or mitigate damage after an attack has occurred, the Credible Layer actively prevents hacks by blocking malicious transactions before they can be executed on-chain.
 
 ## Core Concept: Credible Computing
 
@@ -13,7 +13,8 @@ At its core, the Credible Layer allows dApps to define states they don't want to
 
 - **Non-invasive**: Works alongside your existing smart contracts without requiring modifications
 - **Deterministic**: Assertions produce consistent results for the same transaction and state
-- **Transparent**: All assertion code is public and can be audited on-chain
+- **Binary**: Assertions either pass or fail, without any uncertainty
+- **Verifiable**: All assertion code is public and can be verified by anyone
 - **Preventative**: Assertions block transactions that would violate security invariants
 
 ![Credible Layer Architecture](/images/protocol-flow-diagram.png)
@@ -22,9 +23,9 @@ At its core, the Credible Layer allows dApps to define states they don't want to
 
 Assertions are the fundamental building blocks of the Credible Layer's security model:
 
-- **What Are Assertions?** Assertions are separate Solidity files that define conditions and rules for transaction validation. They allow developers to maintain protocol invariants and implement custom security logic without altering their core contract code.
+- **What Are Assertions?** Assertions are separate smart contracts that define conditions and rules for transaction validation. They allow developers to maintain protocol invariants and implement custom security logic without altering their core contract code. Unlike traditional security measures that only detect or mitigate attacks after they occur, assertions actually prevent hacks by blocking malicious transactions before they can be executed. Assertions leverage special "cheatcodes" that enable powerful security logic not possible in vanilla smart contracts, such as comparing pre-transaction and post-transaction state and inspecting storage slot updates for an entire call stack.
 
-- **How They Work**: When a transaction interacts with a dApp's contract, assertions are run by the block builder of the rollup, which simulates whether the incoming transaction would violate any of the defined assertion conditions. This happens before transaction finalization, adding a protective layer around your existing contracts.
+- **How They Work**: When a transaction interacts with a dApp's contract, assertions are run by the block builder, which simulates whether the incoming transaction would violate any of the defined assertion conditions. This happens before transaction finalization, adding a protective layer around your existing contracts.
 
 - **Flexibility and Power**: Assertions go beyond simple invariant checking. They can be used to implement complex security rules such as:
   - Maintaining critical protocol invariants (e.g., ensuring total assets ≥ total liabilities)
@@ -47,6 +48,12 @@ function assertionOwnerChange() external {
     require(preOwner == postOwner, "Owner changed");
 }
 ```
+
+<Note>
+
+You can think of assertions as reverse intents. Instead of specifying what you want to happen, you specify what you don't want to happen, without worrying about how it could happen.
+
+</Note>
 
 ### The Power of Assertions
 
