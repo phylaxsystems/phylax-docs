@@ -1,0 +1,45 @@
+---
+title: Call Frame Context
+description: Gain fine-grained context about a call frame in order to improve the precision of assertions by allowing to access pre and post call frame states.
+---
+
+## Status
+
+- [ ] Supported
+- [ ] Partially Supported
+- [x] Not Supported Yet
+
+## Implementation Details
+
+### Required Cheatcodes
+
+- A cheatcode which attaches an assertion to a specific call frame
+- Potential access functions to retrieve pre/post states within the specific call context
+
+### Example Implementation
+
+### Implementation Notes
+
+- **Call frame isolation:**
+    - The implementation is similar to the [function-call-inputs](/credible/use-case-mappings/function-call-inputs) use case
+    - The main difference is that the context, the assertion is running on, is only the specific
+      call frame and its pre and post state
+
+- **Benefits over transaction-level assertions:**
+    - Provides more precise state validation at the individual function call level
+    - Allows validation of intermediate states within a transaction
+    - Makes complex, multi-function transactions easier to validate
+
+## Example Use Cases
+
+- See [function-call-inputs](/credible/use-case-mappings/function-call-inputs) and break it down to single call frames.
+
+## Known Limitations
+
+- Recursive function calls are not supported and might be difficult to be tracked
+  - Recursive calls will compound the state changes similar to traditional executions on the transaction level
+  - Users have to ensure that no recursive function calls are possible
+
+## Future Improvements
+
+- Provide handling for recursive execution calls
