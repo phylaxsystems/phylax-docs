@@ -3,7 +3,7 @@ title: PhEVM Cheatcodes
 description: Overview of the cheatcodes made available for the Phylax Credible Layer
 ---
 
-## Overview
+## Introduction
 
 Cheatcodes are PhEVM (Phylax EVM) specific instructions implemented in native code instead of EVM 
 bytecode. They can communicate with Internal APIs and support all existing Ethereum cheatcodes up 
@@ -12,6 +12,12 @@ to Dancun, plus new capabilities for:
 1. Manipulation of the PhEVM state
 2. Forking of state from one or multiple EVM networks
 3. Utilities for writing and managing assertions
+
+> **Note on Terminology:** You may notice the terms "precompiles" and "cheatcodes" used interchangeably 
+> in some contexts. We use the term "cheatcodes" as it's more familiar to Solidity developers who are 
+> already using testing frameworks like Foundry/Forge or Hardhat. Both terms refer to native functions 
+> that extend the EVM's capabilities, but "cheatcodes" better reflects their role in the developer 
+> experience.
 
 ## Storage Operations
 
