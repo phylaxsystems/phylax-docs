@@ -1,0 +1,94 @@
+---
+title: Variable State Change Tracking
+description: Track and assert all values assigned to a specific storage variable during a transaction's execution, including intermediate states.
+---
+
+## Status
+
+- [x] Supported
+- [ ] Partially Supported
+- [ ] Not Supported Yet
+
+## Implementation Details
+
+### Required Cheatcodes
+
+- `getStateChanges(address aa, bytes32 slot)`
+
+### Example Implementation
+
+Protocol:
+
+```solidity
+// Example contract code if needed
+contract MonotonicallyIncreasingValue {
+    uint256 public value;
+
+    function setValue(uint256 value_) external {
+        value = value_;
+    }
+}
+```
+
+Assertion:
+
+```solidity
+contract StateChangesAssertion is Assertion {
+    MonotonicallyIncreasingValue public protocol;
+
+    constructor(MonotonicallyIncreasingValue protocol_) {
+        protocol = protocol_;
+    }
+
+    function triggers() public view override {
+        registerCallTrigger(this.assertionStateChanges.selector);
+    }
+
+    function assertionStateChanges() public view {
+        uint256[] memory changes = getStateChangesUint(address(protocol), 0x0);
+        for (uint256 i = 0; i < changes.length - 1; i++) {
+            require(changes[i] < changes[i + 1], "Value is not monotonically increasing");
+        }
+    }
+}
+```
+
+### Implementation Notes
+
+- **Storage access helpers:**
+    - The `getStateChangesTYPE()` helper functions return the changes for the given slot cast to the respective type
+    - Storage layout packing has to be handled by the user
+
+- **State change ordering:**
+    - The `getStateChanges()` function returns the changes in order of changes being made
+    - To access values of a mapping, the slot has to be calculated manually
+    - The pre-execution value is not included in the state changes
+
+## Example Use Cases
+
+- Make sure that a variable never changes its value:
+    - Implementation slot of a proxy
+    - Owner of a contract
+
+- Make sure assigned values meet certain criteria:
+    - Price oracle increases/decreases max by x%
+    - Address changed to a whitelisted value
+
+## Known Limitations
+
+1. **Slot granularity**
+    - User can only request on a slot level, not on a variable level
+    - User has to know the storage layout of the contract
+    - User has to potentially shift/mask for the correct bits of the slot
+
+2. **Slot Coupling**
+    - Arrays of state changes of different slots don't give you timing guarantees
+        - i.e. There is no guarantee that `changes1[1]` and `changes2[1]` held the value at the same time
+        - Unless the user knows exactly when state changes occur, it is not recommended to assume timing guarantees
+
+## Future Improvements
+
+- Provide variable level access
+- Allow masking/shifting for correct bits of the slot in helper functions
+- Allow coupling of variables
+    - stateChanges provide snapshots of the requested slots

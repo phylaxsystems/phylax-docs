@@ -1,0 +1,100 @@
+---
+title: Storage Lookup
+description: Access the value of a storage variable at a specific address. Even if the variable is not publicly accessible and not part of the contract's state.
+---
+
+## Status
+
+- [x] Supported
+- [ ] Partially Supported
+- [ ] Not Supported Yet
+
+## Implementation Details
+
+### Required Cheatcodes
+
+- `load(address target, bytes32 slot)` - Reads the raw storage value at the given slot for the specified contract address
+
+### Example Implementation
+
+Protocol:
+
+```solidity
+contract Protocol {
+    // This variable is stored in slot 0
+    address owner;
+
+    function setOwner(address owner_) public {
+        owner = owner_;
+    }
+}
+```
+
+Assertion:
+
+```solidity
+contract StorageLookupAssertion is Assertion {
+    Protocol public protocol;
+
+    constructor(Protocol protocol_) {
+        protocol = protocol_;
+    }
+
+    function triggers() public view override {
+        registerCallTrigger(this.assertionStorageLookup.selector);
+    }
+
+    function assertionStorageLookup() public {
+        // Define a whitelist of allowed owner addresses
+        address[] memory whitelist = new address[](2);
+        whitelist[0] = address(0x1);
+        whitelist[1] = address(0x2);
+
+        // Read owner from storage slot 0
+        // Complex casting is needed because load() returns bytes32
+        // 1. Convert bytes32 to uint256
+        // 2. Convert uint256 to uint160 (address size)
+        // 3. Cast to address type
+        address owner = address(uint160(uint256(ph.load(address(protocol), bytes32(uint256(0))))));
+
+        // Verify the owner is in the whitelist
+        for (uint256 i = 0; i < whitelist.length; i++) {
+            if (owner == whitelist[i]) {
+                return;
+            }
+        }
+
+        revert("Owner not in whitelist");
+    }
+}
+```
+
+### Implementation Notes
+
+- **Storage access capabilities:**
+    - You can load specific slots from any address, even if no public getter exists
+    - Works with both external and internal contract storage
+
+## Example Use Cases
+
+- Read slots of private inputs where no getter is available:
+    - e.g. implementation address of ERC1967
+- Access internal contract state for validation
+- Verify ownership or admin privileges properly set
+
+## Known Limitations
+
+1. **State snapshot limitations:**
+    - Values can only be read from pre or post states of the executed transactions
+    - No access to intermediate state changes during transaction execution
+    - To work around this, use `getStateChanges()` to capture all intermediate values
+
+2. **Storage layout knowledge:**
+    - Requires understanding of the target contract's storage layout
+    - May need complex casting for packed storage slots
+
+## Future Improvements
+
+- Provide intra-transaction snapshot states
+- Add helper functions for common storage patterns
+- Implement automatic storage layout detection

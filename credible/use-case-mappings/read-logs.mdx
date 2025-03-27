@@ -1,0 +1,134 @@
+---
+title: Read Logs
+description: Capture and verify logs as a signal for changes in the state of the contract.
+---
+
+## Status
+
+- [x] Supported
+- [ ] Partially Supported
+- [ ] Not Supported Yet
+
+## Implementation Details
+
+### Required Cheatcodes
+
+- `getLogs()`
+
+### Example Implementation
+
+Protocol:
+
+```solidity
+contract Protocol {
+    event Transfer(address from, address to, uint256 amount);
+
+    mapping(address => uint256) public balances;
+
+    function transfer(address to, uint256 amount) public {
+        balances[msg.sender] -= amount;
+        balances[to] += amount;
+        emit Transfer(msg.sender, to, amount);
+    }
+
+    function mint(address to, uint256 amount) public {
+        balances[to] += amount;
+        emit Transfer(address(0), to, amount);
+    }
+}
+```
+
+Assertion:
+
+```solidity
+contract ReadLogsAssertion is Assertion {
+    Protocol public protocol;
+
+    constructor(Protocol protocol_) {
+        protocol = protocol_;
+    }
+
+    function triggers() public view override {
+        registerCallTrigger(this.assertionReadLogs.selector);
+    }
+
+    mapping(address => int256) public balanceChanges;
+    address[] changedAddresses;
+
+    function assertionReadLogs() public {
+        PhEvm.Log[] memory logs = ph.getLogs();
+
+        for (uint256 i = 0; i < logs.length; i++) {
+            (address from, address to, uint256 amount) = abi.decode(logs[i].data, (address, address, uint256));
+            // There is an edge case where the changedBalance has gone back to 0
+            // In this case, it would be duplicated in the changedAddresses array
+            // Additional flags can remove duplicates
+            if (balanceChanges[from] == 0) {
+                changedAddresses.push(from);
+            }
+            if (balanceChanges[to] == 0) {
+                changedAddresses.push(to);
+            }
+            balanceChanges[from] -= int256(amount);
+            balanceChanges[to] += int256(amount);
+        }
+
+        uint256 preBalance;
+        uint256 absDiff;
+
+        for (uint256 i = 0; i < changedAddresses.length; i++) {
+            ph.forkPreState();
+            preBalance = protocol.balances(changedAddresses[i]);
+            ph.forkPostState();
+
+            if (balanceChanges[changedAddresses[i]] > 0) {
+                absDiff = uint256(balanceChanges[changedAddresses[i]]);
+                require(protocol.balances(changedAddresses[i]) == preBalance + absDiff, "Balance change mismatch");
+            } else {
+                absDiff = uint256(balanceChanges[changedAddresses[i]] * -1);
+                require(protocol.balances(changedAddresses[i]) == preBalance - absDiff, "Balance change mismatch");
+            }
+        }
+    }
+}
+```
+
+### Implementation Notes
+
+- **Fetching logs:**
+    - Use `getLogs()` to retrieve logs
+    - Filter for specific events
+    - Decode parameters using `abi.decode()` to reconstruct event arguments
+
+- **State verification:**
+    - Use `forkPreState()` and `forkPostState()` to compare states
+    - Validate state changes match expected behavior based on inputs
+
+- **State tracking considerations:**
+    - Manually track modified storage slots/keys
+    - Consider all functions that modify relevant state variables
+    - Account for complex state dependencies between function calls
+
+- **State reconstruction limitations:**
+    - Manual tracking required for parameter-dependent storage slots (i.e. keys of mappings)
+    - No direct access to intermediate call frame states
+    - Order guarantees only within same function calls, not across different functions
+
+## Example Use Cases
+
+- Transfer events of ERC20 tokens
+- Ownership changes
+- Whenever a log is emitted, which represents a state change, it can be used to reconstruct the expected behavior
+
+## Known Limitations
+
+1. **Parameter-dependent Storage Access**
+    - Storage slots that depend on event parameters lack automated tracking
+    - Example: Mapping keys derived from event parameters
+    - Workaround: Manual tracking required, but introduces overhead
+
+2. **Requirement of events to be emitted**
+    - If it is not certain that the event is emitted upon state change, the state change is not tracked
+    - Might result in false negatives
+
+## Future Improvements

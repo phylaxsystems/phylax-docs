@@ -1,0 +1,142 @@
+---
+title: Function Call Inputs
+description: Capture and verify function input parameters to validate that the resulting end state is as expected.
+---
+
+## Status
+
+- [x] Supported
+- [ ] Partially Supported
+- [ ] Not Supported Yet
+
+## Implementation Details
+
+### Required Cheatcodes
+
+- `getCallInputs(address aa, bytes4 signature)`
+- `forkPreState()`
+- `forkPostState()`
+
+### Example Implementation
+
+Protocol:
+
+```solidity
+contract Protocol {
+    mapping(address => uint256) public balances;
+
+    function transfer(address to, uint256 amount) public {
+        balances[msg.sender] -= amount;
+        balances[to] += amount;
+    }
+
+    function mint(address to, uint256 amount) public {
+        balances[to] += amount;
+    }
+}
+```
+
+Assertion:
+
+```solidity
+contract FunctionCallInputsAssertion is Assertion {
+    Protocol public protocol;
+    mapping(address => int256) public balanceChanges;
+    address[] changedAddresses;
+
+    constructor(Protocol protocol_) {
+        protocol = protocol_;
+    }
+
+    function triggers() public view override {
+        registerCallTrigger(this.assertionFunctionCallInputs.selector);
+    }
+
+    function assertionFunctionCallInputs() public {
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(protocol), protocol.transfer.selector);
+
+        for (uint256 i = 0; i < callInputs.length; i++) {
+            address from = callInputs[i].caller;
+            (address to, uint256 amount) = abi.decode(callInputs[i].input, (address, uint256));
+            // There is an edge case where the changedBalance has gone back to 0
+            // In this case, it would be duplicated in the changedAddresses array
+            // Additional flags can remove duplicates
+            if (balanceChanges[from] == 0) {
+                changedAddresses.push(from);
+            }
+            if (balanceChanges[to] == 0) {
+                changedAddresses.push(to);
+            }
+            balanceChanges[from] -= int256(amount);
+            balanceChanges[to] += int256(amount);
+        }
+
+        uint256 preBalance;
+        uint256 absDiff;
+
+        for (uint256 i = 0; i < changedAddresses.length; i++) {
+            ph.forkPreState();
+            preBalance = protocol.balances(changedAddresses[i]);
+            ph.forkPostState();
+
+            if (balanceChanges[changedAddresses[i]] > 0) {
+                absDiff = uint256(balanceChanges[changedAddresses[i]]);
+                require(protocol.balances(changedAddresses[i]) == preBalance + absDiff, "Balance change mismatch");
+            } else {
+                absDiff = uint256(balanceChanges[changedAddresses[i]] * -1);
+                require(protocol.balances(changedAddresses[i]) == preBalance - absDiff, "Balance change mismatch");
+            }
+        }
+    }
+}
+```
+
+### Implementation Notes
+
+- **Function input reconstruction:**
+    - Use `getCallInputs()` to retrieve call data for target function
+    - Decode parameters using `abi.decode()` to reconstruct function arguments
+
+- **State verification:**
+    - Use `forkPreState()` and `forkPostState()` to compare states
+    - Validate state changes match expected behavior based on inputs
+
+- **State tracking considerations:**
+    - Manually track modified storage slots/keys
+    - Consider all functions that modify relevant state variables
+    - Account for complex state dependencies between function calls
+
+- **State reconstruction limitations:**
+    - Manual tracking required for parameter-dependent storage slots (i.e. keys of mappings)
+    - No direct access to intermediate call frame states
+    - Order guarantees only within same function calls, not across different functions
+
+## Example Use Cases
+
+- Balance mappings of tokens or deposits/withdrawals
+- Ownership changes
+
+## Known Limitations
+
+1. **Parameter-dependent Storage Access**
+    - Storage slots that depend on function parameters lack automated tracking
+    - Example: Mapping keys derived from function parameters
+    - Workaround: Manual tracking required, but introduces overhead
+
+2. **Transaction-wide State Verification**
+    - Complete transaction verification requires:
+        - Guaranteed execution order of captured call inputs
+        - Accurate reconstruction of expected state changes
+        - No direct access to intermediate call frame states
+
+3. **Cross-function Dependencies**
+    - Call inputs are ordered by execution only within individual functions
+    - No guaranteed ordering between different function calls
+    - State validation becomes ambiguous when behavior depends on cross-function interaction
+        - i.e. (approve() -> transferFrom()) has to be considered as a whole
+
+## Future Improvements
+
+- Provide ordering guarantees between different function selectors
+- Provide direct access to intermediate call frame states (This would allow for partial state verification)
+- Automated tracking of changed slots/keys of mappings

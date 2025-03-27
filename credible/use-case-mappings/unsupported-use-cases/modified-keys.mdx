@@ -1,0 +1,50 @@
+---
+title: Modified Keys
+description: Get the modified keys of a mapping
+---
+## Status
+
+- [ ] Supported
+- [x] Partially Supported
+- [ ] Not Supported Yet
+
+## Implementation Details
+
+### Example Implementation
+
+Protocol:
+
+```solidity
+contract Protocol {
+    mapping(address => uint256) public balances;
+
+    function transfer(address to, uint256 amount) public {
+        balances[msg.sender] -= amount;
+        balances[to] += amount;
+    }
+}
+```
+
+Assertion:
+
+```solidity
+function assertionUseCase() public {
+    address[] memory modifiedKeys = getModifiedKeys(address(protocol), 0x0);
+
+    int diff = 0;
+
+    for (uint256 i = 0; i < modifiedKeys.length; i++) {
+        // Here your code to check the modified keys
+    }
+}
+```
+
+## Example Use Cases
+
+- Check invariants about total balances
+- Check invariants about balances of specific addresses
+
+## Workarounds
+
+- Use `FunctionCallInputs` to get the inputs of the function call and retrieve the modified keys.
+- Use `getLogs` to get the logs of the transaction and retrieve the modified keys.

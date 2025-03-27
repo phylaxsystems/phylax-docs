@@ -74,10 +74,26 @@
       ]
     },
     {
-      "group": "Introduction",
+      "group": "Use Case Mapping",
       "pages": [
-        "assertions-book/assertions-book-intro"
+        "credible/use-case-mappings/intro-use-case-mapping",
+        "credible/use-case-mappings/function-call-inputs",
+        "credible/use-case-mappings/read-logs",
+        "credible/use-case-mappings/storage-lookups",
+        "credible/use-case-mappings/state-changes",
+        {
+          "group": "Unsupported",
+          "pages": [
+            "credible/use-case-mappings/unsupported-use-cases/call-frame-context",
+            "credible/use-case-mappings/unsupported-use-cases/modified-keys",
+            "credible/use-case-mappings/unsupported-use-cases/recursive-function-calls"
+          ]
+        }
       ]
+    },
+    {
+      "group": "Introduction",
+      "pages": ["assertions-book/assertions-book-intro"]
     },
     {
       "group": "Assertions",
