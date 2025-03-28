@@ -1,0 +1,57 @@
+---
+title: "credible-std Library"
+description: "Overview of the Phylax credible-std Library"
+---
+
+credible-std is the standard library for implementing assertions in the Phylax Credible Layer (PCL). It provides the core contracts and interfaces needed to create and manage assertions for smart contract security monitoring.
+
+## Key Components
+
+The credible-std library provides several essential components for implementing assertions:
+
+### Core Contracts
+
+- `Credible.sol`: Base contract that provides access to the PhEvm precompile for assertion validation
+- `Assertion.sol`: Abstract contract for implementing assertions with trigger registration and validation logic
+- `StateChanges.sol`: Utilities for tracking and validating contract state changes with type-safe conversions
+- `TriggerRecorder.sol`: Manages assertion triggers for function calls, storage changes, and balance changes
+- `PhEvm.sol`: Interface for the PhEvm precompile that enables assertion validation
+- `CredibleTest.sol`: Testing utilities for assertion development and validation
+
+### Features
+
+1. **Trigger System**
+   - Register triggers for function calls, storage changes, and balance changes
+   - Monitor specific contract behaviors
+   - Support for multiple trigger types
+
+2. **State Change Tracking**
+   - Type-safe utilities for monitoring contract state changes
+   - Built-in conversion helpers
+   - Pre and post transaction state comparison
+   - Call stack level inspection of state changes
+   - Access to intermediate state during transaction execution
+
+3. **Testing Framework**
+   - Comprehensive testing utilities
+   - Built-in validation helpers
+   - Integration with Forge testing framework
+
+4. **PhEvm Integration**
+   - Direct access to the PhEvm precompile
+   - Advanced assertion logic and validation
+   - Support for complex security rules
+
+## Solidity Integration
+
+credible-std is written in Solidity, making it seamlessly integrated with your existing smart contract development workflow. This means:
+
+- No context switching or learning new languages
+- Direct access to all Solidity features and tooling
+- Familiar development experience
+- Easy integration with existing contracts
+- Full compatibility with Foundry testing framework
+
+## Getting Started
+
+For installation and setup instructions, see the [PCL Quickstart Guide](/credible/pcl-quickstart).

@@ -70,7 +70,8 @@
         "credible/pcl-assertion-guide",
         "credible/testing-assertions",
         "credible/cheatcodes",
-        "credible/pcl-reference-guide"
+        "credible/pcl-reference-guide",
+        "credible/credible-std-overview"
       ]
     },
     {
