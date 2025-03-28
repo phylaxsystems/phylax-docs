@@ -75,6 +75,12 @@ See the [CLI Reference Guide](/credible/pcl-reference-guide) for build and store
 ### Assertion Adopter
 The contract that is being monitored by an assertion. This is the contract whose behavior the assertion is designed to verify.
 
+### Assertion Group
+A collection of assertions in the same contract that are related to the same protocol contract. This allows for organizing multiple assertions that protect different aspects of the same protocol.
+
+### Assertion Function
+A function in an assertion contract that performs a specific check. These functions must be registered in the `triggers()` function and are called by the PCL system when their trigger conditions are met.
+
 ## Development Tools
 
 ### PCL CLI
