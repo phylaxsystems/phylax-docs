@@ -6,7 +6,7 @@ description: 'This glossary contains terms and concepts specific to the Phylax C
 ## Core Concepts
 
 ### PCL (Phylax Credible Layer)
-The core system that executes and verifies assertions on the blockchain. It provides the infrastructure for creating, managing, and enforcing security properties through assertions.
+The Credible Layer is security infrastructure that enables developers to link security rules to their smart contracts on-chain. Then, the network validates every transaction that interacts with their smart contracts against their security rules, dropping any invalidating transaction.
 
 See the [Introduction](/credible/credible-introduction) for a comprehensive overview.
 
@@ -49,7 +49,7 @@ A function that determines when an assertion should be executed. Triggers are re
 See the [Cheatcodes Reference](/credible/cheatcodes) for detailed information about different trigger types.
 
 ### Pre-state/Post-state
-Snapshots of the blockchain state captured before and after a transaction. These states are used by assertions to verify changes and enforce properties. The ability to compare pre and post states enables assertions to detect unauthorized changes and enforce protocol invariants.
+Snapshots of the blockchain state captured before and after a transaction. These states are used by assertions to verify changes and enforce properties. The ability to compare pre and post states enables assertions to detect and prevent transactions that would result in undesired state changes.
 
 See the [Cheatcodes Reference](/credible/cheatcodes) for information about `forkPreState` and `forkPostState`.
 
@@ -111,3 +111,6 @@ The ability to run complex security rules outside the main blockchain execution,
 
 ### Forced Inclusion Transactions
 Special transactions that must be included in blocks regardless of validation, such as L1->L2 deposits. PCL handles these by intercepting and validating them appropriately.
+
+### Verifiability
+The transparent and public nature of all assertions deployed on PCL. Since assertions are stored in the Assertion DA and are publicly accessible, any user or auditor can inspect and verify the security mechanisms in place for a protocol. This transparency enables community-driven security reviews and builds trust by making security measures fully auditable.
