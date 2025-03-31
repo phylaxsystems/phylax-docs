@@ -71,7 +71,8 @@
         "credible/testing-assertions",
         "credible/cheatcodes",
         "credible/pcl-reference-guide",
-        "credible/credible-std-overview"
+        "credible/credible-std-overview",
+        "credible/glossary"
       ]
     },
     {

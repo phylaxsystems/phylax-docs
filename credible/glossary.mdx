@@ -1,0 +1,116 @@
+---
+title: 'Glossary'
+description: 'This glossary contains terms and concepts specific to the Phylax Credible Layer (PCL) and related technologies.'
+---
+
+## Core Concepts
+
+### PCL (Phylax Credible Layer)
+The Credible Layer is security infrastructure that enables developers to link security rules to their smart contracts on-chain. Then, the network validates every transaction that interacts with their smart contracts against their security rules, dropping any invalidating transaction.
+
+See the [Introduction](/credible/credible-introduction) for a comprehensive overview.
+
+### Assertion
+A smart contract that verifies specific properties or behaviors of other smart contracts. Assertions are the fundamental building blocks of the Phylax Credible Layer, used to enforce security properties and invariants.
+
+Learn how to write assertions in the [Assertion Guide](/credible/pcl-assertion-guide).
+
+### Protocol Invariants
+Critical conditions or properties that must always be maintained within a protocol, such as ensuring total assets ≥ total liabilities or maintaining specific ownership rules. These invariants can be:
+- Single-contract: Rules within a single contract
+- Protocol-wide: Rules spanning multiple contracts and complex interactions
+- Security-specific: Rules focused on preventing unauthorized access or changes
+
+## System Architecture
+
+### PhEVM (Phylax EVM)
+A specialized EVM implementation that includes additional capabilities for assertion verification and state manipulation.
+
+### Assertion DA (Data Availability)
+The data availability layer responsible for storing assertion code and metadata. This ensures that assertions are accessible and verifiable by anyone.
+
+### Block Builder
+The component of the network that simulates transactions and runs assertions before transaction finalization to ensure they don't violate defined conditions.
+
+### Sequencer
+The network component responsible for building blocks and validating transactions against assertions before including them in the blockchain.
+
+### Transparency Dashboard
+A tool that allows users to view and browse all assertions deployed by different protocols, providing visibility into their security posture.
+
+## Assertion Components
+
+### Trigger
+A function that determines when an assertion should be executed. Triggers are registered with the PCL system to specify the conditions under which an assertion should be evaluated. There are several types of triggers:
+- Call Triggers: Execute on specific contract calls
+- Storage Triggers: Execute on storage changes
+- Balance Triggers: Execute on ETH balance changes
+
+See the [Cheatcodes Reference](/credible/cheatcodes) for detailed information about different trigger types.
+
+### Pre-state/Post-state
+Snapshots of the blockchain state captured before and after a transaction. These states are used by assertions to verify changes and enforce properties. The ability to compare pre and post states enables assertions to detect and prevent transactions that would result in undesired state changes.
+
+See the [Cheatcodes Reference](/credible/cheatcodes) for information about `forkPreState` and `forkPostState`.
+
+### State Changes
+Modifications to contract storage that occur during transaction execution. These can be tracked and verified using PCL's state change tracking capabilities, allowing assertions to monitor and prevent unauthorized modifications.
+
+See the [Cheatcodes Reference](/credible/cheatcodes) for state tracking functions.
+
+### Callstack
+The sequence of function calls that occur during a transaction's execution. PCL's ability to inspect state changes across the entire callstack is a powerful feature that enables assertions to:
+- Track state modifications through complex contract interactions
+- Monitor cross-contract dependencies
+- Detect unauthorized changes in deeply nested calls
+- Enforce invariants that span multiple contract boundaries
+
+See the [Cheatcodes Reference](/credible/cheatcodes) for callstack inspection capabilities.
+
+### Assertion Bytecode
+The compiled form of an assertion contract that is stored in the Assertion DA and executed by the PCL network.
+
+See the [CLI Reference Guide](/credible/pcl-reference-guide) for build and store commands.
+
+### Assertion Adopter
+The contract that is being monitored by an assertion. This is the contract whose behavior the assertion is designed to verify.
+
+### Assertion Group
+A collection of assertions in the same contract that are related to the same protocol contract. This allows for organizing multiple assertions that protect different aspects of the same protocol.
+
+### Assertion Function
+A function in an assertion contract that performs a specific check. These functions must be registered in the `triggers()` function and are called by the PCL system when their trigger conditions are met.
+
+## Development Tools
+
+### PCL CLI
+The command-line interface tool for interacting with the Phylax Credible Layer, providing commands for building, testing, and managing assertions.
+
+See the [CLI Reference Guide](/credible/pcl-reference-guide) for all available commands.
+
+### Phorge
+A minimal fork of Forge with functionality for assertion execution, used for testing and running assertions in the PCL environment. It provides the infrastructure needed to compile, test, and deploy assertions.
+
+### credible-std
+The Phylax smart contract library that provides the base contracts and utilities for writing assertions. It includes the interfaces and implementations needed to interact with PCL's cheatcodes and assertion system.
+
+### Cheatcodes
+Special precompiles (similar to Ethereum's native precompiles) that provide additional capabilities for state manipulation, forking, and assertion management in the PhEVM environment. These are accessed through the credible-std library.
+
+See the [Cheatcodes Reference](/credible/cheatcodes) for a complete list of available cheatcodes and their usage.
+
+### Test Environment
+The PCL testing interface that extends Forge's testing capabilities with additional utilities specifically for testing assertions. It provides functions for adding assertions and validating transactions, making it easier to test assertion behavior in different scenarios.
+
+Learn more about testing assertions in the [Testing Guide](/credible/testing-assertions).
+
+## Security Features
+
+### Off-chain Execution
+The ability to run complex security rules outside the main blockchain execution, providing significant efficiency gains compared to on-chain validation.
+
+### Forced Inclusion Transactions
+Special transactions that must be included in blocks regardless of validation, such as L1->L2 deposits. PCL handles these by intercepting and validating them appropriately.
+
+### Verifiability
+The transparent and public nature of all assertions deployed on PCL. Since assertions are stored in the Assertion DA and are publicly accessible, any user or auditor can inspect and verify the security mechanisms in place for a protocol. This transparency enables community-driven security reviews and builds trust by making security measures fully auditable.
