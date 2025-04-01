@@ -1,0 +1,154 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Phylax Credible Layer Documentation",
+  "colors": {
+    "primary": "#000000",
+    "light": "#898A86",
+    "dark": "#898A86"
+  },
+  "favicon": "/favicon.png",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "General",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["introduction", "faq"]
+          }
+        ]
+      },
+      {
+        "tab": "Assertions Book",
+        "groups": [
+          {
+            "group": "Introduction",
+            "pages": ["assertions-book/assertions-book-intro"]
+          },
+          {
+            "group": "Assertions",
+            "pages": [
+              {
+                "group": "Dapp Use Cases",
+                "pages": [
+                  "assertions-book/assertions/ass01-impl-addr-change",
+                  "assertions-book/assertions/ass05-ownership-change",
+                  "assertions-book/assertions/ass06-constant-product",
+                  "assertions-book/assertions/ass07-lending-health-factor",
+                  "assertions-book/assertions/ass08-sum-of-all-positions",
+                  "assertions-book/assertions/ass09-timelock-verification",
+                  "assertions-book/assertions/ass10-oracle-validation",
+                  "assertions-book/assertions/ass11-twap-deviation",
+                  "assertions-book/assertions/ass12-erc4626-assets-to-shares",
+                  "assertions-book/assertions/ass13-erc4626-deposit-withdraw",
+                  "assertions-book/assertions/ass14-fee-calculations",
+                  "assertions-book/assertions/ass15-price-within-ticks",
+                  "assertions-book/assertions/ass16-liquidation-health-factor",
+                  "assertions-book/assertions/ass17-panic-state-validation",
+                  "assertions-book/assertions/ass18-harvest-increases-balance",
+                  "assertions-book/assertions/ass19-tokens-borrowed-invariant",
+                  "assertions-book/assertions/ass20-erc20-drain",
+                  "assertions-book/assertions/ass21-ether-drain",
+                  "assertions-book/assertions/ass22-farcaster-message-validity",
+                  "assertions-book/assertions/ass23-farcaster-unique-username",
+                  "assertions-book/assertions/ass25-farcaster-rate-limits",
+                  "assertions-book/assertions/ass26-correct-withdraw",
+                  "assertions-book/assertions/ass28-intra-tx-oracle-deviation"
+                ]
+              },
+              {
+                "group": "Previous Hacks Assertions",
+                "pages": [
+                  "assertions-book/previous-hacks-intro",
+                  "assertions-book/previous-hacks/hack1-radiant-capital",
+                  "assertions-book/previous-hacks/hack2-vestra-dao",
+                  "assertions-book/previous-hacks/compound-upgrade-bug",
+                  "assertions-book/previous-hacks/cream-finance-2",
+                  "assertions-book/previous-hacks/visor-finance-unrestricted-mint",
+                  "assertions-book/previous-hacks/first-depositor",
+                  "assertions-book/previous-hacks/abracadabra-rounding-error",
+                  "assertions-book/previous-hacks/euler-finance-donation-hack"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Credible Layer",
+        "groups": [
+          {
+            "group": "Credible Layer",
+            "pages": [
+              "credible/credible-introduction",
+              "credible/credible-install",
+              "credible/pcl-quickstart",
+              "credible/pcl-assertion-guide",
+              "credible/testing-assertions",
+              "credible/cheatcodes",
+              "credible/pcl-reference-guide",
+              "credible/credible-std-overview",
+              "credible/glossary"
+            ]
+          },
+          {
+            "group": "Use Case Mapping",
+            "pages": [
+              "credible/use-case-mappings/intro-use-case-mapping",
+              "credible/use-case-mappings/function-call-inputs",
+              "credible/use-case-mappings/read-logs",
+              "credible/use-case-mappings/storage-lookups",
+              "credible/use-case-mappings/state-changes",
+              {
+                "group": "Unsupported",
+                "pages": [
+                  "credible/use-case-mappings/unsupported-use-cases/call-frame-context",
+                  "credible/use-case-mappings/unsupported-use-cases/modified-keys",
+                  "credible/use-case-mappings/unsupported-use-cases/recursive-function-calls"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Website",
+          "href": "https://phylax.systems",
+          "icon": "globe"
+        },
+        {
+          "anchor": "Blog",
+          "href": "https://blog.phylax.systems",
+          "icon": "newspaper"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/full-black.png",
+    "dark": "/logo/full-white.png"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Community",
+        "href": "https://t.me/phylax_credible_layer"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Quickstart",
+      "href": "https://docs.phylax.systems/credible/pcl-quickstart"
+    }
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/phylaxsystems",
+      "github": "https://github.com/phylaxsystems"
+    }
+  }
+}
