@@ -19,7 +19,7 @@ It'll get compiled into this repo's `docs-prod` branch before deployment
 To add a new file:
 
 - Create .mynewfile.mdx
-- If you want it to show in the sidebar menu, add it to [Navigation](./mint.json)
+- If you want it to show in the sidebar menu, add it to [Navigation](./docs.json)
 
 ## Testing
 
