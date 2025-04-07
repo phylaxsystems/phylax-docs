@@ -1,23 +1,48 @@
 ---
-title: Implementation / Address Change
+title: Implementation Address Change
 description: Assert that an address of an implementation has changed
 ---
 
 ## Use Case
-Check that the implementation of a contract does not change. This works similarly when checking if the owner of a contract has changed.
+Check that the implementation address of a proxy contract does not change unexpectedly. In proxy-based upgradeable contracts, the implementation address is a critical security parameter that determines which contract's logic is executed. An unauthorized change to this address could allow an attacker to replace the entire contract logic with malicious code.
 
-This assertions is useful if you want to make sure that a contract is not unexpectedly upgraded or changed to an undesired implementation.
-For example it would be possible to define a list of allowed implementations that would be whitelisted and any other implementation would be considered an invalid state.
+This assertion is particularly important for:
+- Preventing unauthorized upgrades to proxy contracts
+- Ensuring implementation changes only occur through proper governance channels
+- Detecting potential proxy hijacking attempts
+- Maintaining protocol security by enforcing implementation address invariants
+
+For example, it would be possible to define a list of allowed implementations that would be whitelisted and any other implementation would be considered an invalid state.
+
+### Applicable Protocols
+- Proxy-based upgradeable contracts that need to enforce strict upgrade controls
+- DeFi protocols using proxy patterns for their core functionality (e.g., lending pools, yield aggregators)
+- Governance systems that control implementation upgrades through timelocks or multi-sig
+- Cross-chain bridges and bridges that use proxy patterns for their core logic
 
 ## Explanation
-The assertion checks if the address of a contract has changed after a transaction has been executed.
+The assertion monitors changes to the implementation address storage slot in proxy contracts. In proxy patterns, the implementation address is typically stored in a specific storage slot (often slot 0) and determines which contract's logic is executed when calls are delegated.
+
+The assertion uses the following cheatcodes:
+- `forkPreState()`: Creates a fork of the state before the transaction to capture the original implementation address
+- `forkPostState()`: Creates a fork of the state after the transaction to detect any changes
+- `getStateChanges()`: Gets all state changes for the implementation address storage slot to detect unauthorized modifications throughout the callstack of the transaction
+- `registerStorageChangeTrigger()`: Triggers the assertion when a change is detected in the implementation address storage slot
+
+This multi-layered approach ensures that:
+1. The implementation address remains constant unless explicitly changed through proper channels
+2. Any unauthorized attempts to modify the implementation address are detected
+3. The proxy contract's logic cannot be replaced with malicious code
+
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
 ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../../lib/credible-std/Assertion.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
 interface IImplementation {
     function implementation() external view returns (address);
@@ -26,20 +51,54 @@ interface IImplementation {
 contract ImplementationChange is Assertion {
     IImplementation public implementation = IImplementation(address(0xbeef));
 
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](1);
-        assertions[0] = this.implementationChange.selector;
+    function triggers() external view override {
+        // Register trigger for changes to the implementation address storage slot
+        // The implementation address is typically stored in the first storage slot (slot 0)
+        registerStorageChangeTrigger(
+            this.implementationChange.selector,
+            bytes32(uint256(0))
+        );
     }
 
-    // Asssert that the implementation contract address doesn't change
+    // Assert that the implementation contract address doesn't change
     // during the state transition
     function implementationChange() external {
+        // Get pre-state implementation
         ph.forkPreState();
         address preImpl = implementation.implementation();
+        
+        // Get post-state implementation
         ph.forkPostState();
         address postImpl = implementation.implementation();
+        
+        // Get all state changes for the implementation slot
+        address[] memory changes = getStateChanges(
+            address(implementation),
+            bytes32(uint256(0)) // First storage slot for implementation address
+        );
+        
+        // Verify implementation hasn't changed
         require(preImpl == postImpl, "Implementation changed");
+        
+        // Additional check: verify no unauthorized changes to implementation slot
+        for (uint256 i = 0; i < changes.length; i++) {
+            require(
+                changes[i] == bytes32(uint256(preImpl)),
+                "Unauthorized implementation change detected"
+            );
+        }
     }
 }
-
 ```
+
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/ass01-implementation-address-change). For the latest version and a test example, please refer to the repository.
+
+## Security Considerations
+- This assertion should be used in conjunction with other security measures like timelocks and multi-sig governance
+- Consider whitelisting specific implementation addresses to further enforce strict upgrade controls
+- Consider adding rate limiting for implementation changes, e.g. only allow changes once per week
+- Ensure proper access controls are in place for any functions that can change the implementation
+
+## Related Assertions
+- [Owner Change](/assertions-book/assertions/ass05-ownership-change)
+- [Timelock Verification](/assertions-book/assertions/ass09-timelock-verification)
