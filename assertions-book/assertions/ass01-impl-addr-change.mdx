@@ -39,7 +39,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 ## Code Example
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import {Assertion} from "credible-std/Assertion.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
@@ -54,10 +54,7 @@ contract ImplementationChange is Assertion {
     function triggers() external view override {
         // Register trigger for changes to the implementation address storage slot
         // The implementation address is typically stored in the first storage slot (slot 0)
-        registerStorageChangeTrigger(
-            this.implementationChange.selector,
-            bytes32(uint256(0))
-        );
+        registerStorageChangeTrigger(this.implementationChange.selector, bytes32(uint256(0)));
     }
 
     // Assert that the implementation contract address doesn't change
@@ -66,38 +63,35 @@ contract ImplementationChange is Assertion {
         // Get pre-state implementation
         ph.forkPreState();
         address preImpl = implementation.implementation();
-        
+
         // Get post-state implementation
         ph.forkPostState();
         address postImpl = implementation.implementation();
-        
+
         // Get all state changes for the implementation slot
-        address[] memory changes = getStateChanges(
+        address[] memory changes = getStateChangesAddress(
             address(implementation),
             bytes32(uint256(0)) // First storage slot for implementation address
         );
-        
+
         // Verify implementation hasn't changed
         require(preImpl == postImpl, "Implementation changed");
-        
+
         // Additional check: verify no unauthorized changes to implementation slot
         for (uint256 i = 0; i < changes.length; i++) {
-            require(
-                changes[i] == bytes32(uint256(preImpl)),
-                "Unauthorized implementation change detected"
-            );
+            require(changes[i] == preImpl, "Unauthorized implementation change detected");
         }
     }
 }
 ```
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/ass01-implementation-address-change). For the latest version and a test example, please refer to the repository.
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
 
-## Security Considerations
-- This assertion should be used in conjunction with other security measures like timelocks and multi-sig governance
-- Consider whitelisting specific implementation addresses to further enforce strict upgrade controls
-- Consider adding rate limiting for implementation changes, e.g. only allow changes once per week
-- Ensure proper access controls are in place for any functions that can change the implementation
+## Assertion Best Practices
+- Consider combining this assertion with other assertions like [Owner Change](/assertions-book/assertions/ass05-ownership-change) for comprehensive security
+- Use the `getStateChanges` cheatcode to detect changes to the implementation address throughout the callstack of the transaction
+- Consider whitelisting specific implementation addresses if you know the set of allowed future implementations
+- Ensure proper error messages in the assertion to help with debugging
 
 ## Related Assertions
 - [Owner Change](/assertions-book/assertions/ass05-ownership-change)
