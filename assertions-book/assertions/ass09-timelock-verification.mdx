@@ -4,19 +4,61 @@ description: Make sure that a timelock has been correctly triggered for governan
 ---
 
 ## Use Case
-Many DeFi protocols use timelocks to delay the execution of governance actions. It is important to make sure that timelocks are working as expected.
-Similarly it's important to make sure that the admin is the same as the pre-state admin. This is useful since admins usually have additional privileges and could be used to manipulate the protocol.
+Timelocks are a critical security mechanism in DeFi protocols that enforce a mandatory delay between when a governance action is proposed and when it can be executed. This delay allows the community to review and react to potentially harmful changes.
+
+This assertion prevents:
+- Bypassing the timelock mechanism entirely
+- Setting timelock delays that are too short to be effective
+- Changing the timelock admin without proper authorization
+- Executing governance actions before the timelock period has expired
+
+This is a critical security parameter because:
+- Timelocks are often the last line of defense against malicious governance actions
+- Without proper timelock enforcement, an attacker could execute harmful changes immediately
+- The timelock admin has significant power and must be protected from unauthorized changes
+- Short timelock periods render the security mechanism ineffective
+
+### Applicable Protocols
+- DeFi lending protocols that use timelocks for parameter updates
+- DEX protocols that require timelocked governance for pool parameter changes
+- Yield aggregators that use timelocks for strategy updates
+- Cross-chain bridges that implement timelocks for security parameters
+- DAOs that use timelocks for treasury management and protocol upgrades
+
+Each of these protocol types relies on timelocks to:
+- Prevent flash loan attacks through parameter manipulation
+- Allow community review of significant protocol changes
+- Protect against governance attacks
+- Ensure proper security review periods for critical updates
 
 ## Explanation
-This assertion makes sure that the timelock has been correctly triggered for governance actions.
-It also check that the admin is the same as the pre-state admin.
+The assertion implements a multi-layered approach to verify timelock integrity:
+
+1. **Pre-state Verification**
+   - Captures the initial timelock state before any changes
+   - Records the original admin address and timelock parameters
+
+2. **Post-state Analysis**
+   - Compares the final timelock state after changes
+   - Verifies that any changes maintain security parameters
+
+3. **Parameter Validation**
+   - Ensures timelock delay is within acceptable bounds (1 day to 2 weeks)
+   - Verifies admin address hasn't changed without authorization
+   - Confirms timelock activation follows proper procedures
+
+The assertion uses these cheatcodes:
+- `forkPreState()`: Captures the initial timelock state
+- `forkPostState()`: Analyzes the final timelock state
+- `registerStorageChangeTrigger()`: Monitors changes to the timelock storage slot
 
 ## Code Example
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
 interface IGovernance {
     struct Timelock {
@@ -28,36 +70,67 @@ interface IGovernance {
     function timelock() external view returns (Timelock memory);
 }
 
-// Verify that a timelock is working as expected after some governance action
 contract TimelockVerification is Assertion {
-    IGovernance governance = IGovernance(address(0xbeef));
+    IGovernance public governance = IGovernance(address(0xbeef));
 
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](1);
-        assertions[0] = this.assertionTimelock.selector;
+    function triggers() external view override {
+        // Register trigger for changes to the timelock storage slot
+        registerStorageChangeTrigger(this.assertionTimelock.selector, bytes32(uint256(0)));
     }
 
-    // This assertion checks that if a timelock is activated that it's within the correct parameters
-    // and that the admin is the same as the pre-state admin
-    // revert if the timelock is not active or if the timelock delay is not within the correct parameters
+    // Verify that a timelock is working as expected after some governance action
     function assertionTimelock() external {
-        address preAdmin = governance.timelock().admin;
+        // Get pre-state timelock information
         ph.forkPreState();
-        if (governance.timelock().isActive) {
-            return; // Timelock is already active prior to the transaction, so we don't need to check anything
+        address preAdmin = governance.timelock().admin;
+        bool preActive = governance.timelock().isActive;
+        
+        // If timelock was already active, no need to check further
+        if (preActive) {
+            return;
         }
 
+        // Get post-state timelock information
         ph.forkPostState();
-
+        
+        // If timelock is now active, verify all parameters
         if (governance.timelock().isActive) {
-            bool minDelayCorrect = governance.timelock().timelockDelay >= 1 days; // Choose whatever fits your protocol
-            bool maxDelayCorrect = governance.timelock().timelockDelay <= 2 weeks; // Choose whatever fits your protocol
+            // Verify timelock delay is within acceptable bounds
+            bool minDelayCorrect = governance.timelock().timelockDelay >= 1 days;
+            bool maxDelayCorrect = governance.timelock().timelockDelay <= 2 weeks;
+            
+            // Verify admin hasn't changed
             bool adminCorrect = governance.timelock().admin == preAdmin;
+            
+            // Require all parameters to be correct
             require(
                 minDelayCorrect && maxDelayCorrect && adminCorrect,
-                "Timelock is not active after the transaction, so there's nothing to check"
+                "Timelock parameters invalid"
             );
-        } 
+        }
     }
 }
 ```
+
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+
+## Testing
+To test this assertion:
+1. Deploy a mock governance contract with timelock functionality
+2. Create test cases for:
+   - Valid timelock activation with proper parameters
+   - Invalid timelock activation with too short delay
+   - Invalid timelock activation with changed admin
+   - Attempts to bypass timelock entirely
+3. Verify the assertion correctly identifies valid and invalid states
+
+## Assertion Best Practices
+- Combine this assertion with [Owner Change](/assertions-book/assertions/ass05-ownership-change) for comprehensive governance security
+- Use appropriate delay bounds based on your protocol's risk profile
+- Consider adding whitelist checks for admin changes
+- Implement proper error messages to aid in debugging
+- Monitor timelock state changes throughout the transaction
+
+## Related Assertions
+- [Owner Change](/assertions-book/assertions/ass05-ownership-change)
+- [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)
