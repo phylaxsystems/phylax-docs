@@ -13,7 +13,7 @@ If you prefer visual learning over reading text, watch this introductory video f
 
 ## Core Concept: Credible Computing
 
-At its core, the Credible Layer allows dApps to define states they don't want to reach, and proactively prevent those states from being reached—all without changing a single line of your original contract code.
+At its core, the Credible Layer allows dApps to define states they don't want to reach, and prevent those states from being reached—all without changing a single line of your original contract code.
 
 - **Non-invasive**: Works alongside your existing smart contracts without requiring modifications
 - **Deterministic**: Assertions produce consistent results for the same transaction and state
@@ -27,9 +27,9 @@ At its core, the Credible Layer allows dApps to define states they don't want to
 
 Assertions are the fundamental building blocks of the Credible Layer's security model:
 
-- **What Are Assertions?** Assertions are separate smart contracts that define conditions and rules for transaction validation. They allow developers to maintain protocol invariants and implement custom security logic without altering their core contract code. Unlike traditional security measures that only detect or mitigate attacks after they occur, assertions actually prevent hacks by blocking malicious transactions before they can be executed. Assertions leverage special "cheatcodes" that enable powerful security logic not possible in vanilla smart contracts, such as comparing pre-transaction and post-transaction state and inspecting storage slot updates for an entire call stack.
+- **What Are Assertions?** Assertions are smart contracts that define conditions and rules for transaction validation. They allow developers to maintain protocol invariants and implement custom security logic without altering their core contract code. Unlike traditional security measures that only detect or mitigate attacks after they occur, assertions actually prevent hacks by blocking malicious transactions before they can be executed. Assertions leverage special "cheatcodes" that enable powerful security logic not possible in vanilla smart contracts, such as comparing pre-transaction and post-transaction state and inspecting storage slot updates for an entire call stack.
 
-- **How They Work**: When a transaction interacts with a dApp's contract, assertions are run by the block builder, which simulates whether the incoming transaction would violate any of the defined assertion conditions. This happens before transaction finalization, adding a protective layer around your existing contracts.
+- **How They Work**: When a transaction interacts with a dApp's contract, assertions are run by the block builder, which simulates whether the incoming transaction would violate any assertion conditions. This happens before transaction finalization, adding a protective layer around your existing contracts.
 
 - **Flexibility and Power**: Assertions go beyond simple invariant checking. They can be used to implement complex security rules such as:
   - Maintaining critical protocol invariants (e.g., ensuring total assets ≥ total liabilities)
@@ -122,7 +122,7 @@ The Credible SDK provides developers with:
 
 ### For the Ecosystem
 
-- **Improved Security Standards**: Raises the bar for blockchain security practices
+- **Improved Security Standards**: Preventitive security raises the bar for blockchain security practices
 - **Safer Integrations**: Protocols can trust other protocols through verified assertions
 - **Innovation**: Enables new types of secure applications and use cases
 
