@@ -4,20 +4,57 @@ description: 'Make sure that the price is within the tick range'
 ---
 
 ## Use Case
+In Automated Market Makers (AMMs), particularly those using concentrated liquidity models like Uniswap V3, the price is represented by ticks. A tick is a discrete unit of measurement for the price of an asset, and maintaining proper tick boundaries is critical for protocol security.
 
-In some AMMs, the price is represented by a tick. A tick is a unit of measurement for the price of an asset.
-It is important to make sure that the price is within the tick range.
+This assertion is particularly important for:
+- Preventing price manipulation through tick boundary violations
+- Ensuring trades execute at valid price points
+- Maintaining protocol invariants around price representation
+- Detecting potential exploits that could manipulate tick boundaries
+
+For example, if an attacker could push the price outside the valid tick range, they could potentially:
+- Execute trades at invalid prices
+- Manipulate liquidity positions
+- Cause protocol calculations to fail
+
+### Applicable Protocols
+- AMMs using concentrated liquidity models (e.g., Uniswap V3, PancakeSwap V3)
+- Protocols that rely on tick-based price calculations
+- DeFi protocols that interact with tick-based AMMs
+- Cross-chain bridges that use tick-based price feeds
 
 ## Explanation
+The assertion implements a focused approach to verify tick integrity:
 
-Check the exact boundaries of the tick range before and after a trade to make sure that the price is within the tick range.
+1. **Tick Range Validation**:
+   - Verifies that ticks stay within global bounds (-887272 to 887272)
+   - Prevents tick manipulation outside valid ranges
+   - Ensures the AMM's mathematical model remains valid
+
+2. **Tick Spacing Alignment**:
+   - Ensures ticks align with the pool's tick spacing
+   - Maintains proper concentrated liquidity calculations
+   - Prevents position management errors
+
+The assertion uses the following cheatcodes:
+- `forkPreState()`: Captures the initial tick state
+- `forkPostState()`: Captures the final tick state
+- `registerStorageChangeTrigger()`: Monitors changes to tick-related storage slots
+
+This focused approach ensures:
+1. Ticks remain within protocol-defined bounds
+2. Tick spacing rules are enforced
+3. Core AMM functionality remains secure
+
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
 // Uniswap v3 pool style interface
 interface IUniswapV3Pool {
@@ -34,20 +71,23 @@ interface IUniswapV3Pool {
             bool unlocked
         );
     function tickSpacing() external view returns (int24);
-    function tickToPrice(int24 tick) external view returns (uint256);
 }
 
-// Check that the price is within the tick bounds
 contract PriceWithinTicksAssertion is Assertion {
-    IUniswapV3Pool public pool = IUniswapV3Pool(address(0xbeef));
+    IUniswapV3Pool public pool;
 
     // Uniswap V3 tick bounds
     int24 constant MIN_TICK = -887272;
     int24 constant MAX_TICK = 887272;
 
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](1); // Define the number of triggers
-        assertions[0] = this.priceWithinTicks.selector; // Define the trigger
+    constructor(IUniswapV3Pool pool_) {
+        pool = pool_;
+    }
+
+    function triggers() external view override {
+        // Register trigger for changes to the tick storage slot
+        // Assumes tick is stored in slot0 of the pool contract
+        registerStorageChangeTrigger(this.priceWithinTicks.selector, bytes32(uint256(0)));
     }
 
     // Check that the price is within the tick bounds and that the tick is divisible by the tick spacing
@@ -66,25 +106,26 @@ contract PriceWithinTicksAssertion is Assertion {
 
         // Check 2: Tick must be divisible by tickSpacing
         require(postTick % spacing == 0, "Tick not aligned with spacing");
-
-        // Check 3: Tick movement should be reasonable
-        int24 tickDelta = postTick - preTick;
-        require(tickDelta < 1000 && tickDelta > -1000, "Suspicious tick movement");
-
-        // Check price impact
-        uint256 prePrice = pool.tickToPrice(preTick);
-        uint256 postPrice = pool.tickToPrice(postTick);
-        uint256 priceChange;
-
-        if (postPrice > prePrice) {
-            priceChange = ((postPrice - prePrice) * 10000) / prePrice;
-        } else {
-            priceChange = ((prePrice - postPrice) * 10000) / prePrice;
-        }
-
-        // Alert on large price impacts (e.g., > 10%)
-        require(priceChange <= 1000, "Price impact too high"); // Should be what the protocol defines
     }
 }
-
 ```
+
+## Testing
+To test this assertion:
+
+1. Deploy a mock Uniswap V3 pool contract
+2. Create test scenarios that:
+   - Execute trades within valid tick ranges
+   - Attempt trades that would push ticks outside bounds
+   - Test tick spacing alignment
+
+## Assertion Best Practices
+- Combine this assertion with other AMM-related assertions like [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations)
+- Consider protocol-specific parameters for:
+  - Tick spacing requirements
+  - Global tick bounds (if different from Uniswap V3)
+- Use detailed error messages to aid in debugging
+
+## Related Assertions
+- [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations)
+- [Liquidation Health Factor](/assertions-book/assertions/ass16-liquidation-health-factor)
