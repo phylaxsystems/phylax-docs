@@ -1,23 +1,50 @@
 ---
 title: ERC4626 Deposit and Withdraw
-description: Make sure that deposit and withdraw are correct
+description: Assert that ERC4626 deposit and withdraw operations maintain correct share accounting
 ---
 
 ## Use Case
-ERC4626 is a standard for creating yield-bearing tokens that are compatible with ERC20. It is used in many DeFi protocols, including Aave, Compound, and Yearn.
-There are two functions available to pre-calculate the amount of shares that will be received when depositing and withdrawing assets: `previewDeposit` and `previewWithdraw`.
-This assertions makes sure that `deposit` and `withdraw` are correct as per the preview functions.
+ERC4626 is a standard for creating yield-bearing tokens that are compatible with ERC20. This assertion ensures that deposit and withdraw operations maintain correct share accounting, which is a critical security parameter for any ERC4626 vault.
+
+This assertion is particularly important for:
+- Preventing share calculation errors that could lead to loss of user funds
+- Ensuring deposits and withdrawals maintain the correct ratio between assets and shares
+- Detecting potential accounting errors in yield-bearing vaults
+- Maintaining protocol security by enforcing share calculation invariants
+
+For example, if a vault incorrectly calculates shares during deposits, users could receive fewer shares than they should, effectively losing value in their deposits.
+
+### Applicable Protocols
+- Yield aggregators that use ERC4626 for their vaults (e.g., Yearn, Aave, Compound)
+- Lending protocols that implement ERC4626 for their interest-bearing tokens
+- Liquidity pools that use ERC4626 for their LP tokens
+- Staking protocols that implement ERC4626 for their staking tokens
 
 ## Explanation
-This assertion makes sure that the `deposit` and `withdraw` functions are correct.
+The assertion verifies that the actual shares received from deposits match the preview calculation, and that the total assets are correctly updated. This is done by comparing the state before and after each deposit operation.
+
+The assertion uses the following cheatcodes:
+- `registerCallTrigger()`: Sets up the assertion to be triggered whenever a deposit call is made to the ERC4626 vault
+- `getCallInputs()`: Retrieves the input data (assets and receiver) from all deposit calls that triggered the assertion
+- `forkPreState()`: Creates a fork of the state before the deposit to capture initial balances and calculate expected shares
+- `forkPostState()`: Creates a fork of the state after the deposit to verify that the actual changes match the expected changes
+
+This multi-layered approach ensures that:
+1. Share calculations are accurate and consistent with the preview function - the actual shares received must exactly match what `previewDeposit` predicted
+2. Total assets are correctly updated after deposits - the vault's total assets must increase by exactly the deposited amount
+3. User balances are properly incremented with the correct share amount - the receiver's balance must increase by exactly the expected shares
+
+The assertion specifically checks that there is no discrepancy between what the preview function predicts and what actually happens during the deposit. This is critical because any mismatch could lead to users receiving incorrect amounts of shares, potentially resulting in loss of value.
+
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol"; // Credible Layer precompiles
-import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
 interface IERC4626 {
     function deposit(uint256 assets, address receiver) external returns (uint256);
@@ -29,42 +56,55 @@ interface IERC4626 {
 contract ERC4626DepositAssertion is Assertion {
     IERC4626 public erc4626 = IERC4626(address(0xbeef));
 
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](1);
-        assertions[0] = this.assertionDeposit.selector;
+    function triggers() external view override {
+        // Register trigger for deposit calls to the ERC4626 vault
+        registerCallTrigger(this.assertionDeposit.selector, erc4626.deposit.selector);
     }
 
-    // Make sure that the preview deposit is correct
-    // revert if the deposit is not correct
+    // Assert that deposits maintain correct share accounting
     function assertionDeposit() external {
-        // Get the sender of the transaction and the calldata
+        // Get all deposit calls to the ERC4626 vault
         PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(erc4626), erc4626.deposit.selector);
-        // If there are no call inputs, return
-        if (callInputs.length == 0) {
-            return;
-        }
+        
+        // Check each deposit call
         for (uint256 i = 0; i < callInputs.length; i++) {
+            // Get pre-state values
             ph.forkPreState();
-            bytes memory data = callInputs[i].input;
-            (uint256 assets, address receiver) = abi.decode(stripSelector(data), (uint256, address));
+            (uint256 assets, address receiver) = abi.decode(callInputs[i].input, (uint256, address));
+            
+            // Calculate expected shares and capture pre-state balances
             uint256 expectedShares = erc4626.previewDeposit(assets);
             uint256 preTotalAssets = erc4626.totalAssets();
             uint256 preBalance = erc4626.balanceOf(receiver);
+            
+            // Get post-state values
             ph.forkPostState();
             uint256 postBalance = erc4626.balanceOf(receiver);
             uint256 postTotalAssets = erc4626.totalAssets();
-            require(postBalance == expectedShares + preBalance, "Deposit assertion failed");
-            require(postTotalAssets == preTotalAssets + assets, "Total assets assertion failed");
-        }
-    }
 
-    function stripSelector(bytes memory input) internal pure returns (bytes memory) {
-        // Create a new bytes memory and copy everything after the selector
-        bytes memory paramData = new bytes(32);
-        for (uint256 i = 4; i < input.length; i++) {
-            paramData[i - 4] = input[i];
+            // Verify share accounting is correct
+            require(postBalance == expectedShares + preBalance, "Deposit assertion failed: incorrect share balance");
+            require(postTotalAssets == preTotalAssets + assets, "Deposit assertion failed: incorrect total assets");
         }
-        return paramData;
     }
 }
 ```
+
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+
+## Testing
+To test this assertion:
+1. Deploy an ERC4626 vault with known asset and share calculation logic
+2. Perform deposits with various asset amounts
+3. Verify that the assertion correctly identifies any discrepancies between preview and actual share calculations
+4. Test edge cases like zero deposits and maximum deposits
+
+## Assertion Best Practices
+- Combine this assertion with other ERC4626-related assertions for comprehensive security
+- Use the `getCallInputs` cheatcode to capture all deposit calls to the vault
+- Consider adding additional checks for withdraw operations
+- Ensure proper error messages in the assertion to help with debugging
+- Consider adding checks for rounding errors in share calculations
+
+## Related Assertions
+- [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
