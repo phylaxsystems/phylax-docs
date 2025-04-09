@@ -52,7 +52,9 @@ Since this assertion uses a generic trigger without specifying a target function
 
 While this doesn't prevent a determined attacker from draining funds through multiple transactions (each below the threshold), it significantly slows the attack and creates an opportunity for intervention.
 
-> **Important Note:** This assertion is meant to be an example of monitoring token outflows. Due to the nature of how assertions work, only the owner of a contract can enable assertions on it. Since ERC20 tokens are contracts that track balances, but you don't physically store the tokens in your own contract, you cannot directly control balance changes in the token contract itself. This assertion would need to be implemented by the protocol contract owner to monitor their own contract's token balances.
+<Warning>
+This assertion is meant to be an example of monitoring token outflows. Due to the nature of how assertions work, only the owner of a contract can enable assertions on it. Since ERC20 tokens are contracts that track balances, but you don't physically store the tokens in your own contract, you cannot directly control balance changes in the token contract itself. This assertion would need to be implemented by the protocol contract owner to monitor their own contract's token balances.
+</Warning>
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -141,13 +143,5 @@ To test this assertion:
 
 ## Assertion Best Practices
 - Adjust the `MAX_DRAIN_PERCENTAGE_BPS` based on your protocol's normal operation patterns
-- Consider combining with [Suspicious Transaction](/assertions-book/assertions/ass13-suspicious-transaction) to detect other attack vectors
-- For tokens with rebasing mechanisms, consider using a time-weighted average balance
-- Implement different thresholds for different tokens based on their volatility and usage patterns
+- Potentially use a whitelist of addresses that are allowed to drain large amounts of tokens (e.g. a multisig wallet)
 - Consider excluding certain admin/governance functions from the drain checks if they legitimately need to move large amounts
-
-## Related Assertions
-- [Suspicious Transaction](/assertions-book/assertions/ass13-suspicious-transaction)
-- [Liquidity Pool Balance](/assertions-book/assertions/ass04-liquidity-pool-balance)
-- [Lending Health Factor](/assertions-book/assertions/ass07-lending-health-factor)
-
