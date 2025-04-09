@@ -4,23 +4,71 @@ description: 'Make sure that the balance increases after a harvest'
 ---
 
 ## Use Case
+In DeFi yield farming protocols, users can deposit assets into a pool and earn rewards. The process of claiming the compounded rewards is called "harvesting". This assertion ensures that harvesting operations maintain protocol integrity by:
 
-In DeFi yield farming protocols, users can deposit assets into a pool and earn rewards.
-The process of claiming the compounded rewards is called "harvesting".
-It's expected that the balance of a vault is higher after a harvest.
+- Preventing harvests that decrease vault balances
+- Ensuring price per share remains stable or increases
+- Detecting potential yield farming exploits
+- Maintaining protocol solvency by enforcing proper reward distribution
+
+This is a critical security parameter because:
+- Incorrect harvest implementations could lead to loss of user funds
+- Price per share manipulation could enable flash loan attacks
+- Balance decreases during harvest could indicate protocol insolvency
+- Yield farming exploits often target harvest mechanisms
+
+### Applicable Protocols
+- Yield farming protocols (e.g., Beefy, Yearn, Harvest)
+- Liquidity mining programs
+- Staking protocols with reward distribution
+- Auto-compounding vaults
+
+These protocols need this assertion because:
+- Yield farming protocols rely on accurate reward distribution
+- Liquidity mining programs must maintain proper reward accounting
+- Staking protocols need to ensure rewards are properly distributed
+- Auto-compounding vaults must maintain accurate share pricing
 
 ## Explanation
+The assertion implements a multi-layered approach to verify harvest operations:
 
-Check that the balance of a vault is higher after a harvest and that the price per share doesn't decrease.
+1. **Pre-harvest State Check**:
+   - Uses `forkPreState()` to capture vault balance and price per share
+   - Establishes baseline metrics before harvest
+
+2. **Post-harvest Validation**:
+   - Uses `forkPostState()` to verify metrics after harvest
+   - Ensures balance hasn't decreased (can stay the same if harvested recently)
+   - Confirms price per share hasn't decreased
+
+3. **Sequential State Change Validation**:
+   - Uses `getStateChangesUint()` to monitor all balance changes
+   - Verifies each balance change is valid relative to the previous state
+   - Prevents manipulation through multiple harvest calls
+   - Ensures no balance decreases occur at any point during the transaction
+
+The assertion uses the following cheatcodes:
+- `forkPreState()`: Captures pre-harvest metrics
+- `forkPostState()`: Verifies post-harvest metrics
+- `getStateChangesUint()`: Monitors all balance changes
+- `registerCallTrigger()`: Triggers on harvest function calls
+
+This approach ensures that:
+1. Harvests never decrease vault balances
+2. Price per share remains stable or increases
+3. No unauthorized balance modifications occur
+4. Protocol solvency is maintained
+5. Multiple harvest calls in the same transaction are handled correctly
+
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
-import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
 interface IBeefyVault {
     function balance() external view returns (uint256);
@@ -28,41 +76,79 @@ interface IBeefyVault {
     function harvest() external;
 }
 
-// Assert that the balance of the vault increases after a harvest
-// Inspired by // https://github.com/beefyfinance/beefy-contracts/blob/master/forge/test/vault/ChainVaultsTest.t.sol#L77-L110
+// Inspired by https://github.com/beefyfinance/beefy-contracts/blob/master/forge/test/vault/ChainVaultsTest.t.sol#L77-L110
 contract BeefyHarvestAssertion is Assertion {
-    IBeefyVault public vault = IBeefyVault(address(0xbeef));
+    IBeefyVault public vault;
 
-    bytes4 constant HARVEST = IBeefyVault.harvest.selector;
-
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](1); // Define the number of triggers
-        assertions[0] = this.assertionHarvestIncreasesBalance.selector; // Define the trigger
+    constructor(address vault_) {
+        vault = IBeefyVault(vault_);
     }
 
-    // Assert that the balance of the vault increases after a harvest and that the price per share increases or stays the same
+    function triggers() external view override {
+        // Register trigger for harvest function calls
+        registerCallTrigger(this.assertionHarvestIncreasesBalance.selector, vault.harvest.selector);
+    }
+
+    // Assert that the balance of the vault doesn't decrease after a harvest
+    // and that the price per share doesn't decrease
     function assertionHarvestIncreasesBalance() external {
-        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(vault), vault.harvest.selector);
-        if (callInputs.length == 0) {
-            return;
-        }
+        // Check pre-harvest state
+        ph.forkPreState();
+        uint256 preBalance = vault.balance();
+        uint256 prePricePerShare = vault.getPricePerFullShare();
 
-        for (uint256 i = 0; i < callInputs.length; i++) {
-            ph.forkPreState();
-            uint256 preBalance = vault.balance();
-            uint256 prePricePerShare = vault.getPricePerFullShare();
+        // Check post-harvest state
+        ph.forkPostState();
+        uint256 postBalance = vault.balance();
+        uint256 postPricePerShare = vault.getPricePerFullShare();
 
-            ph.forkPostState();
-            uint256 postBalance = vault.balance();
-            uint256 postPricePerShare = vault.getPricePerFullShare();
+        // Balance should not decrease after harvest (can stay the same if harvested recently)
+        require(postBalance >= preBalance, "Harvest decreased balance");
 
-            // Balance should increase after harvest
-            require(postBalance > preBalance, "Harvest did not increase balance");
+        // Price per share should increase or stay the same
+        require(postPricePerShare >= prePricePerShare, "Price per share decreased after harvest");
 
-            // Price per share should increase or stay the same
-            require(postPricePerShare >= prePricePerShare, "Price per share decreased after harvest");
+        // Get all state changes to the balance slot
+        uint256[] memory balanceChanges = getStateChangesUint(
+            address(vault),
+            bytes32(uint256(0)) // First storage slot for balance
+        );
+
+        // Verify that all intermediate balance changes are valid
+        // Each balance change should be >= the previous balance in the sequence
+        uint256 lastBalance = preBalance;
+        for (uint256 i = 0; i < balanceChanges.length; i++) {
+            require(balanceChanges[i] >= lastBalance, "Invalid balance decrease detected during harvest");
+            lastBalance = balanceChanges[i];
         }
     }
 }
-
 ```
+
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+
+## Testing
+To test this assertion:
+
+1. Deploy a test instance of the yield farming vault
+2. Set up initial vault state with assets and rewards
+3. Execute harvest operations with varying conditions:
+   - Single harvest with rewards
+   - Multiple harvests in same transaction
+   - Harvest with no new rewards
+4. Verify the assertion correctly:
+   - Allows harvests that maintain or increase balance
+   - Prevents harvests that decrease balance
+   - Maintains price per share stability
+   - Handles multiple harvest calls correctly
+
+## Assertion Best Practices
+- Combine with other assertions like [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain) for comprehensive protection
+- Use appropriate balance thresholds based on protocol reward rates
+- Consider adding maximum balance increase limits to prevent reward manipulation
+- Add checks for price per share throughout the callstack (could be a separate assertion for modularity)
+
+## Related Assertions
+- [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
+- [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
+- [Price Within Ticks](/assertions-book/assertions/ass15-price-within-ticks)
