@@ -1,18 +1,19 @@
 ---
-title: ERC4626 Vault Deposit
-description: Assert that ERC4626 deposit maintain correct share accounting
+title: ERC4626 Vault Deposit and Withdrawal
+description: Assert that ERC4626 deposit and withdrawal operations maintain correct accounting
 ---
 
 ## Use Case
-ERC4626 is a standard for creating yield-bearing tokens that are compatible with ERC20. This assertion ensures that deposit operations maintain correct accounting for both assets and shares, which are critical security parameters for any ERC4626 vault.
+ERC4626 is a standard for creating yield-bearing tokens that are compatible with ERC20. This assertion collection ensures that deposit and withdrawal operations maintain correct accounting for both assets and shares, which are critical security parameters for any ERC4626 vault.
 
-This assertion is particularly important for:
+This assertion collection is particularly important for:
 - Preventing share calculation errors that could lead to loss of user funds
-- Ensuring deposits maintain the correct ratio between assets and shares
+- Ensuring deposits and withdrawals maintain the correct ratio between assets and shares
 - Detecting potential accounting errors in yield-bearing vaults
 - Maintaining protocol security by enforcing share calculation invariants
+- Verifying round-trip operations (deposit followed by withdrawal) preserve value
 
-For example, if a vault incorrectly calculates shares during deposits, users could receive fewer shares than they should, effectively losing value in their deposits.
+For example, if a vault incorrectly calculates shares during deposits or withdrawals, users could receive fewer shares or assets than they should, effectively losing value.
 
 ### Applicable Protocols
 - Yield aggregators that use ERC4626 for their vaults (e.g., Yearn, Aave, Compound)
@@ -21,26 +22,33 @@ For example, if a vault incorrectly calculates shares during deposits, users cou
 - Staking protocols that implement ERC4626 for their staking tokens
 
 ## Explanation
-The assertion is split into two separate checks to ensure comprehensive verification of deposit operations:
+The assertion collection is split into four separate assertion functions to ensure comprehensive verification of deposit and withdrawal operations:
 
-1. **Asset Accounting Check**: Verifies that the total assets in the vault increase by exactly the amount deposited. This ensures that no assets are lost or duplicated during deposits.
+### Deposit Assertions
+1. **Deposit Asset Accounting**: Verifies that the total assets in the vault increase by exactly the amount deposited. This ensures that no assets are lost or duplicated during deposits.
 
-2. **Share Accounting Check**: Verifies that each depositor receives the correct number of shares for their deposit. This is done by comparing the actual shares received with the expected shares calculated by `previewDeposit()`.
+2. **Deposit Share Accounting**: Verifies that each depositor receives the correct number of shares for their deposit. This is done by comparing the actual shares received with the expected shares calculated by `previewDeposit()`.
 
-The assertion uses the following cheatcodes:
-- `registerCallTrigger()`: Sets up the assertion to be triggered whenever a deposit call is made to the ERC4626 vault
-- `getCallInputs()`: Retrieves the input data (assets and receiver) from all deposit calls that triggered the assertion
-- `forkPreState()`: Creates a fork of the state before the deposit to capture initial balances
-- `forkPostState()`: Creates a fork of the state after the deposit to verify that the actual changes match the expected changes
+### Withdrawal Assertions
+3. **Withdrawal Asset Accounting**: Verifies that the total assets in the vault decrease by exactly the amount withdrawn. This ensures that no assets are lost or unexpectedly gained during withdrawals.
 
-This multi-layered approach ensures that:
-1. Total assets are correctly updated after deposits - the vault's total assets must increase by exactly the deposited amount
-2. Share calculations are accurate and consistent with the preview function - the actual shares received must exactly match what `previewDeposit` predicted
-3. User balances are properly incremented with the correct share amount - the receiver's balance must increase by exactly the expected shares
+4. **Withdrawal Share Accounting**: Verifies that the correct number of shares are burned for each withdrawal. This is done by comparing the actual shares burned with the expected shares calculated by `previewWithdraw()`.
 
-The assertion specifically checks that there is no discrepancy between what the preview function predicts and what actually happens during the deposit. This is critical because any mismatch could lead to users receiving incorrect amounts of shares, potentially resulting in loss of value.
+The assertion collection uses the following cheatcodes:
+- `registerCallTrigger()`: Sets up the assertion functions to be triggered whenever deposit or withdraw calls are made to the ERC4626 vault
+- `getCallInputs()`: Retrieves the input data from all deposit or withdraw calls that triggered the assertion functions
+- `forkPreState()`: Creates a fork of the state before the operation to capture initial balances
+- `forkPostState()`: Creates a fork of the state after the operation to verify that the actual changes match the expected changes
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
+
+This multi-layered approach ensures that:
+1. Total assets are correctly updated after deposits and withdrawals
+2. Share calculations are accurate and consistent with the preview functions
+3. User balances are properly incremented or decremented with the correct share amount
+4. The ERC4626 vault maintains its invariants during all operations
+
+The assertion functions specifically check that there is no discrepancy between what the preview functions predict and what actually happens during the operations. This is critical because any mismatch could lead to users receiving incorrect amounts of shares or assets, potentially resulting in loss of value.
 
 ## Code Example
 ```solidity
@@ -51,19 +59,39 @@ import {Assertion} from "credible-std/Assertion.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 interface IERC4626 {
+    // Deposit/mint
     function deposit(uint256 assets, address receiver) external returns (uint256);
     function previewDeposit(uint256 assets) external view returns (uint256);
+    
+    // Withdraw/redeem
+    function withdraw(uint256 assets, address receiver, address owner) external returns (uint256);
+    function previewWithdraw(uint256 assets) external view returns (uint256);
+    
+    // View functions
     function totalAssets() external view returns (uint256);
+    function balanceOf(address account) external view returns (uint256);
+    function asset() external view returns (address);
+}
+
+interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-contract ERC4626DepositAssertion is Assertion {
-    IERC4626 public erc4626 = IERC4626(address(0xbeef));
+contract ERC4626DepositWithdrawAssertion is Assertion {
+    IERC4626 public erc4626;
+    
+    constructor(address _erc4626) {
+        erc4626 = IERC4626(_erc4626);
+    }
 
     function triggers() external view override {
-        // Register trigger for deposit calls to the ERC4626 vault
+        // Register triggers for deposit operations
         registerCallTrigger(this.assertionDepositAssets.selector, erc4626.deposit.selector);
         registerCallTrigger(this.assertionDepositShares.selector, erc4626.deposit.selector);
+        
+        // Register triggers for withdraw operations
+        registerCallTrigger(this.assertionWithdrawAssets.selector, erc4626.withdraw.selector);
+        registerCallTrigger(this.assertionWithdrawShares.selector, erc4626.withdraw.selector);
     }
 
     // Assert that deposits correctly update total assets
@@ -112,8 +140,66 @@ contract ERC4626DepositAssertion is Assertion {
             uint256 postShareBalance = erc4626.balanceOf(receiver);
             
             // Verify that the receiver received exactly the expected number of shares
-            require(postShareBalance == expectedSharesToMint + preShareBalance, 
+            require(postShareBalance == preShareBalance + expectedSharesToMint, 
                     "Deposit shares assertion failed: receiver did not receive expected number of shares");
+        }
+    }
+    
+    // Assert that withdrawals correctly update total assets
+    function assertionWithdrawAssets() external {
+        // Get all withdraw calls to the ERC4626 vault
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(erc4626), erc4626.withdraw.selector);
+        
+        // First, do a simple pre/post state check for the overall transaction
+        ph.forkPreState();
+        uint256 preTotalAssets = erc4626.totalAssets();
+        
+        // Get post-state values
+        ph.forkPostState();
+        uint256 postTotalAssets = erc4626.totalAssets();
+        
+        // Calculate total assets withdrawn across all calls
+        uint256 totalAssetsWithdrawn = 0;
+        for (uint256 i = 0; i < callInputs.length; i++) {
+            (uint256 assets, , ) = abi.decode(callInputs[i].input, (uint256, address, address));
+            totalAssetsWithdrawn += assets;
+        }
+        
+        // Verify total assets decreased by exactly the withdrawn amount
+        require(postTotalAssets == preTotalAssets - totalAssetsWithdrawn, 
+                "Withdraw assets assertion failed: incorrect total assets");
+    }
+    
+    // Assert that withdrawals maintain correct share accounting
+    function assertionWithdrawShares() external {
+        // Get all withdraw calls to the ERC4626 vault
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(erc4626), erc4626.withdraw.selector);
+        
+        // Check each withdraw call for correct share accounting
+        for (uint256 i = 0; i < callInputs.length; i++) {
+            (uint256 assets, address receiver, address owner) = abi.decode(callInputs[i].input, (uint256, address, address));
+            
+            // Calculate expected shares to be burned for this withdrawal
+            uint256 expectedSharesToBurn = erc4626.previewWithdraw(assets);
+            
+            // Get pre-state share balance for the owner
+            ph.forkPreState();
+            uint256 preShareBalance = erc4626.balanceOf(owner);
+            address underlying = erc4626.asset();
+            uint256 preReceiverAssetBalance = IERC20(underlying).balanceOf(receiver);
+            
+            // Get post-state share balance for the owner
+            ph.forkPostState();
+            uint256 postShareBalance = erc4626.balanceOf(owner);
+            uint256 postReceiverAssetBalance = IERC20(underlying).balanceOf(receiver);
+            
+            // Verify that the correct number of shares were burned from owner
+            require(preShareBalance - postShareBalance == expectedSharesToBurn, 
+                    "Withdraw shares assertion failed: incorrect number of shares burned");
+                    
+            // Verify that receiver got the requested assets
+            require(postReceiverAssetBalance - preReceiverAssetBalance == assets,
+                    "Withdraw assets assertion failed: receiver did not receive expected amount of assets");
         }
     }
 }
@@ -122,20 +208,36 @@ contract ERC4626DepositAssertion is Assertion {
 > **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
 
 ## Testing
-To test this assertion:
+To test this assertion collection:
 1. Deploy an ERC4626 vault with known asset and share calculation logic
-2. Perform deposits with various asset amounts
-3. Verify that both assertions correctly identify any discrepancies:
-   - Between total assets before and after deposits
-   - Between preview shares and actual shares received
-4. Test edge cases like zero deposits and maximum deposits
+2. Perform deposits and withdrawals with various asset amounts
+3. Verify that all assertion functions correctly identify any discrepancies:
+   - Between total assets before and after operations
+   - Between preview calculations and actual shares/assets received
+4. Test edge cases like:
+   - Zero deposits and withdrawals
+   - Maximum deposits and withdrawals
+   - Deposits followed immediately by withdrawals (round-trip operations)
+   - Withdrawals with fee-on-transfer tokens
 
 ## Assertion Best Practices
-- Use both assertions together for comprehensive security verification
-- The asset check is simpler and can fail fast if there's an issue
-- The share check provides detailed verification of share calculation accuracy
-- Add checks for withdraw operations to ensure they maintain correct share accounting
-- Consider adding checks for rounding errors in share calculations
+- Use all four assertion functions together for comprehensive security verification
+- The asset accounting checks are simpler and can fail fast if there's an issue
+- The share accounting checks provide detailed verification of calculation accuracy
+- Consider adding additional checks for:
+  - Round-trip operations (deposit followed by withdrawal)
+  - Rounding errors in share calculations
+  - Fee calculations if the vault charges fees
+  - Slippage protection based on preview functions
+
+## ERC4626 Compliance Requirements
+The ERC4626 standard requires several invariants to be maintained:
+1. `convertToShares(convertToAssets(x)) <= x` - Converting assets to shares and back should never create value
+2. `previewDeposit` must return the same value as the actual deposit operation
+3. `previewWithdraw` must return the same value as the actual withdraw operation
+4. Asset accounting must be exact - total assets must correctly reflect deposits and withdrawals
+
+These assertion functions verify compliance with these requirements, helping to ensure the vault operates correctly according to the standard.
 
 ## Related Assertions
 - [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
