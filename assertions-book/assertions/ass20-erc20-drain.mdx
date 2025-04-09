@@ -4,54 +4,150 @@ description: 'Prevent tokens from being drained from a contract'
 ---
 
 ## Use Case
+Monitoring and limiting token outflows is a critical security measure for DeFi protocols. When exploits occur, attackers typically attempt to drain protocol assets as quickly as possible. Sudden large token outflows are a strong indicator of an ongoing attack.
 
-One of the most common things that happen when a protocol is exploited is that the attacker drains all the tokens from the protocol.
-Having assertions in place that prevent draining can be helpful to prevent or at the very least slow down the rate at which a protocol is drained.  
+This assertion is particularly important for:
+- Preventing catastrophic asset loss during exploits
+- Creating a delay window for emergency response teams
+- Enabling protocol administrators to activate circuit breakers
+- Preserving protocol solvency by limiting outflow rates
+- Protecting user funds by enforcing reasonable token transfer thresholds
+
+By limiting the rate of token outflows, protocols gain valuable time to respond to security incidents, even if complete prevention isn't possible.
+
+### Applicable Protocols
+- Lending protocols with token reserves (e.g., Compound, Aave, Morpho)
+- Liquidity pools and DEXs with concentrated token positions
+- Treasury management systems and DAOs with significant token holdings
+- Yield aggregators that accumulate deposits in reserve contracts
+- Cross-chain bridges that hold tokens in escrow contracts
+
+These protocols benefit from this assertion because:
+- Lending protocols must guard against flash loan exploits that drain reserves
+- Liquidity pools are prime targets for price manipulation attacks
+- Treasury systems require strict controls on withdrawal rates
+- Yield aggregators need to prevent strategy exploits from draining all assets
+- Bridge contracts must limit withdrawal rates to prevent reserve draining
 
 ## Explanation
+The assertion implements a percentage-based limit on token outflows in a single transaction. It works by:
 
-Check that the token balance of a contract does not decrease by more than X% in a single transaction.
-Each individual protocol should define their own percentage based on user patterns and expected behavior.
+1. Capturing the token balance before the transaction using `forkPreState()`
+2. Checking the token balance after the transaction using `forkPostState()`
+3. Calculating the percentage of tokens withdrawn in the transaction
+4. Reverting if the withdrawal percentage exceeds the configured threshold
 
-Note: This does not prevent draining from happening, as a somewhat capable attacker would just drain X-1% of the tokens in a single transaction.
-It's better than nothing and if mitigation is in place it could pause the protocol on a draining attempt.
+The assertion uses the following cheatcodes:
+- `forkPreState()`: Creates a fork of the state before the transaction to capture the initial token balance
+- `forkPostState()`: Creates a fork of the state after the transaction to capture the final token balance
+- `registerCallTrigger()`: Registers the assertion to run on every transaction, without specifying a particular function signature
+
+This approach ensures that:
+1. Normal protocol operations can continue unimpeded
+2. Suspicious large withdrawals are blocked
+3. Attackers cannot drain the entire protocol at once
+4. Token outflows stay within reasonable operational parameters
+
+Since this assertion uses a generic trigger without specifying a target function, it will run after every transaction that might affect the protected contract's token balance, regardless of which function caused the balance change. This makes it effective at catching outflows regardless of the mechanism used to withdraw tokens.
+
+While this doesn't prevent a determined attacker from draining funds through multiple transactions (each below the threshold), it significantly slows the attack and creates an opportunity for intervention.
+
+> **Important Note:** This assertion is meant to be an example of monitoring token outflows. Due to the nature of how assertions work, only the owner of a contract can enable assertions on it. Since ERC20 tokens are contracts that track balances, but you don't physically store the tokens in your own contract, you cannot directly control balance changes in the token contract itself. This assertion would need to be implemented by the protocol contract owner to monitor their own contract's token balances.
+
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
 interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-interface IExampleContract {}
+interface IProtocol {
+    // Generic interface for the protocol contract being protected
+}
 
 contract ERC20DrainAssertion is Assertion {
-    IERC20 public erc20 = IERC20(address(0xbeef));
-    IExampleContract public example = IExampleContract(address(0xf00));
+    // The ERC20 token being monitored
+    IERC20 public immutable token;
+    
+    // The protocol contract whose token balance is being protected
+    address public immutable protocolContract;
+    
+    // Maximum percentage of token balance that can be withdrawn in a single tx (in basis points)
+    // 1000 basis points = 10%
+    uint256 public constant MAX_DRAIN_PERCENTAGE_BPS = 1000;
+    
+    // Denominator for basis points calculation
+    uint256 public constant BPS_DENOMINATOR = 10000;
 
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](1); // Define the number of triggers
-        assertions[0] = this.assertionERC20Drain.selector; // Define the trigger
+    constructor(address _token, address _protocolContract) {
+        token = IERC20(_token);
+        protocolContract = _protocolContract;
     }
 
-    // Don't allow for more than x% of the total balance to be transferred out in a single transaction
-    // revert if the assertion fails
-    function assertionERC20Drain() external {
+    function triggers() external view override {
+        // This assertion doesn't need specific function triggers since it monitors
+        // the overall balance change regardless of which function caused it
+        // We register a generic trigger that will run after every transaction
+        registerCallTrigger(this.assertERC20Drain.selector);
+    }
+
+    /// @notice Checks that the token balance doesn't decrease by more than MAX_DRAIN_PERCENTAGE_BPS in a single transaction
+    /// @dev This assertion captures state before and after the transaction to detect excessive token outflows
+    function assertERC20Drain() external {
+        // Get token balance before the transaction
         ph.forkPreState();
-        uint256 preBalance = erc20.balanceOf(address(example));
+        uint256 preBalance = token.balanceOf(protocolContract);
+        
+        // Get token balance after the transaction
         ph.forkPostState();
-        uint256 postBalance = erc20.balanceOf(address(example));
+        uint256 postBalance = token.balanceOf(protocolContract);
+        
+        // If balance decreased, check if the decrease exceeds our threshold
         if (preBalance > postBalance) {
             uint256 drainAmount = preBalance - postBalance;
-            uint256 tenPercentOfPreBalance = preBalance / 10; // Change according to the percentage you want to allow
-            require(drainAmount <= tenPercentOfPreBalance, "Drain amount is greater than 10% of the pre-balance");
+            
+            // Calculate maximum allowed drain amount (e.g., 10% of pre-balance)
+            uint256 maxAllowedDrainAmount = (preBalance * MAX_DRAIN_PERCENTAGE_BPS) / BPS_DENOMINATOR;
+            
+            // Revert if the drain amount exceeds the allowed percentage
+            require(
+                drainAmount <= maxAllowedDrainAmount,
+                "ERC20Drain: Token outflow exceeds maximum allowed percentage"
+            );
         }
     }
 }
 ```
+
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+
+## Testing
+To test this assertion:
+
+1. Deploy a test instance of the protocol and token
+2. Set up various balance scenarios in the protocol contract
+3. Attempt token withdrawals at different percentage thresholds:
+   - Below the maximum allowed percentage (should succeed)
+   - Equal to the maximum allowed percentage (should succeed)
+   - Above the maximum allowed percentage (should revert)
+4. Verify the assertion correctly enforces the maximum drain percentage
+
+## Assertion Best Practices
+- Adjust the `MAX_DRAIN_PERCENTAGE_BPS` based on your protocol's normal operation patterns
+- Consider combining with [Suspicious Transaction](/assertions-book/assertions/ass13-suspicious-transaction) to detect other attack vectors
+- For tokens with rebasing mechanisms, consider using a time-weighted average balance
+- Implement different thresholds for different tokens based on their volatility and usage patterns
+- Consider excluding certain admin/governance functions from the drain checks if they legitimately need to move large amounts
+
+## Related Assertions
+- [Suspicious Transaction](/assertions-book/assertions/ass13-suspicious-transaction)
+- [Liquidity Pool Balance](/assertions-book/assertions/ass04-liquidity-pool-balance)
+- [Lending Health Factor](/assertions-book/assertions/ass07-lending-health-factor)
 
