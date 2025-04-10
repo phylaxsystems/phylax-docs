@@ -3,191 +3,432 @@ title: Generate Assertions with AI
 description: How to use AI to generate assertions
 ---
 
+> **Important Note:** AI tools can make mistakes when generating assertions. Always review AI-generated code carefully and [test your assertions thoroughly](/credible/testing-assertions) before deployment. The goal of AI is to accelerate the development process, not replace manual verification.
+
 ## Guide for generating assertions with AI
 
-AI tools can significantly enhance your workflow when defining protocol invariants and assertions. We've conducted experiments using the Phylax assertion examples library and documentation to generate assertions automatically.
+AI tools can significantly enhance your workflow when defining protocol invariants and assertions. By leveraging AI assistants like Claude, GPT-4, or Cursor AI, you can quickly generate assertion templates that follow Phylax best practices and patterns.
+
+> **Note:** This guide focuses on using Cursor as the AI-powered IDE. If you're using a different AI coding assistant, you'll need to adjust the setup steps accordingly while following the same assertion generation principles.
 
 As the number of example assertions grows, we expect the quality of the generated assertions to improve.
 Similarly, we hope that more and more protocols will start clearly documenting their invariants, as it's both an important step towards better security in general and towards more efficient assertions generation.
 
 ### Setup
 
-1. Clone your repo and open it in Cursor
-2. Configure Cursor settings:
-   - Add Phylax docs: [https://docs.phylax.systems](https://docs.phylax.systems/)
-3. Let Cursor's model index your project files
-4. Generate assertions by prompting Cursor AI with either:
-   - Your protocol's existing documentation and source code
-   - Only your protocol's source code
+1. In your existing smart contract repository, install the credible-std library:
+   ```bash
+   forge install https://github.com/phylaxsystems/credible-std/
+   ```
+
+2. Create an assertions directory next to your source files folder:
+   ```
+   your-project/
+   ├── src/
+   └── assertions/
+       ├── src/           # Assertion implementation files (.a.sol)
+       └── test/          # Test files (.t.sol)
+   ```
+   Note: Assertion files should use the `.a.sol` extension to distinguish them from regular Solidity files.
+   
+   For more information on installing the library, see the [PCL Quickstart](/credible/pcl-quickstart).
+
+3. Open your repository in Cursor and configure Cursor settings:
+   - Add Phylax docs for context: [https://docs.phylax.systems](https://docs.phylax.systems/)
+   - Let Cursor's model index your project files
+
+<Note>
+The Phylax documentation is optimized to work well with AIs and expose both llms.txt and llms-full.txt files.
+</Note>
+
+### Creating Effective Prompts
+
+To generate high-quality assertions, your prompts should include:
+
+1. **Contract Context**: Share the relevant contract code that needs protection
+2. **Invariant Description**: Clearly state what invariants you want to protect
+3. **Pattern Reference**: Ask for assertions that follow Phylax's established patterns
+4. **Specific Requirements**: Mention specific functions, state variables, or edge cases
+
+#### Prompt Template
+```
+I need to create Phylax assertions to protect my protocol. Here's the context:
+
+1. Contract: [paste your contract code or describe its function]
+
+2. Invariants I want to protect:
+   - [Invariant 1: e.g., "Owner should never change without authorization"]
+   - [Invariant 2: e.g., "Total supply should never exceed maximum cap"]
+   - [Invariant 3: e.g., "User balances should never decrease unexpectedly"]
+
+3. Please generate assertions that follow the patterns and best practices from the Phylax assertion examples in the @phylax-docs:
+   - Proper imports from credible-std
+   - A clean interface to interact with my contract
+   - A triggers() function registering appropriate triggers (call, storage, balance)
+   - Assertion functions using ph.forkPreState() and ph.forkPostState() to compare values
+   - Use of getCallInputs() and getStateChanges() when appropriate to detect invariant breaches in the callstack
+   - Clear require statements with descriptive error messages
+   - Assertion function names should start with "assertion" prefix (e.g., assertionOwnershipChange)
+
+The assertions should focus on detecting undesired protocol states rather than trying to cover every possible edge case. Follow the pattern from Phylax assertion examples.
+```
 
 ### Example: Origin Protocol
+
+> **Note:** The assertions and tests presented in this section were generated with AI directly from the Origin Protocol codebase as a first version. They are provided as illustrative examples without further refinement and may not fully work in their current form without adjustments. However, they give a practical demonstration of how assertions could be implemented and tested for a real protocol. A developer familiar with Origin Protocol could likely adapt these examples to be production-ready with relatively minimal effort.
 
 We'll demonstrate using [Origin Protocol's contracts](https://github.com/OriginProtocol/origin-dollar) as an example. These contracts are well-documented and include clear invariant definitions in their [token logic documentation](https://github.com/OriginProtocol/origin-dollar/blob/master/contracts/contracts/token/README-token-logic.md#account-invariants).
 
 #### Sample Prompt
 ```
-Based on the invariants defined in this document[the documentation of invariants], write assertions according to the syntax in the Phylax documentation. The assertions should be for the Token contract of the Origin Protocol.
-```
+I need to create Phylax assertions for Origin Protocol's token contract. 
 
-The prompt references:
-- The protocol's invariant documentation
-- The Phylax assertions documentation
-- The smart contract code of the protocol
+1. Context: Origin Protocol's OUSD token has rebasing and non-rebasing accounts. It needs to ensure that specific invariants are maintained during operations.
+
+2. Invariants I want to protect:
+   - Account state (rebasing/non-rebasing) should only change through authorized functions
+   - Yield delegation relationships must maintain bidirectional links
+   - Balance changes during rebase opt-in/out should preserve user value
+   - Total supply should equal the sum of rebasing and non-rebasing supplies
+   - Credits and tokens should maintain correct mathematical relationships
+
+3. Please generate assertions that follow the patterns and best practices from the Phylax assertion examples in the @phylax-docs:
+   - A triggers() function registering appropriate triggers
+   - Clear use of ph.forkPreState() and ph.forkPostState() to compare values
+   - Use of getCallInputs() or getStateChanges() to track relevant operations in the callstack
+   - Descriptive error messages
+   - Assertion function names should start with "assertion" prefix
+   - Focus on detecting undesired states rather than covering every possible scenario
+
+The assertions should check critical state changes before and after transactions to prevent potential exploits.
+```
 
 #### Generated Assertions
 
-Using Claude 3.5 Sonnet, we generated the assertions shown below. While the generated assertions may need refinement, they give a good starting point for interesting aspects and invariants of the protocol that there should be assertions for.
+Using AI, we can generate assertions like this example (simplified for clarity):
 
-```
+```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.7;
+pragma solidity 0.8.28;
 
-import {Assertion} from "credible-std/src/Assertion.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
 interface IOUSD {
     function rebaseState(address) external view returns (uint8);
-    function alternativeCreditsPerToken(address) external view returns (uint256);
-    function _creditBalances(address) external view returns (uint256);
-    function yieldTo(address) external view returns (address);
-    function yieldFrom(address) external view returns (address);
     function balanceOf(address) external view returns (uint256);
     function totalSupply() external view returns (uint256);
     function nonRebasingSupply() external view returns (uint256);
-    function rebasingCredits() external view returns (uint256);
-    function _rebasingCreditsPerToken() external view returns (uint256);
+    function rebaseOptIn() external;
+    function rebaseOptOut() external;
 }
 
 contract OUSDAssertions is Assertion {
     IOUSD public ousd;
     
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](5);
-        assertions[0] = this.assertionAccountTypeInvariants.selector;
-        assertions[1] = this.assertionYieldDelegationLinks.selector;
-        assertions[2] = this.assertionBalanceInvariants.selector;
-        assertions[3] = this.assertionRebaseInvariants.selector;
-        assertions[4] = this.assertionRebaseOptInOutInvariants.selector;
+    constructor(IOUSD _ousd) {
+        ousd = _ousd;
     }
-
-    // Check account type and credits per token relationships
-    function assertionAccountTypeInvariants(address account) external {
-        ph.forkPostState();
-        uint256 altCreditsPerToken = ousd.alternativeCreditsPerToken(account);
-        uint8 state = ousd.rebaseState(account);
-
-        // Check alternativeCreditsPerToken can only be 0 or 1e18
-        require(
-            altCreditsPerToken == 0 || altCreditsPerToken == 1e18,
-            "Invalid alternativeCreditsPerToken value"
+    
+    function triggers() external view override {
+        // Trigger on rebase opt-in/out calls
+        registerCallTrigger(
+            this.assertionBalancePreservation.selector,
+            IOUSD.rebaseOptIn.selector
         );
-
-        // Check state alignment for zero alternativeCreditsPerToken
-        if (altCreditsPerToken == 0) {
-            require(
-                state == 0 || // NotSet
-                state == 1 || // StdRebasing
-                state == 4,   // YieldDelegationTarget
-                "Invalid state for zero alternativeCreditsPerToken"
-            );
-        }
-
-        // Check state alignment for 1e18 alternativeCreditsPerToken
-        if (altCreditsPerToken == 1e18) {
-            require(
-                state == 2 || // StdNonRebasing
-                state == 3,   // YieldDelegationSource
-                "Invalid state for 1e18 alternativeCreditsPerToken"
-            );
-        }
-    }
-
-    // Verify yield delegation relationships
-    function assertionYieldDelegationLinks() external {
-        ph.forkPostState();
-        address account = address(this); // Example account to check
-
-        if (ousd.rebaseState(account) == 3) { // YieldDelegationSource
-            require(
-                ousd.yieldTo(account) != address(0),
-                "YieldDelegationSource must have non-zero yieldTo"
-            );
-        }
-
-        if (ousd.rebaseState(account) == 4) { // YieldDelegationTarget
-            require(
-                ousd.yieldFrom(account) != address(0),
-                "YieldDelegationTarget must have non-zero yieldFrom"
-            );
-        }
-
-        // Check bidirectional links
-        address yieldFrom = ousd.yieldFrom(account);
-        if (yieldFrom != address(0)) {
-            require(
-                ousd.yieldTo(yieldFrom) == account,
-                "Invalid yield delegation linkage"
-            );
-        }
-    }
-
-    // Verify balance invariants during operations
-    function assertionBalanceInvariants() external {
-        ph.forkPreState();
-        uint256 preTotalSupply = ousd.totalSupply();
-        uint256 preNonRebasingSupply = ousd.nonRebasingSupply();
+        registerCallTrigger(
+            this.assertionBalancePreservation.selector,
+            IOUSD.rebaseOptOut.selector
+        );
         
-        ph.forkPostState();
-        uint256 postTotalSupply = ousd.totalSupply();
-        uint256 postNonRebasingSupply = ousd.nonRebasingSupply();
+        // Trigger on any state changes that affect total supply
+        registerStorageChangeTrigger(this.assertionTotalSupplyInvariant.selector);
+    }
 
-        // Sum of all balances should not exceed total supply
-        require(
-            postNonRebasingSupply <= postTotalSupply,
-            "NonRebasingSupply exceeds TotalSupply"
+    // Ensure balances are preserved during rebase opt-in/out
+    function assertionBalancePreservation() external {
+        // Get all calls to rebaseOptIn or rebaseOptOut
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(
+            address(ousd),
+            IOUSD.rebaseOptIn.selector
         );
-
-        // Non-vault operations should not change total supply
-        if (!isVaultOperation()) {
+        
+        if (calls.length == 0) {
+            calls = ph.getCallInputs(
+                address(ousd),
+                IOUSD.rebaseOptOut.selector
+            );
+        }
+        
+        if (calls.length > 0) {
+            address account = calls[0].caller;
+            
+            ph.forkPreState();
+            uint256 preBalance = ousd.balanceOf(account);
+            
+            ph.forkPostState();
+            uint256 postBalance = ousd.balanceOf(account);
+            
             require(
-                preTotalSupply == postTotalSupply,
-                "Total supply changed in non-vault operation"
+                preBalance == postBalance,
+                "Balance must be preserved during rebase state changes"
             );
         }
     }
 
-    // Verify rebase operation invariants
-    function assertionRebaseInvariants() external {
+    // Verify total supply equals sum of all balances
+    function assertionTotalSupplyInvariant() external {
         ph.forkPostState();
-        uint256 nonRebasingCredits = ousd.nonRebasingSupply();
-        uint256 rebasingCredits = ousd.rebasingCredits();
-        uint256 rebasingCreditsPerToken = ousd._rebasingCreditsPerToken();
         uint256 totalSupply = ousd.totalSupply();
-
-        require(
-            nonRebasingCredits + (rebasingCredits / rebasingCreditsPerToken) <= totalSupply,
-            "Credits/supply mismatch after rebase"
-        );
-    }
-
-    // Verify rebase opt-in/out operations maintain balances
-    function assertionRebaseOptInOutInvariants(address account) external {
-        ph.forkPreState();
-        uint256 preBalance = ousd.balanceOf(account);
+        uint256 nonRebasingSupply = ousd.nonRebasingSupply();
         
-        ph.forkPostState();
-        uint256 postBalance = ousd.balanceOf(account);
-
         require(
-            preBalance == postBalance,
-            "Balance changed during rebase opt in/out"
+            nonRebasingSupply <= totalSupply,
+            "Non-rebasing supply cannot exceed total supply"
         );
     }
-
-    // Helper function to determine if operation is from vault
-    function isVaultOperation() internal pure returns (bool) {
-        // Implementation would check if msg.sender is vault
-        return false;
-    }
-} 
+}
 ```
+
+### Refining Generated Assertions
+
+AI-generated assertions often need refinements:
+
+1. **Add Protocol-Specific Logic**: Tailor the assertions to your protocol's unique requirements
+2. **Focus on Undesired States**: Remember that assertions should focus on detecting states you don't want your protocol to reach, not covering every possible scenario
+3. **Optimize Gas Usage**: Simplify complex checks to reduce gas costs
+4. **Improve Error Messages**: Make error messages clear and actionable
+5. **Follow Naming Conventions**: Ensure functions start with "assertion" prefix and files use the `.a.sol` extension
+
+One of the powerful aspects of assertions is that you don't need to worry about how the undesired state might be reached - you only need to define what that undesired state looks like. This makes assertions much simpler to reason about than trying to predict all possible exploit paths.
+
+## Generating Test Cases with AI
+
+Testing assertions is critical to ensure they correctly identify both valid and invalid states. AI can also help generate comprehensive test suites for your assertions.
+
+### Creating Test Prompts
+
+When creating prompts for test generation, include:
+
+1. **Assertion Code**: Share the assertion code you want to test
+2. **Protocol Contract**: Include the protocol contract the assertion protects
+3. **Test Scenarios**: Describe scenarios that should pass and fail
+4. **PCL Testing Patterns**: Ask for tests that follow Phylax's testing practices
+
+#### Test Prompt Template
+```
+I need to create test cases for my Phylax assertion. Here's the context:
+
+1. Protocol Contract:
+[paste your protocol contract code]
+
+2. Assertion Contract:
+[paste your assertion contract code]
+
+3. Please generate test cases that:
+   - Import the proper testing libraries (forge-std/Test and credible-std/CredibleTest)
+   - Set up the testing environment correctly
+   - Test both positive scenarios (assertions should pass) and negative scenarios (assertions should fail)
+   - Use cl.addAssertion() to associate assertions with contracts
+   - Use cl.validate() to test the assertions against specific transactions
+   - Include clear test function names that describe what's being tested
+   - Use vm.prank() and other testing utilities as needed
+
+Follow the testing patterns from the Phylax documentation.
+```
+
+### Example: Testing OUSD Assertions
+
+Building on our OUSD assertion example, here's a sample prompt for generating tests:
+
+```
+I need to create test cases for my OUSD assertions. Here's the context:
+
+1. Protocol Contract: [abbreviated OUSD contract]
+
+2. Assertion Contract: [paste the OUSDAssertions contract generated earlier]
+
+3. Please generate test cases that verify:
+   - Balance preservation during rebase opt-in/out operations
+   - Total supply invariant validation
+   - Both valid operations (assertions pass) and invalid operations (assertions fail)
+
+Follow the Phylax documentation testing patterns and include comprehensive setup for realistic testing scenarios.
+```
+
+### Generated Test Cases
+
+Using AI, we can generate test cases like this example:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Test} from "forge-std/Test.sol";
+import {CredibleTest} from "credible-std/CredibleTest.sol";
+import {OUSD} from "../../src/OUSD.sol";
+import {OUSDAssertions} from "../src/OUSDAssertions.a.sol";
+
+contract TestOUSDAssertions is CredibleTest, Test {
+    // Contract state variables
+    OUSD public token;
+    address public admin = address(0xdead);
+    address public user1 = address(0x1111);
+    address public user2 = address(0x2222);
+    
+    function setUp() public {
+        // Initialize the OUSD token
+        token = new OUSD(admin);
+        
+        // Setup test accounts
+        vm.deal(admin, 100 ether);
+        vm.deal(user1, 10 ether);
+        vm.deal(user2, 10 ether);
+        
+        // Mint some tokens to users
+        vm.prank(admin);
+        token.mint(user1, 1000 * 10**18);
+        
+        vm.prank(admin);
+        token.mint(user2, 500 * 10**18);
+    }
+    
+    function test_assertionBalancePreservation_Pass() public {
+        address tokenAddress = address(token);
+        string memory label = "Balance preserved during rebase opt-in";
+        
+        // Associate the assertion with the protocol
+        cl.addAssertion(label, tokenAddress, type(OUSDAssertions).creationCode, abi.encode(token));
+        
+        // User1 opts out then back in with the same balance
+        vm.startPrank(user1);
+        
+        // First, opt out - this should preserve the balance
+        cl.validate(label, tokenAddress, 0, abi.encodePacked(token.rebaseOptOut.selector));
+        
+        // Then, opt back in - this should also preserve the balance
+        cl.validate(label, tokenAddress, 0, abi.encodePacked(token.rebaseOptIn.selector));
+        
+        vm.stopPrank();
+    }
+    
+    function test_assertionBalancePreservation_Fail() public {
+        address tokenAddress = address(token);
+        string memory label = "Balance not preserved during rebase opt-in";
+        
+        // Create a malicious mock implementation
+        MaliciousOUSD maliciousToken = new MaliciousOUSD(admin);
+        vm.prank(admin);
+        maliciousToken.mint(user1, 1000 * 10**18);
+        
+        // Associate the assertion with the malicious implementation
+        cl.addAssertion(
+            label, 
+            address(maliciousToken), 
+            type(OUSDAssertions).creationCode, 
+            abi.encode(maliciousToken)
+        );
+        
+        // This should revert because the balance would change
+        vm.prank(user1);
+        vm.expectRevert("Assertions Reverted");
+        cl.validate(
+            label, 
+            address(maliciousToken), 
+            0, 
+            abi.encodePacked(maliciousToken.rebaseOptIn.selector)
+        );
+    }
+    
+    function test_assertionTotalSupplyInvariant_Pass() public {
+        address tokenAddress = address(token);
+        string memory label = "Total supply invariant maintained";
+        
+        // Associate the assertion with the protocol
+        cl.addAssertion(label, tokenAddress, type(OUSDAssertions).creationCode, abi.encode(token));
+        
+        // Admin mints tokens - this should maintain the invariant
+        vm.prank(admin);
+        cl.validate(
+            label,
+            tokenAddress,
+            0,
+            abi.encodePacked(token.mint.selector, abi.encode(user1, 500 * 10**18))
+        );
+    }
+    
+    function test_assertionTotalSupplyInvariant_Fail() public {
+        address tokenAddress = address(token);
+        string memory label = "Total supply invariant violated";
+        
+        // Create a malicious mock that would violate the invariant
+        MaliciousOUSD maliciousToken = new MaliciousOUSD(admin);
+        
+        // Associate the assertion with the malicious implementation
+        cl.addAssertion(
+            label, 
+            address(maliciousToken), 
+            type(OUSDAssertions).creationCode, 
+            abi.encode(maliciousToken)
+        );
+        
+        // This should revert due to invariant violation
+        vm.prank(admin);
+        vm.expectRevert("Assertions Reverted");
+        cl.validate(
+            label,
+            address(maliciousToken),
+            0,
+            abi.encodePacked(maliciousToken.violateSupplyInvariant.selector)
+        );
+    }
+}
+
+// Mock malicious contract for testing failure cases
+contract MaliciousOUSD is OUSD {
+    constructor(address admin) OUSD(admin) {}
+    
+    // Override rebaseOptIn to change the balance (violating our assertion)
+    function rebaseOptIn() external override {
+        // Malicious implementation that would change the balance
+        _balances[msg.sender] = _balances[msg.sender] * 99 / 100; // Lose 1%
+        super.rebaseOptIn();
+    }
+    
+    // Function that would violate the supply invariant
+    function violateSupplyInvariant() external {
+        _nonRebasingSupply = _totalSupply + 1; // Violates invariant
+    }
+}
+```
+
+### Tips for AI-Generated Tests
+
+1. **Include Both Positive and Negative Tests**: Test cases should verify that assertions pass for valid operations and fail for invalid ones.
+
+2. **Create Mock Implementations**: Generate mock contracts that violate invariants to test failure scenarios.
+
+3. **Test Each Assertion Function**: Create separate test cases for each assertion function.
+
+4. **Simulate Realistic Scenarios**: Set up the test environment with realistic token balances, user accounts, and permissions.
+
+5. **Use Clear Test Function Names**: Name tests to clearly indicate what they verify (e.g., `test_assertionBalancePreservation_Pass`).
+
+6. **Leverage Forge Testing Utilities**: Use `vm.prank`, `vm.expectRevert`, and other utilities to create comprehensive tests.
+
+7. **Test Edge Cases**: Include tests for boundary conditions and edge cases that might trigger assertion failures.
+
+### Testing Workflow
+
+After generating test cases:
+
+1. Review and adjust the tests to match your specific protocol behavior
+2. Add additional edge cases that might not be covered
+3. Run the tests with `pcl test`
+4. Fix any failing tests that should pass, or adjust assertions if needed
+5. Iterate on both your assertions and tests until you have confidence in their correctness
+
+## Next Steps
+
+Head over to the [PCL Quickstart](/credible/pcl-quickstart) guide for more detailed information and check out the rest of the documentation, particularly the [Assertions Book](/assertions-book/assertions-book-intro) for more examples of common assertion patterns.
 
