@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "willow",
   "name": "Phylax Credible Layer Documentation",
   "colors": {
     "primary": "#000000",
@@ -11,11 +11,45 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "General",
+        "tab": "Credible Layer",
         "groups": [
           {
             "group": "Getting Started",
-            "pages": ["introduction", "faq"]
+            "pages": [
+              "credible/credible-introduction",
+              "credible/credible-install",
+              "credible/pcl-quickstart",
+              "faq"
+            ]
+          },
+          {
+            "group": "Credible Layer",
+            "pages": [
+              "credible/pcl-assertion-guide",
+              "credible/testing-assertions",
+              "credible/cheatcodes",
+              "credible/pcl-reference-guide",
+              "credible/credible-std-overview",
+              "credible/glossary"
+            ]
+          },
+          {
+            "group": "Use Case Mapping",
+            "pages": [
+              "credible/use-case-mappings/intro-use-case-mapping",
+              "credible/use-case-mappings/function-call-inputs",
+              "credible/use-case-mappings/read-logs",
+              "credible/use-case-mappings/storage-lookups",
+              "credible/use-case-mappings/state-changes",
+              {
+                "group": "Unsupported",
+                "pages": [
+                  "credible/use-case-mappings/unsupported-use-cases/call-frame-context",
+                  "credible/use-case-mappings/unsupported-use-cases/modified-keys",
+                  "credible/use-case-mappings/unsupported-use-cases/recursive-function-calls"
+                ]
+              }
+            ]
           }
         ]
       },
@@ -74,59 +108,8 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "Credible Layer",
-        "groups": [
-          {
-            "group": "Credible Layer",
-            "pages": [
-              "credible/credible-introduction",
-              "credible/credible-install",
-              "credible/pcl-quickstart",
-              "credible/pcl-assertion-guide",
-              "credible/testing-assertions",
-              "credible/cheatcodes",
-              "credible/pcl-reference-guide",
-              "credible/credible-std-overview",
-              "credible/glossary"
-            ]
-          },
-          {
-            "group": "Use Case Mapping",
-            "pages": [
-              "credible/use-case-mappings/intro-use-case-mapping",
-              "credible/use-case-mappings/function-call-inputs",
-              "credible/use-case-mappings/read-logs",
-              "credible/use-case-mappings/storage-lookups",
-              "credible/use-case-mappings/state-changes",
-              {
-                "group": "Unsupported",
-                "pages": [
-                  "credible/use-case-mappings/unsupported-use-cases/call-frame-context",
-                  "credible/use-case-mappings/unsupported-use-cases/modified-keys",
-                  "credible/use-case-mappings/unsupported-use-cases/recursive-function-calls"
-                ]
-              }
-            ]
-          }
-        ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Website",
-          "href": "https://phylax.systems",
-          "icon": "globe"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://blog.phylax.systems",
-          "icon": "newspaper"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
     "light": "/logo/full-black.png",
@@ -137,6 +120,18 @@
       {
         "label": "Community",
         "href": "https://t.me/phylax_credible_layer"
+      },
+      {
+        "label": "Blog",
+        "href": "https://blog.phylax.systems"
+      },
+      {
+        "label": "Website",
+        "href": "https://phylax.systems"
+      },
+      {
+        "label": "GitHub",
+        "href": "https://github.com/phylaxsystems"
       }
     ],
     "primary": {
@@ -148,7 +143,8 @@
   "footer": {
     "socials": {
       "x": "https://x.com/phylaxsystems",
-      "github": "https://github.com/phylaxsystems"
+      "github": "https://github.com/phylaxsystems",
+      "website": "https://phylax.systems"
     }
   }
 }
