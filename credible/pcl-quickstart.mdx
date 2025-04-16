@@ -10,8 +10,9 @@ This guide will walk you through the process of creating, testing, and submittin
 1. Set up your project structure
 2. Write a simple assertion
 3. Test your assertion
-4. Build and store your assertion
-5. Submit your assertion to the Credible Layer
+4. Authenticate with `pcl`
+5. Store your assertion
+6. Submit your assertion to the Credible Layer
 
 You can find the example used in this guide plus some additional examples in the [pcl](https://github.com/phylaxsystems/pcl/tree/main/testdata/mock-protocol) repository.
 
@@ -33,7 +34,9 @@ First, let's set up a project with the correct directory structure:
 ```bash
 mkdir pcl-tutorial-project
 cd pcl-tutorial-project
+```
 
+```bash
 # Create the required directories
 mkdir -p assertions/src assertions/test src lib
 ```
@@ -49,7 +52,7 @@ git init
 Next, you need to install the [`credible-std` library](credible/credible-std-overview), which provides the base contracts and utilities for writing assertions:
 
 ```bash
-forge install https://github.com/phylaxsystems/credible-std/
+forge install credible-std=https://github.com/phylaxsystems/credible-std/
 ```
 
 After installation, create a `remappings.txt` file at the root of your project with the following content:
@@ -59,7 +62,7 @@ credible-std/=lib/credible-std/src/
 forge-std/=lib/credible-std/lib/forge-std/src/
 ```
 
-These remappings will ensure that your imports work correctly when referencing the credible-std library. The PCL CLI will automatically detect and use these remappings when compiling your contracts.
+These remappings will ensure that your imports work correctly when referencing the credible-std and forge-std libraries. The PCL CLI will automatically detect and use these remappings when compiling your contracts.
 
 Next, let's create the smart contract that our assertion will monitor. This is a simple `Ownable` contract that tracks ownership of a contract.
 
@@ -67,7 +70,7 @@ Create a file `src/Ownable.sol`:
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.13;
 
 contract Ownable {
     address private _owner;
@@ -109,7 +112,7 @@ Create a file `assertions/src/OwnableAssertion.a.sol`:
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol"; // Using remapping for credible-std
 import {Ownable} from "../../src/Ownable.sol"; // Ownable contract
@@ -166,10 +169,9 @@ Create a file `assertions/test/OwnableAssertion.t.sol`:
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.13;
 
-import {Credible} from "credible-std/Credible.sol";
-import {OwnableAssertion} from "../src/OwnableAssertion.sol";
+import {OwnableAssertion} from "../src/OwnableAssertion.a.sol";
 import {Ownable} from "../../src/Ownable.sol";
 import {CredibleTest} from "credible-std/CredibleTest.sol";
 import {Test} from "forge-std/Test.sol";
@@ -224,7 +226,7 @@ contract TestOwnableAssertion is CredibleTest, Test {
 Use the PCL CLI to run your tests:
 
 ```bash
-pcl phorge test
+pcl test
 ```
 
 This command will compile your assertion and run the tests.
@@ -246,17 +248,7 @@ If your tests fail, check for these common issues:
 - **State mismatch**: Make sure your test properly sets up the initial state
 - **Assertion logic**: Double-check the logic in your assertion function
 
-## 5. Building Your Assertion
-
-Before you can submit your assertion, you need to build it:
-
-```bash
-pcl build
-```
-
-This will compile your assertion and generate the necessary artifacts.
-
-## 6. Authenticating with PCL
+## 5. Authenticating with PCL
 
 Before submitting your assertion, you need to authenticate:
 
@@ -271,7 +263,7 @@ If authentication fails, ensure:
 - You have an internet connection
 - The PCL CLI is properly installed
 
-## 7. Storing Your Assertion
+## 6. Storing Your Assertion
 
 Next, store your assertion in the Assertion Data Availability layer (Assertion DA):
 
@@ -281,7 +273,7 @@ pcl store OwnableAssertion
 
 This command submits your assertion's bytecode and source code to be stored by the Assertion DA, making it available for verification by the network.
 
-## 8. Submitting Your Assertion
+## 7. Submitting Your Assertion
 
 Finally, submit your assertion to the Credible Layer dApp:
 

@@ -9,7 +9,7 @@ The PCL (Phylax Credible Layer) CLI is a command-line tool for interacting with 
 
 Before installing PCL, ensure you have the following installed:
 
-- **Rust** (version 1.86 nightly or later)
+- **Rust** (version 1.80 or later)
 - **Git**
 
 ## Installation
@@ -27,22 +27,24 @@ Before installing PCL, ensure you have the following installed:
    make build
    ```
 
-3. The compiled binaries will be available in the `target/release` directory. PCL relies on two main binaries:
-   - `pcl`: The main CLI tool
-   - `phorge`: A supporting binary required for PCL functionality
+3. The compiled binary will be available in the `target/release` directory.
 
-4. (Optional) Add the binaries to your PATH for easier access:
+4. (Optional) Add the binary to your PATH for easier access:
    ```bash
    # System-wide installation (requires admin privileges)
    cp target/release/pcl /usr/local/bin/
-   cp target/release/phorge /usr/local/bin/
    
    # Or for a user-local installation
    cp target/release/pcl ~/.local/bin/
-   cp target/release/phorge ~/.local/bin/
    ```
 
-   You can place these binaries in any directory that's in your PATH. Choose a location that works best for your system configuration.
+   You can place the binary in any directory that's in your PATH. Choose a location that works best for your system configuration.
+
+   Alternatively, you can create an alias in your shell configuration file (like `.bashrc`, `.zshrc`, etc.) that points to the absolute path of the binary:
+   ```bash
+   # Add to your shell config file
+   alias pcl="/path/to/pcl/target/release/pcl"
+   ```
 
 ### Option 2: Download Pre-built Binary
 
@@ -50,24 +52,21 @@ Pre-built binaries are available for download from the [GitHub releases page](ht
 
 1. Download the appropriate binary for your platform.
 
-2. Make the binaries executable:
+2. Make the binary executable:
    ```bash
    chmod +x pcl
-   chmod +x phorge
    ```
 
-**Note:** The binaries might have slightly different names depending on the platform.
-For example, on Linux, they might be named `pcl-aarch64-apple` and `phorge-aarch64-apple`.
+**Note:** The binary might have a slightly different name depending on the platform.
+For example, on Mac, it might be named `pcl-aarch64-apple`.
 
-3. Move the binaries to a location in your PATH:
+3. Move the binary to a location in your PATH:
    ```bash
    # System-wide installation (requires admin privileges)
    mv pcl /usr/local/bin/
-   mv phorge /usr/local/bin/
    
    # Or for a user-local installation
    mv pcl ~/.local/bin/
-   mv phorge ~/.local/bin/
    ```
 
 ## Verifying Installation
