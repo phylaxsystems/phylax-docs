@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "willow",
+  "theme": "maple",
   "name": "Phylax Credible Layer Documentation",
   "colors": {
     "primary": "#000000",
@@ -9,9 +9,11 @@
   },
   "favicon": "/favicon.png",
   "navigation": {
-    "tabs": [
+    "dropdowns": [
       {
-        "tab": "Credible Layer",
+        "dropdown": "Credible Layer",
+        "icon": "shield",
+        "description": "Docs for the Credible Layer",
         "groups": [
           {
             "group": "Getting Started",
@@ -54,7 +56,9 @@
         ]
       },
       {
-        "tab": "Assertions Book",
+        "dropdown": "Assertions Book",
+        "icon": "book",
+        "description": "A collection of assertion examples",
         "groups": [
           {
             "group": "Introduction",
