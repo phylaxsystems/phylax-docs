@@ -9,11 +9,10 @@
   },
   "favicon": "/favicon.png",
   "navigation": {
-    "dropdowns": [
+    "anchors": [
       {
-        "dropdown": "Credible Layer",
+        "anchor": "Credible Layer",
         "icon": "shield",
-        "description": "Docs for the Credible Layer",
         "groups": [
           {
             "group": "Getting Started",
@@ -56,9 +55,8 @@
         ]
       },
       {
-        "dropdown": "Assertions Book",
+        "anchor": "Assertions Book",
         "icon": "book",
-        "description": "A collection of assertion examples",
         "groups": [
           {
             "group": "Introduction",
