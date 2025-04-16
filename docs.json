@@ -112,44 +112,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "Credible Layer",
-        "groups": [
-          {
-            "group": "Credible Layer",
-            "pages": [
-              "credible/credible-introduction",
-              "credible/credible-install",
-              "credible/pcl-quickstart",
-              "credible/pcl-assertion-guide",
-              "credible/testing-assertions",
-              "credible/cheatcodes",
-              "assertions-book/generate-assertions-with-ai",
-              "credible/pcl-reference-guide",
-              "credible/credible-std-overview",
-              "credible/glossary"
-            ]
-          },
-          {
-            "group": "Use Case Mapping",
-            "pages": [
-              "credible/use-case-mappings/intro-use-case-mapping",
-              "credible/use-case-mappings/function-call-inputs",
-              "credible/use-case-mappings/read-logs",
-              "credible/use-case-mappings/storage-lookups",
-              "credible/use-case-mappings/state-changes",
-              {
-                "group": "Unsupported",
-                "pages": [
-                  "credible/use-case-mappings/unsupported-use-cases/call-frame-context",
-                  "credible/use-case-mappings/unsupported-use-cases/modified-keys",
-                  "credible/use-case-mappings/unsupported-use-cases/recursive-function-calls"
-                ]
-              }
-            ]
-          }
-        ]
       }
     ]
   },
