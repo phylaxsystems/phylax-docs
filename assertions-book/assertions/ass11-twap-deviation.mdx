@@ -1,47 +1,121 @@
 ---
 title: TWAP Deviation
-description: Make sure that the TWAP price doesn't deviate more than X% from the TWAP price.
+description: Assert that the TWAP price doesn't deviate more than X% from the pre-state TWAP price
 ---
 
 ## Use Case
-Make sure that the TWAP price reported by an oracle doesn't deviate more than X% from the pre-state TWAP price.
-A lot of DeFi protocols use TWAP to price their assets. This assertions makes sure that the TWAP price stays within a reasonable range defined by the protocol.
+Check that the TWAP (Time-Weighted Average Price) reported by an oracle doesn't deviate more than X% from the pre-state TWAP price. This is a critical security parameter for DeFi protocols that rely on TWAP oracles for pricing assets, as sudden price deviations could indicate manipulation or oracle failure.
+
+This assertion is particularly important for:
+- Preventing price manipulation through flash loan attacks
+- Ensuring oracle reliability and accuracy
+- Protecting against oracle manipulation in lending protocols
+- Maintaining protocol stability during market volatility
+- Detecting potential oracle failures or attacks
+
+For example, if a protocol allows a 5% deviation, an attacker could potentially manipulate prices within this range to extract value, making this a critical security parameter that requires careful consideration.
+
+### Applicable Protocols
+- AMMs and DEXs that use TWAP for price discovery
+- Lending protocols that use TWAP for collateral valuation
+- Yield aggregators that rely on TWAP for rebalancing
+- Options protocols that use TWAP for settlement prices
+- Cross-chain bridges that use TWAP for asset pricing
+
+Each protocol type needs this assertion because:
+- AMMs: Prevents price manipulation during large trades
+- Lending: Ensures accurate collateral valuation for liquidations
+- Yield: Maintains fair rebalancing prices
+- Options: Guarantees fair settlement prices
+- Bridges: Prevents cross-chain arbitrage attacks
 
 ## Explanation
-In this example we check that the TWAP price doesn't deviate more than 5% from the pre-state TWAP price.
+The assertion monitors changes to the current price by comparing it against the TWAP price from before the transaction. It uses a two-stage approach to ensure price stability:
+
+The assertion uses the following cheatcodes:
+- `forkPreState()`: Creates a fork of the state before the transaction to capture the TWAP price as our reference point
+- `forkPostState()`: Creates a fork of the state after the transaction to get the final price
+- `getStateChanges()`: Gets all state changes for the current price to detect manipulation throughout the callstack
+
+This multi-layered approach ensures that:
+1. The current price remains within acceptable bounds of the pre-transaction TWAP
+2. Any attempts to manipulate the price during the transaction are detected
+3. The protocol's pricing mechanism cannot be exploited through flash loans or other attacks
+
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
 interface IPool {
     function price() external view returns (uint256);
-
     function twap() external view returns (uint256);
 }
 
-// Checks that the pool price doesn't deviate more than 5% from the twap
 contract TwapDeviationAssertion is Assertion {
     IPool public pool = IPool(address(0xbeef));
 
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](1);
-        assertions[0] = this.assertionTwapDeviation.selector;
+    function triggers() external view override {
+        // Register trigger for changes to the current price
+        registerStorageChangeTrigger(this.assertionTwapDeviation.selector, bytes32(uint256(0)));
     }
 
-    // Make sure that the price doesn't deviate more than 5% from the twap
-    // revert if the price deviation is too large
+    // Assert that the current price doesn't deviate more than 5% from the TWAP price
     function assertionTwapDeviation() external {
+        // Get TWAP price before the transaction (our reference point)
+        ph.forkPreState();
+        uint256 preTwapPrice = pool.twap();
+
+        // Get price after the transaction
         ph.forkPostState();
-        uint256 currentPrice = pool.price();
-        uint256 twapPrice = pool.twap();
-        uint256 maxDeviation = 5; // 5% deviation, define this according to your protocol
-        uint256 deviation =
-            (((currentPrice > twapPrice) ? currentPrice - twapPrice : twapPrice - currentPrice) * 100) / twapPrice;
-        require(deviation <= maxDeviation, "Price deviation is too large");
+        uint256 postPrice = pool.price();
+
+        uint256 maxDeviation = 5;
+
+        // First check: Compare post-transaction price against pre-transaction TWAP
+        uint256 deviation = calculateDeviation(preTwapPrice, postPrice);
+        require(deviation <= maxDeviation, "Price deviation from TWAP exceeds maximum allowed");
+
+        // Second check: If the simple check passes, inspect all price changes in the callstack
+        // This is more expensive but catches manipulation attempts within the transaction
+        uint256[] memory priceChanges = getStateChangesUint(
+            address(pool),
+            bytes32(uint256(0)) // Current price storage slot
+        );
+
+        // Check each price change against the pre-transaction TWAP
+        for (uint256 i = 0; i < priceChanges.length; i++) {
+            deviation = calculateDeviation(preTwapPrice, priceChanges[i]);
+            require(deviation <= maxDeviation, "Price deviation from TWAP exceeds maximum allowed");
+        }
+    }
+
+    // Helper function to calculate percentage deviation
+    function calculateDeviation(uint256 referencePrice, uint256 currentPrice) internal pure returns (uint256) {
+        return (((currentPrice > referencePrice) ? currentPrice - referencePrice : referencePrice - currentPrice) * 100) / referencePrice;
     }
 }
 ```
+
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+
+## Testing
+To test this assertion:
+1. Deploy a mock pool contract with TWAP functionality
+2. Set up test scenarios with various price movements
+3. Verify the assertion catches deviations above the threshold
+4. Test edge cases like zero prices and extreme values
+
+## Assertion Best Practices
+- Consider combining this assertion with other price-related assertions like [Intra-tx Oracle Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation) for comprehensive security
+- Use the `getStateChanges` cheatcode to detect price manipulation throughout the callstack
+- Consider implementing different deviation thresholds for different market conditions (eg. stablecoin pools vs volatile assets)
+
+## Related Assertions
+- [Intra-tx Oracle Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation)
+- [Liquidation Health Factor](/assertions-book/assertions/ass16-liquidation-health-factor)

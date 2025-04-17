@@ -4,44 +4,149 @@ description: Make sure that the total shares are not more than the total assets
 ---
 
 ## Use Case
-ERC4626 is a standard for creating yield-bearing tokens that are compatible with ERC20. It is used in many DeFi protocols.
-In ERC4626, there is an invariant that the total shares are not more than the total assets. This is a common requirement for ERC4626 compliant protocols.
+ERC4626 is a standard for creating yield-bearing tokens that are compatible with ERC20. This assertion enforces a critical security invariant in ERC4626 vaults: the total shares must never exceed the total assets converted to shares. This is essential because:
+
+- Prevents share price manipulation that could lead to loss of user funds
+- Ensures the vault maintains proper accounting of user deposits
+- Protects against potential overflow attacks in share calculations
+- Maintains the integrity of the yield-bearing token's value proposition
+
+For example, in a vault with 1000 USDC total assets and 1000 total shares:
+- Normal case: 1 share = 1 USDC
+- If somehow total shares become 2000: 1 share = 0.5 USDC
+- Users who deposited expecting 1:1 ratio would lose 50% of their value
+
+This assertion is particularly important for:
+- Preventing unauthorized share minting that could dilute existing holders
+- Ensuring accurate share price calculations for deposits and withdrawals
+- Maintaining proper accounting of user positions in the vault
+- Protecting against potential arithmetic overflow in share calculations
+- Detecting direct storage manipulation attempts
+- Ensuring fair distribution of yield to all holders
+
+### Applicable Protocols
+- Yield aggregators that use ERC4626 for their vaults
+- Lending protocols implementing ERC4626 for their deposit tokens
+- Liquidity pools using ERC4626 for LP token representation
+- Staking protocols that wrap rewards in ERC4626 vaults
+
+Each of these protocol types relies on accurate share-to-asset conversion for:
+- Proper distribution of yield to depositors
+- Accurate calculation of user positions
+- Fair withdrawal amounts for users
+- Correct accounting of protocol fees
 
 ## Explanation
-This assertion makes sure that the total shares are not more than the total assets. It also handles the edge case where the total shares are 0.
+The assertion implements a multi-layered approach to verify the ERC4626 share-to-asset relationship. This relationship is fundamental to ERC4626 vaults, where shares represent proportional ownership of the vault's assets. The total shares must always be convertible to a value less than or equal to the total assets to maintain the integrity of the vault's accounting.
+
+1. Basic State Check:
+   - Uses `forkPreState()` and `forkPostState()` to capture the vault's state before and after transactions
+   - Compares total shares against total assets converted to shares
+   - Ensures the fundamental invariant is maintained
+   - Catches any direct manipulation of share calculations
+
+2. State Change Monitoring:
+   - Uses `getStateChanges()` to track modifications to the total supply storage slot
+   - Verifies that no transaction can create more shares than assets
+   - Catches potential manipulation attempts within complex transactions
+   - Prevents unauthorized share minting through direct storage access
+
+The assertion uses the following cheatcodes:
+- `forkPreState()`: Captures the vault's state before transaction execution
+- `forkPostState()`: Captures the vault's state after transaction execution
+- `getStateChanges()`: Monitors changes to the total supply storage slot
+- `registerStorageChangeTrigger()`: Triggers the assertion when the total supply storage slot changes
+
+This comprehensive approach ensures that:
+1. The total shares never exceed the total assets converted to shares
+2. Any attempt to manipulate share calculations is detected
+3. The vault maintains proper accounting at all times
+4. Users' share values remain accurate and fair
+5. Yield distribution remains proportional to deposits
+
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
 interface IERC4626 {
     function totalAssets() external view returns (uint256);
-
     function totalSupply() external view returns (uint256);
-
     function convertToShares(uint256 assets) external view returns (uint256);
 }
 
-// Checks that the total shares are not more than the total assets
 contract ERC4626AssetsSharesAssertion is Assertion {
-    IERC4626 public erc4626 = IERC4626(address(0xbeef));
+    IERC4626 public vault = IERC4626(address(0xbeef));
 
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](1);
-        assertions[0] = this.assertionAssetsShares.selector;
+    function triggers() external view override {
+        // Register trigger specifically for changes to the total supply storage slot
+        // This is more gas efficient than triggering on all storage changes
+        registerStorageChangeTrigger(
+            this.assertionAssetsShares.selector,
+            bytes32(uint256(1)) // Total supply storage slot
+        );
     }
 
-    // Make sure that the total shares are not more than the total assets
-    // revert if total shares is greater than total assets
+    // Assert that the total shares are not more than the total assets
     function assertionAssetsShares() external {
+        // First check: Simple pre/post state comparison
+        ph.forkPreState();
+        uint256 preTotalAssets = vault.totalAssets();
+        uint256 preTotalShares = vault.totalSupply();
+        uint256 preTotalAssetsInShares = vault.convertToShares(preTotalAssets);
+        
         ph.forkPostState();
-        uint256 totalAssets = erc4626.totalAssets();
-        uint256 totalShares = erc4626.totalSupply();
-        uint256 totalAssetsInShares = erc4626.convertToShares(totalAssets);
-        require(totalAssetsInShares >= totalShares, "Total shares is greater than total assets");
+        uint256 postTotalAssets = vault.totalAssets();
+        uint256 postTotalShares = vault.totalSupply();
+        uint256 postTotalAssetsInShares = vault.convertToShares(postTotalAssets);
+
+        // Basic invariant check
+        require(
+            postTotalAssetsInShares >= postTotalShares,
+            "Total shares exceeds total assets in shares"
+        );
+
+        // Second check: Monitor changes to total supply to catch manipulation attempts
+        uint256[] memory shareChanges = getStateChangesUint(
+            address(vault),
+            bytes32(uint256(1)) // Total supply storage slot
+        );
+
+        // For each share change, verify against the current total assets
+        for (uint256 i = 0; i < shareChanges.length; i++) {
+            uint256 assetsInShares = vault.convertToShares(postTotalAssets);
+            require(
+                assetsInShares >= shareChanges[i],
+                "Intermediate state violates shares/assets invariant"
+            );
+        }
     }
 }
 ```
+
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+
+## Testing
+To test this assertion effectively:
+
+1. Basic Functionality:
+   - Deploy an ERC4626 vault with test tokens
+   - Verify the assertion passes for normal deposits and withdrawals
+   - Test edge cases with zero assets and maximum values
+
+2. Manipulation Attempts:
+   - Try to manipulate share calculations through direct storage access
+   - Attempt to create more shares than assets through complex transactions
+   - Test potential overflow scenarios in share calculations
+
+## Assertion Best Practices
+- Combine this assertion with assertions covering other ERC4626 invariants
+- Monitor both total assets and total shares changes for complete coverage
+
+## Related Assertions
+- [ERC4626 Deposit and Withdrawal](/assertions-book/assertions/ass13-erc4626-deposit-withdraw)
