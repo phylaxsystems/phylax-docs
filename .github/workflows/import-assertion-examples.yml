@@ -1,20 +1,12 @@
 name: Import Assertion Examples
 
 on:
-  # Option 1: Run on schedule (e.g., daily at midnight UTC)
-  schedule:
-    - cron: "0 0 * * *"
-
-  # Option 2: Run when PRs are merged to main
+  # Option 1: Run when PRs are merged to main
   pull_request:
     types: [closed]
     branches: [main]
 
-  # Option 3: Run when changes are pushed to main directly
-  push:
-    branches: [main]
-
-  # Option 4: Allow manual triggering
+  # Option 2: Allow manual triggering
   workflow_dispatch:
     inputs:
       dry_run:
@@ -25,7 +17,7 @@ on:
 
 permissions:
   contents: write
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   import-assertion-examples:
@@ -35,7 +27,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
 
@@ -68,10 +60,10 @@ jobs:
           fi
 
           echo "Processing Solidity files from $ASSERTIONS_PATH:"
-          find "$ASSERTIONS_PATH" -name "*.sol" -type f -maxdepth 1 | sort
+          find "$ASSERTIONS_PATH" -maxdepth 1 -name "*.sol" -type f | sort
 
           # Process all Solidity files in the specific directory (not subdirectories)
-          find "$ASSERTIONS_PATH" -name "*.sol" -type f -maxdepth 1 | while read solidity_file; do
+          find "$ASSERTIONS_PATH" -maxdepth 1 -name "*.sol" -type f | while read solidity_file; do
             base_filename=$(basename "$solidity_file" .sol)
             mdx_file="snippets/${base_filename}.mdx"
             
@@ -84,14 +76,27 @@ jobs:
           echo "Generated MDX files:"
           ls -la snippets/*.mdx || echo "No MDX files generated"
 
-      - name: Commit and push changes
-        if: github.event_name != 'workflow_dispatch' || !inputs.dry_run
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          commit-message: Import assertion examples from phylaxsystems/assertion-examples
+          title: Update assertion examples
+          body: |
+            This PR automatically imports assertion examples from the [phylaxsystems/assertion-examples](https://github.com/phylaxsystems/assertion-examples) repository.
+
+            The import was triggered by ${{ github.event_name == 'workflow_dispatch' && 'manual workflow run' || 'PR merge to main' }}.
+          branch: update-assertion-examples
+          delete-branch: true
+          base: main
+          reviewers: czepluch
+
+      - name: Show pull request details
+        if: steps.cpr.outputs.pull-request-operation != 'none'
         run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
-          git add snippets/
-          git commit -m "Import assertion examples from phylaxsystems/assertion-examples" || echo "No changes to commit"
-          git push
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
 
       - name: Cleanup temporary directory
         if: always()
