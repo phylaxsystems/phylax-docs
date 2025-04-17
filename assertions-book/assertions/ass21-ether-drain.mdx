@@ -4,48 +4,185 @@ description: 'Make sure that ether is not drained from a contract'
 ---
 
 ## Use Case
+Protecting protocols from rapid ETH draining is a critical security measure. Malicious actors often attempt to extract all available ETH from a contract in a single transaction after discovering an exploit, leading to catastrophic loss of funds. This assertion prevents sudden large withdrawals of ETH, giving protocols time to respond to potential exploits.
 
-Many protocols use ether as a collateral asset. If the protocol is exploited, the attacker can drain all the ether from the protocol.
-Having assertions in place that prevent draining can be helpful to prevent or at the very least slow down the rate at which a protocol is drained.
+> **Real-world example:** In February 2025, Bybit suffered one of the largest hacks in crypto history, losing approximately $1.4 billion USD when attackers compromised Safe Wallet's UI and changed the implementation address of their proxy contract. This allowed the attackers to drain all assets without requiring additional approvals from the original owners. ETH drain assertions, especially with whitelist functionality, could have prevented or significantly limited the impact of this attack. See the [Bybit Safe UI attack](/assertions-book/previous-hacks/Bybit-safe-UI) for more details.
+
+This assertion is particularly important for:
+- Detecting and limiting the impact of flash loan attacks targeting ETH reserves
+- Preventing complete draining of protocol treasury funds in a single transaction
+- Buying time for protocol teams to activate circuit breakers or emergency pauses
+- Limiting the economic damage from zero-day exploits by enforcing withdrawal rate limits
+- Ensuring larger ETH transfers only occur to trusted, whitelisted addresses
+
+### Applicable Protocols
+- DeFi lending platforms that use ETH as collateral
+- Cross-chain bridges holding large ETH reserves
+- DAOs and protocol treasuries with significant ETH holdings
+- Staking protocols managing ETH deposits
+- Yield aggregators and vaults holding ETH
+- Centralized exchanges holding large ETH reserves
+
+These protocols need this assertion because:
+- Lending platforms need to maintain adequate ETH collateral reserves
+- Cross-chain bridges are frequent targets of large-scale ETH draining attacks
+- Treasury contracts often lack rate-limiting on withdrawals
+- Staking protocols need to protect depositor funds from sudden drains
+- Yield-generating protocols need to detect abnormal ETH outflows
+- Centralized exchanges need to protect their large ETH reserves
 
 ## Explanation
+The assertion implements a straightforward yet effective approach to detect rapid ETH draining with a tiered protection strategy:
 
-Check that the ether balance of a contract does not decrease by more than X% in a single transaction.
-Each individual protocol should define their own percentage based on user patterns and expected behavior.
+1. **Pre-transaction Analysis**:
+   - Uses `forkPreState()` to capture the contract's ETH balance before the transaction
+   - Records the balances of all whitelisted addresses before the transaction
+   - Establishes the baseline for detecting significant withdrawals
 
-Note: This does not prevent draining from happening, as a somewhat capable attacker would just drain X-1% of the ether in a single transaction.
-It's better than nothing and if mitigation is in place it could pause the protocol on a draining attempt.
+2. **Post-transaction Verification with Dual Security Paths**:
+   - Uses `forkPostState()` to check the contract's ETH balance after the transaction
+   - For small withdrawals (below threshold): Allows the transaction regardless of destination
+   - For large withdrawals (above threshold): Requires the destination to be a whitelisted address
+   - If no whitelist is defined, blocks all large withdrawals as a safety measure
+
+The assertion uses the following cheatcodes:
+- `forkPreState()`: Captures the contract's ETH balance and whitelist balances before execution
+- `forkPostState()`: Captures the contract's ETH balance and whitelist balances after execution
+- `registerBalanceChangeTrigger()`: Triggers the assertion when ETH balances change
+
+This tiered approach ensures that:
+1. Normal operations with small withdrawals continue uninterrupted
+2. Large withdrawals are restricted to trusted, whitelisted addresses
+3. Protocols can define their own risk thresholds for withdrawal sizes
+4. Smart contracts maintain secure yet flexible ETH management
+
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
 interface IExampleContract {}
 
 contract EtherDrainAssertion is Assertion {
-    IExampleContract public example = IExampleContract(address(0xbeef));
+    // The contract we're monitoring for ETH drains
+    IExampleContract public example;
+    
+    // Maximum percentage of ETH that can be drained in a single transaction (10% by default)
+    uint256 public immutable MAX_DRAIN_PERCENTAGE;
+    
+    // Whitelist of addresses that are allowed to receive larger amounts
+    address[] public whitelistedAddresses;
 
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](1); // Define the number of triggers
-        assertions[0] = this.assertionEtherDrain.selector; // Define the trigger
+    constructor(
+        address exampleContract, 
+        uint256 maxDrainPercentage,
+        address[] memory _whitelistedAddresses
+    ) {
+        example = IExampleContract(exampleContract);
+        
+        // Default to 10% if 0 is passed, otherwise use the provided percentage
+        MAX_DRAIN_PERCENTAGE = maxDrainPercentage == 0 ? 10 : maxDrainPercentage;
+        
+        // Set whitelist addresses during construction
+        whitelistedAddresses = _whitelistedAddresses;
     }
 
-    // Don't allow more than x% of the total ether balance to be drained in a single transaction
-    // revert if the assertion fails
+    function triggers() external view override {
+        // Register a trigger that activates when the ETH balance of the monitored contract changes
+        registerBalanceChangeTrigger(this.assertionEtherDrain.selector);
+    }
+
+    // Combined assertion for ETH drain with whitelist logic
     function assertionEtherDrain() external {
+        // Capture the ETH balance before transaction execution
         ph.forkPreState();
         uint256 preBalance = address(example).balance;
+        
+        // Store balances of whitelisted addresses before the transaction
+        uint256[] memory preWhitelistBalances = new uint256[](whitelistedAddresses.length);
+        for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
+            preWhitelistBalances[i] = address(whitelistedAddresses[i]).balance;
+        }
+        
+        // Capture the ETH balance after transaction execution
         ph.forkPostState();
         uint256 postBalance = address(example).balance;
+        
+        // Only check for drainage (we don't care about ETH being added)
         if (preBalance > postBalance) {
+            // Calculate the amount drained and the maximum allowed drain
             uint256 drainAmount = preBalance - postBalance;
-            uint256 tenPercentOfPreBalance = preBalance / 10; // Change according to the percentage you want to allow
-            require(drainAmount <= tenPercentOfPreBalance, "Drain amount is greater than 10% of the pre-balance");
+            uint256 maxAllowedDrain = (preBalance * MAX_DRAIN_PERCENTAGE) / 100;
+            
+            // If drain amount is within allowed limit, allow the transaction
+            if (drainAmount <= maxAllowedDrain) {
+                return; // Small drain, no need to check whitelist
+            }
+            
+            // For large drains, check if sent to a whitelisted address
+            // If whitelist is empty, this will always revert for large drains
+            if (whitelistedAddresses.length == 0) {
+                revert("ETH drain exceeds allowed percentage and no whitelist defined");
+            }
+            
+            // Check if the drained amount went to a whitelisted address
+            bool sentToWhitelisted = false;
+            for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
+                uint256 postWhitelistBalance = address(whitelistedAddresses[i]).balance;
+                uint256 increased = postWhitelistBalance > preWhitelistBalances[i] 
+                    ? postWhitelistBalance - preWhitelistBalances[i] 
+                    : 0;
+                
+                if (increased == drainAmount) {
+                    sentToWhitelisted = true;
+                    break;
+                }
+            }
+            
+            // Revert if large drain and not sent to whitelisted address
+            if (!sentToWhitelisted) {
+                revert("Large ETH drain must go to whitelisted address");
+            }
         }
     }
 }
 ```
+
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+
+## Testing
+To test this assertion:
+
+1. Deploy a test contract with ETH balance
+2. Attempt various ETH withdrawal scenarios:
+   - Small withdrawals below the threshold
+   - Large withdrawals that exceed the threshold
+   - Multiple withdrawals in sequence
+3. Verify the assertion correctly:
+   - Allows withdrawals below the maximum percentage
+   - Blocks withdrawals that exceed the maximum percentage
+   - Properly handles edge cases like zero balance
+   - Permits large withdrawals only to whitelisted addresses
+
+## Assertion Best Practices
+- Combine with time-based monitoring to limit withdrawal frequency
+- Adjust the maximum percentage based on the protocol's specific risk profile
+- Consider implementing a tiered system where larger withdrawals require longer timeouts
+- Define a comprehensive whitelist of trusted addresses at deployment time (deploy new assertion to update whitelist)
+- Use alongside other assertions like [Ownership Change](/assertions-book/assertions/ass05-ownership-change) or [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change) for comprehensive protection
+
+When implementing this assertion:
+- Consider protocol user patterns to set appropriate drain limits
+- Be careful not to set limits too low, which could impair normal protocol functionality 
+- Remember that attackers can still drain funds incrementally if no time-based limits are added
+- For critical systems, combine with automated alerting to notify the team of any large withdrawals
+
+## Related Assertions
+- [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
+- [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)
+- [Ownership Change](/assertions-book/assertions/ass05-ownership-change)
