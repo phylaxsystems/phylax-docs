@@ -1,24 +1,69 @@
 ---
 title: Intra-tx Oracle Deviation
+description: Assert that oracle price updates stay within an acceptable deviation range
 ---
 
-## Description
-
-This assertion checks if the price of an oracle has changed more than 10% within a transaction that requests several price updates from an oracle.
-
 ## Use Case
+This assertion monitors oracle price updates to detect and prevent price manipulation within a single transaction. Price oracles are critical security components that many DeFi protocols rely on for valuation, liquidations, and trading decisions. Intra-transaction price manipulations can lead to:
 
-Many protocols rely on oracles to get the price of assets. If the price of an asset is manipulated within a transaction, it can lead to losses for the protocol.
-This assertion analyzes all calls to updatePrice from an oracle in order to make sure that the price isn't deviating more than X% within a transaction.
+- Flash loan attacks that temporarily manipulate oracle prices
+- Malicious arbitrage exploiting large price deviations
+- Theft of funds through manipulated liquidations or swaps
+- Protocol insolvency due to incorrect asset valuations
+
+This assertion is particularly important for:
+- Preventing price manipulation attacks that exploit multiple price updates
+- Ensuring price stability across oracle updates within a transaction
+- Protecting protocols from flash-loan based oracle attacks
+- Maintaining protocol security by enforcing price deviation thresholds
+
+### Applicable Protocols
+- AMM-based DEXs that use oracle prices for various operations
+- Lending protocols that rely on oracles for collateral valuation
+- Synthetic asset platforms that need stable and accurate price feeds
+- Derivatives protocols that use oracles for settlement prices
+- Yield farming platforms that calculate rewards based on asset prices
+
+These protocols need this assertion because:
+- DEXs can be exploited through price manipulation to extract value
+- Lending protocols need accurate price data to maintain proper collateralization
+- Synthetic asset platforms require stable oracle prices to maintain peg
+- Derivatives protocols depend on reliable pricing for fair settlement
+- Yield platforms may miscalculate rewards with manipulated prices
+
+## Explanation
+The assertion implements a simple but effective approach to verify oracle price updates:
+
+1. **Pre/Post State Comparison**:
+   - Uses `forkPreState()` to capture the price before the transaction
+   - Uses `forkPostState()` to capture the price after the transaction
+   - Compares pre and post states to detect price deviations (reverts early if deviation is detected)
+
+2. **Intra-Transaction Inspection**:
+   - Uses `getCallInputs()` to capture all price update calls within the transaction 
+   - Verifies each update's price parameter against the initial price
+   - Enforces that no price update can deviate more than the maximum allowed percentage from the initial price
+
+The assertion uses the following cheatcodes:
+- `forkPreState()`: Captures the oracle price before any updates
+- `forkPostState()`: Captures the oracle price after all updates
+- `getCallInputs()`: Monitors all price update function calls within the transaction
+- `registerCallTrigger()`: Triggers the assertion when an oracle price update is detected
+
+This approach ensures that:
+1. Oracle prices remain within an acceptable deviation range throughout a transaction
+2. Flash loan attacks attempting to manipulate prices are detected and prevented
+3. Both the final price and any intermediate price updates are validated against the initial price
+
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
-import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
 interface IOracle {
     function updatePrice(uint256 price) external;
@@ -26,48 +71,86 @@ interface IOracle {
 }
 
 contract IntraTxOracleDeviationAssertion is Assertion {
-    IOracle public oracle = IOracle(address(0xbeef));
-
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](1); // Define the number of triggers
-        assertions[0] = this.assertionIntraTxOracleDeviation.selector; // Define the trigger
+    // The oracle contract to monitor
+    IOracle public oracle;
+    
+    // Maximum allowed price deviation (10% by default)
+    uint256 public constant MAX_DEVIATION_PERCENTAGE = 10;
+    
+    constructor(address oracle_) {
+        oracle = IOracle(oracle_);
     }
 
-    // Go through all the updatePrice calls in a transaction and check for large deviations
-    // If a deviation is bigger than 10% (could be whatever), revert
-    function assertionIntraTxOracleDeviation() external {
+    function triggers() external view override {
+        // Register trigger for oracle price update calls
+        registerCallTrigger(this.assertOracleDeviation.selector, oracle.updatePrice.selector);
+    }
+
+    // Check that price updates don't deviate more than the allowed percentage 
+    // from the initial price at any point during the transaction
+    function assertOracleDeviation() external {
+        // Start with a simple check comparing pre and post state
         ph.forkPreState();
-        uint256 lastPrice = oracle.price(); // Get the most recent price prior to the transaction
-        uint256 maxDeviation = lastPrice * 110 / 100; // 10% deviation
-        uint256 minDeviation = lastPrice * 90 / 100; // 10% deviation
-        // Get the callInputs for the updatePrice calls
-        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(oracle), oracle.updatePrice.selector);
-        // If less than 2 updatePrice calls, we can cover the case with pre and post state instead
-        if (callInputs.length < 2) {
-            if (callInputs.length == 0) {
-                return;
-            }
-            ph.forkPostState();
-            uint256 postPrice = oracle.price();
-            // Check that the price after the transaction is within the deviation
-            require(postPrice >= minDeviation && postPrice <= maxDeviation, "Price deviation is too large");
-            return;
+        uint256 prePrice = oracle.price();
+        
+        // Calculate allowed deviation thresholds (10% by default)
+        uint256 maxAllowedPrice = (prePrice * (100 + MAX_DEVIATION_PERCENTAGE)) / 100;
+        uint256 minAllowedPrice = (prePrice * (100 - MAX_DEVIATION_PERCENTAGE)) / 100;
+        
+        // First check post-state price
+        ph.forkPostState();
+        uint256 postPrice = oracle.price();
+        
+        // Verify post-state price is within allowed deviation from initial price
+        require(
+            postPrice >= minAllowedPrice && postPrice <= maxAllowedPrice,
+            "Oracle post-state price deviation exceeds threshold"
+        );
+        
+        // Get all price update calls in this transaction
+        // Since this assertion is triggered by updatePrice calls, we know there's at least one
+        PhEvm.CallInputs[] memory priceUpdates = ph.getCallInputs(address(oracle), oracle.updatePrice.selector);
+        
+        // Check each price update to ensure none deviate more than allowed from initial price
+        for (uint256 i = 0; i < priceUpdates.length; i++) {
+            // Decode the price from the function call data
+            uint256 updatedPrice = abi.decode(priceUpdates[i].input, (uint256));
+            
+            // Verify each update is within allowed deviation from initial pre-state price
+            require(
+                updatedPrice >= minAllowedPrice && updatedPrice <= maxAllowedPrice,
+                "Oracle intra-tx price deviation exceeds threshold"
+            );
         }
-        for (uint256 i = 0; i < callInputs.length; i++) {
-            bytes memory data = callInputs[i].input;
-            (uint256 price) = abi.decode(stripSelector(data), (uint256));
-            // Compare new price with the price prior to the transaction
-            require(price >= minDeviation && price <= maxDeviation, "Price deviation is too large");
-        }
-    }
-
-    function stripSelector(bytes memory input) internal pure returns (bytes memory) {
-        // Create a new bytes memory and copy everything after the selector
-        bytes memory paramData = new bytes(32);
-        for (uint256 i = 4; i < input.length; i++) {
-            paramData[i - 4] = input[i];
-        }
-        return paramData;
     }
 }
 ```
+
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+
+## Testing
+To test this assertion:
+
+1. Deploy a test oracle contract with price update functionality
+2. Create test scenarios with varying price update patterns:
+   - Single price updates with different deviation amounts
+   - Multiple price updates within acceptable ranges
+   - Multiple price updates with excessive deviations
+   - Flash loan-style attacks with price manipulation
+3. Verify the assertion correctly:
+   - Allows updates within acceptable deviation thresholds
+   - Blocks updates exceeding deviation thresholds
+   - Detects suspicious patterns of sequential updates
+
+## Assertion Best Practices
+- Adjust the `MAX_DEVIATION_PERCENTAGE` based on the specific asset's volatility
+- Combine with [Oracle Validation](/assertions-book/assertions/ass10-oracle-validation) for comprehensive oracle protection
+- Consider implementing time-weighted average prices (TWAP) in volatile markets
+- Add specific detection for sandwich patterns (price up then down, or vice versa)
+- Monitor transaction origin to detect potential flash loan sources
+- Consider different thresholds for different assets or market conditions
+
+## Related Assertions
+- [Oracle Validation](/assertions-book/assertions/ass10-oracle-validation)
+- [TWAP Deviation](/assertions-book/assertions/ass11-twap-deviation)
+- [Price Within Ticks](/assertions-book/assertions/ass15-price-within-ticks)
