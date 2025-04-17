@@ -50,11 +50,14 @@ Since direct iteration over all non-zero entries in a mapping is not currently s
 
 This approach avoids the need to iterate over all positions while still effectively detecting accounting discrepancies.
 
+Check the [Modified Keys](/credible/use-case-mappings/unsupported-use-cases/modified-keys) use case for a detailed breakdown of what the iteration over all positions would look like.
+
 ### Cheatcodes Used
 
 - `forkPreState()`: Captures the state before the transaction
 - `forkPostState()`: Creates a fork of the state after the transaction
-- `getFunctionCallInputs()`: Gets the inputs to function calls for tracking position changes
+- `getCallInputs()`: Gets the inputs to function calls for tracking position changes
+- `registerStorageChangeTrigger()`: Registers a trigger for changes to the total supply
 
 ## Code Example
 ```solidity
@@ -140,8 +143,6 @@ To test this assertion effectively:
    - Discrepancies between position changes and total supply changes
    - Cases where the total supply is updated incorrectly
 
-For complete testing examples, refer to the [Phylax Assertions Repository](https://github.com/phylax/assertions).
-
 ## Assertion Best Practices
 
 When implementing this assertion:
@@ -152,17 +153,10 @@ When implementing this assertion:
 
 3. **Separate Assertions**: Consider creating separate assertion functions for different types of position-modifying functions (deposits, withdrawals, transfers) to make the code more maintainable and easier to debug.
 
-4. **Error Messages**: Provide detailed error messages that include the expected and actual values to help with debugging when the assertion fails.
-
-5. **Combining with Other Assertions**: This assertion works well with:
-   - Balance consistency assertions
-   - Supply cap assertions
-   - Interest rate assertions
-
-6. **Debugging Tips**:
+4. **Debugging Tips**:
    - Log the pre-state total supply, position changes, and new total supply
    - Compare the expected vs. actual values when failures occur
-   - Check for patterns in failures that might indicate specific vulnerabilities
+
 
 ## Related Assertions
 
