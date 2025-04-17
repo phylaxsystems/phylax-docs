@@ -4,19 +4,64 @@ description: 'Make sure that the fees do not change unexpectedly'
 ---
 
 ## Use Case
-In AMMs users pay a fee when they trade. This fee is usually a percentage of the trade amount.
-It is important to make sure that the fees don't change unexpectedly.
+In AMMs and other DeFi protocols, trading fees are a critical security parameter that directly impacts user returns and protocol revenue. Unexpected fee changes can lead to:
+- Unauthorized fee manipulation by malicious actors
+- Protocol revenue loss through fee bypasses
+- User losses from unexpected fee increases
+- Market manipulation through fee changes
+
+This assertion is particularly important because:
+- Fees are a primary revenue source for many DeFi protocols
+- Fee changes can be used as an attack vector to drain protocol value
+- Users rely on consistent fee structures for trading strategies
+- Protocol sustainability depends on predictable fee mechanisms
+
+### Applicable Protocols
+- AMMs (Automated Market Makers) like Velodrome, Aerodrome, and Curve
+- DEX aggregators that charge routing fees
+- Lending protocols with origination fees
+- Yield aggregators with performance fees
+- Cross-chain bridges with transfer fees
+
+Each protocol type needs this assertion because:
+- AMMs: Fee changes can be used to manipulate price impact and drain liquidity
+- DEX aggregators: Fee manipulation could bypass routing security
+- Lending protocols: Fee changes could affect interest calculations
+- Yield aggregators: Performance fee changes could drain protocol value
+- Bridges: Fee changes could be used to manipulate cross-chain arbitrage
 
 ## Explanation
-Check that the fees of a Velodrome / Aerodrome style pool don't change before and after a transaction.
+The assertion uses a whitelist approach to control fee changes:
+
+1. Trigger Registration:
+   - Uses `registerStorageChangeTrigger` to detect any changes to the fee storage slot
+   - When triggered, we know a fee change has occurred
+
+2. Whitelist Validation:
+   - Maintains hardcoded allowed fee values for both stable and non-stable pools
+   - For stable pools: allows 0.1% (1) and 0.15% (15)
+   - For non-stable pools: allows 0.25% (25) and 0.30% (30)
+   - When a change occurs, verifies the new fee matches one of the allowed values
+   - Prevents unauthorized fee modifications
+
+The assertion uses the following cheatcodes:
+- `registerStorageChangeTrigger`: Detects changes to the fee storage slot
+- `load`: Retrieves the new fee value after a change
+- `getStateChanges`: Gets all state changes for the fee storage slot to verify intermediate changes
+
+This approach ensures that:
+1. Only whitelisted fee values are allowed
+2. Protocol can still update fees through proper channels
+3. Unauthorized fee modifications are prevented
+4. All intermediate fee changes in the callstack are also validated
 
 ## Code Example
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
 // Aerodrome style interface
 interface IPool {
@@ -24,34 +69,58 @@ interface IPool {
     function stable() external view returns (bool);
 }
 
-// Check that fee invariants are maintained
 contract AmmFeeVerificationAssertion is Assertion {
     IPool public pool = IPool(address(0xbeef));
 
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](1);
-        assertions[0] = this.feeVerification.selector;
+    // Hardcoded whitelist of allowed fee values
+    uint256 private constant STABLE_POOL_FEE_1 = 1; // 0.1%
+    uint256 private constant STABLE_POOL_FEE_2 = 15; // 0.15%
+    uint256 private constant NON_STABLE_POOL_FEE_1 = 25; // 0.25%
+    uint256 private constant NON_STABLE_POOL_FEE_2 = 30; // 0.30%
+
+    function triggers() external view override {
+        // Register trigger for changes to the fee storage slot
+        registerStorageChangeTrigger(this.assertFeeVerification.selector, bytes32(uint256(1))); // Assuming fee is in slot 1
     }
 
-    // Check that the fee is the same before and after the transaction
-    // and that they maintain correct percentage based on stable or not
-    // revert if the fee is not the same before and after the transaction
-    function feeVerification() external {
-        ph.forkPreState();
-        uint256 preFee = pool.fee();
-        bool preStable = pool.stable(); // check pool is stable or not
-        ph.forkPostState();
-        uint256 postFee = pool.fee();
-        bool postStable = pool.stable(); // check pool is stable or not
-        // Fee should be the same before and after the transaction
-        require(preFee == postFee, "Fee is not the same before and after the transaction");
-        // Pool should be stable before and after the transaction
-        require(preStable == postStable, "Pool is not stable before and after the transaction");
-        if (postStable) {
-            require(postFee == 1, "Fee is not 0.1% for stable pool"); // Should be what the protocol defines
-        } else {
-            require(postFee == 25, "Fee is not 0.25% for non-stable pool"); // Should be what the protocol defines
+    // Verify that any fee change is to an allowed value
+    function assertFeeVerification() external {
+        // Get the new fee value and pool type
+        bool isStable = pool.stable();
+        uint256 newFee = uint256(ph.load(address(pool), bytes32(uint256(1))));
+
+        // Check if the new fee is in the whitelist
+        bool isAllowed = isStable
+            ? (newFee == STABLE_POOL_FEE_1 || newFee == STABLE_POOL_FEE_2)
+            : (newFee == NON_STABLE_POOL_FEE_1 || newFee == NON_STABLE_POOL_FEE_2);
+
+        require(isAllowed, "Fee change to unauthorized value");
+
+        // If the simple check passes, verify no unauthorized changes in the callstack
+        uint256[] memory changes = getStateChangesUint(address(pool), bytes32(uint256(1)));
+
+        // Check each change against the whitelist
+        for (uint256 i = 0; i < changes.length; i++) {
+            isAllowed = isStable
+                ? (changes[i] == STABLE_POOL_FEE_1 || changes[i] == STABLE_POOL_FEE_2)
+                : (changes[i] == NON_STABLE_POOL_FEE_1 || changes[i] == NON_STABLE_POOL_FEE_2);
+            require(isAllowed, "Unauthorized fee change detected in callstack");
         }
     }
 }
 ```
+
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+
+## Testing
+To test this assertion:
+1. Deploy the assertion contract with a test pool
+2. Execute transactions that should maintain fees
+3. Attempt transactions that would modify fees
+4. Verify the assertion catches unauthorized changes
+
+## Assertion Best Practices
+- Use whitelists to explicitly define allowed fee values
+
+## Related Assertions
+- [Price Within Ticks](/assertions-book/assertions/ass15-price-within-ticks)
