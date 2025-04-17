@@ -4,19 +4,18 @@ description: Make sure that a timelock has been correctly triggered for governan
 ---
 
 ## Use Case
-Timelocks are a critical security mechanism in DeFi protocols that enforce a mandatory delay between when a governance action is proposed and when it can be executed. This delay allows the community to review and react to potentially harmful changes.
+Timelocks are a governance mechanism in DeFi protocols that enforce a delay between when a governance action is proposed and when it can be executed. This delay allows the community to review and react to potentially harmful changes.
 
 This assertion prevents:
-- Bypassing the timelock mechanism entirely
-- Setting timelock delays that are too short to be effective
+- Bypassing the timelock mechanism
+- Setting timelock delays that are too short
 - Changing the timelock admin without proper authorization
 - Executing governance actions before the timelock period has expired
 
-This is a critical security parameter because:
-- Timelocks are often the last line of defense against malicious governance actions
-- Without proper timelock enforcement, an attacker could execute harmful changes immediately
-- The timelock admin has significant power and must be protected from unauthorized changes
-- Short timelock periods render the security mechanism ineffective
+This is important because:
+- Timelocks provide a buffer against malicious governance actions
+- Without proper enforcement, changes could be executed immediately
+- Effective timelock periods need to be of appropriate duration
 
 ### Applicable Protocols
 - DeFi lending protocols that use timelocks for parameter updates
@@ -32,7 +31,7 @@ Each of these protocol types relies on timelocks to:
 - Ensure proper security review periods for critical updates
 
 ## Explanation
-The assertion implements a multi-layered approach to verify timelock integrity:
+The assertion verifies timelock integrity by:
 
 1. **Pre-state Verification**
    - Captures the initial timelock state before any changes
@@ -51,6 +50,8 @@ The assertion uses these cheatcodes:
 - `forkPreState()`: Captures the initial timelock state
 - `forkPostState()`: Analyzes the final timelock state
 - `registerStorageChangeTrigger()`: Monitors changes to the timelock storage slot
+
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
 ```solidity
@@ -120,16 +121,12 @@ To test this assertion:
 2. Create test cases for:
    - Valid timelock activation with proper parameters
    - Invalid timelock activation with too short delay
-   - Invalid timelock activation with changed admin
    - Attempts to bypass timelock entirely
 3. Verify the assertion correctly identifies valid and invalid states
 
 ## Assertion Best Practices
 - Combine this assertion with [Owner Change](/assertions-book/assertions/ass05-ownership-change) for comprehensive governance security
 - Use appropriate delay bounds based on your protocol's risk profile
-- Consider adding whitelist checks for admin changes
-- Implement proper error messages to aid in debugging
-- Monitor timelock state changes throughout the transaction
 
 ## Related Assertions
 - [Owner Change](/assertions-book/assertions/ass05-ownership-change)
