@@ -1,0 +1,101 @@
+name: Import Assertion Examples
+
+on:
+  # Option 1: Run on schedule (e.g., daily at midnight UTC)
+  schedule:
+    - cron: "0 0 * * *"
+
+  # Option 2: Run when PRs are merged to main
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+  # Option 3: Run when changes are pushed to main directly
+  push:
+    branches: [main]
+
+  # Option 4: Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (skip git push)"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  import-assertion-examples:
+    # For PR events, only run when merged
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create temporary directory and clone assertion-examples repository
+        run: |
+          # Create temporary directory
+          TEMP_DIR=$(mktemp -d)
+          echo "TEMP_DIR=$TEMP_DIR" >> $GITHUB_ENV
+
+          # Clone into temporary directory
+          git clone --depth 1 https://github.com/phylaxsystems/assertion-examples.git "$TEMP_DIR/assertion-examples"
+
+          echo "Directory structure:"
+          find "$TEMP_DIR/assertion-examples" -type d | sort
+          echo "Solidity files found:"
+          find "$TEMP_DIR/assertion-examples" -name "*.sol" | sort
+
+      - name: Create directories if they don't exist
+        run: mkdir -p snippets
+
+      - name: Copy and convert Solidity files to MDX
+        run: |
+          # Use the specific path to target only .sol files in assertions/src
+          ASSERTIONS_PATH="$TEMP_DIR/assertion-examples/assertions/src"
+
+          # Check if the directory exists
+          if [ ! -d "$ASSERTIONS_PATH" ]; then
+            echo "Error: Directory $ASSERTIONS_PATH not found"
+            exit 1
+          fi
+
+          echo "Processing Solidity files from $ASSERTIONS_PATH:"
+          find "$ASSERTIONS_PATH" -name "*.sol" -type f -maxdepth 1 | sort
+
+          # Process all Solidity files in the specific directory (not subdirectories)
+          find "$ASSERTIONS_PATH" -name "*.sol" -type f -maxdepth 1 | while read solidity_file; do
+            base_filename=$(basename "$solidity_file" .sol)
+            mdx_file="snippets/${base_filename}.mdx"
+            
+            # Create MDX file with Solidity content wrapped in code blocks
+            echo -e "\`\`\`solidity\n$(cat $solidity_file)\n\`\`\`" > "$mdx_file"
+            
+            echo "Created $mdx_file from $solidity_file"
+          done
+
+          echo "Generated MDX files:"
+          ls -la snippets/*.mdx || echo "No MDX files generated"
+
+      - name: Commit and push changes
+        if: github.event_name != 'workflow_dispatch' || !inputs.dry_run
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add snippets/
+          git commit -m "Import assertion examples from phylaxsystems/assertion-examples" || echo "No changes to commit"
+          git push
+
+      - name: Cleanup temporary directory
+        if: always()
+        run: |
+          # Clean up temporary directory
+          rm -rf "$TEMP_DIR"
+          echo "Temporary directory removed"
