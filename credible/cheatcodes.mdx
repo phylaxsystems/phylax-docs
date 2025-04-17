@@ -122,6 +122,10 @@ function getStateChanges(
 ) external view returns (bytes32[] memory stateChanges);
 ```
 
+<Note>
+The array returned includes the initial value of the slot as the first element, so the length of the array is either 0 or >= 2.
+</Note>
+
 ### Helper Functions
 
 The following helpers convert state changes to specific types. Each has three variants:
