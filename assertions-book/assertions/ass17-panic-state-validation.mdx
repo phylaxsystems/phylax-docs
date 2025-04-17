@@ -1,52 +1,139 @@
 ---
-title: 'Panic State Validation'
-description: 'Make sure that pool works as expected in panic state'
+title: 'Emergency State Validation'
+description: 'Ensure protocol behaves correctly during emergency pause states'
 ---
 
 ## Use Case
+Check that protocols maintain proper security controls during emergency pause states. When a protocol enters a panic/pause state, it's critical to ensure that:
 
-Many DeFi protocols have functionality to pause or panic their protocols. This is useful in case of emergencies.
-It's important to make sure that the protocol works as expected in panic state.
+- No new deposits can be made to the protocol
+- Existing users can still withdraw their funds
+- Protocol state changes are restricted to emergency operations only
+- No unauthorized state modifications occur during the pause
+
+This assertion is particularly important because:
+- Emergency pause mechanisms are a critical security feature for DeFi protocols
+- Improper handling of pause states can lead to fund lockups or unauthorized access
+- Many high-profile hacks have been prevented by proper pause mechanisms
+- Users need confidence they can exit during emergencies
+
+### Applicable Protocols
+- Yield aggregators and vaults (e.g., Yearn, Beefy)
+- Lending protocols with pause mechanisms
+- DEXs with emergency circuit breakers
+- Cross-chain bridges with pause functionality
+- Any protocol with emergency pause capabilities
+
+These protocols particularly need this assertion because:
+- They often hold significant user funds
+- They have complex state transitions that must be restricted during emergencies
+- Users need guaranteed withdrawal capabilities during crises
+- Protocol upgrades or maintenance should be blocked during pause states
 
 ## Explanation
-Check that it's not possible to deposit assets into the pool during panic state.
+The assertion monitors the protocol's balance and pause state to ensure proper behavior during emergencies. It uses a multi-layered approach:
 
-Withdrawals should still be possible, so we can allow transactions that decrease the balance of the pool.
+1. First, it checks if the protocol is in a paused state
+2. If paused, it verifies that the protocol's balance can only decrease (allowing withdrawals)
+3. It uses state change tracking to detect any unauthorized modifications
+
+The assertion uses the following cheatcodes and triggers:
+- `forkPreState()`: Captures the initial state before the transaction
+- `forkPostState()`: Captures the final state after the transaction
+- `getStateChanges()`: Tracks all state changes during the transaction
+- `registerCallTrigger()`: Monitors all function calls to the contract
+
+
+This approach ensures that:
+1. Users can always withdraw their funds during emergencies
+2. No new deposits can be made while paused
+3. Protocol state remains consistent during pause periods
+
+> **Note:** In the future, this assertion could be optimized with a new trigger type that only fires when a specific storage slot has a specific value (e.g., when the pause flag is true). This would reduce unnecessary assertion checks and improve efficiency.
 
 ## Code Example
-
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
-// Beefy style interface
-interface IBeefyVault {
+interface IEmergencyPausable {
     function paused() external view returns (bool);
     function balance() external view returns (uint256);
 }
 
-contract BeefyPanicAssertion is Assertion {
-    IBeefyVault public vault = IBeefyVault(address(0xbeef));
+contract EmergencyStateAssertion is Assertion {
+    IEmergencyPausable public vault;
 
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](1); // Define the number of triggers
-        assertions[0] = this.assertionPanickedCanOnlyDecreaseBalance.selector; // Define the trigger
+    constructor(address vault_) {
+        vault = IEmergencyPausable(vault_);
+    }
+
+    function triggers() external view override {
+        // Register trigger for all function calls to ensure comprehensive coverage
+        registerCallTrigger(this.assertionPanickedCanOnlyDecreaseBalance.selector);
     }
 
     // Check that if the state is panicked that the pool balance can only decrease
-    // The tokens can increase in value, but the balance can only decrease
-    // This is a more robust check as it doesn't rely on the function selectors
+    // This ensures users can withdraw but prevents new deposits
     function assertionPanickedCanOnlyDecreaseBalance() external {
+        // Get pre-state values
         ph.forkPreState();
         bool isPanicked = vault.paused();
         uint256 preBalance = vault.balance();
+
+        // Get post-state values
         ph.forkPostState();
         uint256 postBalance = vault.balance();
+
+        // If protocol is paused, ensure balance can only decrease
         if (isPanicked) {
-            require(postBalance <= preBalance, "Balance can only decrease when panicked");
+            require(
+                postBalance <= preBalance,
+                "Balance can only decrease when panicked"
+            );
+
+            // Additional check: verify no unauthorized state changes
+            uint256[] memory changes = getStateChangesUint(
+                address(vault),
+                bytes32(uint256(1)) // Balance storage slot
+            );
+            
+            // Ensure all intermediate states maintain the decrease-only property
+            for (uint256 i = 0; i < changes.length; i++) {
+                require(
+                    changes[i] <= preBalance,
+                    "Unauthorized state change during pause"
+                );
+            }
         }
     }
 }
 ```
+
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+
+## Testing
+To test this assertion:
+1. Deploy the assertion contract with a test vault
+2. Set up test scenarios:
+   - Normal operation (not paused)
+   - Paused state with withdrawals
+   - Paused state with attempted deposits
+   - Paused state with multiple state changes in a single transaction
+3. Verify the assertion correctly:
+   - Allows balance decreases during pause
+   - Blocks balance increases during pause
+   - Maintains proper state during complex transactions
+
+## Assertion Best Practices
+- Combine with other assertions like [Owner Change](/assertions-book/assertions/ass05-ownership-change) for comprehensive security
+- Use `getStateChanges` to detect unauthorized modifications throughout the call stack during pause states
+- Consider adding whitelisted addresses that can modify state during emergencies (e.g. for upgrades or liquidity management)
+- Implement proper error messages to help with debugging
+
+## Related Assertions
+- [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)
+- [Owner Change](/assertions-book/assertions/ass05-ownership-change)
