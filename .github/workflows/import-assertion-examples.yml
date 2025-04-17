@@ -45,8 +45,8 @@ jobs:
           TEMP_DIR=$(mktemp -d)
           echo "TEMP_DIR=$TEMP_DIR" >> $GITHUB_ENV
 
-          # Clone into temporary directory
-          git clone --depth 1 https://github.com/phylaxsystems/assertion-examples.git "$TEMP_DIR/assertion-examples"
+          # Clone into temporary directory using organization token
+          git clone --depth 1 https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/phylaxsystems/assertion-examples.git "$TEMP_DIR/assertion-examples"
 
           echo "Directory structure:"
           find "$TEMP_DIR/assertion-examples" -type d | sort
