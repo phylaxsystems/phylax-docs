@@ -1,10 +1,12 @@
 ---
 title: Lending Health Factor
-description: Assert that the health factor of a lending protocol is above a certain threshold
+description: Assert that the health factor of updated positions in a lending protocol is above a certain threshold
 ---
 
+import ass07LendingHealthFactor from '/snippets/ass7-lending-health-factor.a.mdx';
+
 ## Use Case
-Check that the health factor of a position in a lending protocol is above a certain threshold. The health factor is a critical security parameter that determines whether a position is at risk of liquidation. An unhealthy position could lead to:
+Check that the health factor of updated positions in a lending protocol is above a certain threshold. The health factor is a critical security parameter that determines whether a position is at risk of liquidation. An unhealthy position could lead to:
 
 - Unauthorized liquidations of user positions
 - Protocol insolvency if positions become undercollateralized
@@ -41,115 +43,30 @@ The assertion focuses on ensuring that core lending operations (supply, borrow, 
 - Protocols using health factors as a key risk parameter for position management
 
 ## Explanation
-The assertion monitors changes to position health factors in lending protocols. The health factor is calculated as the ratio of the total value of collateral to the total value of debt, and it determines whether a position is at risk of liquidation.
+The assertion monitors the health factors of positions in lending protocols during specific lending operations. The health factor is calculated as the ratio of the total value of collateral to the total value of debt, and it determines whether a position is at risk of liquidation.
 
 The assertion uses the following cheatcodes:
-- `forkPreState()`: Creates a fork of the state before the transaction to capture original health factors
-- `forkPostState()`: Creates a fork of the state after the transaction to detect any changes
-- `getStateChangesBytes32()`: Gets state changes for specific mapping entries to detect modifications
+- `getCallInputs()`: Retrieves information about all function calls to the specified protocol functions
 - `registerCallTrigger()`: Triggers the assertion when specific lending operations are called
+- If no `forkPreState()` or `forkPostState()` is provided, the assertion will use the `forkPostState()` cheatcode by default
 
-This multi-layered approach ensures that:
-1. Core lending operations maintain healthy collateral ratios
-2. No position can become undercollateralized through standard lending functions
-3. Health factor calculations remain accurate and consistent for user operations
+This approach ensures that:
+1. Each lending operation (supply, borrow, withdraw, repay) is monitored individually
+2. The assertion directly checks the health factor after each operation
+3. Positions affected by these operations remain healthy
+4. All protocol users' positions are verified after relevant operations
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+<ass07LendingHealthFactor/>
 
-import {Assertion} from "credible-std/Assertion.sol";
-import {PhEvm} from "credible-std/PhEvm.sol";
-
-// We use Morpho as an example, but this could be any lending protocol
-interface IMorpho {
-    struct MarketParams {
-        uint256 marketId;
-    }
-
-    struct Position {
-        uint256 supplyShares;
-        uint128 borrowShares;
-        uint128 collateral;
-    }
-
-    function idToMarketParams(uint256) external view returns (MarketParams memory);
-    function position(uint256, address) external view returns (Position memory);
-    function _isHealthy(MarketParams memory marketParams, uint256 marketId, address borrower)
-        external
-        view
-        returns (bool);
-
-    // Functions used in triggers
-    function supply(uint256 marketId, uint256 amount) external;
-    function borrow(uint256 marketId, uint256 amount) external;
-    function withdraw(uint256 marketId, uint256 amount) external;
-    function repay(uint256 marketId, uint256 amount) external;
-}
-
-contract LendingHealthFactorAssertion is Assertion {
-    IMorpho public morpho = IMorpho(address(0xbeef));
-
-    // Storage slot for the position mapping
-    // This is the slot where the position mapping is stored in the contract
-    bytes32 constant POSITION_MAPPING_SLOT = bytes32(uint256(2)); // Adjust this based on actual storage layout
-
-    function triggers() external view override {
-        // Register triggers for functions that should maintain healthy positions
-        // For example: supply, borrow, withdraw, repay functions
-        registerCallTrigger(this.assertionHealthFactor.selector, morpho.supply.selector);
-        registerCallTrigger(this.assertionHealthFactor.selector, morpho.borrow.selector);
-        registerCallTrigger(this.assertionHealthFactor.selector, morpho.withdraw.selector);
-        registerCallTrigger(this.assertionHealthFactor.selector, morpho.repay.selector);
-    }
-
-    // Check that all updated positions are still healthy after operations
-    // that should maintain healthy positions
-    function assertionHealthFactor() external {
-        // Get all state changes for the position mapping
-        // We need to check each position that might have changed
-        // This is a simplified example - in practice you would need to:
-        // 1. Track which positions are affected by the current transaction
-        // 2. Calculate their storage slots
-        // 3. Check state changes for each slot
-
-        // Example: Check a specific position (in practice you'd need to track affected positions)
-        uint256 id = 1; // Example ID
-        address borrower = address(0x123); // Example borrower
-
-        // Get state changes for the position using the mapping accessor
-        bytes32[] memory changes = getStateChangesBytes32(
-            address(morpho),
-            POSITION_MAPPING_SLOT,
-            id,
-            0 // No additional offset needed for the first level
-        );
-
-        // If there were changes to this position, verify it's still healthy
-        if (changes.length > 0) {
-            IMorpho.MarketParams memory marketParams = IMorpho.MarketParams({marketId: id});
-            require(morpho._isHealthy(marketParams, id, borrower), "Health factor is not healthy");
-        }
-    }
-}
-```
-
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/) where you can also find test examples.
 
 > **Extending Assertions:** When new functions are added to the protocol that should maintain healthy positions, you can create a new assertion file (e.g., `LendingHealthFactorExtendedAssertion.sol`) that follows the same pattern. This allows you to:
 > - Keep the original assertions active for existing functions
 > - Add new assertions for new functions without modifying existing code
 > - Maintain clear separation of concerns between different protocol features
-> - Easily enable/disable assertions for specific protocol functions
-
-> **Implementation Note:** This is a simplified example that demonstrates the core concept. In a production environment, you would need to:
-> 1. Track which positions are affected by the current transaction (possibly through events or by monitoring specific function calls)
-> 2. Handle the nested mapping structure correctly (the example only shows a single level)
-> 3. Consider market conditions and protocol parameters when evaluating health factors
-> 4. Implement proper error handling and logging for debugging
 
 ## Testing
 To test this assertion:
@@ -166,13 +83,11 @@ To test this assertion:
    - Positions near the health factor threshold
    - Concurrent operations on the same position
 
-For complete test examples, see the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples).
+For test examples, see the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples).
 
 ## Assertion Best Practices
 - Combine this assertion with other lending-related assertions like [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain) for comprehensive security
 - Use appropriate health factor thresholds based on protocol risk parameters
-- Consider implementing additional checks for specific protocol features
-- Ensure proper error messages to help with debugging unhealthy positions
 - Consider the impact of market conditions on position health when designing the assertion
 
 ## Related Assertions
