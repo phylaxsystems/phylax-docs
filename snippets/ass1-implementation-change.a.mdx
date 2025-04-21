@@ -1,0 +1,51 @@
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+interface IImplementation {
+    function implementation() external view returns (address);
+}
+
+contract ImplementationChangeAssertion is Assertion {
+    IImplementation public implementation;
+
+    constructor(address _implementation) {
+        implementation = IImplementation(_implementation);
+    }
+
+    function triggers() external view override {
+        // Register trigger for changes to the implementation address storage slot
+        // The implementation address is typically stored in the first storage slot (slot 0)
+        registerStorageChangeTrigger(this.implementationChange.selector, bytes32(uint256(0)));
+    }
+
+    // Assert that the implementation contract address doesn't change
+    // during the state transition
+    function implementationChange() external {
+        // Get pre-state implementation
+        ph.forkPreState();
+        address preImpl = implementation.implementation();
+
+        // Get post-state implementation
+        ph.forkPostState();
+        address postImpl = implementation.implementation();
+
+        // Get all state changes for the implementation slot
+        address[] memory changes = getStateChangesAddress(
+            address(implementation),
+            bytes32(uint256(0)) // First storage slot for implementation address
+        );
+
+        // Verify implementation hasn't changed
+        require(preImpl == postImpl, "Implementation changed");
+
+        // Additional check: verify no unauthorized changes to implementation slot
+        for (uint256 i = 0; i < changes.length; i++) {
+            require(changes[i] == preImpl, "Unauthorized implementation change detected");
+        }
+    }
+}
+```

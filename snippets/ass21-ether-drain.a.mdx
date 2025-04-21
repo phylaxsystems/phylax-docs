@@ -1,0 +1,88 @@
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+interface IExampleContract {}
+
+contract EtherDrainAssertion is Assertion {
+    // The contract we're monitoring for ETH drains
+    IExampleContract public example;
+
+    // Maximum percentage of ETH that can be drained in a single transaction (10% by default)
+    uint256 public immutable MAX_DRAIN_PERCENTAGE;
+
+    // Whitelist of addresses that are allowed to receive larger amounts
+    address[] public whitelistedAddresses;
+
+    constructor(address exampleContract, uint256 maxDrainPercentage, address[] memory _whitelistedAddresses) {
+        example = IExampleContract(exampleContract);
+
+        // Default to 10% if 0 is passed, otherwise use the provided percentage
+        MAX_DRAIN_PERCENTAGE = maxDrainPercentage == 0 ? 10 : maxDrainPercentage;
+
+        // Set whitelist addresses during construction
+        whitelistedAddresses = _whitelistedAddresses;
+    }
+
+    function triggers() external view override {
+        // Register a trigger that activates when the ETH balance of the monitored contract changes
+        registerBalanceChangeTrigger(this.assertionEtherDrain.selector);
+    }
+
+    // Combined assertion for ETH drain with whitelist logic
+    function assertionEtherDrain() external {
+        // Capture the ETH balance before transaction execution
+        ph.forkPreState();
+        uint256 preBalance = address(example).balance;
+
+        // Store balances of whitelisted addresses before the transaction
+        uint256[] memory preWhitelistBalances = new uint256[](whitelistedAddresses.length);
+        for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
+            preWhitelistBalances[i] = address(whitelistedAddresses[i]).balance;
+        }
+
+        // Capture the ETH balance after transaction execution
+        ph.forkPostState();
+        uint256 postBalance = address(example).balance;
+
+        // Only check for drainage (we don't care about ETH being added)
+        if (preBalance > postBalance) {
+            // Calculate the amount drained and the maximum allowed drain
+            uint256 drainAmount = preBalance - postBalance;
+            uint256 maxAllowedDrain = (preBalance * MAX_DRAIN_PERCENTAGE) / 100;
+
+            // If drain amount is within allowed limit, allow the transaction
+            if (drainAmount <= maxAllowedDrain) {
+                return; // Small drain, no need to check whitelist
+            }
+
+            // For large drains, check if sent to a whitelisted address
+            // If whitelist is empty, this will always revert for large drains
+            if (whitelistedAddresses.length == 0) {
+                revert("ETH drain exceeds allowed percentage and no whitelist defined");
+            }
+
+            // Check if the drained amount went to a whitelisted address
+            bool sentToWhitelisted = false;
+            for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
+                uint256 postWhitelistBalance = address(whitelistedAddresses[i]).balance;
+                uint256 increased =
+                    postWhitelistBalance > preWhitelistBalances[i] ? postWhitelistBalance - preWhitelistBalances[i] : 0;
+
+                if (increased == drainAmount) {
+                    sentToWhitelisted = true;
+                    break;
+                }
+            }
+
+            // Revert if large drain and not sent to whitelisted address
+            if (!sentToWhitelisted) {
+                revert("Large ETH drain must go to whitelisted address");
+            }
+        }
+    }
+}
+```

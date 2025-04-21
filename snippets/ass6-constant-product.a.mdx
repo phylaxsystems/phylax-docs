@@ -1,0 +1,54 @@
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+// Aerodrome style pool interface
+
+interface IAmm {
+    function getReserves() external view returns (uint256, uint256);
+}
+
+contract ConstantProductAssertion is Assertion {
+    IAmm public amm;
+
+    constructor(address _amm) {
+        amm = IAmm(_amm);
+    }
+
+    function triggers() external view override {
+        // Register triggers for both reserve slots for each assertion
+        // This ensures we catch any modifications to either reserve
+        registerStorageChangeTrigger(this.assertionConstantProduct.selector, bytes32(uint256(0)));
+        registerStorageChangeTrigger(this.assertionConstantProduct.selector, bytes32(uint256(1)));
+    }
+
+    // Assert that the constant product (k = x * y) invariant is maintained
+    // This is done by comparing the pre-state and post-state values
+    //
+    // NOTE: Due to current limitations in getStateChanges, there are no guarantees
+    // regarding timing when comparing values from two stateChanges arrays throughout the callstack.
+    // An ideal solution in the future would allow for comparing values at any given
+    // point in time during the callstack, thus making it possible to prevent
+    // potential intra-transaction manipulations of the constant product invariant.
+    //
+    // For example, a malicious actor could temporarily manipulate the reserves
+    // to violate the invariant during the transaction, then restore them before
+    // the end of the transaction to avoid detection in a pre/post comparison.
+    function assertionConstantProduct() external {
+        // Get pre-state reserves and calculate initial k
+        ph.forkPreState();
+        (uint256 reserve0Pre, uint256 reserve1Pre) = amm.getReserves();
+        uint256 kPre = reserve0Pre * reserve1Pre;
+
+        // Get post-state reserves and calculate final k
+        ph.forkPostState();
+        (uint256 reserve0Post, uint256 reserve1Post) = amm.getReserves();
+        uint256 kPost = reserve0Post * reserve1Post;
+
+        // Verify the final state maintains the constant product
+        require(kPre == kPost, "Constant product invariant violated");
+    }
+}
+```
