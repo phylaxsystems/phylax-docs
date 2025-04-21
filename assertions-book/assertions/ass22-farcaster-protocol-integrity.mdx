@@ -1,0 +1,214 @@
+---
+title: 'Farcaster Protocol Integrity'
+description: 'Ensure message validity, unique usernames, and rate limits in Farcaster'
+---
+
+## Use Case
+
+Farcaster is a decentralized social media protocol where security and integrity of the platform depends on maintaining several critical invariants. While not directly handling financial assets like DeFi protocols, the security concerns are still significant:
+
+- **Data Integrity**: Ensuring that all messages are properly signed by their claimed author
+- **Identity Protection**: Preventing username spoofing or duplication that could enable impersonation
+- **DoS Prevention**: Protecting network resources from abuse through rate limiting
+- **Platform Stability**: Maintaining defined constraints on content size and format
+
+Without proper validation, attackers could:
+- Post messages as other users by bypassing signature verification
+- Register usernames that are already taken, breaking user identity uniqueness
+- Flood the network with posts to cause resource exhaustion
+- Create invalid content that could break client applications
+
+## Applicable Protocols
+
+This assertion is particularly valuable for:
+
+- **Social Protocols**: Decentralized social networks like Farcaster, Lens Protocol, and similar platforms where user identity and content integrity are crucial
+- **Identity Systems**: Any protocol managing unique identifiers or usernames in a decentralized context
+- **Content Publishing Platforms**: Systems that store user-generated content on-chain or in decentralized storage with on-chain references
+- **Governance Systems**: Protocols where message validity is critical for voting or proposal submission
+
+## Explanation
+
+This assertion provides comprehensive protection for Farcaster-like protocols by monitoring three critical aspects:
+
+1. **Message Validity**: Validates that all posted messages have proper signatures from the claimed author, meet content requirements, and pass protocol-specific validation checks
+2. **Username Uniqueness**: Ensures that usernames remain unique across the system and that ownership is properly tracked
+3. **Rate Limiting**: Enforces posting rate limits to prevent network abuse
+
+The assertion uses several cheatcodes:
+- `registerCallTrigger`: Registers the assertion to be triggered when specific functions are called
+- `getCallInputs`: Retrieves and decodes the parameters from function calls
+- `forkPreState` and `forkPostState`: Creates execution contexts to check system state before and after operations
+
+The multi-layered approach first checks basic invariants, then performs deeper validation of protocol-specific rules. This provides both performance efficiency and comprehensive coverage.
+
+## Code Example
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "@credible-std/Assertion.sol";
+import {PhEvm} from "@credible-std/PhEvm.sol";
+
+interface IFarcaster {
+    // Message struct and functions
+    struct Message {
+        uint256 id;
+        address author;
+        bytes content;
+        uint256 timestamp;
+        bytes signature;
+    }
+    function isValidMessage(Message memory message) external view returns (bool);
+    function verifySignature(Message memory message) external view returns (bool);
+    function postMessage(Message memory message) external;
+    
+    // Username functions
+    function register(string calldata username, address owner) external;
+    function isRegistered(string calldata username) external view returns (bool);
+    function getUsernameOwner(string calldata username) external view returns (address);
+    
+    // Rate limit functions
+    function getLastPostTimestamp(address user) external view returns (uint256);
+}
+
+contract FarcasterProtocolAssertion is Assertion {
+    // Contract to protect
+    IFarcaster public immutable farcaster;
+    
+    // Constants
+    uint256 constant MAX_CONTENT_LENGTH = 320; // Farcaster's max message length
+    uint256 constant POST_COOLDOWN = 1 minutes;
+    
+    constructor(address _farcaster) {
+        farcaster = IFarcaster(_farcaster);
+    }
+
+    function triggers() external view override {
+        // Register trigger for message validity on postMessage calls
+        registerCallTrigger(
+            this.assertMessageValidity.selector, 
+            farcaster.postMessage.selector
+        );
+        
+        // Register trigger for username uniqueness on register calls
+        registerCallTrigger(
+            this.assertUniqueUsername.selector, 
+            farcaster.register.selector
+        );
+        
+        // Register trigger for rate limits on postMessage calls
+        registerCallTrigger(
+            this.assertRateLimit.selector, 
+            farcaster.postMessage.selector
+        );
+    }
+
+    function assertMessageValidity() external {
+        // Get all calls to postMessage function
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(farcaster), farcaster.postMessage.selector);
+        
+        for (uint256 i = 0; i < callInputs.length; i++) {
+            // Decode the message parameters from the call data
+            IFarcaster.Message memory message = abi.decode(
+                callInputs[i].input, 
+                (IFarcaster.Message)
+            );
+
+            // Examine state after the message is posted to ensure all validations pass
+            ph.forkPostState();
+
+            // Check basic message validity requirements
+            require(message.author != address(0), "Invalid author: zero address");
+            require(message.content.length > 0, "Invalid message: empty content");
+            require(message.content.length <= MAX_CONTENT_LENGTH, "Invalid message: content exceeds max length");
+            require(message.timestamp > 0, "Invalid message: missing timestamp");
+            require(message.signature.length > 0, "Invalid message: missing signature");
+
+            // Verify cryptographic signature is valid for the message
+            require(farcaster.verifySignature(message), "Security violation: invalid signature");
+
+            // Check protocol-specific validation rules
+            require(farcaster.isValidMessage(message), "Message failed protocol validation");
+        }
+    }
+
+    function assertUniqueUsername() external {
+        // Get all calls to register function
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(farcaster), farcaster.register.selector);
+        
+        for (uint256 i = 0; i < callInputs.length; i++) {
+            // Decode registration parameters
+            (string memory username, address owner) = abi.decode(
+                callInputs[i].input, 
+                (string, address)
+            );
+
+            // Check pre-registration state to ensure username isn't already taken
+            ph.forkPreState();
+            require(!farcaster.isRegistered(username), "Security violation: username already registered");
+
+            // Check post-registration state to ensure registration succeeded and owner is correct
+            ph.forkPostState();
+            require(farcaster.isRegistered(username), "Registration failed to complete");
+            require(farcaster.getUsernameOwner(username) == owner, "Security violation: owner mismatch after registration");
+        }
+    }
+
+    function assertRateLimit() external {
+        // Get all calls to postMessage function
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(farcaster), farcaster.postMessage.selector);
+        
+        for (uint256 i = 0; i < callInputs.length; i++) {
+            // Decode the message to get author
+            IFarcaster.Message memory message = abi.decode(
+                callInputs[i].input,
+                (IFarcaster.Message)
+            );
+            
+            address user = message.author;
+
+            // Check state before posting to validate rate limits
+            ph.forkPreState();
+
+            // Ensure cooldown between posts is respected
+            uint256 lastPostTime = farcaster.getLastPostTimestamp(user);
+            require(
+                block.timestamp >= lastPostTime + POST_COOLDOWN, 
+                "Rate limit violation: posting too frequently"
+            );
+        }
+    }
+}
+```
+
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+
+## Testing
+
+To effectively test this assertion:
+
+1. **Message Validity Testing**:
+   - Create valid and invalid message scenarios (invalid signatures, empty content, oversized content)
+   - Test with malformed messages that attempt to bypass signature verification
+   - Verify that the assertion rejects messages with invalid timestamps
+
+2. **Username Uniqueness Testing**:
+   - Attempt to register the same username multiple times
+   - Try to register a username and then change its ownership improperly
+   - Test edge cases with similar usernames (case sensitivity, special characters)
+
+3. **Rate Limit Testing**:
+   - Create scenarios where users attempt to post more frequently than the cooldown period allows
+   - Test with legitimate posts that respect the rate limit
+
+## Assertion Best Practices
+
+1. **Core Protocol Changes Monitoring**:
+   - Update rate limit constants if the protocol's policies change (new assertions should be deployed for this)
+   - Adjust validation logic if message format specifications are modified
+
+2. **Combining with Other Assertions**:
+   - Pair with governance assertions if Farcaster has on-chain governance
+   - Combine with access control assertions to monitor admin functions that could modify rate limits
