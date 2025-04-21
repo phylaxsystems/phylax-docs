@@ -87,8 +87,7 @@
                   "assertions-book/assertions/ass19-tokens-borrowed-invariant",
                   "assertions-book/assertions/ass20-erc20-drain",
                   "assertions-book/assertions/ass21-ether-drain",
-                  "assertions-book/assertions/ass22-farcaster-protocol-integrity",
-                  "assertions-book/assertions/ass26-correct-withdraw"
+                  "assertions-book/assertions/ass22-farcaster-protocol-integrity"
                 ]
               },
               {
