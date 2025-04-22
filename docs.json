@@ -66,28 +66,68 @@
             "group": "Assertions",
             "pages": [
               {
-                "group": "Dapp Use Cases",
+                "group": "General Use Cases",
                 "pages": [
-                  "assertions-book/assertions/ass01-impl-addr-change",
-                  "assertions-book/assertions/ass05-ownership-change",
-                  "assertions-book/assertions/ass06-constant-product",
-                  "assertions-book/assertions/ass07-lending-health-factor",
-                  "assertions-book/assertions/ass08-sum-of-all-positions",
-                  "assertions-book/assertions/ass09-timelock-verification",
-                  "assertions-book/assertions/ass10-oracle-validation",
-                  "assertions-book/assertions/ass28-intra-tx-oracle-deviation",
-                  "assertions-book/assertions/ass11-twap-deviation",
-                  "assertions-book/assertions/ass12-erc4626-assets-to-shares",
-                  "assertions-book/assertions/ass13-erc4626-deposit-withdraw",
-                  "assertions-book/assertions/ass14-fee-calculations",
-                  "assertions-book/assertions/ass15-price-within-ticks",
-                  "assertions-book/assertions/ass16-liquidation-health-factor",
-                  "assertions-book/assertions/ass17-panic-state-validation",
-                  "assertions-book/assertions/ass18-harvest-increases-balance",
-                  "assertions-book/assertions/ass19-tokens-borrowed-invariant",
-                  "assertions-book/assertions/ass20-erc20-drain",
-                  "assertions-book/assertions/ass21-ether-drain",
-                  "assertions-book/assertions/ass22-farcaster-protocol-integrity"
+                  {
+                    "group": "Access Control & Administrative Changes",
+                    "pages": [
+                      "assertions-book/assertions/ass01-impl-addr-change",
+                      "assertions-book/assertions/ass05-ownership-change",
+                      "assertions-book/assertions/ass09-timelock-verification"
+                    ]
+                  },
+                  {
+                    "group": "Liquidity Pool & AMM Security",
+                    "pages": [
+                      "assertions-book/assertions/ass06-constant-product",
+                      "assertions-book/assertions/ass15-price-within-ticks",
+                      "assertions-book/assertions/ass14-fee-calculations"
+                    ]
+                  },
+                  {
+                    "group": "Lending Protocol Safety",
+                    "pages": [
+                      "assertions-book/assertions/ass07-lending-health-factor",
+                      "assertions-book/assertions/ass16-liquidation-health-factor",
+                      "assertions-book/assertions/ass08-sum-of-all-positions",
+                      "assertions-book/assertions/ass19-tokens-borrowed-invariant"
+                    ]
+                  },
+                  {
+                    "group": "Oracle Security",
+                    "pages": [
+                      "assertions-book/assertions/ass10-oracle-validation",
+                      "assertions-book/assertions/ass11-twap-deviation",
+                      "assertions-book/assertions/ass28-intra-tx-oracle-deviation"
+                    ]
+                  },
+                  {
+                    "group": "Vault & ERC4626 Security",
+                    "pages": [
+                      "assertions-book/assertions/ass12-erc4626-assets-to-shares",
+                      "assertions-book/assertions/ass13-erc4626-deposit-withdraw",
+                      "assertions-book/assertions/ass18-harvest-increases-balance"
+                    ]
+                  },
+                  {
+                    "group": "Emergency & Special Mode Protection",
+                    "pages": [
+                      "assertions-book/assertions/ass17-panic-state-validation"
+                    ]
+                  },
+                  {
+                    "group": "Data Integrity & Message Verification",
+                    "pages": [
+                      "assertions-book/assertions/ass22-farcaster-protocol-integrity"
+                    ]
+                  },
+                  {
+                    "group": "Fund Protection",
+                    "pages": [
+                      "assertions-book/assertions/ass20-erc20-drain",
+                      "assertions-book/assertions/ass21-ether-drain"
+                    ]
+                  }
                 ]
               },
               {
