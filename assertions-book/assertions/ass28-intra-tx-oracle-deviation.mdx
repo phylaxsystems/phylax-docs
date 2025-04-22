@@ -3,6 +3,8 @@ title: Intra-tx Oracle Deviation
 description: Assert that oracle price updates stay within an acceptable deviation range
 ---
 
+import ass28IntraTxOracleDeviation from "/snippets/ass28-intra-tx-oracle-deviation.a.mdx";
+
 ## Use Case
 This assertion monitors oracle price updates to detect and prevent price manipulation within a single transaction. Price oracles are critical security components that many DeFi protocols rely on for valuation, liquidations, and trading decisions. Intra-transaction price manipulations can lead to:
 
@@ -58,75 +60,10 @@ This approach ensures that:
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
 
-import {Assertion} from "credible-std/Assertion.sol";
-import {PhEvm} from "credible-std/PhEvm.sol";
+<ass28IntraTxOracleDeviation />
 
-interface IOracle {
-    function updatePrice(uint256 price) external;
-    function price() external view returns (uint256);
-}
-
-contract IntraTxOracleDeviationAssertion is Assertion {
-    // The oracle contract to monitor
-    IOracle public oracle;
-    
-    // Maximum allowed price deviation (10% by default)
-    uint256 public constant MAX_DEVIATION_PERCENTAGE = 10;
-    
-    constructor(address oracle_) {
-        oracle = IOracle(oracle_);
-    }
-
-    function triggers() external view override {
-        // Register trigger for oracle price update calls
-        registerCallTrigger(this.assertOracleDeviation.selector, oracle.updatePrice.selector);
-    }
-
-    // Check that price updates don't deviate more than the allowed percentage 
-    // from the initial price at any point during the transaction
-    function assertOracleDeviation() external {
-        // Start with a simple check comparing pre and post state
-        ph.forkPreState();
-        uint256 prePrice = oracle.price();
-        
-        // Calculate allowed deviation thresholds (10% by default)
-        uint256 maxAllowedPrice = (prePrice * (100 + MAX_DEVIATION_PERCENTAGE)) / 100;
-        uint256 minAllowedPrice = (prePrice * (100 - MAX_DEVIATION_PERCENTAGE)) / 100;
-        
-        // First check post-state price
-        ph.forkPostState();
-        uint256 postPrice = oracle.price();
-        
-        // Verify post-state price is within allowed deviation from initial price
-        require(
-            postPrice >= minAllowedPrice && postPrice <= maxAllowedPrice,
-            "Oracle post-state price deviation exceeds threshold"
-        );
-        
-        // Get all price update calls in this transaction
-        // Since this assertion is triggered by updatePrice calls, we know there's at least one
-        PhEvm.CallInputs[] memory priceUpdates = ph.getCallInputs(address(oracle), oracle.updatePrice.selector);
-        
-        // Check each price update to ensure none deviate more than allowed from initial price
-        for (uint256 i = 0; i < priceUpdates.length; i++) {
-            // Decode the price from the function call data
-            uint256 updatedPrice = abi.decode(priceUpdates[i].input, (uint256));
-            
-            // Verify each update is within allowed deviation from initial pre-state price
-            require(
-                updatedPrice >= minAllowedPrice && updatedPrice <= maxAllowedPrice,
-                "Oracle intra-tx price deviation exceeds threshold"
-            );
-        }
-    }
-}
-```
-
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
 
 ## Testing
 To test this assertion:
