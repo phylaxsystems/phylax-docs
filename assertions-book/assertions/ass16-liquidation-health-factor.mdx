@@ -3,6 +3,8 @@ title: 'Liquidation Health Factor'
 description: 'Make sure that liquidations can only happen if the position is unhealthy'
 ---
 
+import ass16LiquidationHealthFactor from "/snippets/ass16-liquidation-health-factor.a.mdx";
+
 ## Use Case
 In DeFi lending protocols, positions can be liquidated when they become unhealthy due to market movements or other factors. The health factor is a critical security parameter that determines when a position can be liquidated. An incorrect health factor calculation or validation could lead to:
 
@@ -48,10 +50,10 @@ The assertion implements a multi-layered approach to verify liquidation health f
    - Enforces a maximum liquidation amount to prevent protocol destabilization
    - Ensures liquidation parameters are within safe bounds
 
-The assertion uses the following cheatcodes:
-- `forkPreState()`: Captures the health factor before liquidation
-- `forkPostState()`: Verifies the health factor after liquidation
-- `getCallInputs()`: Monitors liquidation function calls
+The assertion uses the following cheatcodes and functions:
+- `ph.forkPreState()`: Captures the health factor before liquidation
+- `ph.forkPostState()`: Verifies the health factor after liquidation
+- `ph.getCallInputs()`: Monitors liquidation function calls
 - `registerCallTrigger()`: Triggers on liquidation function calls
 
 This approach ensures that:
@@ -63,100 +65,10 @@ This approach ensures that:
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
 
-import {Assertion} from "credible-std/Assertion.sol";
-import {PhEvm} from "credible-std/PhEvm.sol";
+<ass16LiquidationHealthFactor />
 
-// Using a generic lending protocol interface
-interface ILendingProtocol {
-    // MarketParams contains the market identifier
-    // Using nested structs to match common lending protocol patterns
-    struct MarketParams {
-        Id id;
-    }
-
-    struct Id {
-        uint256 marketId;
-    }
-
-    function liquidate(
-        MarketParams memory marketParams,
-        address borrower,
-        uint256 seizedAssets,
-        uint256 repaidShares,
-        bytes memory data
-    ) external returns (uint256, uint256);
-
-    function isHealthy(MarketParams memory marketParams, address borrower) external view returns (bool);
-    function healthFactor(MarketParams memory marketParams, address borrower) external view returns (uint256);
-}
-
-contract LiquidationHealthFactorAssertion is Assertion {
-    ILendingProtocol public lendingProtocol;
-
-    // Health factors are typically scaled by 1e18 for precision
-    // This allows for fine-grained health factor calculations without floating point
-    uint256 constant LIQUIDATION_THRESHOLD = 1e18; // 1.0
-    uint256 constant MIN_HEALTH_FACTOR = 1.02e18; // 1.02 - small buffer above liquidation
-
-    // Maximum amount that can be liquidated in a single transaction
-    // This helps prevent large liquidations that could destabilize the protocol
-    uint256 constant MAX_LIQUIDATION_AMOUNT = 1000e18; // Example value, adjust based on protocol
-
-    constructor(address lendingProtocol_) {
-        lendingProtocol = ILendingProtocol(lendingProtocol_);
-    }
-
-    function triggers() external view override {
-        // Register trigger for liquidation function calls
-        registerCallTrigger(this.assertHealthFactor.selector, lendingProtocol.liquidate.selector);
-    }
-
-    // Make sure that liquidation can't happen if the position is healthy
-    // Check that the health factor is improved after liquidation
-    function assertHealthFactor() external {
-        // Get all liquidation calls in the transaction
-        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(lendingProtocol), lendingProtocol.liquidate.selector);
-
-        for (uint256 i = 0; i < callInputs.length; i++) {
-            address borrower;
-            ILendingProtocol.MarketParams memory marketParams;
-            uint256 seizedAssets;
-            uint256 repaidShares;
-
-            // Decode liquidation parameters
-            (marketParams, borrower, seizedAssets, repaidShares,) =
-                abi.decode(callInputs[i].input, (ILendingProtocol.MarketParams, address, uint256, uint256, bytes));
-
-            // Validate liquidation amounts
-            require(seizedAssets > 0, "Zero assets seized");
-            require(repaidShares > 0, "Zero shares repaid");
-            require(seizedAssets <= MAX_LIQUIDATION_AMOUNT, "Liquidation amount too large");
-
-            // Check health factor before liquidation
-            ph.forkPreState();
-            uint256 preHealthFactor = lendingProtocol.healthFactor(marketParams, borrower);
-            require(preHealthFactor <= LIQUIDATION_THRESHOLD, "Account not eligible for liquidation");
-
-            // Check health factor after liquidation
-            ph.forkPostState();
-            uint256 postHealthFactor = lendingProtocol.healthFactor(marketParams, borrower);
-
-            // Verify the liquidation actually improved the position's health
-            require(postHealthFactor > preHealthFactor, "Health factor did not improve after liquidation");
-
-            // Ensure the position is now in a safe state above the minimum required health factor
-            // This prevents partial liquidations that leave positions in a dangerous state
-            require(postHealthFactor >= MIN_HEALTH_FACTOR, "Position still unhealthy after liquidation");
-        }
-    }
-}
-```
-
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
 
 ## Testing
 To test this assertion:
