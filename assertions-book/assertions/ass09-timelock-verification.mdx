@@ -3,6 +3,8 @@ title: Timelock Verification
 description: Make sure that a timelock has been correctly triggered for governance actions
 ---
 
+import ass9TimelockVerification from "/snippets/ass9-timelock-verification.a.mdx";
+
 ## Use Case
 Timelocks are a governance mechanism in DeFi protocols that enforce a delay between when a governance action is proposed and when it can be executed. This delay allows the community to review and react to potentially harmful changes.
 
@@ -35,7 +37,7 @@ The assertion verifies timelock integrity by:
 
 1. **Pre-state Verification**
    - Captures the initial timelock state before any changes
-   - Records the original admin address and timelock parameters
+   - Records whether the timelock is currently active
 
 2. **Post-state Analysis**
    - Compares the final timelock state after changes
@@ -43,7 +45,6 @@ The assertion verifies timelock integrity by:
 
 3. **Parameter Validation**
    - Ensures timelock delay is within acceptable bounds (1 day to 2 weeks)
-   - Verifies admin address hasn't changed without authorization
    - Confirms timelock activation follows proper procedures
 
 The assertion uses these cheatcodes:
@@ -51,69 +52,22 @@ The assertion uses these cheatcodes:
 - `forkPostState()`: Analyzes the final timelock state
 - `registerStorageChangeTrigger()`: Monitors changes to the timelock storage slot
 
+The implementation performs checks on:
+1. The timelock's active status before and after the transaction
+2. The timelock delay parameters when the timelock is activated
+
+This ensures that:
+- Timelock activations use appropriate delay periods
+- Security parameters are maintained during governance changes
+- Protocol changes follow proper governance procedures
+
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
 
-import {Assertion} from "credible-std/Assertion.sol";
-import {PhEvm} from "credible-std/PhEvm.sol";
+<ass9TimelockVerification />
 
-interface IGovernance {
-    struct Timelock {
-        address admin;
-        uint256 timelockDelay;
-        bool isActive;
-    }
-
-    function timelock() external view returns (Timelock memory);
-}
-
-contract TimelockVerification is Assertion {
-    IGovernance public governance = IGovernance(address(0xbeef));
-
-    function triggers() external view override {
-        // Register trigger for changes to the timelock storage slot
-        registerStorageChangeTrigger(this.assertionTimelock.selector, bytes32(uint256(0)));
-    }
-
-    // Verify that a timelock is working as expected after some governance action
-    function assertionTimelock() external {
-        // Get pre-state timelock information
-        ph.forkPreState();
-        address preAdmin = governance.timelock().admin;
-        bool preActive = governance.timelock().isActive;
-        
-        // If timelock was already active, no need to check further
-        if (preActive) {
-            return;
-        }
-
-        // Get post-state timelock information
-        ph.forkPostState();
-        
-        // If timelock is now active, verify all parameters
-        if (governance.timelock().isActive) {
-            // Verify timelock delay is within acceptable bounds
-            bool minDelayCorrect = governance.timelock().timelockDelay >= 1 days;
-            bool maxDelayCorrect = governance.timelock().timelockDelay <= 2 weeks;
-            
-            // Verify admin hasn't changed
-            bool adminCorrect = governance.timelock().admin == preAdmin;
-            
-            // Require all parameters to be correct
-            require(
-                minDelayCorrect && maxDelayCorrect && adminCorrect,
-                "Timelock parameters invalid"
-            );
-        }
-    }
-}
-```
-
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
 
 ## Testing
 To test this assertion:

@@ -3,6 +3,8 @@ title: 'Price Within Ticks'
 description: 'Make sure that the price is within the tick range'
 ---
 
+import ass15PriceWithinTicks from "/snippets/ass15-price-within-ticks.a.mdx";
+
 ## Use Case
 In Automated Market Makers (AMMs), particularly those using concentrated liquidity models like Uniswap V3, the price is represented by ticks. A tick is a discrete unit of measurement for the price of an asset, and maintaining proper tick boundaries is critical for protocol security.
 
@@ -36,9 +38,9 @@ The assertion implements a focused approach to verify tick integrity:
    - Maintains proper concentrated liquidity calculations
    - Prevents position management errors
 
-The assertion uses the following cheatcodes:
-- `forkPreState()`: Captures the initial tick state
-- `forkPostState()`: Captures the final tick state
+The assertion uses the following cheatcodes and functions:
+- `ph.forkPreState()`: Captures the initial tick state
+- `ph.forkPostState()`: Captures the final tick state
 - `registerStorageChangeTrigger()`: Monitors changes to tick-related storage slots
 
 This focused approach ensures:
@@ -49,66 +51,10 @@ This focused approach ensures:
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
 
-import {Assertion} from "credible-std/Assertion.sol";
-import {PhEvm} from "credible-std/PhEvm.sol";
+<ass15PriceWithinTicks />
 
-// Uniswap v3 pool style interface
-interface IUniswapV3Pool {
-    function slot0()
-        external
-        view
-        returns (
-            uint160 sqrtPriceX96,
-            int24 tick,
-            uint16 observationIndex,
-            uint16 observationCardinality,
-            uint16 observationCardinalityNext,
-            uint8 feeProtocol,
-            bool unlocked
-        );
-    function tickSpacing() external view returns (int24);
-}
-
-contract PriceWithinTicksAssertion is Assertion {
-    IUniswapV3Pool public pool;
-
-    // Uniswap V3 tick bounds
-    int24 constant MIN_TICK = -887272;
-    int24 constant MAX_TICK = 887272;
-
-    constructor(IUniswapV3Pool pool_) {
-        pool = pool_;
-    }
-
-    function triggers() external view override {
-        // Register trigger for changes to the tick storage slot
-        // Assumes tick is stored in slot0 of the pool contract
-        registerStorageChangeTrigger(this.priceWithinTicks.selector, bytes32(uint256(0)));
-    }
-
-    // Check that the price is within the tick bounds and that the tick is divisible by the tick spacing
-    function priceWithinTicks() external {
-        // Get pre-swap state
-        ph.forkPreState();
-        (, int24 preTick,,,,,) = pool.slot0();
-
-        // Get post-swap state
-        ph.forkPostState();
-        (, int24 postTick,,,,,) = pool.slot0();
-        int24 spacing = pool.tickSpacing();
-
-        // Check 1: Tick must be within global bounds
-        require(postTick >= MIN_TICK && postTick <= MAX_TICK, "Tick outside global bounds");
-
-        // Check 2: Tick must be divisible by tickSpacing
-        require(postTick % spacing == 0, "Tick not aligned with spacing");
-    }
-}
-```
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
 
 ## Testing
 To test this assertion:
@@ -124,7 +70,6 @@ To test this assertion:
 - Consider protocol-specific parameters for:
   - Tick spacing requirements
   - Global tick bounds (if different from Uniswap V3)
-- Use detailed error messages to aid in debugging
 
 ## Related Assertions
 - [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations)

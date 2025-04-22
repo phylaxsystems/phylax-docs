@@ -3,6 +3,8 @@ title: 'Emergency State Validation'
 description: 'Ensure protocol behaves correctly during emergency pause states'
 ---
 
+import ass17PanicStateVerification from "/snippets/ass17-panic-state-verificatoin.a.mdx";
+
 ## Use Case
 Check that protocols maintain proper security controls during emergency pause states. When a protocol enters a panic/pause state, it's critical to ensure that:
 
@@ -37,83 +39,26 @@ The assertion monitors the protocol's balance and pause state to ensure proper b
 2. If paused, it verifies that the protocol's balance can only decrease (allowing withdrawals)
 3. It uses state change tracking to detect any unauthorized modifications
 
-The assertion uses the following cheatcodes and triggers:
-- `forkPreState()`: Captures the initial state before the transaction
-- `forkPostState()`: Captures the final state after the transaction
-- `getStateChanges()`: Tracks all state changes during the transaction
+The assertion uses the following cheatcodes and functions:
+- `ph.forkPreState()`: Captures the initial state before the transaction
+- `ph.forkPostState()`: Captures the final state after the transaction
+- `getStateChangesUint()`: Tracks all state changes during the transaction
 - `registerCallTrigger()`: Monitors all function calls to the contract
-
 
 This approach ensures that:
 1. Users can always withdraw their funds during emergencies
 2. No new deposits can be made while paused
 3. Protocol state remains consistent during pause periods
 
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
+
 > **Note:** In the future, this assertion could be optimized with a new trigger type that only fires when a specific storage slot has a specific value (e.g., when the pause flag is true). This would reduce unnecessary assertion checks and improve efficiency.
 
 ## Code Example
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
 
-import {Assertion} from "credible-std/Assertion.sol";
-import {PhEvm} from "credible-std/PhEvm.sol";
+<ass17PanicStateVerification />
 
-interface IEmergencyPausable {
-    function paused() external view returns (bool);
-    function balance() external view returns (uint256);
-}
-
-contract EmergencyStateAssertion is Assertion {
-    IEmergencyPausable public vault;
-
-    constructor(address vault_) {
-        vault = IEmergencyPausable(vault_);
-    }
-
-    function triggers() external view override {
-        // Register trigger for all function calls to ensure comprehensive coverage
-        registerCallTrigger(this.assertionPanickedCanOnlyDecreaseBalance.selector);
-    }
-
-    // Check that if the state is panicked that the pool balance can only decrease
-    // This ensures users can withdraw but prevents new deposits
-    function assertionPanickedCanOnlyDecreaseBalance() external {
-        // Get pre-state values
-        ph.forkPreState();
-        bool isPanicked = vault.paused();
-        uint256 preBalance = vault.balance();
-
-        // Get post-state values
-        ph.forkPostState();
-        uint256 postBalance = vault.balance();
-
-        // If protocol is paused, ensure balance can only decrease
-        if (isPanicked) {
-            require(
-                postBalance <= preBalance,
-                "Balance can only decrease when panicked"
-            );
-
-            // Additional check: verify no unauthorized state changes
-            uint256[] memory changes = getStateChangesUint(
-                address(vault),
-                bytes32(uint256(1)) // Balance storage slot
-            );
-            
-            // Ensure all intermediate states maintain the decrease-only property
-            for (uint256 i = 0; i < changes.length; i++) {
-                require(
-                    changes[i] <= preBalance,
-                    "Unauthorized state change during pause"
-                );
-            }
-        }
-    }
-}
-```
-
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
 
 ## Testing
 To test this assertion:
@@ -130,7 +75,7 @@ To test this assertion:
 
 ## Assertion Best Practices
 - Combine with other assertions like [Owner Change](/assertions-book/assertions/ass05-ownership-change) for comprehensive security
-- Use `getStateChanges` to detect unauthorized modifications throughout the call stack during pause states
+- Use `getStateChangesUint` to detect unauthorized modifications throughout the call stack during pause states
 - Consider adding whitelisted addresses that can modify state during emergencies (e.g. for upgrades or liquidity management)
 - Implement proper error messages to help with debugging
 

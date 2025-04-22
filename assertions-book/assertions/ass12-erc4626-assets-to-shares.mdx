@@ -3,6 +3,8 @@ title: ERC4626 Assets to Shares
 description: Make sure that the total shares are not more than the total assets
 ---
 
+import ass12Erc4626AssetsShares from "/snippets/ass12-erc4626-assets-shares.a.mdx";
+
 ## Use Case
 ERC4626 is a standard for creating yield-bearing tokens that are compatible with ERC20. This assertion enforces a critical security invariant in ERC4626 vaults: the total shares must never exceed the total assets converted to shares. This is essential because:
 
@@ -37,99 +39,27 @@ Each of these protocol types relies on accurate share-to-asset conversion for:
 - Correct accounting of protocol fees
 
 ## Explanation
-The assertion implements a multi-layered approach to verify the ERC4626 share-to-asset relationship. This relationship is fundamental to ERC4626 vaults, where shares represent proportional ownership of the vault's assets. The total shares must always be convertible to a value less than or equal to the total assets to maintain the integrity of the vault's accounting.
+The assertion implements a basic approach to verify the ERC4626 share-to-asset relationship. This relationship is fundamental to ERC4626 vaults, where shares represent proportional ownership of the vault's assets. The total assets must always be sufficient to back all outstanding shares to maintain the integrity of the vault's accounting.
 
-1. Basic State Check:
-   - Uses `forkPreState()` and `forkPostState()` to capture the vault's state before and after transactions
-   - Compares total shares against total assets converted to shares
-   - Ensures the fundamental invariant is maintained
-   - Catches any direct manipulation of share calculations
-
-2. State Change Monitoring:
-   - Uses `getStateChanges()` to track modifications to the total supply storage slot
-   - Verifies that no transaction can create more shares than assets
-   - Catches potential manipulation attempts within complex transactions
-   - Prevents unauthorized share minting through direct storage access
-
-The assertion uses the following cheatcodes:
-- `forkPreState()`: Captures the vault's state before transaction execution
-- `forkPostState()`: Captures the vault's state after transaction execution
-- `getStateChanges()`: Monitors changes to the total supply storage slot
+The assertion uses the following cheatcodes and functions:
 - `registerStorageChangeTrigger()`: Triggers the assertion when the total supply storage slot changes
 
-This comprehensive approach ensures that:
-1. The total shares never exceed the total assets converted to shares
-2. Any attempt to manipulate share calculations is detected
-3. The vault maintains proper accounting at all times
-4. Users' share values remain accurate and fair
-5. Yield distribution remains proportional to deposits
+The implementation performs a fundamental check:
+- It verifies that the total assets are sufficient to back all outstanding shares
+- This ensures that share value is preserved and users can withdraw their assets
+
+This approach ensures that:
+1. There are always enough assets to back all shares
+2. Users' share values remain accurate and fair
+3. No value can be extracted improperly from the vault
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
 
-import {Assertion} from "credible-std/Assertion.sol";
-import {PhEvm} from "credible-std/PhEvm.sol";
+<ass12Erc4626AssetsShares />
 
-interface IERC4626 {
-    function totalAssets() external view returns (uint256);
-    function totalSupply() external view returns (uint256);
-    function convertToShares(uint256 assets) external view returns (uint256);
-}
-
-contract ERC4626AssetsSharesAssertion is Assertion {
-    IERC4626 public vault = IERC4626(address(0xbeef));
-
-    function triggers() external view override {
-        // Register trigger specifically for changes to the total supply storage slot
-        // This is more gas efficient than triggering on all storage changes
-        registerStorageChangeTrigger(
-            this.assertionAssetsShares.selector,
-            bytes32(uint256(1)) // Total supply storage slot
-        );
-    }
-
-    // Assert that the total shares are not more than the total assets
-    function assertionAssetsShares() external {
-        // First check: Simple pre/post state comparison
-        ph.forkPreState();
-        uint256 preTotalAssets = vault.totalAssets();
-        uint256 preTotalShares = vault.totalSupply();
-        uint256 preTotalAssetsInShares = vault.convertToShares(preTotalAssets);
-        
-        ph.forkPostState();
-        uint256 postTotalAssets = vault.totalAssets();
-        uint256 postTotalShares = vault.totalSupply();
-        uint256 postTotalAssetsInShares = vault.convertToShares(postTotalAssets);
-
-        // Basic invariant check
-        require(
-            postTotalAssetsInShares >= postTotalShares,
-            "Total shares exceeds total assets in shares"
-        );
-
-        // Second check: Monitor changes to total supply to catch manipulation attempts
-        uint256[] memory shareChanges = getStateChangesUint(
-            address(vault),
-            bytes32(uint256(1)) // Total supply storage slot
-        );
-
-        // For each share change, verify against the current total assets
-        for (uint256 i = 0; i < shareChanges.length; i++) {
-            uint256 assetsInShares = vault.convertToShares(postTotalAssets);
-            require(
-                assetsInShares >= shareChanges[i],
-                "Intermediate state violates shares/assets invariant"
-            );
-        }
-    }
-}
-```
-
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
 
 ## Testing
 To test this assertion effectively:

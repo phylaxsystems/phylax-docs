@@ -3,6 +3,8 @@ title: Owner Change
 description: Assert that the owner of a contract has not changed unexpectedly
 ---
 
+import ass5OwnerChange from "/snippets/ass5-owner-change.a.mdx";
+
 ## Use Case
 Check that the owner of a contract has not changed unexpectedly. In many DeFi protocols, the owner address is a critical security parameter that controls administrative functions and protocol upgrades. An unauthorized change to this address could allow an attacker to take complete control of the protocol.
 
@@ -25,11 +27,15 @@ For example, in the Radiant Capital hack, the attacker gained control over 3 sig
 ## Explanation
 The assertion monitors changes to the owner address storage slot in contracts. The owner address typically determines who has administrative privileges over the contract.
 
-The assertion uses the following cheatcodes:
-- `forkPreState()`: Creates a fork of the state before the transaction to capture the original owner address
-- `forkPostState()`: Creates a fork of the state after the transaction to detect any changes
-- `getStateChanges()`: Gets all state changes for the owner address storage slot in the callstack of the transaction to detect any changes to the owner address
+The assertion uses the following cheatcodes and functions:
+- `ph.forkPreState()`: Creates a fork of the state before the transaction to capture the original owner address
+- `ph.forkPostState()`: Creates a fork of the state after the transaction to detect any changes
+- `getStateChangesAddress()`: Gets all state changes for the owner address storage slot in the callstack of the transaction to detect any changes to the owner address
 - `registerStorageChangeTrigger()`: Triggers the assertion when a change is detected in the owner address storage slot
+
+The implementation performs two checks:
+1. A direct comparison between pre-state and post-state owner addresses
+2. A thorough verification of all state changes to the owner slot during the transaction's execution
 
 This multi-layered approach ensures that:
 1. The owner address remains constant unless explicitly changed through proper channels
@@ -39,80 +45,10 @@ This multi-layered approach ensures that:
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
 
-import {Assertion} from "credible-std/Assertion.sol";
-import {PhEvm} from "credible-std/PhEvm.sol";
+<ass5OwnerChange />
 
-interface IOwnership {
-    function owner() external view returns (address);
-    function admin() external view returns (address);
-}
-
-contract OwnerChange is Assertion {
-    IOwnership public ownership = IOwnership(address(0xbeef));
-
-    function triggers() external view override {
-        // Register triggers for changes to both owner and admin storage slots
-        registerStorageChangeTrigger(this.assertionOwnerChange.selector, bytes32(uint256(0)));
-        registerStorageChangeTrigger(this.assertionAdminChange.selector, bytes32(uint256(1)));
-    }
-
-    // Assert that the owner address doesn't change during the state transition
-    function assertionOwnerChange() external {
-        // Get pre-state owner
-        ph.forkPreState();
-        address preOwner = ownership.owner();
-
-        // Get post-state owner
-        ph.forkPostState();
-        address postOwner = ownership.owner();
-
-        // Get all state changes for the owner slot
-        address[] memory changes = getStateChangesAddress(
-            address(ownership),
-            bytes32(uint256(0)) // First storage slot for owner address
-        );
-
-        // Verify owner hasn't changed after the transaction
-        require(preOwner == postOwner, "Owner changed");
-
-        // Additional check: verify no changes take place in the owner slot throughout the callstack
-        for (uint256 i = 0; i < changes.length; i++) {
-            require(changes[i] == preOwner, "Unauthorized owner change detected");
-        }
-    }
-
-    // Assert that the admin address doesn't change during the state transition
-    function assertionAdminChange() external {
-        // Get pre-state admin
-        ph.forkPreState();
-        address preAdmin = ownership.admin();
-
-        // Get post-state admin
-        ph.forkPostState();
-        address postAdmin = ownership.admin();
-
-        // Get all state changes for the admin slot
-        address[] memory changes = getStateChangesAddress(
-            address(ownership),
-            bytes32(uint256(1)) // Second storage slot for admin address
-        );
-
-        // Verify admin hasn't changed after the transaction
-        require(preAdmin == postAdmin, "Admin changed");
-
-        // Additional check: verify no changes take place in the admin slot throughout the callstack
-        for (uint256 i = 0; i < changes.length; i++) {
-            require(changes[i] == preAdmin, "Unauthorized admin change detected");
-        }
-    }
-}
-```
-
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
 
 ## Testing
 To test this assertion:
@@ -128,7 +64,7 @@ For complete test examples, see the [Phylax Assertion Examples Repository](https
 
 ## Assertion Best Practices
 - Consider combining this assertion with other assertions like [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change) for comprehensive security
-- Use the `getStateChanges` cheatcode to detect changes to the owner address throughout the callstack of the transaction
+- Use the `getStateChangesAddress` cheatcode to detect changes to the owner address throughout the callstack of the transaction
 - Consider whitelisting specific owner addresses if you know the set of allowed future owners
 - Ensure proper error messages in the assertion to help with debugging
 - Add additional checks for admin/operator addresses if your protocol uses multiple administrative roles

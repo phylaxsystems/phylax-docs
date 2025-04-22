@@ -3,6 +3,8 @@ title: 'Fee Calculations'
 description: 'Make sure that the fees do not change unexpectedly'
 ---
 
+import ass14FeeVerification from "/snippets/ass14-fee-verification.a.mdx";
+
 ## Use Case
 In AMMs and other DeFi protocols, trading fees are a critical security parameter that directly impacts user returns and protocol revenue. Unexpected fee changes can lead to:
 - Unauthorized fee manipulation by malicious actors
@@ -44,10 +46,10 @@ The assertion uses a whitelist approach to control fee changes:
    - When a change occurs, verifies the new fee matches one of the allowed values
    - Prevents unauthorized fee modifications
 
-The assertion uses the following cheatcodes:
-- `registerStorageChangeTrigger`: Detects changes to the fee storage slot
-- `load`: Retrieves the new fee value after a change
-- `getStateChanges`: Gets all state changes for the fee storage slot to verify intermediate changes
+The assertion uses the following cheatcodes and functions:
+- `registerStorageChangeTrigger()`: Detects changes to the fee storage slot
+- `ph.load()`: Retrieves the new fee value after a change
+- `getStateChangesUint()`: Gets all state changes for the fee storage slot to verify intermediate changes
 
 This approach ensures that:
 1. Only whitelisted fee values are allowed
@@ -55,62 +57,13 @@ This approach ensures that:
 3. Unauthorized fee modifications are prevented
 4. All intermediate fee changes in the callstack are also validated
 
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
+
 ## Code Example
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
 
-import {Assertion} from "credible-std/Assertion.sol";
-import {PhEvm} from "credible-std/PhEvm.sol";
+<ass14FeeVerification />
 
-// Aerodrome style interface
-interface IPool {
-    function fee() external view returns (uint256);
-    function stable() external view returns (bool);
-}
-
-contract AmmFeeVerificationAssertion is Assertion {
-    IPool public pool = IPool(address(0xbeef));
-
-    // Hardcoded whitelist of allowed fee values
-    uint256 private constant STABLE_POOL_FEE_1 = 1; // 0.1%
-    uint256 private constant STABLE_POOL_FEE_2 = 15; // 0.15%
-    uint256 private constant NON_STABLE_POOL_FEE_1 = 25; // 0.25%
-    uint256 private constant NON_STABLE_POOL_FEE_2 = 30; // 0.30%
-
-    function triggers() external view override {
-        // Register trigger for changes to the fee storage slot
-        registerStorageChangeTrigger(this.assertFeeVerification.selector, bytes32(uint256(1))); // Assuming fee is in slot 1
-    }
-
-    // Verify that any fee change is to an allowed value
-    function assertFeeVerification() external {
-        // Get the new fee value and pool type
-        bool isStable = pool.stable();
-        uint256 newFee = uint256(ph.load(address(pool), bytes32(uint256(1))));
-
-        // Check if the new fee is in the whitelist
-        bool isAllowed = isStable
-            ? (newFee == STABLE_POOL_FEE_1 || newFee == STABLE_POOL_FEE_2)
-            : (newFee == NON_STABLE_POOL_FEE_1 || newFee == NON_STABLE_POOL_FEE_2);
-
-        require(isAllowed, "Fee change to unauthorized value");
-
-        // If the simple check passes, verify no unauthorized changes in the callstack
-        uint256[] memory changes = getStateChangesUint(address(pool), bytes32(uint256(1)));
-
-        // Check each change against the whitelist
-        for (uint256 i = 0; i < changes.length; i++) {
-            isAllowed = isStable
-                ? (changes[i] == STABLE_POOL_FEE_1 || changes[i] == STABLE_POOL_FEE_2)
-                : (changes[i] == NON_STABLE_POOL_FEE_1 || changes[i] == NON_STABLE_POOL_FEE_2);
-            require(isAllowed, "Unauthorized fee change detected in callstack");
-        }
-    }
-}
-```
-
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
 
 ## Testing
 To test this assertion:
