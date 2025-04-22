@@ -3,10 +3,12 @@ title: Oracle Liveness Validation
 description: Assert that an oracle is updated within a specified time window
 ---
 
-## Use Case
-Oracles are critical components in DeFi protocols that provide external data (like asset prices) to on-chain contracts. Oracle liveness is a fundamental security parameter that ensures the data provided by oracles is current and reliable. Stale oracle data can lead to significant financial losses and protocol vulnerabilities.
+import ass10OracleLiveness from "/snippets/ass10-oracle-liveness.a.mdx";
 
-This assertion is particularly important for:
+## Use Case
+Oracles are components in DeFi protocols that provide external data (like asset prices) to on-chain contracts. Oracle liveness is a security parameter that ensures the data provided by oracles is current and reliable. Stale oracle data can lead to significant financial losses and protocol vulnerabilities.
+
+This assertion is important for:
 - Preventing the use of stale price data that could lead to incorrect valuations
 - Ensuring oracle services remain operational and responsive
 - Detecting oracle service disruptions before they impact protocol operations
@@ -22,65 +24,27 @@ For example, if an oracle hasn't been updated for an extended period, it could i
 - Options and derivatives protocols that require precise price feeds for settlement
 
 ## Explanation
-The assertion monitors the timestamp of the last update to an oracle contract when critical protocol functions are called. In oracle implementations, this timestamp is typically stored in a specific storage slot and is updated whenever new data is fetched from external sources.
+The assertion monitors the timestamp of the last update to an oracle contract when critical protocol functions like swaps are called.
 
-The assertion uses the following cheatcodes:
+The assertion uses the following cheatcodes and functions:
 - `forkPostState()`: Creates a fork of the state after the transaction to check the current oracle state
-- `registerFunctionCallTrigger()`: Triggers the assertion when specific protocol functions that rely on oracle data are called
+- `registerCallTrigger()`: Triggers the assertion when specific protocol functions that rely on oracle data are called
 
-This approach ensures that:
-1. The oracle data is refreshed within a specified time window (e.g., 10 minutes)
-2. Any delays or disruptions in oracle updates are detected
-3. The assertion blocks transactions that would use stale oracle data
+The implementation performs the following check:
+1. Upon a function call that relies on oracle data (like a DEX swap), it verifies that the oracle's last update time is within the defined maximum time window
+
+This ensures that:
+- Critical operations only use fresh oracle data
+- Transactions revert when oracles are stale
+- Protocol functions that rely on price data remain secure
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
 
-import {Assertion} from "credible-std/Assertion.sol";
-import {PhEvm} from "credible-std/PhEvm.sol";
+<ass10OracleLiveness />
 
-interface IOracle {
-    function lastUpdated() external view returns (uint256);
-}
-
-interface IDex {
-    function swap(address tokenIn, address tokenOut, uint256 amountIn) external returns (uint256);
-}
-
-contract OracleLivenessAssertion is Assertion {
-    IOracle public oracle = IOracle(address(0xbeef));
-    IDex public dex = IDex(address(0xdead));
-
-    // Maximum time window (in seconds) that oracle data can be considered fresh
-    // This is a constant that should be adjusted based on the protocol's requirements
-    uint256 public constant MAX_UPDATE_WINDOW = 10 minutes;
-
-    function triggers() external view override {
-        // Register trigger for the swap function which relies on oracle data
-        registerCallTrigger(this.assertionOracleLiveness.selector, dex.swap.selector);
-    }
-
-    // Assert that the oracle has been updated within the specified time window
-    function assertionOracleLiveness() external {
-        // Get the current state to check the oracle's last update time
-        ph.forkPostState();
-
-        // Check if the oracle has been updated within the maximum allowed window
-        uint256 lastUpdateTime = oracle.lastUpdated();
-        uint256 currentTime = block.timestamp;
-
-        // Verify the oracle data is fresh (updated within the time window)
-        require(currentTime - lastUpdateTime <= MAX_UPDATE_WINDOW, "Oracle not updated within the allowed time window");
-    }
-}
-
-```
-
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
 
 ## Testing
 To test this assertion, you would typically:
