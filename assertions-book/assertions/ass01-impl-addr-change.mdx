@@ -1,7 +1,9 @@
 ---
 title: Implementation Address Change
-description: Assert that an address of an implementation has changed
+description: Assert that the address of an implementation has not changed unexpectedly
 ---
+
+import ass1ImplAddrChange from "/snippets/ass1-implementation-change.a.mdx";
 
 ## Use Case
 Check that the implementation address of a proxy contract does not change unexpectedly. In proxy-based upgradeable contracts, the implementation address is a critical security parameter that determines which contract's logic is executed. An unauthorized change to this address could allow an attacker to replace the entire contract logic with malicious code.
@@ -23,11 +25,15 @@ For example, it would be possible to define a list of allowed implementations th
 ## Explanation
 The assertion monitors changes to the implementation address storage slot in proxy contracts. In proxy patterns, the implementation address is typically stored in a specific storage slot (often slot 0) and determines which contract's logic is executed when calls are delegated.
 
-The assertion uses the following cheatcodes:
-- `forkPreState()`: Creates a fork of the state before the transaction to capture the original implementation address
-- `forkPostState()`: Creates a fork of the state after the transaction to detect any changes
-- `getStateChanges()`: Gets all state changes for the implementation address storage slot to detect unauthorized modifications throughout the callstack of the transaction
+The assertion uses the following cheatcodes and functions:
+- `ph.forkPreState()`: Creates a fork of the state before the transaction to capture the original implementation address
+- `ph.forkPostState()`: Creates a fork of the state after the transaction to detect any changes
+- `getStateChangesAddress()`: Gets all state changes for the implementation address storage slot to detect unauthorized modifications throughout the callstack of the transaction
 - `registerStorageChangeTrigger()`: Triggers the assertion when a change is detected in the implementation address storage slot
+
+The implementation performs two checks:
+1. A direct comparison between pre-state and post-state implementation addresses
+2. A thorough verification of all state changes to the implementation slot during the transaction's execution
 
 This multi-layered approach ensures that:
 1. The implementation address remains constant unless explicitly changed through proper channels
@@ -37,61 +43,17 @@ This multi-layered approach ensures that:
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
 
-import {Assertion} from "credible-std/Assertion.sol";
-import {PhEvm} from "credible-std/PhEvm.sol";
+<ass1ImplAddrChange />
 
-interface IImplementation {
-    function implementation() external view returns (address);
-}
-
-contract ImplementationChange is Assertion {
-    IImplementation public implementation = IImplementation(address(0xbeef));
-
-    function triggers() external view override {
-        // Register trigger for changes to the implementation address storage slot
-        // The implementation address is typically stored in the first storage slot (slot 0)
-        registerStorageChangeTrigger(this.implementationChange.selector, bytes32(uint256(0)));
-    }
-
-    // Assert that the implementation contract address doesn't change
-    // during the state transition
-    function implementationChange() external {
-        // Get pre-state implementation
-        ph.forkPreState();
-        address preImpl = implementation.implementation();
-
-        // Get post-state implementation
-        ph.forkPostState();
-        address postImpl = implementation.implementation();
-
-        // Get all state changes for the implementation slot
-        address[] memory changes = getStateChangesAddress(
-            address(implementation),
-            bytes32(uint256(0)) // First storage slot for implementation address
-        );
-
-        // Verify implementation hasn't changed
-        require(preImpl == postImpl, "Implementation changed");
-
-        // Additional check: verify no unauthorized changes to implementation slot
-        for (uint256 i = 0; i < changes.length; i++) {
-            require(changes[i] == preImpl, "Unauthorized implementation change detected");
-        }
-    }
-}
-```
-
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For the latest version and a test example, please refer to the repository.
+> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
 
 ## Assertion Best Practices
 - Consider combining this assertion with other assertions like [Owner Change](/assertions-book/assertions/ass05-ownership-change) for comprehensive security
-- Use the `getStateChanges` cheatcode to detect changes to the implementation address throughout the callstack of the transaction
+- Use the `getStateChangesAddress` cheatcode to detect changes to the implementation address throughout the callstack of the transaction
 - Consider whitelisting specific implementation addresses if you know the set of allowed future implementations
 - Ensure proper error messages in the assertion to help with debugging
+- Be aware that the example assumes the implementation address is stored in slot 0, which may vary across different proxy implementations
 
 ## Related Assertions
 - [Owner Change](/assertions-book/assertions/ass05-ownership-change)
