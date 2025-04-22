@@ -1,92 +1,79 @@
 ---
-title: Introduction to Assertions
+title: Introduction to the Assertions Book
 description: Resource for assertion use cases and patterns
 ---
 
-# Assertions Book
-
 This resource is a collection of use cases and patterns for assertions. The goal is to show how assertions can be used to prevent hacks and vulnerabilities in smart contracts and protocols.
-Some examples are designed for specific protocols, while others are more generally applicable to certain architectures.
-We also added a category where we show how assertions could have been used to prevent historical hacks.
+The content of the book is a great source for inspiration for how to write assertions for your own use cases and protocols.
 
-Each assertions is named after the use case it is intended to solve and will be accompanied by an explanation and a code example.
+Each entry in the book shows a code snippet of an assertion. Each assertion is accompanied by a minimal interface for the protocol the assertion is written for.
+Full examples that include mock protocol code and test cases are available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples).
 
-In the menu to the left you can find all the assertions.
+## Getting Started
+It's a good idea to check out the two links below to get started with assertions, but it's not required to understand the content of the book.
 
-If you have any questions or issues getting things to work please reach out on telegram [@phylax_credible_layer](https://t.me/phylax_credible_layer).
+- Learn all about assertions in the [Assertion Guide](/credible/pcl-assertion-guide)
+- Follow the [PCL Quickstart Guide](/credible/pcl-quickstart) to set up your own assertions project
+- Check the [PhEVM Cheatcodes Reference](/credible/cheatcodes) for available assertion tools
 
-If you think that an assertion is missing, please don't hesitate to open a PR or reach out. We love digging into new use cases and writing assertions for them!
+If you have questions or issues, please reach out on telegram [@phylax_credible_layer](https://t.me/phylax_credible_layer).
 
-## Introduction to Assertions
+If you think an assertion is missing, please don't hesitate to open a PR or reach out. We love digging into new hacks and use cases and writing assertions for them!
 
-Assertions are a way to define states that should never be reached in your smart contracts. 
-You can think of them as opposite intents. Instead of defining what you want to happen, you define what you don't want to happen.
-In other words we enable dApps to define hacks.
+## Table of Contents
 
-Below is a full example of an assertion contract for reference:
+### Access Control & Administrative Changes
 
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+- [**Implementation Address Change**](/assertions-book/assertions/ass01-impl-addr-change.mdx): Protects against unauthorized changes to proxy implementation addresses, preventing attackers from replacing contract logic with malicious code.
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
+- [**Owner Change**](/assertions-book/assertions/ass05-ownership-change.mdx): Ensures ownership of a contract cannot be transferred unexpectedly, preventing attackers from gaining administrative control over critical protocol functions.
 
-interface IOwnership {
-    function owner() external view returns (address);
+- [**Timelock Verification**](/assertions-book/assertions/ass09-timelock-verification.mdx): Verifies that administrative actions are executed only after the required timelock period, preventing rushed or malicious changes to protocol parameters.
 
-    function admin() external view returns (address);
-}
+### Liquidity Pool & AMM Security
 
-// This is a simple example of an assertion that checks if the owner has changed.
-// You can import your own ownership contract and modify the assertion accordingly.
-contract OwnerChange is Assertion {
-    IOwnership public ownership = IOwnership(address(0xbeef));
+- [**Constant Product**](/assertions-book/assertions/ass06-constant-product.mdx): Ensures the constant product formula (k = x * y) is maintained in AMM pools, preventing price manipulation attacks and unauthorized token drains.
 
-    function fnSelectors() external pure override returns (bytes4[] memory assertions) {
-        assertions = new bytes4[](2);
-        assertions[0] = this.assertionOwnerChange.selector;
-        assertions[1] = this.assertionAdminChange.selector;
-    }
+- [**Price Within Ticks**](/assertions-book/assertions/ass15-price-within-ticks.mdx): Verifies that concentrated liquidity positions in AMM protocols maintain prices within expected tick boundaries, protecting against price manipulation.
 
-    // This function is used to check if the owner has changed.
-    // return true indicates a valid state
-    // return false indicates an invalid state
-    function assertionOwnerChange() external returns (bool) {
-        ph.forkPreState(); // fork the pre state - the state before the transaction
-        address preOwner = ownership.owner(); // get the owner before the transaction
-        ph.forkPostState(); // fork the post state - the state after the transaction
-        address postOwner = ownership.owner(); // get the owner after the transaction
-        return preOwner == postOwner; // return false if the owner has changed (invalid state)
-    }
+- [**Fee Calculations**](/assertions-book/assertions/ass14-fee-calculations.mdx): Ensures trading fees are correctly calculated and distributed, preventing fee theft or unexpected losses in AMM protocols.
 
-    // This function is used to check if the admin has changed.
-    // It works in the same way as the ownerChange function, and here it's used as
-    // an example of how to add another trigger to the assertion.
-    function assertionAdminChange() external virtual returns (bool) {
-        ph.forkPreState(); // fork the pre state - the state before the transaction
-        address preAdmin = ownership.admin(); // get the admin before the transaction
-        ph.forkPostState(); // fork the post state - the state after the transaction
-        address postAdmin = ownership.admin(); // get the admin after the transaction
-        return preAdmin == postAdmin; // return false if the admin has changed (invalid state)
-    }
-}
-```
+### Lending Protocol Safety
 
-It can be assumed that all assertion examples will have a similar structure, but only the assertions functions will be shown.
+- [**Lending Health Factor**](/assertions-book/assertions/ass07-lending-health-factor.mdx): Enforces minimum health factor requirements in lending protocols, preventing under-collateralized positions and protecting protocol solvency.
 
-For the actual example listed above see the [Owner Change](/assertions-book/assertions/ass05-ownership-change.mdx) assertion.
+- [**Liquidation Health Factor**](/assertions-book/assertions/ass16-liquidation-health-factor.mdx): Ensures liquidations only occur when health factors fall below the liquidation threshold, protecting borrowers from premature or incorrect liquidations.
 
-The `ph` keyword is a global keyword that is used to interact with the Phylax Credible Layer. It is imported from the `credible-std` library.
+- [**Sum of All Positions**](/assertions-book/assertions/ass08-sum-of-all-positions.mdx): Verifies that the sum of all user positions matches the total asset balance, detecting accounting errors or unauthorized fund movements.
 
-For a video explainer of the above example and assertions in general check out the video below:
+- [**Tokens Borrowed Invariant**](/assertions-book/assertions/ass19-tokens-borrowed-invariant.mdx): Enforces that the relationship between borrowed tokens and collateral remains within safe protocol limits, preventing critical invariant violations.
 
-<iframe
-  width="560"
-  height="315"
-  src="https://www.youtube.com/embed/9sOn9yvn6I8?si=Td4-QenV8hbhVc4G"
-  title="YouTube video player"
-  frameborder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-  referrerpolicy="strict-origin-when-cross-origin"
-  allowfullscreen
-></iframe>
+### Oracle Security
+
+- [**Oracle Liveness Validation**](/assertions-book/assertions/ass10-oracle-validation.mdx): Verifies that oracle data is fresh and updated within an acceptable time window, preventing the use of stale or manipulated price data.
+
+- [**TWAP Deviation**](/assertions-book/assertions/ass11-twap-deviation.mdx): Ensures the time-weighted average price doesn't deviate excessively from previous values, detecting price manipulation attempts or oracle failures.
+
+- [**Intra-Transaction Oracle Deviation**](/assertions-book/assertions/ass28-intra-tx-oracle-deviation.mdx): Monitors price oracle readings during a transaction to detect excessive deviations that might indicate flash loan attacks or price manipulation.
+
+### Vault & ERC4626 Security
+
+- [**ERC4626 Assets to Shares**](/assertions-book/assertions/ass12-erc4626-assets-to-shares.mdx): Verifies correct conversion between assets and shares in ERC4626 vaults, preventing accounting errors that could lead to fund loss.
+
+- [**ERC4626 Deposit and Withdraw**](/assertions-book/assertions/ass13-erc4626-deposit-withdraw.mdx): Ensures deposit and withdrawal operations maintain correct accounting in ERC4626 vaults, protecting user funds during transfers.
+
+- [**Harvest Increases Balance**](/assertions-book/assertions/ass18-harvest-increases-balance.mdx): Verifies that yield-generating operations like harvests always increase the total balance of vaults, preventing value extraction attacks.
+
+### Emergency & Special Mode Protection
+
+- [**Panic State Validation**](/assertions-book/assertions/ass17-panic-state-validation.mdx): Validates critical protocol state variables during panic or emergency modes, ensuring fallback mechanisms work correctly when normal operations are suspended.
+
+### Data Integrity & Message Verification
+
+- [**Farcaster Protocol Integrity**](/assertions-book/assertions/ass22-farcaster-protocol-integrity.mdx): Ensures the integrity of cross-chain messages in the Farcaster protocol, preventing unauthorized or malformed message processing.
+
+### Fund Protection
+
+- [**ERC20 Drain**](/assertions-book/assertions/ass20-erc20-drain.mdx): Prevents excessive token outflows in a single transaction, mitigating the impact of potential exploits by limiting how quickly funds can be drained.
+
+- [**Ether Drain**](/assertions-book/assertions/ass21-ether-drain.mdx): Monitors and limits ETH outflows from contracts, protecting against unauthorized withdrawals that could deplete protocol reserves.
