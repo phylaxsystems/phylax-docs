@@ -1,51 +1,111 @@
 ---
-title: PCL CLI Reference
-description: Reference documentation for the PCL command-line interface
+title: Credible Layer CLI Reference
+description: Reference documentation for the Credible Layer command-line interface
 ---
 
 ## Overview
 
-PCL (Phylax Credible Layer) CLI is a command-line tool for interacting with the Credible Layer.
+The [`pcl` (Phylax Credible Layer)](https://github.com/phylaxsystems/pcl/tree/main) is a command-line interface for interacting with the Credible Layer. It allows developers to authenticate, test, and submit assertions to the Credible Layer dApp.
 
 - For installation: [Installation Guide](/credible/credible-install)
 - For getting started: [Quick Start Guide](/credible/pcl-quickstart)
 
-## Global Options
+## Project Structure
 
-```bash
-pcl [OPTIONS] <COMMAND>
+The `pcl` command expects the following directory structure:
 
-Options:
-  -r, --root <ROOT_DIR>              Project root directory [env: PCL_ROOT_DIR=]
-  -a, --assertions <ASSERTIONS_DIR>  Assertions directory [env: PCL_ASSERTIONS_DIR=]
-  -h, --help                         Print help
-  -V, --version                      Print version
+```text
+root-dir/
+  assertions-dir/
+    src/      # Assertion source files (.a.sol)
+    test/     # Test files (.t.sol)
 ```
 
 ## Commands
 
-### phorge
+### auth
 
-A minimal fork of Forge with functionality for assertion execution.
-
-```bash
-pcl phorge test|script [OPTIONS]
-```
-
-### build
-
-Build the project and assertions.
+Manage authentication with your Credible Layer dApp account.
 
 ```bash
-pcl build [OPTIONS]
+pcl auth [OPTIONS] <COMMAND>
+
+Commands:
+  login   Login to PCL using your wallet
+  logout  Logout from PCL
+  status  Check current authentication status
+
+Options:
+      --base-url <BASE_URL>  Base URL for authentication service [env: AUTH_BASE_URL=] [default: https://credible-layer-dapp.pages.dev]
+  -h, --help                 Print help
 ```
+
+When logging in:
+
+1. A URL and authentication code will be displayed
+2. Visit the URL in your browser
+3. Connect your wallet and approve the authentication
+4. CLI will automatically detect successful authentication
+
+### config
+
+Manage your PCL configuration:
+
+```bash
+pcl config [COMMAND]
+
+Commands:
+  show    Display the current configuration
+  delete  Delete the current configuration
+```
+
+Configuration is stored in ~/.pcl/config.toml and includes:
+
+- Authentication token
+- Pending assertions for submission
+- Project settings
+
+### test
+
+Run tests for your assertions.
+
+```bash
+pcl test -h
+Run tests
+
+Usage: pcl test [OPTIONS] [PATH]
+
+Options:
+  -h, --help  Print help (see more with '--help')
+
+Display options:
+  -v, --verbosity...                Verbosity level of the log messages.
+  -q, --quiet                       Do not print log messages
+      --json                        Format log messages as JSON
+      --color <COLOR>               The color of the log messages [possible values: auto, always, never]
+  -s, --suppress-successful-traces  Suppress successful test traces and show only traces for failures [env: FORGE_SUPPRESS_SUCCESSFUL_TRACES=]
+      --junit                       Output test results as JUnit XML report
+  -l, --list                        List tests instead of running them
+      --show-progress               Show test execution progress
+      --summary                     Print test summary table
+      --detailed                    Print detailed test summary table
+```
+
+Note: The `pcl test` command is a fork of Forge's `test` command so all functionality is available.
 
 ### store
 
 Submit Assertion bytecode and source code to the Assertion DA.
 
 ```bash
-pcl store <ASSERTION> [--url <URL>]
+pcl store [OPTIONS] <ASSERTION>
+
+Arguments:
+  <ASSERTION>  Name of the assertion contract to submit
+
+Options:
+      --url <URL>  URL of the assertion-DA [env: PCL_DA_URL=] [default: http://localhost:5001]
+  -h, --help       Print help
 ```
 
 ### submit
@@ -56,51 +116,57 @@ Submit assertions to the Credible Layer dApp.
 pcl submit [OPTIONS]
 
 Options:
-  -s, --project-name <NAME>     Target project name
-  -a, --assertion-name <NAME>   Assertion to submit
-  --dapp-url <URL>              Credible Layer dApp URL
+  -u, --dapp-url <DAPP_URL>                 Base URL for the Credible Layer dApp API [default: http://localhost:3003/api/v1]
+  -p, --project-name <PROJECT_NAME>         Optional project name to skip interactive selection
+  -a, --assertion-name <ASSERTION_NAME>...  Optional list of assertion names to skip interactive selection
+  -h, --help                                Print help
 ```
 
 If not specified, the command will prompt interactively to select the project and assertion(s).
 
-### auth
 
-Manage authentication with your Credible Layer dApp account.
+## Examples
+
+### Complete Authentication Flow
 
 ```bash
-pcl auth login|logout|status [--base-url <URL>]
+# Login
+pcl auth login
+
+# Verify status
+pcl auth status
+
+# Store assertion
+pcl store my_assertion
+
+# Submit to dApp
+pcl submit -a my_assertion -p my_project
+
+# Logout when done
+pcl auth logout
 ```
 
-## Project Structure
+### Development Workflow
 
-PCL expects the following directory structure:
-
-```text
-root-dir/
-  assertions-dir/
-    src/      # Assertion source files (.a.sol)
-    test/     # Test files (.t.sol)
-```
-
-## Environment Variables
-
-- `PCL_ROOT_DIR`: Root directory
-- `PCL_ASSERTIONS_DIR`: Assertions directory
-- `PCL_DA_URL`: Assertion DA URL
-- `AUTH_BASE_URL`: Authentication service URL
-
-## Configuration
-
-PCL stores configuration in `~/.pcl/config.toml`, including authentication credentials, prepared assertions, and user preferences.
-
-## Getting Help
-
-For detailed help on any command:
 ```bash
-pcl <command> --help
+# Run tests
+pcl test
+
+# Store and submit assertion
+pcl store my_assertion
+pcl submit -a my_assertion -p my_project
 ```
 
 ## Troubleshooting
 
-- **Authentication Errors**: Run `pcl auth login`
-- **Build Failures**: Check assertion syntax and dependencies
+### Authentication Issues
+
+- **Error: Not authenticated**: Run `pcl auth login` to authenticate
+- **Error: Authentication expired**: Run `pcl auth login` to refresh your authentication
+- **Browser doesn't open**: Manually visit the URL displayed in the terminal
+
+### Submission Issues
+
+- **Error: Failed to submit**: Ensure you're authenticated and have network connectivity
+- **Error: Project not found**: Create a project in the Credible Layer dApp first
+- **Error: Assertion not found**: Ensure the assertion name is correct and exists in your project
