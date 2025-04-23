@@ -256,7 +256,20 @@ Before submitting your assertion, you need to authenticate:
 pcl auth login
 ```
 
-This will open a browser window where you can connect your wallet and authenticate with the Credible Layer.
+
+This will provide you with with a URL and an authentication code that you can use to authenticate with the Credible Layer.
+
+Once authenticated, you can create a project in the dApp and point it to your deployed contracts.
+
+If you're on a testnet you can deploy the Ownable contract using the following command:
+
+```bash
+forge create \
+       --rpc-url $RPC_URL \
+       --private-key $PRIVATE_KEY_YOU_USED_TO_SIGN_IN_TO_DAPP \
+       --broadcast \
+       src/Ownable.sol:Ownable
+```
 
 If authentication fails, ensure:
 - Your wallet has the correct network selected
@@ -283,11 +296,19 @@ pcl submit
 
 This will prompt you to select the project and assertion(s) you want to submit. Follow the interactive prompts to complete the submission.
 
-Alternatively, you can specify the project and assertion directly:
+Alternatively, you can specify the project and assertion directly as per the output of the `pcl store` command:
 
 ```bash
-pcl submit --project-name "MyProject" --assertion-name "OwnableAssertion"
+pcl submit -a OwnableAssertion -p <project_name>
 ```
+
+## 8. Activating Your Assertion
+
+Last step is to go to the dApp and activate the assertion. Go back to the url that you opened with the `pcl auth login` command and navigate to the project that the assertions was added to. It should look something like this:
+
+![Project Page](/images/project-1-assertion-submission-dapp.png)
+
+You'll notice that there's one assertion ready for submission, go ahead and proceed to review and activate it.
 
 ## Conclusion
 
@@ -295,7 +316,7 @@ Congratulations! You've successfully created, tested, and submitted your first a
 
 ### Next Steps
 
-1. **Try more complex assertions**: Check out the [examples repository](https://github.com/phylaxsystems/pcl/tree/main/testdata/mock-protocol) for more advanced assertion patterns
+1. **Try more complex assertions**: Check out the [Assertions Book](/assertions-book) for more detailed explanations and a collection of assertions for various use cases
 2. **Integrate with your own projects**: Apply assertions to your existing smart contracts
 3. **Join the community**: Share your assertions and learn from others in the [Phylax Telegram](https://t.me/phylax_credible_layer)
 
