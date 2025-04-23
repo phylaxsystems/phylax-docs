@@ -1,11 +1,11 @@
 ---
-title: 'PCL Quickstart'
-description: 'A quickstart guide to using the PCL CLI'
+title: 'Credible Layer Quickstart'
+description: 'A quickstart guide to using the Credible Layer CLI'
 ---
 
 ## Introduction
 
-This guide will walk you through the process of creating, testing, and submitting an assertion using the PCL (Phylax Credible Layer) CLI. By the end of this tutorial, you'll understand how to:
+This guide will walk you through the process of creating, testing, and submitting an assertion using the `pcl` (Phylax Credible Layer) CLI. By the end of this tutorial, you'll understand how to:
 
 1. Set up your project structure
 2. Write a simple assertion
@@ -20,7 +20,7 @@ You can find the example used in this guide plus some additional examples in the
 
 Before you begin, make sure you have:
 
-- PCL CLI installed (see the [Installation Guide](credible/credible-install))
+- `pcl` CLI installed (see the [Installation Guide](credible/credible-install))
 - Solidity knowledge (basic understanding of contracts and functions)
 - A wallet for authentication (MetaMask or similar)
 - Taken a look at the [Assertion Guide](credible/pcl-assertion-guide) to understand the basics of assertions
@@ -62,7 +62,7 @@ credible-std/=lib/credible-std/src/
 forge-std/=lib/credible-std/lib/forge-std/src/
 ```
 
-These remappings will ensure that your imports work correctly when referencing the credible-std and forge-std libraries. The PCL CLI will automatically detect and use these remappings when compiling your contracts.
+These remappings will ensure that your imports work correctly when referencing the credible-std and forge-std libraries. The `pcl` CLI will automatically detect and use these remappings when compiling your contracts.
 
 Next, let's create the smart contract that our assertion will monitor. This is a simple `Ownable` contract that tracks ownership of a contract.
 
@@ -102,7 +102,7 @@ contract Ownable {
 
 ## 2. Writing Your First Assertion
 
-Assertions in PCL are Solidity contracts that inherit from the `Assertion` base contract. They define checks that can be run against smart contracts to verify specific properties.
+Assertions in the Credible Layer are Solidity contracts that inherit from the `Assertion` base contract. They define checks that can be run against smart contracts to verify specific properties.
 
 Let's create a simple assertion that checks if an `Ownable` contract's ownership has changed after a transaction.
 
@@ -223,7 +223,7 @@ contract TestOwnableAssertion is CredibleTest, Test {
 
 ## 4. Running Tests
 
-Use the PCL CLI to run your tests:
+Use the `pcl` CLI to run your tests:
 
 ```bash
 pcl test
@@ -248,7 +248,7 @@ If your tests fail, check for these common issues:
 - **State mismatch**: Make sure your test properly sets up the initial state
 - **Assertion logic**: Double-check the logic in your assertion function
 
-## 5. Authenticating with PCL
+## 5. Authenticating with Credible Layer
 
 Before submitting your assertion, you need to authenticate:
 
@@ -274,7 +274,7 @@ forge create \
 If authentication fails, ensure:
 - Your wallet has the correct network selected
 - You have an internet connection
-- The PCL CLI is properly installed
+- The `pcl` CLI is properly installed
 
 ## 6. Storing Your Assertion
 
@@ -312,7 +312,7 @@ You'll notice that there's one assertion ready for submission, go ahead and proc
 
 ## Conclusion
 
-Congratulations! You've successfully created, tested, and submitted your first assertion using the PCL CLI. You can now create more complex assertions to verify various properties of smart contracts.
+Congratulations! You've successfully created, tested, and submitted your first assertion using the Credible Layer CLI. You can now create more complex assertions to verify various properties of smart contracts.
 
 ### Next Steps
 
@@ -320,6 +320,6 @@ Congratulations! You've successfully created, tested, and submitted your first a
 2. **Integrate with your own projects**: Apply assertions to your existing smart contracts
 3. **Join the community**: Share your assertions and learn from others in the [Phylax Telegram](https://t.me/phylax_credible_layer)
 
-For more detailed information about the PCL CLI and its commands, see the [CLI Reference Guide](credible/pcl-reference-guide).
+For more detailed information about the Credible Layer CLI and its commands, see the [CLI Reference Guide](credible/pcl-reference-guide).
 
-For a comprehensive list of terms and concepts used in PCL, see the [Glossary](/credible/glossary).
+For a comprehensive list of terms and concepts used in the Credible Layer, see the [Glossary](/credible/glossary).
