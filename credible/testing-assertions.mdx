@@ -1,5 +1,6 @@
 ---
 title: Testing Assertions
+description: How to test assertions
 ---
 
 Testing assertions is very similar to writing regular Forge tests. If you're familiar with Forge testing, you'll feel right at home. You get access to all the same testing utilities:
@@ -9,9 +10,9 @@ Testing assertions is very similar to writing regular Forge tests. If you're fam
 - Console logging
 - Test setup with `setUp()` function
 
-## PCL Testing Interface
+## Credible Layer Testing Interface
 
-PCL extends Forge's testing capabilities with additional utilities specifically for testing assertions. Here's the key interface:
+The Credible Layer extends Forge's testing capabilities with additional utilities specifically for testing assertions. Here's the key interface:
 
 ```solidity
 contract CLTestEnv {
@@ -46,7 +47,7 @@ contract CLTestEnv {
 Here's how to use these utilities in your tests:
 
 ```solidity
-import { CredibleTest } from "@phylax/pcl/CredibleTest.sol";
+import { CredibleTest } from "credible-std/CredibleTest.sol";
 import { Test } from "forge-std/Test.sol";
 
 contract TestOwnableAssertion is Test, CredibleTest {
@@ -90,3 +91,61 @@ Key concepts:
 - Multiple assertions can be linked to the same contract
 
 This means you can leverage your existing Forge testing knowledge while using these additional features to verify your assertions work correctly.
+
+## Testing Patterns
+
+This section shows useful patterns that can be used when testing assertions.
+
+### Batch Operation Testing Pattern
+
+This pattern is used to test assertions that need to verify behavior across multiple operations in a single transaction. It involves creating a helper contract that performs multiple operations in its fallback function, allowing us to test the assertion's ability to track and validate the cumulative effect of these operations.
+
+#### Key Components:
+
+1. A helper contract with a fallback function that performs multiple operations
+2. Testing by calling the helper contract's fallback with empty calldata
+3. Verification of the final state after all operations
+
+#### Example Implementation:
+
+```solidity
+// Helper contract that performs multiple operations
+contract BatchOperations {
+    TargetContract public target;
+
+    constructor(address target_) {
+        target = TargetContract(target_);
+    }
+
+    fallback() external {
+        // Perform multiple operations in a single transaction
+        target.deposit(100);
+        target.deposit(200);
+        target.deposit(300);
+    }
+}
+
+// Test function
+function testMultipleOperations() public {
+    // Regular test setup and cl.addAssertion() omitted for brevity
+    
+    // Create helper contract
+    BatchOperations batch = new BatchOperations(address(target));
+
+    // Execute all operations in one transaction
+    cl.validate(
+        "AssertionLabel",
+        address(batch),
+        0,
+        new bytes(0) // Empty calldata triggers fallback
+    );
+}
+```
+
+#### Benefits:
+
+- Tests multiple operations in a single transaction
+- Verifies that assertions can track cumulative effects
+- More realistic testing of real-world scenarios
+
+This pattern is used in assertions like the [Sum of all positions](/assertions-book/assertions/ass08-sum-of-all-positions) to test how multiple operations affect intra-transaction state changes. It's particularly valuable for assertions that need to verify invariants across complex sequences of operations within a single transaction.

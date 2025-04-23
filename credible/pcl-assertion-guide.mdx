@@ -1,13 +1,13 @@
 ---
-title: 'PCL Assertion Guide'
-description: 'Write assertions and test them with the PCL'
+title: 'Assertion Guide'
+description: 'Write assertions and test them with the Credible Layer'
 ---
 
 ## Introduction
 
-The Phylax Credible Layer (PCL) is a security prevention framework that helps protect smart contracts by continuously verifying critical protocol invariants. PCL assertions act as automated guardians that detect, alert on, and prevent unauthorized state changes or invalid conditions in your protocol.
+The Credible Layer is a security prevention framework that helps protect smart contracts by continuously verifying critical protocol invariants. Assertions act as automated guardians that detect, alert on, and prevent unauthorized state changes or invalid conditions in your protocol.
 
-This guide assumes that you have already installed the PCL. If you haven't, please see the [PCL Quickstart](/credible/pcl-quickstart) for instructions.
+This guide assumes that you have already installed the Credible Layer. If you haven't, please see the [Credible Layer Quickstart](/credible/pcl-quickstart) for instructions.
 
 For a visual learners a video introduction to assertions is available:
 
@@ -22,9 +22,9 @@ For a visual learners a video introduction to assertions is available:
   allowfullscreen
 ></iframe>
 
-### Why Use PCL Assertions?
+### Why Use Assertions?
 
-Unlike traditional auditing or testing that only happens during development, PCL assertions:
+Unlike traditional auditing or testing that only happens during development, assertions:
 
 - Actively protect your protocol in real-time on the blockchain
 - Automatically detect and prevent violations of critical invariants 
@@ -35,7 +35,7 @@ We will use a simple ownership protocol as an example that demonstrates how to p
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.13;
 
 // Do not use this in production, it is just an example!!!
 contract Ownable {
@@ -75,39 +75,16 @@ To prevent such incidents, we can write an assertion that guards ownership chang
 
 ## 1. Setting Up Your Project
 
-### Project Structure
+For detailed instructions on setting up your Credible Layer project structure, please refer to the [Credible Layer Quickstart Guide](/credible/pcl-quickstart).
 
-When using PCL assertions, your project should follow this structure:
-```
-|-- assertions
-|    |-- src
-|    |    |-- OwnableAssertion.a.sol  # Assertion implementation
-|    |
-|    |-- test
-|         |-- OwnableAssertion.t.sol  # Tests for your assertions
-|-- src
-     |
-     |-- Ownable.sol  # Your protocol contract
-```
-
-The `phorge` command takes the `assertions` directory location as an argument and should be run from the project root containing both `assertions` and `src` directories.
-
-### Installing the credible-std Library
-
-Before writing assertions, you need to install the `credible-std` library which provides the base contracts and utilities for PCL assertions:
+Alternatively, you can quickly get started by cloning the Credible Layer starter repository:
 
 ```bash
-forge install https://github.com/phylaxsystems/credible-std/
+git clone https://github.com/phylaxsystems/credible-layer-starter
+cd credible-layer-starter
 ```
 
-After installation, create a `remappings.txt` file at the root of your project with the following content:
-
-```
-credible-std/=lib/credible-std/src/
-forge-std/=lib/credible-std/lib/forge-std/src/
-```
-
-These remappings will ensure that your imports work correctly when referencing the credible-std library. The PCL CLI will automatically detect and use these remappings when compiling your contracts, so no additional configuration is needed.
+This repository includes the necessary file structure, dependencies, and configuration for writing and testing assertions.
 
 ## 2. Writing the Assertion
 
@@ -115,7 +92,7 @@ Let's create our assertion in `OwnableAssertion.a.sol`. Here's the complete code
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol"; // Using remapping for credible-std
 import {Ownable} from "../../src/Ownable.sol"; // Ownable contract
@@ -222,7 +199,7 @@ function triggers() external view override {
 - `registerCallTrigger` specifically registers functions to be called after any interaction with the protected contract
 
 <Note>
-The PCL framework supports different trigger types. `registerCallTrigger` is used to run assertions after any transaction interacting with the protected contract. Other triggers can be implemented depending on your needs.
+The Credible Layer supports different trigger types. `registerCallTrigger` is used to run assertions after any transaction interacting with the protected contract. Other triggers can be implemented depending on your needs.
 See the "Triggers" section in the [cheatcodes documentation](/credible/cheatcodes) for more information.
 </Note>
 
@@ -241,7 +218,7 @@ function assertionOwnershipChange() external {
   - `ph.forkPostState()`: Examines state after the transaction
 - The assertion reverts if the condition is not met
 - The `ph` namespace refers to the Phylax Helper, which provides utility functions for assertions for more information see the [cheatcodes documentation](/credible/cheatcodes)
-- All assertion functions must be public or external to be callable by PCL
+- All assertion functions must be public or external to be callable by the Credible Layer
 
 ### Best Practices for Writing Assertions
 
@@ -256,7 +233,7 @@ Testing assertions is a critical step in developing effective security preventio
 To run the tests, you can use the following command:
 
 ```bash
-pcl phorge test
+pcl test
 ```
 
 Good assertion tests should:
@@ -265,6 +242,24 @@ Good assertion tests should:
 - Simulate realistic protocol interactions
 
 Let's break down how to test our assertion:
+
+### Test Imports
+
+```solidity
+import {OwnableAssertion} from "../src/OwnableAssertion.sol";
+import {Ownable} from "../../src/Ownable.sol";
+import {CredibleTest} from "credible-std/CredibleTest.sol";
+import {Test} from "forge-std/Test.sol";
+```
+
+Let's examine each import:
+
+- `OwnableAssertion`: This imports the assertion we created that we want to test
+- `Ownable`: Imports the protocol contract that our assertion is protecting
+- `CredibleTest`: Provides special testing utilities for assertion testing, including the `cl` cheatcode interface
+- `Test`: Standard testing base contract from Forge, providing utilities like `vm.prank` and `vm.expectRevert`
+
+These imports provide all the necessary components to test our assertion effectively, including access to both the assertion logic and the protocol being protected.
 
 ### Test Contract Structure
 
@@ -356,9 +351,8 @@ pragma solidity 0.8.28;
 
 import {OwnableAssertion} from "../src/OwnableAssertion.sol";
 import {Ownable} from "../../src/Ownable.sol";
-import {console} from "../../lib/credible-std/lib/forge-std/src/console.sol";
-import {CredibleTest} from "../../lib/credible-std/src/CredibleTest.sol";
-import {Test} from "../../lib/credible-std/lib/forge-std/src/Test.sol";
+import {CredibleTest} from "credible-std/CredibleTest.sol";
+import {Test} from "forge-std/Test.sol";
 
 contract TestOwnableAssertion is CredibleTest, Test {
     address public newOwner = address(0xdeadbeef);
@@ -410,12 +404,12 @@ contract TestOwnableAssertion is CredibleTest, Test {
 ### Running the Tests
 
 ```bash
-pcl phorge test
+pcl test
 ```
 
 ## Conclusion
 
-PCL assertions provide a powerful mechanism for protecting your protocol's state and preventing security violations in real-time. By implementing well-designed assertions, you can:
+Assertions provide a powerful mechanism for protecting your protocol's state and preventing security violations in real-time. By implementing well-designed assertions, you can:
 
 1. **Enhance Security**: Block unauthorized changes to critical protocol parameters
 2. **Eliminate Risk**: Prevent potential exploits before any damage occurs
