@@ -77,8 +77,8 @@ contract Ownable {
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-    constructor() {
-        _owner = address(0xdead);
+    constructor(address initialOwner) {
+        _owner = initialOwner;
         emit OwnershipTransferred(address(0), _owner);
     }
 
@@ -184,7 +184,7 @@ contract TestOwnableAssertion is CredibleTest, Test {
 
     // Set up the test environment
     function setUp() public {
-        assertionAdopter = new Ownable();
+        assertionAdopter = new Ownable(initialOwner);
         vm.deal(initialOwner, 1 ether);
     }
 
@@ -268,6 +268,7 @@ forge create \
        --rpc-url $RPC_URL \
        --private-key $PRIVATE_KEY_YOU_USED_TO_SIGN_IN_TO_DAPP \
        --broadcast \
+       --constructor-args $INITIAL_OWNER_ADDRESS \
        src/Ownable.sol:Ownable
 ```
 
