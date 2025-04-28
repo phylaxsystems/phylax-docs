@@ -49,6 +49,7 @@ Here's how to use these utilities in your tests:
 ```solidity
 import { CredibleTest } from "credible-std/CredibleTest.sol";
 import { Test } from "forge-std/Test.sol";
+import { OwnableAssertion } from "../src/OwnableAssertion.a.sol";
 
 contract TestOwnableAssertion is Test, CredibleTest {
     address public newOwner = address(0xdeadbeef);
@@ -89,6 +90,7 @@ Key concepts:
 - Use `cl.validate()` to test how assertions respond to transactions
 - No return value from `cl.validate()`, but you can use `vm.expectRevert()` to check if it reverts
 - Multiple assertions can be linked to the same contract
+- Use the `label` to specify the assertion contract name for easier debugging
 
 This means you can leverage your existing Forge testing knowledge while using these additional features to verify your assertions work correctly.
 
@@ -149,3 +151,15 @@ function testMultipleOperations() public {
 - More realistic testing of real-world scenarios
 
 This pattern is used in assertions like the [Sum of all positions](/assertions-book/assertions/ass08-sum-of-all-positions) to test how multiple operations affect intra-transaction state changes. It's particularly valuable for assertions that need to verify invariants across complex sequences of operations within a single transaction.
+
+### Protocol Mocking
+
+When testing assertions, it can be difficult to trigger the conditions that would cause an assertion to fail in a real protocol. This is because protocols are designed to be secure and prevent invalid states from occurring. Protocol mocking provides a solution by creating simplified versions of protocols that can be intentionally put into invalid states. For example, you might create a mock protocol that allows direct manipulation of balances or total supply to test if your assertion correctly catches these invalid states.
+
+#### Key Components:
+
+1. Create a mock protocol with simplified logic
+2. Test by intentionally putting the protocol into an invalid state
+3. Verify that the assertion correctly catches the invalid state
+
+You can see examples of mock protocols in the [Assertion Examples](https://github.com/phylaxsystems/assertion-examples/tree/main/src) repository.
