@@ -3,7 +3,7 @@ title: 'Install PCL'
 description: 'This page explains how to install the Phylax Credible Layer (PCL) CLI'
 ---
 
-The PCL (Phylax Credible Layer) CLI is a command-line tool for interacting with the Phylax Credible Layer.
+The `pcl` (Phylax Credible Layer) CLI is a command-line tool for interacting with the Phylax Credible Layer.
 
 ## Prerequisites
 
@@ -14,7 +14,19 @@ Before installing PCL, ensure you have the following installed:
 
 ## Installation
 
-### Option 1: Build from Source
+### Option 1: Install with Cargo (Recommended)
+
+The fastest and easiest way to install `pcl` is using Cargo:
+
+```bash
+cargo install --git https://github.com/phylaxsystems/pcl
+```
+
+This will install the `pcl` binary in your Cargo installation directory (typically `~/.cargo/bin` on Unix-like systems). Make sure this directory is in your PATH.
+
+### Option 2: Build from Source
+
+This option is recommended if you want more control over the build process or prefer to build from source.
 
 1. Clone the repository:
    ```bash
@@ -46,7 +58,7 @@ Before installing PCL, ensure you have the following installed:
    alias pcl="/path/to/pcl/target/release/pcl"
    ```
 
-### Option 2: Download Pre-built Binary
+### Option 3: Download Pre-built Binary
 
 Pre-built binaries are available for download from the [GitHub releases page](https://github.com/phylaxsystems/pcl/releases).
 
@@ -71,14 +83,14 @@ For example, on Mac, it might be named `pcl-aarch64-apple`.
 
 ## Verifying Installation
 
-To verify that PCL is installed correctly, run:
+To verify that `pcl` is installed correctly, run:
 
 ```bash
 pcl --version
 ```
 
-You should see the version number of the installed PCL CLI.
+You should see the version number of the installed `pcl` CLI.
 
 ## Next Steps
 
-Now that you have PCL installed, you can learn how to [get started](/credible/pcl-quickstart) with the Credible Layer.
+Now that you have `pcl` installed, you can learn how to [get started](/credible/pcl-quickstart) with the Credible Layer.
