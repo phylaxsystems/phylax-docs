@@ -1,0 +1,180 @@
+---
+title: 'Assertion Patterns'
+description: 'Common patterns and best practices for writing assertions'
+---
+
+## Layered Invariant Checking
+
+A common pattern in assertion writing is to first perform simple, cheap checks before moving on to more complex validations. This approach is particularly important when dealing with potential flash loan attacks or other sophisticated manipulations where values might be temporarily changed and then restored to their original state.
+
+### Pattern Overview
+
+The layered approach follows this general structure:
+
+1. **Simple State Check**
+   - Use `forkPreState()` and `forkPostState()` to compare values
+   - Check basic invariants that should hold true
+   - Fail fast if basic invariants are violated
+   - This is the cheapest and most straightforward check
+
+2. **Call Stack Inspection** (if needed)
+   - Only performed if simple checks pass
+   - Use `getStateChanges()` or `getCallInputs()` to inspect the entire callstack
+   - Look for sophisticated manipulations where values are changed and then restored
+   - More expensive but provides deeper security guarantees
+
+### Example: Owner Change Assertion
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
+
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+interface IOwnable {
+    function owner() external view returns (address);
+}
+
+contract OwnerChangeAssertion is Assertion {
+    IOwnable public target = IOwnable(address(0xbeef));
+    
+    function triggers() external view override {
+        // Register trigger for changes to the owner storage slot
+        registerStorageChangeTrigger(this.assertOwnerChange.selector, bytes32(uint256(0))); // Assuming owner in slot 0
+    }
+    
+    function assertOwnerChange() external {
+        // Layer 1: Simple State Check
+        // Check if owner changed between pre and post state
+        ph.forkPreState();
+        address preOwner = target.owner();
+
+        ph.forkPostState();
+        address postOwner = target.owner();
+        
+        require(preOwner == postOwner, "Owner changed");
+        
+        // Layer 2: Call Stack Inspection
+        // Check if owner was changed at any point in the callstack and returned to its original state 
+        // at the end of the transaction making it look like the owner didn't change
+        address[] memory changes = getStateChangesAddress(address(target), bytes32(uint256(0)));
+        
+        for (uint256 i = 0; i < changes.length; i++) {
+            require(changes[i] == preOwner, "Owner changed");
+        }
+    }
+}
+```
+
+This example demonstrates:
+
+1. **Simple State Check**
+   - Uses `forkPreState()` and `forkPostState()` to check if the owner changed
+   - Reverts immediately if a change is detected, enforcing the basic invariant
+   - This is the cheapest and most straightforward check
+
+2. **Call Stack Inspection**
+   - Uses `getStateChangesAddress()` to inspect all owner changes in the callstack
+   - Verifies that no unauthorized changes occurred at any point in the transaction
+   - Provides additional security against sophisticated attacks where the owner is changed and then changed back
+
+### When to Use
+
+This pattern is particularly useful when:
+- You're checking that an invariant holds throughout a transaction
+- You want to be efficient by only doing thorough callstack checks when necessary
+- There's a risk that values can be manipulated in the callstack and returned to their original state at the end of the transaction (e.g. flash loans)
+
+## Trigger Patterns
+
+Effective assertion writing involves using the right triggers for the right situations. Different triggers provide different guarantees and should be chosen based on the specific invariant you're trying to enforce.
+
+### Storage Change Triggers
+
+Storage change triggers are ideal when you need to monitor specific storage slots for changes, regardless of what function caused the change. This is useful when:
+
+- You want to check if a specific value is changed by any transaction
+- You don't care which functions trigger the changes
+- You need to catch all modifications to a particular storage slot
+
+### Call Input Triggers
+
+Call input triggers are useful when you need to monitor specific function calls. This is ideal when:
+
+- You only want to run assertions when specific functions are called
+- You need to verify behavior of particular protocol operations
+- You want to check function parameters and their effects
+
+## Verifying Mapping Totals
+
+A common requirement in protocol security is verifying that the sum of all individual values in a mapping equals a total value tracked by the protocol. For example:
+
+- In a lending protocol, ensuring the sum of all user deposits equals the total supply
+- In a staking protocol, verifying that all staked amounts sum to the total staked supply
+- In a liquidity pool, checking that all LP positions sum to the total pool value
+
+### The Challenge
+
+The fundamental challenge is that Solidity doesn't provide a way to iterate through all entries in a mapping. This means we can't directly:
+- Sum up all values in a mapping
+- Verify that every entry matches its expected value
+- Check that no entries are missing or duplicated
+
+### Solution Approach
+
+Instead of trying to iterate through the mapping, we use an inductive approach based on function call inputs:
+
+1. Capture the pre-state total value (e.g., total supply) before the transaction
+2. Execute the transaction
+3. Identify all function calls that modify the mapping values (e.g., deposit, withdraw)
+4. Calculate the sum of changes to these values
+5. Verify that the new total equals the pre-state total plus the sum of changes
+
+This pattern is particularly useful for assertions like [Sum of all positions](/assertions-book/assertions/ass08-sum-of-all-positions) where you need to verify that all balance changes are properly accounted for.
+
+### Implementation Details
+
+The implementation relies on tracking function calls that modify the mapping:
+
+1. Use `getCallInputs()` to track all function calls that modify the mapping
+2. Calculate the delta for each modified position
+3. Sum these deltas to verify they match the expected total change
+
+This approach effectively verifies that the protocol's accounting remains consistent across all operations. For a detailed breakdown of what direct iteration would look like, see the [Modified Keys](/credible/use-case-mappings/unsupported-use-cases/modified-keys) documentation.
+
+### When to Use
+
+This pattern is particularly useful when:
+- You need to verify that the sum of all individual values matches a total
+- You need to track changes across multiple function calls
+- You want to ensure no values are double-counted or missed
+- You need to verify protocol accounting integrity
+
+## Pre- and Post-State Considerations
+
+Not all assertions require checking both pre- and post-state. Understanding when to use each can make your assertions more efficient.
+If neither `ph.forkPreState()` nor `ph.forkPostState()` are used the state is `ph.forkPostState()` by default.
+
+### When to Use Pre-State
+
+- When you need to compare values before and after a transaction
+- When you need a specific state to build on top of to ensure that the invariant holds
+- When verifying that certain values remain constant
+
+### When to Skip Pre-State
+
+- When you only care about final values
+- When checking conditions that only matter after execution
+- When the pre-state is irrelevant to your invariant
+
+## Extending Assertions
+
+When new functionality is added to a protocol, you can create new assertions that cover the new functionality and deploy them alongside the original assertions. This allows you to:
+
+- Keep the original assertions active for existing functionality
+- Add new assertions for new features without modifying existing code
+- Maintain clear separation of concerns between different protocol features
+- Easily enable/disable assertions for specific protocol functions
+
+This approach maintains modularity while allowing for easy extension of assertion coverage as the protocol evolves.
