@@ -250,12 +250,15 @@ If your tests fail, check for these common issues:
 
 ## 5. Authenticating with Credible Layer
 
+Here's a full video that you can consult to follow along with the process entire process from authentication to activating the assertion:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/MrDVLp5UDZ0?si=tdgQEJ3Tkps2LwJA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 Before submitting your assertion, you need to authenticate:
 
 ```bash
 pcl auth login
 ```
-
 
 This will provide you with with a URL and an authentication code that you can use to authenticate with the Credible Layer.
 
@@ -310,6 +313,34 @@ Last step is to go to the dApp and activate the assertion. Go back to the url th
 ![Project Page](/images/project-1-assertion-submission-dapp.png)
 
 You'll notice that there's one assertion ready for submission, go ahead and proceed to review and activate it.
+
+## 9. Verify That The Assertion Is Working
+
+Now that your assertion is activated, let's verify that it's working as expected. We'll do this by attempting to change the ownership of the contract, which should trigger our assertion and prevent the change.
+
+First, let's check the current owner of the Ownable contract. Replace `$ADDRESS_OF_OWNABLE_CONTRACT` with the address of your deployed Ownable contract and `$RPC_URL` with your network's RPC URL:
+
+```bash
+cast call $ADDRESS_OF_OWNABLE_CONTRACT "owner()" --rpc-url $RPC_URL
+```
+
+This command should return the initial owner address that was set when we deployed the contract.
+
+Next, let's attempt to transfer ownership to a new address. This transaction should trigger our assertion and revert:
+
+```bash
+cast send $ADDRESS_OF_OWNABLE_CONTRACT "transferOwnership(address)" $NEW_OWNER_ADDRESS --rpc-url $RPC_URL --private-key $PRIVATE_KEY_OF_THE_OWNER
+```
+
+The transaction should fail silently as the assertion prevents the ownership change. You might not see an explicit error message, but the important thing is that the transaction doesn't succeed - this is the expected behavior since our assertion is designed to prevent ownership changes.
+
+To confirm that the ownership hasn't changed, let's check the owner again:
+
+```bash
+cast call $ADDRESS_OF_OWNABLE_CONTRACT "owner()" --rpc-url $RPC_URL
+```
+
+The owner should still be the original address, confirming that our assertion successfully prevented the ownership change.
 
 ## Conclusion
 
