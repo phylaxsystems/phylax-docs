@@ -1,0 +1,78 @@
+---
+title: DApp Overview
+description: An overview of the Credible Layer dApp features and functionality
+---
+
+The Credible Layer dApp provides a comprehensive interface for managing smart contract projects and their associated assertions. It serves as the primary platform for:
+- Creating and managing projects
+- Linking and managing assertions
+- Monitoring assertion status and insights
+- Exploring projects and their security measures
+
+The dApp's explorer feature enables users to quickly assess a project's security posture by viewing its linked assertions before interacting with it.
+
+In this overview we'll walk through the process of authenticating with the dApp, creating a project and linking assertions to it.
+
+## Prerequisites
+
+A local development environment with the Credible Layer CLI (`pcl`) installed. If you don't have one set up yet, you can follow the [pcl quickstart guide](/credible/pcl-quickstart) to get started.
+
+## Core Features
+
+### Project Explorer
+The dApp's explorer feature enables users to search for and analyze projects and their associated assertions. To access the explorer and see details about projects:
+1. Click the "Explorer" tab in the navigation bar
+2. Browse all projects on the Credible Layer
+3. Search for specific projects by name or address
+4. View detailed information about linked assertions
+
+![Explorer](/images/explorer_screenshot_dapp.png)
+
+### Project Management
+
+#### Creating a Project
+To create a new project:
+1. Navigate to the "Projects" tab
+2. Click "Create a project"
+3. Enter project details:
+   - Project Name (typically matching your smart contract/protocol)
+   - Project Description
+   - Target Chain
+4. Click "Continue to contract selection"
+5. Add one or more contract addresses
+6. Review and publish the project
+
+![Create Project](/images/create_project_dapp.gif)
+
+#### Linking Assertions
+To link assertions to your project:
+1. Store the assertion using the CLI:
+   ```bash
+   pcl store <assertion-name>
+   ```
+2. Submit the assertion to your project:
+   ```bash
+   pcl submit -a <assertion-name> -p <project-name>
+   ```
+3. In the dApp:
+   - Navigate to your project dashboard
+   - Go to "Ready for Submission" tab
+   - Click "Proceed to Review"
+   - Select target contract
+   - Review and deploy the assertion
+
+![Linking Assertion](/images/linking_assertion_dapp.gif)
+
+### Authentication
+Before using the dApp, you must authenticate through the `pcl` CLI:
+1. Run the authentication command:
+   ```bash
+   pcl auth login
+   ```
+2. Follow the provided login link
+3. Connect your wallet
+4. Enter the login code from the CLI
+
+![Authentication Flow](/images/authenticate_dapp.gif)
+
+For more details about the `pcl` CLI, refer to the [pcl reference](/credible/pcl-reference-guide).
