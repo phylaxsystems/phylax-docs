@@ -1,6 +1,6 @@
 ---
 title: 'Credible Layer Quickstart'
-description: 'A quickstart guide to using the Credible Layer CLI'
+description: 'A quickstart guide to writing assertions and using the Credible Layer CLI'
 ---
 
 ## Introduction
@@ -13,8 +13,19 @@ This guide will walk you through the process of creating, testing, and submittin
 4. Authenticate with `pcl`
 5. Store your assertion
 6. Submit your assertion to the Credible Layer
+7. Activate your assertion
 
-You can find the example used in this guide plus some additional examples in the [pcl](https://github.com/phylaxsystems/pcl/tree/main/testdata/mock-protocol) repository.
+We've created an example project with the content of this guide that you can use to follow along and use as a starting point for your own projects.
+The project can be found [here](https://github.com/phylaxsystems/credible-layer-starter).
+
+You can clone the example project by running the following command:
+
+```bash
+git clone --recurse-submodules https://github.com/phylaxsystems/credible-layer-starter.git
+cd credible-layer-starter
+```
+
+You can jump directly to the [Running Tests](#4-running-tests) section if you have the example project cloned and `pcl` installed.
 
 ## Prerequisites
 
