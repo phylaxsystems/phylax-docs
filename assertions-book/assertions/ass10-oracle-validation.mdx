@@ -23,6 +23,10 @@ For example, if an oracle hasn't been updated for an extended period, it could i
 - Insurance protocols that need current market data for premium calculations
 - Options and derivatives protocols that require precise price feeds for settlement
 
+### Related Hacks
+Hacks that are related to this assertion and that most likely could have been prevented by using an assertion like this:
+- [Loopscale](https://rekt.news/loopscale-rekt): Hack caused by a stale oracle. It was on Solana, so not relevant to Credible Layer, but the same idea applies.
+
 ## Explanation
 The assertion monitors the timestamp of the last update to an oracle contract when critical protocol functions like swaps are called.
 
