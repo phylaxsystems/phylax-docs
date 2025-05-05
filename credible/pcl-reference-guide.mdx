@@ -97,20 +97,38 @@ Note: The `pcl test` command is a fork of Forge's `test` command so all function
 
 Submit Assertion bytecode and source code to the Assertion DA.
 
+Be aware that if your assertion contract has constructor arguments, you need to pass them to the `pcl store` command.
+
 ```bash
-pcl store [OPTIONS] <ASSERTION>
+pcl store [OPTIONS] <ASSERTION_CONTRACT> [CONSTRUCTOR_ARGS]...
 
 Arguments:
-  <ASSERTION>  Name of the assertion contract to submit
+  <ASSERTION_CONTRACT>   Name of the assertion contract to build and flatten
+  [CONSTRUCTOR_ARGS]...  Constructor arguments for the assertion contract
 
 Options:
-      --url <URL>  URL of the assertion-DA [env: PCL_DA_URL=] [default: http://localhost:5001]
-  -h, --help       Print help
+  -u, --url <URL>        URL of the assertion-DA server [default: http://localhost:5001]
+  -r, --root <ROOT>      Root directory of the project
+  -h, --help             Print help (see a summary with '-h')
 ```
+
+Example of an assertion contract that takes the address of the smart contract it protects as a constructor argument:
+
+```bash
+pcl store MyAssertion 0xADDRESS_OF_SMART_CONTRACT
+```
+
+<Note>
+You can also hardcode the address of the smart contract it protects in the assertion contract, but you lose the flexibility of being able to use the same assertion for different smart contracts.
+</Note>
 
 ### submit
 
 Submit assertions to the Credible Layer dApp.
+
+If you have provided a constructor argument when storing the assertion, you need to provide it when submitting the assertion.
+
+If no options are provided, the command will prompt interactively to select the project and assertion(s).
 
 ```bash
 pcl submit [OPTIONS]
@@ -118,12 +136,16 @@ pcl submit [OPTIONS]
 Options:
   -u, --dapp-url <DAPP_URL>                 Base URL for the Credible Layer dApp API [default: http://localhost:3003/api/v1]
   -p, --project-name <PROJECT_NAME>         Optional project name to skip interactive selection
-  -a, --assertion-name <ASSERTION_NAME>...  Optional list of assertion names to skip interactive selection
+  -a, --assertion-keys <ASSERTION_KEYS>     Optional list of assertion name and constructor args to skip interactive selection
+                                            Format: assertion_name OR 'assertion_name(constructor_arg0,constructor_arg1)'
   -h, --help                                Print help
 ```
 
-If not specified, the command will prompt interactively to select the project and assertion(s).
+Example:
 
+```bash
+pcl submit -a 'MyAssertion(0xADDRESS_OF_SMART_CONTRACT)' -p my-project
+```
 
 ## Examples
 
@@ -137,24 +159,13 @@ pcl auth login
 pcl auth status
 
 # Store assertion
-pcl store my_assertion
+pcl store my_assertion 0xADDRESS_OF_SMART_CONTRACT
 
 # Submit to dApp
-pcl submit -a my_assertion -p my_project
+pcl submit -a 'my_assertion(0xADDRESS_OF_SMART_CONTRACT)' -p my_project
 
 # Logout when done
 pcl auth logout
-```
-
-### Development Workflow
-
-```bash
-# Run tests
-pcl test
-
-# Store and submit assertion
-pcl store my_assertion
-pcl submit -a my_assertion -p my_project
 ```
 
 ## Troubleshooting
@@ -170,3 +181,4 @@ pcl submit -a my_assertion -p my_project
 - **Error: Failed to submit**: Ensure you're authenticated and have network connectivity
 - **Error: Project not found**: Create a project in the Credible Layer dApp first
 - **Error: Assertion not found**: Ensure the assertion name is correct and exists in your project
+- Make sure to provide constructor arguments when storing the assertion if it has any
