@@ -168,7 +168,7 @@ contract OwnableAssertion is Assertion {
 ### Key Components of an Assertion:
 
 1. **Inheritance**: All assertions must inherit from the `Assertion` base contract.
-2. **Constructor**: Initialize references to the contracts you want to monitor.
+2. **Constructor**: Initialize references to the contract you want to monitor. You can hardcode the address of the contract you want to monitor in the assertion contract, but you lose the flexibility of being able to use the same assertion for different smart contracts.
 3. **Triggers Function**: Register which assertion functions should be triggered.
 4. **Assertion Functions**: Implement the actual checks using pre and post transaction states.
 
@@ -202,7 +202,7 @@ contract TestOwnableAssertion is CredibleTest, Test {
     // Test case: Ownership changes should trigger the assertion
     function test_assertionOwnershipChanged() public {
         address aaAddress = address(assertionAdopter);
-        string memory label = "Ownership has changed";
+        string memory label = "OwnableAssertion";
 
         // Associate the assertion with the protocol
         // cl will manage the correct assertion execution when the protocol is called
@@ -218,7 +218,7 @@ contract TestOwnableAssertion is CredibleTest, Test {
 
     // Test case: No ownership change should pass the assertion
     function test_assertionOwnershipNotChanged() public {
-        string memory label = "Ownership has not changed";
+        string memory label = "OwnableAssertion";
         address aaAddress = address(assertionAdopter);
 
         cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
@@ -296,10 +296,12 @@ If authentication fails, ensure:
 Next, store your assertion in the Assertion Data Availability layer (Assertion DA):
 
 ```bash
-pcl store OwnableAssertion
+pcl store OwnableAssertion 0xADDRESS_OF_OWNABLE_CONTRACT
 ```
 
 This command submits your assertion's bytecode and source code to be stored by the Assertion DA, making it available for verification by the network.
+
+If your assertion contract has a constructor argument, you need to provide it when storing the assertion.
 
 ## 7. Submitting Your Assertion
 
@@ -314,7 +316,7 @@ This will prompt you to select the project and assertion(s) you want to submit. 
 Alternatively, you can specify the project and assertion directly as per the output of the `pcl store` command:
 
 ```bash
-pcl submit -a OwnableAssertion -p <project_name>
+pcl submit -a 'OwnableAssertion(0xADDRESS_OF_OWNABLE_CONTRACT)' -p <project_name>
 ```
 
 ## 8. Activating Your Assertion
@@ -343,7 +345,11 @@ Next, let's attempt to transfer ownership to a new address. This transaction sho
 cast send $ADDRESS_OF_OWNABLE_CONTRACT "transferOwnership(address)" $NEW_OWNER_ADDRESS --rpc-url $RPC_URL --private-key $PRIVATE_KEY_OF_THE_OWNER
 ```
 
-The transaction should fail silently as the assertion prevents the ownership change. You might not see an explicit error message, but the important thing is that the transaction doesn't succeed - this is the expected behavior since our assertion is designed to prevent ownership changes.
+The transaction should timeout after about 2 minutes which means that the assertion reverted the transaction:
+
+```bash
+Error: transaction was not confirmed within the timeout
+```
 
 To confirm that the ownership hasn't changed, let's check the owner again:
 
@@ -355,7 +361,7 @@ The owner should still be the original address, confirming that our assertion su
 
 ## Conclusion
 
-Congratulations! You've successfully created, tested, and submitted your first assertion using the Credible Layer CLI. You can now create more complex assertions to verify various properties of smart contracts.
+Congratulations! You've successfully created, tested, activated and verified your first assertion using the Credible Layer CLI. You can now go ahead and start implementing assertions in your own projects.
 
 ### Next Steps
 

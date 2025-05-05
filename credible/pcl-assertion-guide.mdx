@@ -163,21 +163,10 @@ constructor(address ownable_) {
     ownable = Ownable(ownable_);
 }
 ```
-- State variables store the addresses of contracts we need to interact with
-- The constructor initializes these variables when the assertion is deployed
-- The constructor is optional, you don't need to implement it if you don't need to pass any values to the assertion
-- Optimization: In most cases using immutable to define the address of the protocol is more efficient
-
-Here's how you would implement the optimized version with immutable:
-
-```solidity
-// More gas-efficient implementation using immutable
-Ownable immutable ownable;
-
-constructor(address ownable_) {
-    ownable = Ownable(ownable_);
-}
-```
+- State variables store the address of contract the assertion is protecting
+- The constructor initializes this variable when the assertion is deployed
+- The constructor is optional, but it is recommended to use this approach to have more flexibility and be able to use the same assertion to protect different contracts
+- You can hardcode the address of the contract you want to protect in the assertion contract, but this only makes sense if you are sure that the assertion will only be used with that one contract and you want to safe a bit of gas
 
 <Note>
 The constructor of the assertion runs against an empty state. That means you can pass values in the constructor but you can not read values from other contracts.
