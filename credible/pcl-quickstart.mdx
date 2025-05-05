@@ -345,7 +345,7 @@ Next, let's attempt to transfer ownership to a new address. This transaction sho
 cast send $ADDRESS_OF_OWNABLE_CONTRACT "transferOwnership(address)" $NEW_OWNER_ADDRESS --rpc-url $RPC_URL --private-key $PRIVATE_KEY_OF_THE_OWNER
 ```
 
-The transaction should eventually timeout which means that the assertion reverted the transaction:
+The transaction should timeout after about 2 minutes which means that the assertion reverted the transaction:
 
 ```bash
 Error: transaction was not confirmed within the timeout
