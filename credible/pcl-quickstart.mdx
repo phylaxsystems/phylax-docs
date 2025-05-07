@@ -14,6 +14,19 @@ This guide will walk you through the process of creating, testing, and submittin
 5. Store your assertion
 6. Submit your assertion to the Credible Layer
 7. Activate your assertion
+8. Verify that the assertion is working
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- `pcl` CLI installed (see the [Installation Guide](credible/credible-install))
+- Solidity compiler [installed](https://docs.soliditylang.org/en/latest/installing-solidity.html)
+- Foundry installed (see the [Foundry Installation Guide](https://book.getfoundry.sh/getting-started/installation))
+- A browser wallet for authentication (MetaMask or similar)
+- Protocol smart contracts deployed to write assertions for OR access to a testnet that you can deploy smart contracts to
+
+## 0. Lazy Mode
 
 We've created an example project with the content of this guide that you can use to follow along and use as a starting point for your own projects.
 The project can be found [here](https://github.com/phylaxsystems/credible-layer-starter).
@@ -26,17 +39,6 @@ cd credible-layer-starter
 ```
 
 You can jump directly to the [Running Tests](#4-running-tests) section if you have the example project cloned and `pcl` installed.
-
-## Prerequisites
-
-Before you begin, make sure you have:
-
-- `pcl` CLI installed (see the [Installation Guide](credible/credible-install))
-- Solidity knowledge (basic understanding of contracts and functions)
-- A wallet for authentication (MetaMask or similar)
-- Taken a look at the [Assertion Guide](credible/pcl-assertion-guide) to understand the basics of assertions
-- Foundry installed (see the [Foundry Installation Guide](https://book.getfoundry.sh/getting-started/installation))
-- Protocol smart contracts deployed to write assertions for OR access to a testnet that you can deploy smart contracts to
 
 ## 1. Project Setup
 
@@ -58,12 +60,22 @@ Next, in order to make sure that forge works correctly, we need to the root fold
 git init
 ```
 
+### Installing forge-std
+
+Next, we need to install forge-std as a project dependency:
+
+```bash
+forge install foundry-rs/forge-std --no-commit
+```
+
+This will add forge-std as a dependency to your project, which is required for running tests and managing dependencies.
+
 ### Installing the credible-std Library
 
 Next, you need to install the [`credible-std` library](credible/credible-std-overview), which provides the base contracts and utilities for writing assertions:
 
 ```bash
-forge install credible-std=https://github.com/phylaxsystems/credible-std/
+forge install credible-std=https://github.com/phylaxsystems/credible-std/ --no-commit
 ```
 
 After installation, create a `remappings.txt` file at the root of your project with the following content:
