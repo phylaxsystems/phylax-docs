@@ -24,7 +24,7 @@ Invariant:
 
 ```solidity
 function assertionIsSolvent() public view {
-  require(visr.balanceOf(address(assertionAdopter)) >= vvisr.totalSupply(), "Reward tokens are undercollateralized");
+    require(visr.balanceOf(address(adopter)) >= vvisr.totalSupply(), "Reward tokens are undercollateralized");
 }
 ```
 
@@ -34,15 +34,15 @@ The assertion could be triggered by a call to the deposit function.
 ```solidity
 function assertion_triggerDeposit_remainsSolvent() public view {
 
-  uint256 postBalanceCollateral = visr.balanceOf(address(adopter));
-  uint256 postTotalSupplyRewards = vvisr.totalSupply();
-  uint256 postRatio = postBalanceCollateral / postTotalSupplyRewards;
-  ph.forkPreState();
+    uint256 postBalanceCollateral = visr.balanceOf(address(adopter));
+    uint256 postTotalSupplyRewards = vvisr.totalSupply();
+    uint256 postRatio = postBalanceCollateral / postTotalSupplyRewards;
+    ph.forkPreState();
 
-  uint256 preBalanceCollateral = visr.balanceOf(address(adopter));
-  uint256 preTotalSupplyRewards = vvisr.totalSupply();
-  uint256 preRatio = preBalanceCollateral / preTotalSupplyRewards;
+    uint256 preBalanceCollateral = visr.balanceOf(address(adopter));
+    uint256 preTotalSupplyRewards = vvisr.totalSupply();
+    uint256 preRatio = preBalanceCollateral / preTotalSupplyRewards;
 
-  require(preRatio == postRatio, "Reward tokens are undercollateralized");
+    require(preRatio == postRatio, "Reward tokens are undercollateralized");
 }
 ```

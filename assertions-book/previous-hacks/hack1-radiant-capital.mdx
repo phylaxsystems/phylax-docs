@@ -39,12 +39,10 @@ contract LendingPoolAddressesProviderAssertions is Assertion {
     ILendingPoolAddressesProvider public lendingPoolAddressesProvider =
         ILendingPoolAddressesProvider(0x091d52CacE1edc5527C99cDCFA6937C1635330E4); //arbitrum
 
-    function fnSelectors() external pure override returns (Trigger[] memory) {
-        Trigger[] memory triggers = new Trigger[](3);
-        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionOwnerChange.selector);
-        triggers[1] = Trigger(TriggerType.STORAGE, this.assertionEmergencyAdminChange.selector);
-        triggers[2] = Trigger(TriggerType.STORAGE, this.assertionPoolAdminChange.selector);
-        return triggers;
+    function triggers() external view override {
+        registerCallTrigger(this.assertionOwnerChange.selector, lendingPoolAddressesProvider.owner.selector);
+        registerCallTrigger(this.assertionEmergencyAdminChange.selector, lendingPoolAddressesProvider.getEmergencyAdmin.selector);
+        registerCallTrigger(this.assertionPoolAdminChange.selector, lendingPoolAddressesProvider.getPoolAdmin.selector);
     }
 
     // Check if the owner has changed
