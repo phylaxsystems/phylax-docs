@@ -47,29 +47,24 @@ interface IVestraDAO {
     function unStake(uint8 maturity) external;
 }
 
-// TODO: Explain the assertion
 contract VestraDAOHack is Assertion {
     IVestraDAO public vestraDAO = IVestraDAO(address(0xbeef));
 
-    function fnSelectors() external pure override returns (Trigger[] memory) {
-        Trigger[] memory triggers = new Trigger[](1); // Define the number of triggers
-        triggers[0] = Trigger(TriggerType.STORAGE, this.assertionExample.selector); // Define the trigger
-        return triggers;
+    function triggers() external view override {
+        registerCallTrigger(this.assertionExample.selector, vestraDAO.unStake.selector);
     }
 
     // Check if the user has already unstaked for a maturity
-    // return true indicates a valid state
-    // return false indicates an invalid state
-    function assertionExample() external returns (bool) {
+    function assertionExample() external {
         ph.forkPostState();
-        (address from, , , bytes memory data) = ph.getTransaction(); // TODO: Check if this works once we have the cheatcode
-        bytes4 functionSelector = bytes4(data[:4]);
-        if (functionSelector != vestraDAO.unStake.selector) {
-            return true; // Skip the assertion if the function is not withdrawCollateral
+        PhEvm.CallInputs[] memory unStakes = ph.getCallInputs(address(vestraDAO), vestraDAO.unStake.selector);
+
+        for (uint256 i = 0; i < unStakes.length; i++) {
+            uint8 maturity = abi.decode(unStakes[i].input.maturity, (uint8));
+            address from = unStakes[i].caller;
+            IVestraDAO.Stake storage user = vestraDAO.stakes[from][maturity];
+            require(user.isActive, "User has already unstaked for this maturity");
         }
-        uint8 maturity = abi.decode(data[4:], (uint8));
-        IVestraDAO.Stake storage user = vestraDAO.stakes[from][maturity];
-        return user.isActive;
     }
 }
 ```

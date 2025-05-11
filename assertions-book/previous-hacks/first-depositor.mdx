@@ -50,8 +50,8 @@ Traditional prevention :
 
 ```solidity
 function assertionHasMinimumSupply() public view {
-  Market market = Market(address(0x1234));
-  require(market.totalSupply() > MINIMUM_SUPPLY, "Market has no supply");
+    Market market = Market(address(0x1234));
+    require(market.totalSupply() > MINIMUM_SUPPLY, "Market has no supply");
 }
 ```
 
@@ -59,15 +59,15 @@ function assertionHasMinimumSupply() public view {
 
 ```solidity
 function assertionExchangeRate() public view {
-  Market market = Market(address(0x1234));
+    Market market = Market(address(0x1234));
 
 
-  PhEvm.CallInputs[] memory inputs = PhEvm.CallInputs(address(cToken),abi.encodeWithSelector(cToken.mint.selector));
+    PhEvm.CallInputs[] memory inputs = PhEvm.CallInputs(address(cToken),abi.encodeWithSelector(cToken.mint.selector));
 
-  for (uint256 i = 0; i < inputs.length; i++) {
-    PhEvm.CallInputs memory input = inputs[i];
-    (address target, uint256 amount) = abi.decode(input.data, (address, uint256));
-    require(amount / market.exchangeRate() > 0, "Did not receive any shares");
-  }
+    for (uint256 i = 0; i < inputs.length; i++) {
+        PhEvm.CallInputs memory input = inputs[i];
+        (address target, uint256 amount) = abi.decode(input.data, (address, uint256));
+        require(amount / market.exchangeRate() > 0, "Did not receive any shares");
+    }
 }
 ```
