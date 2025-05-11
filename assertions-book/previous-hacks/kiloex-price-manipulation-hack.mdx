@@ -1,0 +1,78 @@
+---
+title: KiloEx Price Oracle Manipulation
+description: Access control vulnerability in price oracle implementation led to $7.5M loss across multiple chains
+---
+
+import ass28IntraTxOracleDeviation from "/snippets/ass28-intra-tx-oracle-deviation.a.mdx";
+
+## Description
+
+The vulnerability stemmed from a critical access control flaw in KiloEx's price oracle implementation:
+
+- The protocol used a chain of contracts for price updates:
+  - KiloPriceFeed: Main oracle contract
+  - Keeper: Contract responsible for price updates
+  - PositionKeeper: Contract managing positions
+  - MinimalForwarder: Contract handling transaction forwarding
+
+- The access control chain was implemented as follows:
+  - KiloPriceFeed trusted Keeper
+  - Keeper trusted PositionKeeper
+  - PositionKeeper trusted MinimalForwarder
+  - MinimalForwarder had no access controls
+
+**Attack Mechanism:**
+1. The attacker exploited the MinimalForwarder's lack of access controls
+2. They were able to forge signatures and bypass the entire access control chain
+3. This allowed direct manipulation of the KiloPriceFeed contract
+
+**Exploitation Steps:**
+1. Attacker funded their wallet through Tornado Cash
+2. Used the MinimalForwarder to bypass access controls
+3. Manipulated ETH price down to $100
+4. Opened leveraged long positions
+5. Manipulated price up to $10,000
+6. Closed positions for profit
+7. Repeated across multiple chains (Base, BNB Chain, Taiko)
+
+**Vulnerability Details:**
+- The MinimalForwarder contract lacked signature validation
+- No checks were performed on the caller's identity
+- The entire access control chain relied on each component trusting the next
+- The protocol had been audited 5 times since June 2023, but the vulnerability remained undetected
+
+## Prevention Assertions
+
+### Price Deviation Assertion
+
+With an assertion very similar to the [Price Deviation Assertion](/assertions-book/assertions/ass28-intra-tx-oracle-deviation), this attack could have been prevented.
+The example assertion below could with very few changes have caught the large price deviations in the attack and prevented the transaction.
+
+<ass28IntraTxOracleDeviation />
+
+Specifically, the assertion could have been configured to:
+1. Trigger on all calls to the `setPrices` function in the KiloPriceFeed contract
+2. Enforcing a maximum price deviation of 5% per update
+3. Reverting if the price deviation exceeds this threshold
+
+This would have prevented the attack in two ways:
+1. When the attacker tried to set ETH price to $100 (from the then ~$2000), the assertion would have detected this ~95% deviation and reverted the transaction
+2. When they later tried to set the price to $10,000, the assertion would have again detected this extreme deviation and reverted
+3. If this was all done in a single transaction, the assertion would have caught the large deviation and reverted the entire transaction
+
+Note: In a real implementation, this assertion should be:
+- Run for each token in the protocol
+- Consider token-specific deviation thresholds
+- Handle multiple price updates in a single transaction
+
+### Access Control Assertion
+
+The root cause of the vulnerability was the MinimalForwarder's lack of access controls. A simple assertion could have prevented this by ensuring the MinimalForwarder is only called by authorized addresses in the expected call chain (Keeper → PositionKeeper → MinimalForwarder):
+
+- **Trigger**: Register for all calls to `MinimalForwarder.execute()`
+- **Assertion**: 
+  - Maintain a whitelist of authorized callers (specifically the PositionKeeper)
+  - Verify the caller is in the whitelist
+  - Revert if unauthorized
+
+This simple assertion would have prevented the attack by ensuring that only the PositionKeeper could trigger price updates through the MinimalForwarder. While fixing the access control in the contract itself would be the better solution, this assertion could have served as a safety net to catch unauthorized access attempts.

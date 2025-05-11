@@ -143,7 +143,9 @@
                   "assertions-book/previous-hacks/visor-finance-unrestricted-mint",
                   "assertions-book/previous-hacks/first-depositor",
                   "assertions-book/previous-hacks/abracadabra-rounding-error",
-                  "assertions-book/previous-hacks/euler-finance-donation-hack"
+                  "assertions-book/previous-hacks/euler-finance-donation-hack",
+                  "assertions-book/previous-hacks/bybit-safe-ui",
+                  "assertions-book/previous-hacks/kiloex-price-manipulation-hack"
                 ]
               }
             ]
