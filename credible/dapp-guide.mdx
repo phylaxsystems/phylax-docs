@@ -40,7 +40,14 @@ To create a new project:
    - Target Chain
 4. Click "Continue to contract selection"
 5. Add one or more contract addresses
+    - Here it's important to note that only contracts where the `owner` matches the address of the account you're using to create the project will be permitted to be linked to the project.
+    - Specifically this is done by calling the `owner()` function on the contract and comparing the result to the address of the account you're using to create the project.
 6. Review and publish the project
+
+<Note>
+    Only the owner of a contract can create a project for it. There will be additional verification methods in the future, but for now this is the only way.
+    When playing around and testing the demo, make sure to have an `owner()` function in your contract that returns the current owner.
+</Note>
 
 ![Create Project](/images/create_project_dapp.gif)
 
@@ -52,7 +59,7 @@ To link assertions to your project:
    ```
 2. Submit the assertion to your project:
    ```bash
-   pcl submit -a <assertion-name> -p <project-name>
+   pcl submit -a '<assertion-name>(constructor-args)' -p <project-name>
    ```
 3. In the dApp:
    - Navigate to your project dashboard

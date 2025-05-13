@@ -49,8 +49,9 @@ mkdir pcl-tutorial-project
 cd pcl-tutorial-project
 ```
 
+Create the required directories:
+
 ```bash
-# Create the required directories
 mkdir -p assertions/src assertions/test src lib
 ```
 
@@ -122,6 +123,10 @@ contract Ownable {
     }
 }
 ```
+
+<Note>
+    Currently, we rely on the contract having an `owner()` function for ownership verification during project creation, so make sure to have a `owner()` function in your contract.
+</Note>
 
 ## 2. Writing Your First Assertion
 
@@ -311,9 +316,11 @@ Next, store your assertion in the Assertion Data Availability layer (Assertion D
 pcl store OwnableAssertion 0xADDRESS_OF_OWNABLE_CONTRACT
 ```
 
-This command submits your assertion's bytecode and source code to be stored by the Assertion DA, making it available for verification by the network.
+Here `OwnableAssertion` is the name of the assertion and `0xADDRESS_OF_OWNABLE_CONTRACT` is the address of the contract you want to protect.
 
-If your assertion contract has a constructor argument, you need to provide it when storing the assertion.
+The `0xADDRESS_OF_OWNABLE_CONTRACT` is a constructor argument for the assertion, so if your assertion contract has a constructor argument, you need to provide it when storing the assertion.
+
+This command submits your assertion's bytecode and source code to be stored by the Assertion DA, making it available for verification by the network.
 
 ## 7. Submitting Your Assertion
 
@@ -330,6 +337,8 @@ Alternatively, you can specify the project and assertion directly as per the out
 ```bash
 pcl submit -a 'OwnableAssertion(0xADDRESS_OF_OWNABLE_CONTRACT)' -p <project_name>
 ```
+
+Note, that `<project_name>` is the name of the project you created in the dApp, capitalized in the same way as you did when creating the project.
 
 ## 8. Activating Your Assertion
 
@@ -351,13 +360,13 @@ cast call $ADDRESS_OF_OWNABLE_CONTRACT "owner()" --rpc-url $RPC_URL
 
 This command should return the initial owner address that was set when we deployed the contract.
 
-Next, let's attempt to transfer ownership to a new address. This transaction should trigger our assertion and revert:
+Next, let's attempt to transfer ownership to a new address. Make sure you replace `$NEW_OWNER_ADDRESS` with an address that is not the initial owner and `$PRIVATE_KEY_OF_THE_OWNER` with the private key of the owner of the contract. This transaction should trigger the assertion and revert:
 
 ```bash
-cast send $ADDRESS_OF_OWNABLE_CONTRACT "transferOwnership(address)" $NEW_OWNER_ADDRESS --rpc-url $RPC_URL --private-key $PRIVATE_KEY_OF_THE_OWNER
+cast send $ADDRESS_OF_OWNABLE_CONTRACT "transferOwnership(address)" $NEW_OWNER_ADDRESS --rpc-url $RPC_URL --private-key $PRIVATE_KEY_OF_THE_OWNER --timeout 20
 ```
 
-The transaction should timeout after about 2 minutes which means that the assertion reverted the transaction:
+The transaction should timeout after about 20 seconds which means that the assertion reverted the transaction:
 
 ```bash
 Error: transaction was not confirmed within the timeout
