@@ -8,7 +8,7 @@ import ass21EtherDrain from "/snippets/ass21-ether-drain.a.mdx";
 ## Use Case
 Protecting protocols from rapid ETH draining is a critical security measure. Malicious actors often attempt to extract all available ETH from a contract in a single transaction after discovering an exploit, leading to catastrophic loss of funds. This assertion prevents sudden large withdrawals of ETH, giving protocols time to respond to potential exploits.
 
-> **Real-world example:** In February 2025, Bybit suffered one of the largest hacks in crypto history, losing approximately $1.4 billion USD when attackers compromised Safe Wallet's UI and changed the implementation address of their proxy contract. This allowed the attackers to drain all assets without requiring additional approvals from the original owners. ETH drain assertions, especially with whitelist functionality, could have prevented or significantly limited the impact of this attack. See the [Bybit Safe UI attack](/assertions-book/previous-hacks/Bybit-safe-UI) for more details.
+> **Real-world example:** In February 2025, Bybit suffered one of the largest hacks in crypto history, losing approximately $1.4 billion USD when attackers compromised Safe Wallet's UI and changed the implementation address of their proxy contract. This allowed the attackers to drain all assets without requiring additional approvals from the original owners. ETH drain assertions, especially with whitelist functionality, could have prevented or significantly limited the impact of this attack. See the [Bybit Safe UI attack](/assertions-book/previous-hacks/bybit-safe-ui) for more details.
 
 This assertion is particularly important for:
 - Detecting and limiting the impact of flash loan attacks targeting ETH reserves

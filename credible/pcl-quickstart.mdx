@@ -1,5 +1,5 @@
 ---
-title: 'Credible Layer Quickstart'
+title: 'Quickstart'
 description: 'A quickstart guide to writing assertions and using the Credible Layer CLI'
 ---
 
@@ -24,7 +24,7 @@ Before you begin, make sure you have:
 - Solidity compiler [installed](https://docs.soliditylang.org/en/latest/installing-solidity.html)
 - Foundry installed (see the [Foundry Installation Guide](https://book.getfoundry.sh/getting-started/installation))
 - A browser wallet for authentication (MetaMask or similar)
-- Protocol smart contracts deployed to write assertions for OR access to a testnet that you can deploy smart contracts to
+- Access to the Credible Layer Demo, reach out to us on [Telegram](https://t.me/phylax_credible_layer) if you're interested in getting access
 
 ## 0. Lazy Mode
 
@@ -49,8 +49,9 @@ mkdir pcl-tutorial-project
 cd pcl-tutorial-project
 ```
 
+Create the required directories:
+
 ```bash
-# Create the required directories
 mkdir -p assertions/src assertions/test src lib
 ```
 
@@ -122,6 +123,10 @@ contract Ownable {
     }
 }
 ```
+
+<Note>
+    Currently, we rely on the contract having an `owner()` function for ownership verification during project creation, so make sure to have a `owner()` function in your contract.
+</Note>
 
 ## 2. Writing Your First Assertion
 
@@ -290,13 +295,18 @@ Once authenticated, you can create a project in the dApp and point it to your de
 If you're on a testnet you can deploy the Ownable contract using the following command:
 
 ```bash
-forge create \
-       --rpc-url $RPC_URL \
-       --private-key $PRIVATE_KEY_YOU_USED_TO_SIGN_IN_TO_DAPP \
+forge create src/Ownable.sol:Ownable \
+       --rpc-url <RPC_URL> \
+       --private-key <PRIVATE_KEY_YOU_USED_TO_SIGN_IN_TO_DAPP> \
        --broadcast \
-       --constructor-args $INITIAL_OWNER_ADDRESS \
-       src/Ownable.sol:Ownable
+       --constructor-args <INITIAL_OWNER_ADDRESS> 
 ```
+
+Explanation of the arguments:
+
+- `<RPC_URL>`: The RPC URL of the network you're deploying to
+- `<PRIVATE_KEY_YOU_USED_TO_SIGN_IN_TO_DAPP>`: The private key of the account you used to sign in to the dApp
+- `<INITIAL_OWNER_ADDRESS>`: The address of the initial owner of the contract, it makes sense to use the address of the account you used to sign in to the dApp
 
 If authentication fails, ensure:
 - Your wallet has the correct network selected
@@ -308,12 +318,14 @@ If authentication fails, ensure:
 Next, store your assertion in the Assertion Data Availability layer (Assertion DA):
 
 ```bash
-pcl store OwnableAssertion 0xADDRESS_OF_OWNABLE_CONTRACT
+pcl store OwnableAssertion <ADDRESS_OF_OWNABLE_CONTRACT>
 ```
 
-This command submits your assertion's bytecode and source code to be stored by the Assertion DA, making it available for verification by the network.
+Here `OwnableAssertion` is the name of the assertion and `0xADDRESS_OF_OWNABLE_CONTRACT` is the address of the contract you want to protect.
 
-If your assertion contract has a constructor argument, you need to provide it when storing the assertion.
+The `0xADDRESS_OF_OWNABLE_CONTRACT` is a constructor argument for the assertion, so if your assertion contract has a constructor argument, you need to provide it when storing the assertion.
+
+This command submits your assertion's bytecode and source code to be stored by the Assertion DA, making it available for verification by the network.
 
 ## 7. Submitting Your Assertion
 
@@ -331,6 +343,8 @@ Alternatively, you can specify the project and assertion directly as per the out
 pcl submit -a 'OwnableAssertion(0xADDRESS_OF_OWNABLE_CONTRACT)' -p <project_name>
 ```
 
+Note, that `<project_name>` is the name of the project you created in the dApp, capitalized in the same way as you did when creating the project.
+
 ## 8. Activating Your Assertion
 
 Last step is to go to the dApp and activate the assertion. Go back to the url that you opened with the `pcl auth login` command and navigate to the project that the assertions was added to. 
@@ -346,18 +360,18 @@ Now that your assertion is activated, let's verify that it's working as expected
 First, let's check the current owner of the Ownable contract. Replace `$ADDRESS_OF_OWNABLE_CONTRACT` with the address of your deployed Ownable contract and `$RPC_URL` with your network's RPC URL:
 
 ```bash
-cast call $ADDRESS_OF_OWNABLE_CONTRACT "owner()" --rpc-url $RPC_URL
+cast call <ADDRESS_OF_OWNABLE_CONTRACT> "owner()" --rpc-url <RPC_URL>
 ```
 
 This command should return the initial owner address that was set when we deployed the contract.
 
-Next, let's attempt to transfer ownership to a new address. This transaction should trigger our assertion and revert:
+Next, let's attempt to transfer ownership to a new address. Make sure you replace `$NEW_OWNER_ADDRESS` with an address that is not the initial owner and `$PRIVATE_KEY_OF_THE_OWNER` with the private key of the owner of the contract. This transaction should trigger the assertion and revert:
 
 ```bash
-cast send $ADDRESS_OF_OWNABLE_CONTRACT "transferOwnership(address)" $NEW_OWNER_ADDRESS --rpc-url $RPC_URL --private-key $PRIVATE_KEY_OF_THE_OWNER
+cast send <ADDRESS_OF_OWNABLE_CONTRACT> "transferOwnership(address)" <NEW_OWNER_ADDRESS> --rpc-url <RPC_URL> --private-key <PRIVATE_KEY_OF_THE_OWNER> --timeout 20
 ```
 
-The transaction should timeout after about 2 minutes which means that the assertion reverted the transaction:
+The transaction should timeout after about 20 seconds which means that the assertion reverted the transaction:
 
 ```bash
 Error: transaction was not confirmed within the timeout
@@ -366,7 +380,7 @@ Error: transaction was not confirmed within the timeout
 To confirm that the ownership hasn't changed, let's check the owner again:
 
 ```bash
-cast call $ADDRESS_OF_OWNABLE_CONTRACT "owner()" --rpc-url $RPC_URL
+cast call <ADDRESS_OF_OWNABLE_CONTRACT> "owner()" --rpc-url <RPC_URL>
 ```
 
 The owner should still be the original address, confirming that our assertion successfully prevented the ownership change.

@@ -1,5 +1,5 @@
 ---
-title: PhEVM Cheatcodes
+title: Cheatcodes
 description: Overview of the cheatcodes made available for the Phylax Credible Layer
 ---
 
@@ -13,11 +13,13 @@ to Dancun, plus new capabilities for:
 2. Forking of state from one or multiple EVM networks
 3. Utilities for writing and managing assertions
 
-> **Note on Terminology:** You may notice the terms "precompiles" and "cheatcodes" used interchangeably 
-> in some contexts. We use the term "cheatcodes" as it's more familiar to Solidity developers who are 
-> already using testing frameworks like Foundry/Forge or Hardhat. Both terms refer to native functions 
-> that extend the EVM's capabilities, but "cheatcodes" better reflects their role in the developer 
-> experience.
+<Note>
+You may notice the terms "precompiles" and "cheatcodes" used interchangeably 
+in some contexts. We use the term "cheatcodes" as it's more familiar to Solidity developers who are 
+already using testing frameworks like Foundry/Forge or Hardhat. Both terms refer to native functions 
+that extend the EVM's capabilities, but "cheatcodes" better reflects their role in the developer 
+experience.
+</Note>
 
 ## Storage Operations
 
@@ -91,23 +93,24 @@ function getCallInputs(
 ) external view returns (CallInputs[] memory calls);
 ```
 
-<Info> Note on Internal Calls </Info>
->Internal calls are not actual EVM calls but rather a Solidity language feature. They are not traced by the CallTracer and will not result in `CallInputs` or trigger call-based assertions. However, using the `this` keyword (e.g., `this.functionName()`) creates an external call that will be traced and can trigger assertions.
->
-> Example:
-> ```solidity
-> function foo() external {
->   // Internal call - not traced, no CallInputs generated
->   bar();
->   
->   // External call via 'this' - traced, generates CallInputs
->   this.bar();
-> }
->
-> function bar() public {
->   // Function implementation
-> }
-> ```
+<Info>
+Internal calls are not actual EVM calls but rather a Solidity language feature. They are not traced by the CallTracer and will not result in `CallInputs` or trigger call-based assertions. However, using the `this` keyword (e.g., `this.functionName()`) creates an external call that will be traced and can trigger assertions.
+
+Example:
+```solidity
+function foo() external {
+    // Internal call - not traced, no CallInputs generated
+    bar();
+   
+    // External call via 'this' - traced, generates CallInputs
+    this.bar();
+}
+
+function bar() public {
+    // Function implementation
+}
+```
+</Info>
 
 ## State Change Tracking
 
@@ -172,6 +175,11 @@ mapping-with-offset variants.
 
 Triggers determine when your assertion functions will be executed. You can register 
 different types of triggers in your assertion's `triggers()` function.
+
+<Note>
+Use triggers to make sure that assertions are only called when they are needed in order to save gas and resources.
+For example, instead of triggering an assertion on every call to a contract, you can trigger it only on specific function calls that are able to change the state of the specific value you are asserting on.
+</Note>
 
 ### Call Triggers
 
