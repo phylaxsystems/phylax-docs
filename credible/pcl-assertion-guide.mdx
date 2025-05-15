@@ -172,7 +172,7 @@ constructor(address ownable_) {
 The constructor of the assertion runs against an empty state. That means you can pass values in the constructor but you can not read values from other contracts.
 </Note>
 
-#### 3. Registering Assertion Functions
+#### 3. Triggering Assertions
 ```solidity
 // The triggers function tells the Credible Layer which assertion functions to run
 // This is required by the Assertion interface
@@ -181,11 +181,13 @@ function triggers() external view override {
     registerCallTrigger(this.assertionOwnershipChange.selector);
 }
 ```
+
 - The `triggers` function is required by the `Assertion` interface
 - It defines which functions in your contract are assertions
 - Each assertion function must be registered here via its function selector
 - Multiple assertions can be defined in a single contract
 - `registerCallTrigger` specifically registers functions to be called after any interaction with the protected contract
+- Use triggers to make sure that assertions are only called when they are needed in order to save gas and resources
 
 <Note>
 The Credible Layer supports different trigger types. `registerCallTrigger` is used to run assertions after any transaction interacting with the protected contract. Other triggers can be implemented depending on your needs.
@@ -282,7 +284,7 @@ function setUp() public {
 ```solidity
 function test_assertionOwnershipChanged() public {
     address aaAddress = address(assertionAdopter);
-    string memory label = "Ownership has changed";
+    string memory label = "OwnableAssertion";
 
     // Associate the assertion with the protocol
     // cl will manage the correct assertion execution under the hood when the protocol is being called
@@ -297,14 +299,14 @@ function test_assertionOwnershipChanged() public {
 ```
 Key components:
 1. `cl.addAssertion()`: Links the assertion to the contract being protected
-   - First argument: Label of the assertion
+   - First argument: Label of the assertion (use the name of the assertion you are testing)
    - Second argument: Address of contract to protect
    - Third argument: Bytecode of the assertion contract
    - Fourth argument: Constructor arguments for the assertion
 2. `vm.prank()`: Simulates a call from the owner's address
 3. `vm.expectRevert()`: Expects the assertion to revert
 4. `cl.validate()`: Tests how the assertion responds to a transaction
-   - First argument: Label of the assertion
+   - First argument: Label of the assertion (use the name of the assertion you are testing)
    - Second argument: Address of contract to protect
    - Third argument: ETH value (0 in this case)
    - Fourth argument: Encoded function call (transferOwnership in this case)
@@ -317,7 +319,7 @@ Key components:
 
 ```solidity
 function test_assertionOwnershipNotChanged() public {
-    string memory label = "Ownership has not changed";
+    string memory label = "OwnableAssertion";
     address aaAddress = address(assertionAdopter);
 
     cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
@@ -355,7 +357,7 @@ contract TestOwnableAssertion is CredibleTest, Test {
 
     function test_assertionOwnershipChanged() public {
         address aaAddress = address(assertionAdopter);
-        string memory label = "Ownership has changed";
+        string memory label = "OwnableAssertion";
 
         // Associate the assertion with the protocol
         // cl will manage the correct assertion execution under the hood when the protocol is being called
@@ -369,7 +371,7 @@ contract TestOwnableAssertion is CredibleTest, Test {
     }
 
     function test_assertionOwnershipNotChanged() public {
-        string memory label = "Ownership has not changed";
+        string memory label = "OwnableAssertion";
         address aaAddress = address(assertionAdopter);
 
         cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
@@ -388,7 +390,7 @@ contract TestOwnableAssertion is CredibleTest, Test {
 2. **Transaction Simulation**: Use `cl.validate()` to test how assertions respond to transactions
 3. **State Manipulation**: Use Forge's cheatcodes (`vm.prank`, `vm.deal`) to set up test scenarios
 4. **Verification**: Use `vm.expectRevert()` to verify that the assertion reverts when expected
-5. **Labeling**: Use meaningful labels to identify assertions
+5. **Labeling**: Use the name of the assertion you are testing as the label for improved feedback in logs
 
 ### Running the Tests
 

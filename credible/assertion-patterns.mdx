@@ -90,6 +90,10 @@ This pattern is particularly useful when:
 
 Effective assertion writing involves using the right triggers for the right situations. Different triggers provide different guarantees and should be chosen based on the specific invariant you're trying to enforce.
 
+It is important to use triggers to make sure that assertions are only called when they are needed in order to save gas and resources.
+For example, it is a waste to trigger an assertion on every call to a contract, if the assertion is only checking a value that can only be changed by a specific function. 
+In this case it would make sense to use a trigger that only triggers on calls to the specific function or updates to the specific storage slot of the value.
+
 ### Storage Change Triggers
 
 Storage change triggers are ideal when you need to monitor specific storage slots for changes, regardless of what function caused the change. This is useful when:

@@ -295,13 +295,18 @@ Once authenticated, you can create a project in the dApp and point it to your de
 If you're on a testnet you can deploy the Ownable contract using the following command:
 
 ```bash
-forge create \
-       --rpc-url $RPC_URL \
-       --private-key $PRIVATE_KEY_YOU_USED_TO_SIGN_IN_TO_DAPP \
+forge create src/Ownable.sol:Ownable \
+       --rpc-url <RPC_URL> \
+       --private-key <PRIVATE_KEY_YOU_USED_TO_SIGN_IN_TO_DAPP> \
        --broadcast \
-       --constructor-args $INITIAL_OWNER_ADDRESS \
-       src/Ownable.sol:Ownable
+       --constructor-args <INITIAL_OWNER_ADDRESS> 
 ```
+
+Explanation of the arguments:
+
+- `<RPC_URL>`: The RPC URL of the network you're deploying to
+- `<PRIVATE_KEY_YOU_USED_TO_SIGN_IN_TO_DAPP>`: The private key of the account you used to sign in to the dApp
+- `<INITIAL_OWNER_ADDRESS>`: The address of the initial owner of the contract, it makes sense to use the address of the account you used to sign in to the dApp
 
 If authentication fails, ensure:
 - Your wallet has the correct network selected
@@ -313,7 +318,7 @@ If authentication fails, ensure:
 Next, store your assertion in the Assertion Data Availability layer (Assertion DA):
 
 ```bash
-pcl store OwnableAssertion 0xADDRESS_OF_OWNABLE_CONTRACT
+pcl store OwnableAssertion <ADDRESS_OF_OWNABLE_CONTRACT>
 ```
 
 Here `OwnableAssertion` is the name of the assertion and `0xADDRESS_OF_OWNABLE_CONTRACT` is the address of the contract you want to protect.
@@ -355,7 +360,7 @@ Now that your assertion is activated, let's verify that it's working as expected
 First, let's check the current owner of the Ownable contract. Replace `$ADDRESS_OF_OWNABLE_CONTRACT` with the address of your deployed Ownable contract and `$RPC_URL` with your network's RPC URL:
 
 ```bash
-cast call $ADDRESS_OF_OWNABLE_CONTRACT "owner()" --rpc-url $RPC_URL
+cast call <ADDRESS_OF_OWNABLE_CONTRACT> "owner()" --rpc-url <RPC_URL>
 ```
 
 This command should return the initial owner address that was set when we deployed the contract.
@@ -363,7 +368,7 @@ This command should return the initial owner address that was set when we deploy
 Next, let's attempt to transfer ownership to a new address. Make sure you replace `$NEW_OWNER_ADDRESS` with an address that is not the initial owner and `$PRIVATE_KEY_OF_THE_OWNER` with the private key of the owner of the contract. This transaction should trigger the assertion and revert:
 
 ```bash
-cast send $ADDRESS_OF_OWNABLE_CONTRACT "transferOwnership(address)" $NEW_OWNER_ADDRESS --rpc-url $RPC_URL --private-key $PRIVATE_KEY_OF_THE_OWNER --timeout 20
+cast send <ADDRESS_OF_OWNABLE_CONTRACT> "transferOwnership(address)" <NEW_OWNER_ADDRESS> --rpc-url <RPC_URL> --private-key <PRIVATE_KEY_OF_THE_OWNER> --timeout 20
 ```
 
 The transaction should timeout after about 20 seconds which means that the assertion reverted the transaction:
@@ -375,7 +380,7 @@ Error: transaction was not confirmed within the timeout
 To confirm that the ownership hasn't changed, let's check the owner again:
 
 ```bash
-cast call $ADDRESS_OF_OWNABLE_CONTRACT "owner()" --rpc-url $RPC_URL
+cast call <ADDRESS_OF_OWNABLE_CONTRACT> "owner()" --rpc-url <RPC_URL>
 ```
 
 The owner should still be the original address, confirming that our assertion successfully prevented the ownership change.
