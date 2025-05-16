@@ -390,7 +390,12 @@ If you try to do another transaction with the same private key, you will most li
 - server returned an error response: error code -32603: replacement transaction underpriced
 ```
 
-We are aware of this and a fix will be released in a future version. For now we recommend doing a simple ether transfer with a higher gas price, to replace the reverted transaction.
+We are aware of this and a fix will be released in a future version.
+For now we recommend doing a simple ether transfer with a higher gas price, to replace the reverted transaction:
+
+```bash
+cast send <your-address> --value 0 --gas-price <higher-gas-price> --private-key <your-private-key> --rpc-url <your-rpc>
+```
 
 To confirm that the ownership hasn't changed, let's check the owner again:
 
