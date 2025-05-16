@@ -362,7 +362,7 @@ For a more detailed overview of how to use the dApp, see the [dApp Guide](/credi
 
 Now that your assertion is activated, let's verify that it's working as expected. We'll do this by attempting to change the ownership of the contract, which should trigger our assertion and prevent the change.
 
-First, let's check the current owner of the Ownable contract. Replace `$ADDRESS_OF_OWNABLE_CONTRACT` with the address of your deployed Ownable contract and `$RPC_URL` with your network's RPC URL:
+First, let's check the current owner of the Ownable contract. Replace `ADDRESS_OF_OWNABLE_CONTRACT` with the address of your deployed Ownable contract and `RPC_URL` with your network's RPC URL:
 
 ```bash
 cast call <ADDRESS_OF_OWNABLE_CONTRACT> "owner()" --rpc-url <RPC_URL>
@@ -370,7 +370,7 @@ cast call <ADDRESS_OF_OWNABLE_CONTRACT> "owner()" --rpc-url <RPC_URL>
 
 This command should return the initial owner address that was set when we deployed the contract.
 
-Next, let's attempt to transfer ownership to a new address. Make sure you replace `$NEW_OWNER_ADDRESS` with an address that is not the initial owner and `$PRIVATE_KEY_OF_THE_OWNER` with the private key of the owner of the contract. This transaction should trigger the assertion and revert:
+Next, let's attempt to transfer ownership to a new address. Make sure you replace `NEW_OWNER_ADDRESS` with an address that is not the initial owner and `PRIVATE_KEY_OF_THE_OWNER` with the private key of the owner of the contract. This transaction should trigger the assertion and revert:
 
 ```bash
 cast send <ADDRESS_OF_OWNABLE_CONTRACT> "transferOwnership(address)" <NEW_OWNER_ADDRESS> --rpc-url <RPC_URL> --private-key <PRIVATE_KEY_OF_THE_OWNER> --timeout 20
@@ -381,6 +381,16 @@ The transaction should timeout after about 20 seconds which means that the asser
 ```bash
 Error: transaction was not confirmed within the timeout
 ```
+
+When an assertion is reverted, the transaction causing the revert will be ignored by the builder. This means that the `cast` or `forge` command will not show any output indicating that the transaction was reverted, it will just timeout after a while. You can use the `--timeout` flag to decrease the timeout.
+
+If you try to do another transaction with the same private key, you will most likely get this a replacement transaction error:
+
+```bash
+- server returned an error response: error code -32603: replacement transaction underpriced
+```
+
+We are aware of this and a fix will be released in a future version. For now we recommend doing a simple ether transfer with a higher gas price, to replace the reverted transaction.
 
 To confirm that the ownership hasn't changed, let's check the owner again:
 
