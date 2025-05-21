@@ -11,10 +11,12 @@ This guide will walk you through the process of creating, testing, and submittin
 2. Write a simple assertion
 3. Test your assertion
 4. Authenticate with `pcl`
-5. Store your assertion
-6. Submit your assertion to the Credible Layer
-7. Activate your assertion
-8. Verify that the assertion is working
+5. Deploy your contract
+6. Create a project
+7. Store your assertion
+8. Submit your assertion to the Credible Layer
+9. Activate your assertion
+10. Verify that the assertion is working
 
 ## Prerequisites
 
@@ -295,9 +297,15 @@ pcl auth login
 
 This will provide you with with a URL and an authentication code that you can use to authenticate with the Credible Layer.
 
-Once authenticated, you can create a project in the dApp and point it to your deployed contracts.
+If authentication fails, ensure:
+- Your wallet has the correct network selected
+- The `pcl` CLI uses the correct url
+- You have an internet connection
+- The `pcl` CLI is properly installed
 
-If you're on a testnet you can deploy the Ownable contract using the following command:
+## 6. Deploy Your Contract
+
+You can deploy the Ownable contract using the following command:
 
 ```bash
 forge create src/Ownable.sol:Ownable \
@@ -313,12 +321,16 @@ Explanation of the arguments:
 - `<PRIVATE_KEY_YOU_USED_TO_SIGN_IN_TO_DAPP>`: The private key of the account you used to sign in to the dApp
 - `<INITIAL_OWNER_ADDRESS>`: The address of the initial owner of the contract, it makes sense to use the address of the account you used to sign in to the dApp
 
-If authentication fails, ensure:
-- Your wallet has the correct network selected
-- You have an internet connection
-- The `pcl` CLI is properly installed
+Make sure to note down the address of the deployed contract as you'll need it to create a project in the next step.
+It will be the `Deployed to:` address in the output of the command.
 
-## 6. Storing Your Assertion
+## 7. Create a Project
+
+Once you have deployed your contract, you'll need to create a project in the dApp if you don't have one already. Navigate to the browser window opened by the `pcl auth login` command and create a new project. When asked to link your contract, use the address of the contract you deployed in the previous step.
+
+For a more detailed overview of how to use the dApp and manage projects, see the [dApp Guide](/credible/dapp-guide).
+
+## 8. Storing Your Assertion
 
 Next, store your assertion in the Assertion Data Availability layer (Assertion DA):
 
@@ -332,7 +344,7 @@ The `0xADDRESS_OF_OWNABLE_CONTRACT` is a constructor argument for the assertion,
 
 This command submits your assertion's bytecode and source code to be stored by the Assertion DA, making it available for verification by the network.
 
-## 7. Submitting Your Assertion
+## 9. Submitting Your Assertion
 
 Finally, submit your assertion to the Credible Layer dApp:
 
@@ -350,7 +362,7 @@ pcl submit -a 'OwnableAssertion(0xADDRESS_OF_OWNABLE_CONTRACT)' -p <project_name
 
 Note, that `<project_name>` is the name of the project you created in the dApp, capitalized in the same way as you did when creating the project.
 
-## 8. Activating Your Assertion
+## 10. Activating Your Assertion
 
 Last step is to go to the dApp and activate the assertion. Go back to the url that you opened with the `pcl auth login` command and navigate to the project that the assertions was added to. 
 
@@ -358,7 +370,7 @@ You'll notice that there's one assertion ready for submission, go ahead and proc
 
 For a more detailed overview of how to use the dApp, see the [dApp Guide](/credible/dapp-guide).
 
-## 9. Verify That The Assertion Is Working
+## 11. Verify That The Assertion Is Working
 
 Now that your assertion is activated, let's verify that it's working as expected. We'll do this by attempting to change the ownership of the contract, which should trigger our assertion and prevent the change.
 
