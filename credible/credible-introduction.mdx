@@ -120,146 +120,15 @@ The protocol has three target users. They can use the Credible Layer in the foll
 
 ## Use Cases
 
-TODO: review next line
-What we have built is truly infrastructure. That is to say, it has wide applicability. Even so, here are a few examples of use cases we have explored:
+Assertions open up a wide range of use cases, some that aren't even possible in pure Solidity. Here are a few examples:
 
-1. **Parameter Protection**: Prevent unauthorized changes to critical protocol parameters and owner addresses.
-2. **Market Integrity**: Ensure market prices don't move beyond specified thresholds within time periods.
+1. **Parameter Protection**: Prevent unauthorized changes to critical protocol parameters such as owner and implementation addresses.
+2. **Market Integrity**: Ensure market prices don't move beyond specified thresholds inside of a single transaction.
 3. **Lending Protocol Safety**: Guarantee lending positions maintain the required collateralization ratios.
-4. **Oracle Monitoring**: Verify oracle prices are updated within the required timeframes.
-5. **Vault Security**: Ensure total shares never exceed total assets in ERC4626 vaults.
+4. **Oracle Monitoring**: Verify oracle prices stay within specified ranges to detect price manipulation.
+5. **Total Balance Invariants**: Ensure that the sum of all positions match the total balance of a protocol.
 
 Explore more use cases in the [Assertions Book](/assertions-book/assertions-book-intro).
-
-<Warning>
-  Everything below this point (except next steps) is old content, leaving it as reference during review.
-</Warning>
-
-## Core Concept: Credible Computing
-
-At its core, the Credible Layer allows dApps to define states they don't want to reach, and prevent those states from being reached—all without changing a single line of your original contract code.
-
-- **Non-invasive**: Works alongside your existing smart contracts without requiring modifications
-- **Deterministic**: Assertions produce consistent results for the same transaction and state
-- **Binary**: Assertions either pass or fail, without any uncertainty
-- **Verifiable**: All assertion code is public and can be verified by anyone
-- **Preventative**: Assertions block transactions that would violate security invariants
-
-![Credible Layer Architecture](/images/protocol-flow-diagram.png)
-
-## Understanding Assertions
-
-Assertions are the fundamental building blocks of the Credible Layer's security model:
-
-- **What Are Assertions?** Assertions are smart contracts that define conditions and rules for transaction validation. They allow developers to maintain protocol invariants and implement custom security logic without altering their core contract code. Unlike traditional security measures that only detect or mitigate attacks after they occur, assertions actually prevent hacks by blocking malicious transactions before they can be executed. Assertions leverage special "cheatcodes" that enable powerful security logic not possible in vanilla smart contracts, such as comparing pre-transaction and post-transaction state and inspecting storage slot updates for an entire call stack.
-
-- **How They Work**: When a transaction interacts with a dApp's contract, assertions are run by the block builder, which simulates whether the incoming transaction would violate any assertion conditions. This happens before transaction finalization, adding a protective layer around your existing contracts.
-
-- **Flexibility and Power**: Assertions go beyond simple invariant checking. They can be used to implement complex security rules such as:
-  - Maintaining critical protocol invariants (e.g., ensuring total assets ≥ total liabilities)
-  - Defining whitelists or blacklists for address interactions
-  - Implementing custom transaction validation logic
-  - Creating context-aware security rules that adapt to different scenarios
-
-- **Prevention vs. Detection**: Unlike traditional security methods that detect issues after they occur, assertions prevent problematic transactions from being finalized if they violate specified conditions.
-
-Example assertion code:
-
-```solidity
-// This function is used to check if the owner of a contract has changed
-// If the owner has changed during the transaction, the transaction will be reverted
-function assertionOwnerChange() external {
-    ph.forkPreState(); // fork the pre state - the state before the transaction
-    address preOwner = ownership.owner(); // get the owner before the transaction
-    ph.forkPostState(); // fork the post state - the state after the transaction
-    address postOwner = ownership.owner(); // get the owner after the transaction
-    require(preOwner == postOwner, "Owner changed");
-}
-```
-
-<Note>
-  You can think of assertions as reverse intents. Instead of specifying what you want to happen, you specify what you don't want to happen, without worrying about how it could happen.
-</Note>
-
-### The Power of Assertions
-
-The power of assertions is multifaceted:
-
-1. **Protocol Safety**: Developers can ensure that critical protocol invariants are always maintained, preventing the system from entering unsafe states.
-
-2. **Custom Security Logic**: Assertions allow for implementing tailored security measures, such as restricting certain operations to specific addresses or time periods.
-
-3. **Block-Level Security**: Since assertions are evaluated for every relevant transaction, teams can programmatically define the behavior they want to exclude from their protocols with greater specificity and precision than relying on heuristic approaches.
-
-4. **On-Chain Transparency**: Assertions are deployed and stored on-chain, providing complete verifiability and transparency to users and auditors. Anyone can inspect the security rules that protect a protocol, creating trust through openness rather than obscurity.
-
-5. **Integration Confidence**: There is significant time and resource savings for protocols needing to trust another smart contract for integration. For example, a DeFi yield aggregation service that integrates strategies across various markets and pools can use assertions to assess the risk and competence of the protocols they are collaborating with.
-
-6. **Zero Contract Modifications**: Implement sophisticated security measures without changing your existing contract code, eliminating the need for audits or migrations of your core contracts.
-
-![Assertion Flow Diagram](/images/highlevel-assertion-flow.png)
-
-## Key Components
-
-The Credible Layer consists of several integrated components:
-
-### 1. Assertion Protocol
-
-The foundation of the Credible Layer is its protocol for making and verifying assertions about blockchain state. This allows applications to:
-
-- Define precise security conditions that must be maintained
-- Implement custom transaction validation logic
-- Create flexible rules that adapt to different contexts
-
-### 2. Verification System
-
-A robust system that:
-- Observes and validates blockchain transactions against assertions
-- Ensures transactions do not violate defined conditions
-- Provides guarantees that security rules are enforced
-
-### 3. Developer SDK
-
-The Credible SDK provides developers with:
-- Easy-to-use interfaces for integrating with the Credible Layer
-- Libraries for creating and verifying assertions
-- Tools for developing and testing security conditions
-
-## Benefits for Different Stakeholders
-
-### For Developers
-
-- **Non-invasive Security**: Add security measures without changing your existing smart contracts
-- **Enhanced Protection**: Create robust security guarantees for your applications
-- **Simplified Implementation**: Write assertions instead of building complex security monitoring systems
-- **Reduced Risk**: Prevent security issues before they cause damage
-- **Familiar Interface**: Use familiar Solidity syntax and tools for writing assertions
-- **Better Sleep**: No more worrying about security issues in your smart contracts
-
-### For Users
-
-- **Greater Trust**: Confidence that applications are operating securely
-- **Transparency**: Visibility into security assertions and verifications
-- **Protection**: Transactions that would violate security conditions are rejected
-
-### For the Ecosystem
-
-- **Improved Security Standards**: Preventitive security raises the bar for blockchain security practices
-- **Safer Integrations**: Protocols can trust other protocols through verified assertions
-- **Innovation**: Enables new types of secure applications and use cases
-
-## Use Cases
-
-The Credible Layer can be applied to a wide range of blockchain applications:
-
-- **DeFi Protocols**: Validate transaction integrity and prevent manipulation attempts
-- **NFT Marketplaces**: Verify authenticity and ownership of digital assets
-- **DAOs**: Ensure governance processes follow established rules
-- **Protocol Integrations**: Verify the safety of integrating with other smart contracts
-- **Access Control**: Implement sophisticated whitelisting or blacklisting mechanisms
-- **Custom Security Policies**: Define and enforce protocol-specific security rules
-
-![Credible Layer Explorer](/images/cl-explorer-screenshot.png)
 
 ## Next Steps
 
