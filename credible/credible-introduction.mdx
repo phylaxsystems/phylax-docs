@@ -5,17 +5,135 @@ description: 'What is the Phylax Credible Layer?'
 
 # The Phylax Credible Layer
 
-The Credible Layer is security infrastructure that enables developers to link security rules to their smart contracts on-chain. Then, the network validates every transaction that interacts with their smart contracts against their security rules, dropping any invalidating transaction. Unlike traditional security approaches that merely monitor or mitigate damage after an attack has occurred, the Credible Layer actively prevents hacks by blocking malicious transactions before they can be executed on-chain.
+The Credible Layer is security infrastructure that enables developers to link security rules to their smart contracts on-chain. Then, the network validates every transaction that interacts with their smart contracts against their security rules, preventing any invalidating transaction.
 
-<Note>
-If you want to get started right away, jump directly to the [Quickstart Guide](/credible/pcl-quickstart).
+Unlike traditional security approaches that merely monitor or mitigate damage after an attack has occurred, the Credible Layer enables block builders to prevent hacks by removing malicious transactions before they can be executed on-chain.
 
-For a collection of concrete assertion examples go to the [Assertions Book](/assertions-book/assertions-book-intro).
-</Note>
+<Columns cols={2}>
+  <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
+    Get started with the Credible Layer in minutes.
+  </Card>
+  <Card title="Assertions Book" icon="book" href="/assertions-book/assertions-book-intro">
+    See concrete assertion examples and previous hacks.
+  </Card>
+</Columns>
 
 If you prefer visual learning over reading text, watch this introductory video for a comprehensive overview:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/J7uPS1ruR04?si=GkQEASccP6BHoPGt" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+_The Credible Layer is currently only available on OP-stack blockchains. Join the waitlist and we'll let you know if there's a fit._
+
+## How It Works
+
+The Credible Layer consists of four key components working together:
+
+1. **Assertions**: Security rules written in Solidity that define states that should never occur (e.g., "implementation address shouldn't change", "price reported by oracle shouldn't deviate more than x% inside of a single transaction").
+2. **Protocols**: Protocols that define assertions for their contracts and link them on-chain.
+3. **Block Builders/Sequencers**: The network infrastructure that validates every transaction against assertions before inclusion in a block, dropping any that would violate security rules.
+4. **Transparency Dashboard**: A platform where users can see which protocols are protected and how, creating a focal point for ecosystem security.
+
+## User Flow
+
+The protocol has three target users. They can use the Credible Layer in the following ways:
+
+1. **Protocol Teams**:
+    - Install the `pcl` CLI tool
+    - Write assertions in Solidity to protect their protocol
+    - Test assertions locally using `pcl test`
+    - Register assertions to contracts through the Credible Layer dApp
+    - Monitor security posture through the dashboard
+2. **End Users**:
+    - View which protocols have Credible Layer protection through the dashboard
+    - Verify the specific security rules protecting your funds
+    - Confidently deploy their capital, knowing that malicious transactions that would result in exploits are prevented
+3. **Network Operators**:
+    - Run OP-Talos alongside your sequencer
+    - Configure integration with Rollup Boost
+    - All transactions will automatically be validated against registered assertions
+
+## Transaction Flow
+
+1. User submits transaction to the network
+2. Transaction enters the mempool
+3. OP-Talos receives the transaction for potential inclusion in a block
+4. For each transaction, OP-Talos:
+    - References the assertions stored in the **Credible Layer Protocol** that are related to the contracts the transaction interacts with
+    - Fetches assertion bytecode from the Assertion DA
+    - The PhEVM:
+        - Simulate transaction execution
+        - Create pre-transaction and post-transaction state snapshots
+        - Execute all relevant assertions against these transactions
+    - The PhEVM returns assertion results:
+        - If any assertion reverts (invalid state), the transaction is flagged as invalid
+        - If all assertions pass, the transaction is considered valid
+5. OP-Talos makes inclusion decisions:
+    - Invalid transactions are not included in the block
+    - Valid transactions are included in the block
+6. OP-Talos submits the validated block to the sequencer via Rollup Boost
+7. Sequencer accepts and processes the validated block
+
+## System Components
+
+### Core Infrastructure
+
+- **OP-Talos**
+    - Custom block builder implementation for OP Stack-based rollups
+    - Integrates with the sequencer via Rollup Boost without requiring sequencer code modifications
+    - Orchestrates the validation process by:
+        - Identifying which assertions apply to incoming transactions
+        - Invoking PhEVM to execute the assertions against transaction states
+        - Making inclusion/exclusion decisions based on assertion results
+    - Builds blocks that exclude any transactions violating assertions
+    - Handles forced inclusion transactions with special mitigation pathways
+    - **PhEVM (Phylax EVM) - the execution arm of OP-Talos**
+        - Executes assertion bytecode in an isolated off-chain environment
+        - Supports special [cheatcodes](/credible/cheatcodes) (precompiles) for efficient state access and comparison
+        - Can simulate both pre-transaction and post-transaction states
+        - Evaluates assertions in parallel to maximize throughput
+- **Assertion Data Availability (Assertion DA)**
+    - Compiles and stores assertion source code and bytecode securely
+    - Provides assertion code to block builders for enforcement
+    - Enables transparency by making assertions publicly available
+- **Credible Layer Protocol**
+    - Smart contract that manages the on-chain registry of assertions
+    - Maps assertions to protected contracts
+    - Handles assertion registration, updates, and deactivation
+    - Supports proof verification for mitigation triggers
+    - Maintains security parameters and protocol metadata
+
+### Developer Tools
+
+- **Credible Layer dApp**: User interface for protocols to register and manage assertions
+    - **Transparency Dashboard:** The part of the dApp that shows every project's assertions and other security measures to end users. These users can use these proofs to eliminate the blind trust that most use to make allocation decisions today.
+- **`pcl` CLI**: Command-line tool for writing, testing, and deploying assertions
+- **`credible-std`**: Standard library exposing cheatcodes and testing functionality for writing and testing assertions
+
+## Key Benefits
+
+- **Prevents Hacks, Doesn't Just Detect Them**: Stop attacks before they succeed, not after funds are lost
+- **No False Positives**: Only blocks transactions that explicitly violate defined rules
+- **Developer-Friendly**: Assertions are written in Solidity, which means no need for context switching or learning a new language
+- **Non-Invasive**: Add protection without modifying existing contracts
+- **High Performance**: Processes 1,500 transactions in under 50ms
+- **Transparent Security**: All assertions are visible on-chain
+
+## Use Cases
+
+TODO: review next line
+What we have built is truly infrastructure. That is to say, it has wide applicability. Even so, here are a few examples of use cases we have explored:
+
+1. **Parameter Protection**: Prevent unauthorized changes to critical protocol parameters and owner addresses.
+2. **Market Integrity**: Ensure market prices don't move beyond specified thresholds within time periods.
+3. **Lending Protocol Safety**: Guarantee lending positions maintain the required collateralization ratios.
+4. **Oracle Monitoring**: Verify oracle prices are updated within the required timeframes.
+5. **Vault Security**: Ensure total shares never exceed total assets in ERC4626 vaults.
+
+Explore more use cases in the [Assertions Book](/assertions-book/assertions-book-intro).
+
+<Warning>
+  Everything below this point (except next steps) is old content, leaving it as reference during review.
+</Warning>
 
 ## Core Concept: Credible Computing
 
@@ -60,9 +178,7 @@ function assertionOwnerChange() external {
 ```
 
 <Note>
-
-You can think of assertions as reverse intents. Instead of specifying what you want to happen, you specify what you don't want to happen, without worrying about how it could happen.
-
+  You can think of assertions as reverse intents. Instead of specifying what you want to happen, you specify what you don't want to happen, without worrying about how it could happen.
 </Note>
 
 ### The Power of Assertions
@@ -149,9 +265,7 @@ The Credible Layer can be applied to a wide range of blockchain applications:
 
 Ready to get started with the Phylax Credible Layer? Explore these resources:
 
-- [Getting Started](/credible/credible-install) - Set up your development environment and install the necessary tools
-- [Quickstart Guide](/credible/pcl-quickstart) - Write and deploy your first assertion using the Credible Layer CLI
-- [Credible Layer Cheatcodes](/credible/cheatcodes) - Detailed reference for assertion functions and capabilities
-- [FAQ](faq) - Answers to common questions about the Credible Layer
-
-We're excited to see what hacks you'll prevent with the Credible Layer!
+- [Installation Guide](/credible/credible-install) - Set up your development environment and install `pcl`
+- [Quickstart Guide](/credible/pcl-quickstart) - Write and deploy your first assertion using the Credible Layer
+- [Cheatcodes](/credible/cheatcodes) - Detailed reference for assertion functions and capabilities
+- [FAQ](/credible/faq) - Answers to common questions about the Credible Layer
