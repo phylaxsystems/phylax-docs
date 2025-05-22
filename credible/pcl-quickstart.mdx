@@ -283,27 +283,7 @@ If your tests fail, check for these common issues:
 - **State mismatch**: Make sure your test properly sets up the initial state
 - **Assertion logic**: Double-check the logic in your assertion function
 
-## 5. Authenticating with Credible Layer
-
-Here's a full video that you can consult to follow along with the process entire process from authentication to activating the assertion:
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/MrDVLp5UDZ0?si=tdgQEJ3Tkps2LwJA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-Before submitting your assertion, you need to authenticate:
-
-```bash
-pcl auth login
-```
-
-This will provide you with with a URL and an authentication code that you can use to authenticate with the Credible Layer.
-
-If authentication fails, ensure:
-- Your wallet has the correct network selected
-- The `pcl` CLI uses the correct url
-- You have an internet connection
-- The `pcl` CLI is properly installed
-
-## 6. Deploy Your Contract
+## 5. Deploy Your Contract
 
 You can deploy the Ownable contract using the following command:
 
@@ -319,10 +299,34 @@ Explanation of the arguments:
 
 - `<RPC_URL>`: The RPC URL of the network you're deploying to
 - `<PRIVATE_KEY_YOU_USED_TO_SIGN_IN_TO_DAPP>`: The private key of the account you used to sign in to the dApp
-- `<INITIAL_OWNER_ADDRESS>`: The address of the initial owner of the contract, it makes sense to use the address of the account you used to sign in to the dApp
+- `<INITIAL_OWNER_ADDRESS>`: The address of the initial owner of the contract. Use the same address as you will be using in your browser wallet to authenticate with the Credible Layer.
 
 Make sure to note down the address of the deployed contract as you'll need it to create a project in the next step.
 It will be the `Deployed to:` address in the output of the command.
+
+## 6. Authenticating with Credible Layer
+
+Here's a full video that you can consult to follow along with the process entire process from authentication to activating the assertion:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/MrDVLp5UDZ0?si=tdgQEJ3Tkps2LwJA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+Before submitting your assertion, you need to authenticate:
+
+```bash
+pcl auth login
+```
+
+<Note>
+    Make sure to use the same address as you set as the initial owner of the contract in the previous step.
+</Note>
+
+This will provide you with with a URL and an authentication code that you can use to authenticate with the Credible Layer.
+
+If authentication fails, ensure:
+- Your wallet has the correct network selected
+- The `pcl` CLI uses the correct url
+- You have an internet connection
+- The `pcl` CLI is properly installed
 
 ## 7. Create a Project
 
