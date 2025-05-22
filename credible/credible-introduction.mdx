@@ -73,6 +73,12 @@ The protocol has three target users. They can use the Credible Layer in the foll
 6. OP-Talos submits the validated block to the sequencer via Rollup Boost
 7. Sequencer accepts and processes the validated block
 
+![Transaction Flow Diagram](/images/tx-flow-credible.png)
+
+Ultimately, if a transaction would result in a hack, if the contract is protected by the Credible Layer, the transaction will be dropped. If the contract is not protected, the transaction will be included in the block.
+
+![Enforcement Diagram](/images/block-state-transitions.png)
+
 ## System Components
 
 ### Core Infrastructure
@@ -101,6 +107,10 @@ The protocol has three target users. They can use the Credible Layer in the foll
     - Handles assertion registration, updates, and deactivation
     - Supports proof verification for mitigation triggers
     - Maintains security parameters and protocol metadata
+
+![High Level Flow Diagram](/images/high-level-flow-credible.png)
+
+Above is a high level overview of the system components and their interactions.
 
 ### Developer Tools
 
