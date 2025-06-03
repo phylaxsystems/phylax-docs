@@ -132,6 +132,13 @@ The key principle of assertions is simple: if an assertion reverts, it means the
 If an assertion reverts, the transaction resulting in the undesired state is reverted and not included in the block.
 This results in actual hack prevention, not just mitigation.
 
+### Gas Consumption
+
+Assertion functions are limited to a maximum execution of 100,000 gas. If an assertion function exceeds this gas limit, the transaction will be invalidated and dropped.
+Please be aware that the gas consumption of certain cheatcodes, such as `getCallInputs`, can be variable, due to unknown lengths of the call inputs.
+We are actively working to improve this as soon as possible. Staying mindful of gas consumption is in general a good practice.
+See the [Assertion Patterns](/credible/assertion-patterns) for more details on ways to optimize gas consumption.
+
 ### Anatomy of the Assertion
 
 Let's break down the key components of our assertion:

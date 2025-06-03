@@ -3,6 +3,13 @@ title: 'Assertion Patterns'
 description: 'Common patterns and best practices for writing assertions'
 ---
 
+## Gas Consumption
+
+Assertion functions are limited to a maximum execution of 100,000 gas. If an assertion function exceeds this gas limit, the transaction will be invalidated and dropped.
+Please be aware that the gas consumption of certain cheatcodes, such as `getCallInputs`, can be variable, due to unknown lengths of the call inputs.
+We are actively working to improve this as soon as possible. Staying mindful of gas consumption is in general a good practice.
+Some of the patterns below can be used to keep gas consumption low.
+
 ## Layered Invariant Checking
 
 A common pattern in assertion writing is to first perform simple, cheap checks before moving on to more complex validations. This approach is particularly important when dealing with potential flash loan attacks or other sophisticated manipulations where values might be temporarily changed and then restored to their original state.
