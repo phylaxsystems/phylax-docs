@@ -27,6 +27,11 @@ experience.
 
 Loads a storage slot from an address.
 
+<Note>
+Using `forge inspect <ContractName> storage-layout` is an easy way to get the storage layout of a contract.
+This can be used to determine the storage slot of a specific variable to use in the cheatcode.
+</Note>
+
 ```solidity
 function load(
     address target, 
@@ -118,6 +123,11 @@ function bar() public {
 
 Returns state changes for a contract's storage slot within the current call stack.
 
+<Note>
+Using `forge inspect <ContractName> storage-layout` is an easy way to get the storage layout of a contract.
+This can be used to determine the storage slot of a specific variable to use in the cheatcode.
+</Note>
+
 ```solidity
 function getStateChanges(
     address contractAddress,
@@ -187,6 +197,8 @@ Call triggers execute your assertion when specific contract calls occur.
 
 ```solidity
 // Trigger on any call to the contract
+// Note: It is not recommended to use this trigger as it will trigger the assertion on every call to the contract
+// This can be expensive and inefficient
 function registerCallTrigger(
     bytes4 assertionFnSelector
 ) internal view
@@ -216,8 +228,15 @@ function triggers() external view override {
 
 Storage triggers execute your assertion when contract storage changes.
 
+<Note>
+Using `forge inspect <ContractName> storage-layout` is an easy way to get the storage layout of a contract.
+This can be used to determine the storage slot of a specific variable to use in the cheatcode.
+</Note>
+
 ```solidity
 // Trigger on ANY storage slot change
+// Note: It is not recommended to use this trigger as it will trigger the assertion on every storage slot change
+// This can be expensive and inefficient
 function registerStorageChangeTrigger(
     bytes4 assertionFnSelector
 ) internal view
@@ -271,3 +290,18 @@ function triggers() external view override {
     );
 }
 ```
+
+## Helpers
+
+### `getAssertionAdopter`
+
+Get assertion adopter contract address associated with the assertion triggering transaction.
+
+```solidity
+function getAssertionAdopter() external view returns (address);
+```
+
+This cheat code allows for not defining an assertion adopter contract in the assertion contract constructor.
+
+The cheat code is only available in the `triggers()` function and the assertion functions.
+It cannot be used in the constructor since assertion contracts have no state during deployment.
