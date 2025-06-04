@@ -21,7 +21,8 @@ jobs:
           ignore_words_file: .github/codespell_wordlist.txt
 
           # Optional: Specify the path for codespell to run on.
-          path: "**/*.mdx"
+          # If you only want to check .mdx files, use the following pattern
+          path: '"./**/*.mdx"'
 
           # Optional: Files or directories to skip.
           # Use a comma-separated list of glob patterns.
