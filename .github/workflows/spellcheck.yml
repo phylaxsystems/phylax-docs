@@ -1,0 +1,32 @@
+name: Spellcheck
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  codespell:
+    name: Check Spelling with Codespell
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Codespell
+        uses: codespell-project/actions-codespell@v2.0 # Using a specific version
+        with:
+          # Path to a file containing words to ignore, one word per line.
+          ignore_words_file: .github/codespell_wordlist.txt
+
+          # Optional: Specify the path for codespell to run on.
+          # This uses a glob pattern to check only .mdx files.
+          path: "**/*.mdx"
+
+          # Optional: Files or directories to skip.
+          # Use a comma-separated list of glob patterns.
+          skip: "./snippets/*"
+
+          # Optional: Run codespell only on changed files in a PR.
+          # only_run_on_changed_files: true
