@@ -22,7 +22,7 @@ jobs:
 
           # Optional: Specify the path for codespell to run on.
           # This uses a glob pattern to check only .mdx files.
-          path: "**/*.mdx"
+          # path: "**/*.mdx"
 
           # Optional: Files or directories to skip.
           # Use a comma-separated list of glob patterns.
