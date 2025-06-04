@@ -26,4 +26,4 @@ jobs:
 
           # Optional: Files or directories to skip.
           # Use a comma-separated list of glob patterns.
-          skip: "./snippets/*"
+          skip: "snippets/*"
