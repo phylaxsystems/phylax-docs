@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Codespell
-        uses: codespell-project/actions-codespell@v2.0 # Using a specific version
+        uses: codespell-project/actions-codespell@v2 # Using a specific version
         with:
           # Path to a file containing words to ignore, one word per line.
           ignore_words_file: .github/codespell_wordlist.txt
