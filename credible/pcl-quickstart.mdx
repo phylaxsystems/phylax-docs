@@ -73,7 +73,7 @@ git init
 Next, we need to install forge-std as a project dependency:
 
 ```bash
-forge install foundry-rs/forge-std --no-commit
+forge install foundry-rs/forge-std
 ```
 
 This will add forge-std as a dependency to your project, which is required for running tests and managing dependencies.
@@ -83,7 +83,7 @@ This will add forge-std as a dependency to your project, which is required for r
 Next, you need to install the [`credible-std` library](credible/credible-std-overview), which provides the base contracts and utilities for writing assertions:
 
 ```bash
-forge install credible-std=https://github.com/phylaxsystems/credible-std/ --no-commit
+forge install credible-std=https://github.com/phylaxsystems/credible-std/
 ```
 
 After installation, create a `remappings.txt` file at the root of your project with the following content:
