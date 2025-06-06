@@ -5,13 +5,6 @@ description: 'This page explains how to install the Phylax Credible Layer (PCL) 
 
 The `pcl` (Phylax Credible Layer) CLI is a command-line tool for interacting with the Phylax Credible Layer.
 
-## Prerequisites
-
-Before installing PCL, ensure you have the following installed:
-
-- **Rust Nightly** (version 1.80 or later)
-- **Git**
-
 ## Installation
 
 ### Option 1: Install with Brew (Recommended)
@@ -27,7 +20,10 @@ This will install the `pcl` binary.
 
 ### Option 2: Install with Cargo
 
-The fastest and easiest way to install `pcl` is using Cargo:
+Another convenient way to install `pcl` is using Cargo. It does require a couple of pre-requisites though:
+
+- **Rust Nightly** (version 1.80 or later)
+- **Git**
 
 ```bash
 cargo +nightly install --git https://github.com/phylaxsystems/pcl --locked
@@ -38,6 +34,10 @@ This will install the `pcl` binary in your Cargo installation directory (typical
 ### Option 3: Build from Source
 
 This option is recommended if you want more control over the build process or prefer to build from source.
+
+Prerequisites:
+- **Rust Nightly** (version 1.80 or later)
+- **Git**
 
 1. Clone the repository:
    ```bash
