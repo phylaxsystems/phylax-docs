@@ -71,7 +71,7 @@ For detailed instructions on setting up your Credible Layer project structure, p
 Alternatively, you can quickly get started by cloning the Credible Layer starter repository:
 
 ```bash
-git clone https://github.com/phylaxsystems/credible-layer-starter
+git clone --recurse-submodules https://github.com/phylaxsystems/credible-layer-starter 
 cd credible-layer-starter
 ```
 
@@ -85,39 +85,38 @@ Let's create our assertion in `OwnableAssertion.a.sol`. Here's the complete code
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {Assertion} from "credible-std/Assertion.sol"; // Using remapping for credible-std
+import {Assertion} from "credible-std/Assertion.sol";
 import {Ownable} from "../../src/Ownable.sol"; // Ownable contract
 
 contract OwnableAssertion is Assertion {
-    // The contract we're protecting
-    Ownable ownable;
-
-    // Constructor takes the address of the contract to protect
-    constructor(address ownable_) {
-        ownable = Ownable(ownable_); // Initialize the Ownable contract reference
-    }
+    Ownable public ownable;
 
     // The triggers function tells the Credible Layer which assertion functions to run
     // This is required by the Assertion interface
     function triggers() external view override {
-        // Register our assertion function to be called when transactions interact with the Ownable contract
-        registerCallTrigger(this.assertionOwnershipChange.selector);
+        // Register our assertion function to be called when transferOwnership is called
+        registerCallTrigger(this.assertionOwnershipChange.selector, Ownable.transferOwnership.selector);
     }
 
     // This assertion checks if ownership has changed between pre and post transaction states
     function assertionOwnershipChange() external {
+        // Get the adopter contract address using the cheatcode
+        // This can be done instead of using the constructor and
+        // is less error prone while storing and submitting the assertion
+        ownable = Ownable(ph.getAssertionAdopter());
+
         // Create a snapshot of the blockchain state before the transaction
         ph.forkPreState();
-        
+
         // Get the owner before the transaction
         address preOwner = ownable.owner();
-        
+
         // Create a snapshot of the blockchain state after the transaction
         ph.forkPostState();
-        
+
         // Get the owner after the transaction
         address postOwner = ownable.owner();
-        
+
         // Assert that the owner hasn't changed
         // If this requirement fails, the assertion will revert
         require(postOwner == preOwner, "Ownership has changed");
@@ -155,65 +154,80 @@ contract OwnableAssertion is Assertion {
 
 #### 2. State Variables and Constructor
 ```solidity
-Ownable ownable;
+Ownable public ownable;
 
-constructor(address ownable_) {
-    ownable = Ownable(ownable_);
-}
+// Optional constructor
+constructor() {}
 ```
 - State variables store the address of contract the assertion is protecting
-- The constructor initializes this variable when the assertion is deployed
-- The constructor is optional, but it is recommended to use this approach to have more flexibility and be able to use the same assertion to protect different contracts
-- You can hardcode the address of the contract you want to protect in the assertion contract, but this only makes sense if you are sure that the assertion will only be used with that one contract and you want to safe a bit of gas
-
-<Note>
-The constructor of the assertion runs against an empty state. That means you can pass values in the constructor but you can not read values from other contracts.
-</Note>
+- The `ph.getAssertionAdopter()` cheatcode is used to get the address of the contract the assertion is protecting and provided the most flexibility.
+- If you are defining other state variables your assertion should know about this can be done in the constructor.
+- The constructor is optional and can be initialized during the storing and submitting of the assertion through the `pcl`.
+- The constructor runs against an empty state. This means you can pass values in the constructor but you can not read values from other contracts.
+- Storage that is set in the constructor persists in the assertion contract.
+- Cheatcodes/precompiles are not accessible in the constructor.
+- You can hardcode the address of the contract you want to protect in the assertion contract, but this is not a flexible or recommended approach.
 
 #### 3. Triggering Assertions
 ```solidity
-// The triggers function tells the Credible Layer which assertion functions to run
+// The triggers function tells the Credible Layer which assertion functions to run and when to run them
 // This is required by the Assertion interface
 function triggers() external view override {
-    // Register our assertion function to be called when transactions interact with the Ownable contract
-    registerCallTrigger(this.assertionOwnershipChange.selector);
+    // Register our assertion function to be called when transferOwnership is called
+    registerCallTrigger(this.assertionOwnershipChange.selector, Ownable.transferOwnership.selector);
 }
 ```
 
-- The `triggers` function is required by the `Assertion` interface
-- It defines which functions in your contract are assertions
-- Each assertion function must be registered here via its function selector
-- Multiple assertions can be defined in a single contract
-- `registerCallTrigger` specifically registers functions to be called after any interaction with the protected contract
-- Use triggers to make sure that assertions are only called when they are needed in order to save gas and resources
-
-<Note>
-The Credible Layer supports different trigger types. `registerCallTrigger` is used to run assertions after any transaction interacting with the protected contract. Other triggers can be implemented depending on your needs.
-See the "Triggers" section in the [cheatcodes documentation](/credible/cheatcodes) for more information.
-</Note>
+- The `triggers` function is required by the `Assertion` interface.
+- Each assertion function must be registered here via its function selector.
+- Multiple assertions can be defined in a single contract.
+- `registerCallTrigger` specifies the function selector of the assertion function to run and the function selector of the protected contract function that should trigger the assertion.
+- A trigger can only trigger one assertion function.
+- Use triggers to make sure that assertions are only called when they are needed in order to save gas and resources.
+- The Credible Layer supports different trigger types. See the "Triggers" section in the [cheatcodes documentation](/credible/cheatcodes) for more information.
 
 #### 4. Assertion Logic
 ```solidity
+// This assertion checks if ownership has changed between pre and post transaction states
 function assertionOwnershipChange() external {
-    ph.forkPreState();                    // Take snapshot before transaction
-    address preOwner = ownable.owner();   // Get pre-transaction owner
-    ph.forkPostState();                   // Take snapshot after transaction
-    address postOwner = ownable.owner();  // Get post-transaction owner
+    // Get the adopter contract address using the cheatcode
+    // This can be done instead of using the constructor and
+    // is less error prone while storing and submitting the assertion
+    ownable = Ownable(ph.getAssertionAdopter());
+
+    // Create a snapshot of the blockchain state before the transaction
+    ph.forkPreState();
+
+    // Get the owner before the transaction
+    address preOwner = ownable.owner();
+
+    // Create a snapshot of the blockchain state after the transaction
+    ph.forkPostState();
+
+    // Get the owner after the transaction
+    address postOwner = ownable.owner();
+
+    // Assert that the owner hasn't changed
+    // If this requirement fails, the assertion will revert
     require(postOwner == preOwner, "Ownership has changed");
 }
 ```
-- The main assertion logic uses special features:
-  - `ph.forkPreState()`: Examines state before the transaction
-  - `ph.forkPostState()`: Examines state after the transaction
-- The assertion reverts if the condition is not met
-- The `ph` namespace refers to the Phylax Helper, which provides utility functions for assertions for more information see the [cheatcodes documentation](/credible/cheatcodes)
-- All assertion functions must be public or external to be callable by the Credible Layer
+- The main assertion logic uses cheatcodes:
+  - `ph.forkPreState()`: Creates a snapshot of the blockchain state before the transaction.
+  - `ph.forkPostState()`: Creates a snapshot of the blockchain state after the transaction.
+- The assertion reverts if the condition is not met. You can have several require checks in the same function to make sure no rules are violated.
+- The `ph` namespace gives access to the Credible Layer cheatcodes, which provide utility functions for assertions. For more information see the [cheatcodes documentation](/credible/cheatcodes).
+- All assertion functions must be public or external to be callable by the Credible Layer.
 
 ### Best Practices for Writing Assertions
 
-1. **Single Responsibility**: Each assertion should verify one specific property or invariant
-2. **State Management**: Use `forkPreState()` and `forkPostState()` to compare values before and after transactions
-3. **Comprehensive Testing**: Write thorough tests to verify both positive and negative cases
+1. **Single Responsibility**: Each assertion should verify one specific property or invariant.
+    - Sometimes it makes sense to check multiple properties in the same assertion function.
+    - Aim to have as many specific assertion functions as possible, since the Credible Layer executes assertions in parallel.
+2. **State Management**: Use `forkPreState()` and `forkPostState()` to compare values before and after transactions.
+3. **Gas Optimization**: Use triggers to make sure that assertions are only called when they are needed in order to save gas and resources.
+4. **Return Early**: When writing more complex assertions checking multiple function calls in the callstack, it is recommended to check basic invariants first before starting to iterate over the callstack.
+
 
 ## 3. Testing the Assertion
 
@@ -235,7 +249,7 @@ Let's break down how to test our assertion:
 ### Test Imports
 
 ```solidity
-import {OwnableAssertion} from "../src/OwnableAssertion.sol";
+import {OwnableAssertion} from "../src/OwnableAssertion.a.sol";
 import {Ownable} from "../../src/Ownable.sol";
 import {CredibleTest} from "credible-std/CredibleTest.sol";
 import {Test} from "forge-std/Test.sol";
@@ -254,12 +268,13 @@ These imports provide all the necessary components to test our assertion effecti
 
 ```solidity
 contract TestOwnableAssertion is CredibleTest, Test {
-    address public newOwner = address(0xdeadbeef);
+    // Contract state variables
     Ownable public assertionAdopter;
-    address public initialOwner = address(0xdeadb999f);
+    address public initialOwner = address(0xf00);
+    address public newOwner = address(0xdeadbeef);
 ```
 - Inherits from `CredibleTest` and `Test` which provides testing utilities
-- `CredibleTest` provides the `cl` cheatcode interface for testing PCL assertions
+- `CredibleTest` provides the `cl` cheatcode interface for testing assertions
 - `Test` is the standard Forge test base contract
 - `assertionAdopter` is the contract we're protecting
 - `newOwner` is used to test ownership transfers
@@ -268,8 +283,9 @@ contract TestOwnableAssertion is CredibleTest, Test {
 ### Setup
 
 ```solidity
+// Set up the test environment
 function setUp() public {
-    assertionAdopter = new Ownable();
+    assertionAdopter = new Ownable(initialOwner);
     vm.deal(initialOwner, 1 ether);
 }
 ```
@@ -277,17 +293,21 @@ function setUp() public {
 - Gives the owner some ETH using Forge's `vm.deal`
 - This setup runs before each test function
 
-### Testing Assertion Failure
+### Testing Assertion Reverted
+
+This test checks that the assertion reverts when ownership changes.
 
 ```solidity
+// Test case: Ownership changes should trigger the assertion
 function test_assertionOwnershipChanged() public {
     address aaAddress = address(assertionAdopter);
     string memory label = "OwnableAssertion";
 
     // Associate the assertion with the protocol
-    // cl will manage the correct assertion execution under the hood when the protocol is being called
+    // cl will manage the correct assertion execution when the protocol is called
     cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
 
+    // Simulate a transaction that changes ownership
     vm.prank(initialOwner);
     vm.expectRevert("Assertions Reverted");
     cl.validate(
@@ -300,14 +320,14 @@ Key components:
    - First argument: Label of the assertion (use the name of the assertion you are testing)
    - Second argument: Address of contract to protect
    - Third argument: Bytecode of the assertion contract
-   - Fourth argument: Constructor arguments for the assertion
+   - Fourth argument: Constructor argument(s) for the assertion
 2. `vm.prank()`: Simulates a call from the owner's address
-3. `vm.expectRevert()`: Expects the assertion to revert
-4. `cl.validate()`: Tests how the assertion responds to a transaction
+3. `vm.expectRevert()`: Expects the assertion to revert with "Assertions Reverted" (only current error message)
+4. `cl.validate()`: Run a transaction against the assertion. If the assertion reverts, the transaction will be reverted and not included in the block.
    - First argument: Label of the assertion (use the name of the assertion you are testing)
-   - Second argument: Address of contract to protect
+   - Second argument: Address of contract to call the function on
    - Third argument: ETH value (0 in this case)
-   - Fourth argument: Encoded function call (transferOwnership in this case)
+   - Fourth argument: Encoded function call to the protected contract (transferOwnership in this case)
 
 <Note>
 `cl` is the cheatcode exposed by the `CredibleTest` contract used specifically for testing assertions. It provides tools to validate your assertions under different conditions without having to deploy them to a real blockchain.
@@ -316,19 +336,21 @@ Key components:
 ### Testing Assertion Success
 
 ```solidity
+// Test case: No ownership change should pass the assertion
 function test_assertionOwnershipNotChanged() public {
-    string memory label = "OwnableAssertion";
     address aaAddress = address(assertionAdopter);
+    string memory label = "OwnableAssertion";
 
     cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
 
+    // Simulate a transaction that doesn't change ownership (transferring to same owner)
     vm.prank(initialOwner);
     cl.validate(
         label, aaAddress, 0, abi.encodePacked(assertionAdopter.transferOwnership.selector, abi.encode(initialOwner))
-    ); // assert that the ownership has not changed
+    );
 }
 ```
-- Similar setup but tests the case where no ownership change occurs
+- Similar to the failing test, but tests the case where no ownership change occurs.
 - Uses transferOwnership to the same owner to simulate a transaction that doesn't change the state in ways that violate our assertion
 - `cl.validate()` will not revert if the assertion passes so we don't need to use `vm.expectRevert()`
 
@@ -336,31 +358,35 @@ function test_assertionOwnershipNotChanged() public {
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.13;
 
-import {OwnableAssertion} from "../src/OwnableAssertion.sol";
+import {OwnableAssertion} from "../src/OwnableAssertion.a.sol";
 import {Ownable} from "../../src/Ownable.sol";
 import {CredibleTest} from "credible-std/CredibleTest.sol";
 import {Test} from "forge-std/Test.sol";
 
 contract TestOwnableAssertion is CredibleTest, Test {
-    address public newOwner = address(0xdeadbeef);
+    // Contract state variables
     Ownable public assertionAdopter;
-    address public initialOwner = address(0xdeadb999f);
+    address public initialOwner = address(0xf00);
+    address public newOwner = address(0xdeadbeef);
 
+    // Set up the test environment
     function setUp() public {
-        assertionAdopter = new Ownable();
+        assertionAdopter = new Ownable(initialOwner);
         vm.deal(initialOwner, 1 ether);
     }
 
+    // Test case: Ownership changes should trigger the assertion
     function test_assertionOwnershipChanged() public {
         address aaAddress = address(assertionAdopter);
-        string memory label = "OwnableAssertion";
+        string memory label = "Ownership has changed";
 
         // Associate the assertion with the protocol
-        // cl will manage the correct assertion execution under the hood when the protocol is being called
+        // cl will manage the correct assertion execution when the protocol is called
         cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
 
+        // Simulate a transaction that changes ownership
         vm.prank(initialOwner);
         vm.expectRevert("Assertions Reverted");
         cl.validate(
@@ -368,16 +394,18 @@ contract TestOwnableAssertion is CredibleTest, Test {
         );
     }
 
+    // Test case: No ownership change should pass the assertion
     function test_assertionOwnershipNotChanged() public {
-        string memory label = "OwnableAssertion";
+        string memory label = "Ownership has not changed";
         address aaAddress = address(assertionAdopter);
 
         cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
 
+        // Simulate a transaction that doesn't change ownership (transferring to same owner)
         vm.prank(initialOwner);
         cl.validate(
             label, aaAddress, 0, abi.encodePacked(assertionAdopter.transferOwnership.selector, abi.encode(initialOwner))
-        ); // assert that the ownership has not changed
+        );
     }
 }
 ```
