@@ -1,0 +1,27 @@
+---
+title: 'Ownership Verification'
+description: 'Understanding ownership verification requirements for the Credible Layer'
+---
+
+To add a contract or register an assertion in the Credible Layer, users must prove they are the admin or owner of that contract. Currently, this is done through the `getOwner()` function exposed by the Ownable pattern.
+
+## Current Requirements
+
+The Credible Layer currently requires contracts to implement the `getOwner()` function to verify ownership. This is a temporary requirement while we work on implementing more flexible verification methods. We are actively researching ways to make this as flexible as possible without compromising security.
+
+<Note>
+For now while developing and getting familiar with assertions you should make sure to use the Ownable pattern in your contracts to make sure they are compatible.
+</Note>
+
+## Future Improvements
+
+We are actively working on expanding the verification methods to support:
+
+- Multisig wallets
+- Governance contracts
+- Custom ownership patterns
+
+## Known Limitations
+
+- Some contracts are fully permissionless and do not have an owner. In this case the Credible Layer will currently not be able to verify ownership.
+
