@@ -31,6 +31,7 @@
               "credible/testing-assertions",
               "credible/cheatcodes",
               "credible/assertion-patterns",
+              "credible/ownership-verification",
               "credible/pcl-reference-guide",
               "credible/credible-std-overview",
               "credible/glossary"
