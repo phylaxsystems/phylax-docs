@@ -3,25 +3,36 @@ title: 'Ownership Verification'
 description: 'Understanding ownership verification requirements for the Credible Layer'
 ---
 
-To add a contract or register an assertion in the Credible Layer, users must prove they are the admin or owner of that contract. Currently, this is done through the `getOwner()` function exposed by the Ownable pattern.
+# Ownership Verification
 
-## Current Requirements
+The current version of the Credible Layer requires that the address returned by the `owner()` function of a contract is the only address that can register that contract and add assertions to it. This is a temporary implementation that will be expanded in future versions.
 
-The Credible Layer currently requires contracts to implement the `getOwner()` function to verify ownership. This is a temporary requirement while we work on implementing more flexible verification methods. We are actively researching ways to make this as flexible as possible without compromising security.
+## Current Implementation
 
-<Note>
-For now while developing and getting familiar with assertions you should make sure to use the Ownable pattern in your contracts to make sure they are compatible.
-</Note>
+The Credible Layer expects contracts to implement the `owner()` function, typically through the Ownable pattern. Here's an example of the expected interface:
 
-## Future Improvements
+```solidity
+interface IOwnable {
+    function owner() external view returns (address);
+}
+```
 
-We are actively working on expanding the verification methods to support:
+When testing or developing with the Credible Layer, ensure your contracts implement this interface to enable project registration and assertion management.
 
-- Multisig wallets
-- Governance contracts
-- Custom ownership patterns
+## Future Development
 
-## Known Limitations
+We are actively researching alternative ownership verification methods that will:
 
-- Some contracts are fully permissionless and do not have an owner. In this case the Credible Layer will currently not be able to verify ownership.
+- Support different ownership patterns
+- Enable seamless ownership transfers
+- Maintain security requirements
+- Allow for multisig integration
+
+These improvements will be implemented in future versions of the Credible Layer.
+
+## Next Steps
+
+- [Quickstart Guide](/credible/pcl-quickstart) - Get started with the Credible Layer
+- [Assertion Guide](/credible/pcl-assertion-guide) - Learn how to write and register assertions
+- [FAQ](/credible/faq) - Find answers to common questions
 
