@@ -1,30 +1,48 @@
-# Welcome to the Phylax docs
+# Phylax Documentation
 
-Here you'll find everything you need to get started, for every Phylax product
+This repository contains the official documentation for Phylax's products.
 
-## Setting up
+## Documentation Structure
 
-The first step to world-class documentation is setting up your editing environments.
+### Credible Layer (`/credible`)
 
-As part of "docs-driven development", we're going to document code
-as we commit it and enforce that in the PR approvals flow.
+Documentation for the Credible Layer including guides, reference materials, and best practices.
 
-It's easy to add to the docs! Either add markdown/MDX syntax to an
-existing file in this repo, or add a new one (feel free to copy from an
-existing one of the same style).
+### Assertions Book (`/assertions-book`)
 
-If you're going to document a specific product, follow instructions from its own repo.
-It'll get compiled into this repo's `docs-prod` branch before deployment
+A collection of practical assertion examples and patterns that developers can use as a learning resource and inspiration for building their own assertions.
+Each example demonstrates real-world patterns and best practices. The book also includes a collection of previous hacks and detailed explanations of how they could have been prevented using assertions.
 
-To add a new file:
+## Code Snippet Integration
 
-- Create .mynewfile.mdx
-- If you want it to show in the sidebar menu, add it to [Navigation](./docs.json)
+The documentation integrates code snippets from the [assertions-examples](https://github.com/phylaxsystems/assertions-examples) repository through:
 
-## Testing
+1. Automated GitHub Actions
+2. Storage in `/snippets`
+3. Mintlify code block references
 
-We don't have a staging site set up for docs yet, so it'll be a bit manual
+## Contributing
 
-- Commit and push the new docs to this repo or a product-specific repo
-- The [github action](https://github.com/phylaxsystems/phylax-docs/actions/workflows/compile-docs.yml) should auto-run
-- run `mintlify dev`
+We welcome contributions to improve our documentation! Here are some ways you can help:
+
+- Add new guides and tutorials
+- Improve existing content for clarity
+- Add more examples to the Assertions Book
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a new branch for your changes
+3. Make your changes:
+   - Create or modify `.mdx` files in the appropriate directory
+   - If adding new pages, add them to `docs.json` to include them in the navigation
+   - For code snippets, ensure they are properly referenced from the assertions-examples repo
+4. Test your changes:
+   - Run `mint dev` to preview locally
+   - Check for broken links using `mint check-links`
+5. Commit your changes with a clear commit message
+6. Push to your fork and create a pull request
+
+## Deployment
+
+Documentation is automatically deployed when changes are pushed to main, compiling all content and integrating code snippets.
