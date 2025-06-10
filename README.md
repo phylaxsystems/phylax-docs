@@ -46,3 +46,7 @@ We welcome contributions to improve our documentation! Here are some ways you ca
 ## Deployment
 
 Documentation is automatically deployed when changes are pushed to main, compiling all content and integrating code snippets.
+
+## License
+
+This documentation is licensed under the [Creative Commons Attribution 4.0 International License](LICENSE).
