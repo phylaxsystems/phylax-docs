@@ -10,7 +10,7 @@ We chose Aave V3 because it's a popular and battle-tested protocol that would se
 
 Link to the Phylax fork of Aave V3: [https://github.com/phylaxsystems/aave-v3-origin/tree/feat/assertions](https://github.com/phylaxsystems/aave-v3-origin/tree/feat/assertions)
 
-### Approach
+## Approach
 
 One of the most common ways of writing assertions is by expressing the protocol invariants as assertions.
 
@@ -19,7 +19,7 @@ Specifically, the [invariants specification](https://github.com/aave-dao/aave-v3
 
 We have mocked parts of the protocol in order to properly test the assertions and ensure that they only revert transactions that break the invariants. The mocks are located in the [mocks](https://github.com/phylaxsystems/aave-v3-origin/tree/feat/assertions/assertions/mocks) directory.
 
-### Here Be Dragons
+## Here Be Dragons
 
 In order to showcase the real power of assertions, we have introduced a bug in the protocol.
 
@@ -31,7 +31,7 @@ The bug can be found in the [BorrowLogic.sol](https://github.com/phylaxsystems/a
 DO NOT USE THIS VERSION OF AAVE V3 IN PRODUCTION!!!
 </Warning>
 
-### Assertion Collections Overview
+## Assertion Collections Overview
 
 - [BaseInvariants](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/BaseInvariants.a.sol) - Core protocol invariants for debt token supply validation, ensuring the sum of individual user debt balances matches the total debt token supply for specific assets.
 
