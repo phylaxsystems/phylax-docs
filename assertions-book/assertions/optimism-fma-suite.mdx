@@ -1,0 +1,77 @@
+---
+title: Optimism FMA Suite
+description: Assertions for Optimism's Failure Mode Analysis
+---
+
+We've taken a deep dive into Optimism's Failure Mode Analysis (FMA) framework and have created a suite of assertions that can be used to prevent critical failure modes identified in the protocol.
+
+Optimism's FMA process is a systematic approach to identifying, analyzing, and mitigating potential failure modes in the protocol. As documented in their [security design docs](https://github.com/ethereum-optimism/design-docs/tree/main/security), FMAs are intended to "shift-left" the process of thinking through risks, so that mitigations can be planned and implemented earlier rather than later.
+
+We chose Optimism's FMA framework because it represents a comprehensive and well-documented approach to security analysis. The protocol has conducted extensive failure mode analyses across various components including the Interop Portal, ETH Lockbox, Message Passing contracts, and more. This makes it an excellent case study for demonstrating how assertions can be used to prevent the specific failure modes identified through systematic security analysis.
+
+Link to the Phylax fork of Optimism: [https://github.com/phylaxsystems/optimism/tree/feat/assertions](https://github.com/phylaxsystems/optimism/tree/feat/assertions) TODO FIX LINK
+
+## Approach
+
+Our approach to writing assertions for Optimism's failure modes follows the same systematic methodology used in their FMA process. We analyze each identified failure mode and create assertions that prevent the conditions that could lead to those failures.
+
+The key insight is that many failure modes identified in FMAs can be prevented by enforcing invariants at the transaction level. For example, if an FMA identifies that "incorrect state reporting by AnchorStateRegistry" could lead to withdrawal safety failures, we can write assertions that validate the state consistency before allowing withdrawal transactions to proceed.
+
+
+## Assertion Collections Overview
+
+### FMA ETH Lockbox Assertions (`fma-eth-lockbox-assertions.a.sol`)
+
+This collection validates the **ETHLockbox** contract's security properties, corresponding to the [ETH Lockbox FMA document](packages/contracts-bedrock/assertions/fma/fma-eth-lockbox.md):
+
+#### Key Checks:
+- **FM1: Unauthorized Access Protection** - Ensures only authorized portals can call `lockETH` and `unlockETH` functions
+- **FM2: Drain Prevention** - Prevents the lockbox from being drained to zero balance in a single transaction
+- **FM3: Proxy Upgrade Protection** - Monitors for unexpected proxy implementation address changes that could indicate buggy upgrades
+
+#### Risk Context:
+These assertions address **CRITICAL** failure modes where unauthorized access or bugs could lead to complete loss of ETH liquidity from the lockbox, with **HIGH** impact but **LOW** likelihood due to access controls and upgrade procedures.
+
+---
+
+### FMA Interop Portal Assertions (`fma-interop-portal-assertions.a.sol`)
+
+This collection validates the **OptimismPortal2** and **AnchorStateRegistry** integration, corresponding to the [Interop Portal FMA document](packages/contracts-bedrock/assertions/fma/fma-interop-portal.md):
+
+#### Key Checks:
+- **FM1: AnchorStateRegistry Integrity** - Validates retirement timestamp updates, respected game type changes, anchor state transitions, and blacklist operations
+- **FM2: Migration Logic Safety** - Ensures ETH lockbox and portal migrations maintain fund safety and state consistency
+- **FM4: SuperRoots Toggle Validation** - Validates that `superRootsActive` flag changes follow proper authorization and state requirements
+
+#### Risk Context:
+These assertions address **CRITICAL** failure modes where incorrect state reporting or migration bugs could lead to **Withdrawal Safety Failure** or **Withdrawal Liveness Failure**, with **LOW** likelihood but **HIGH/CRITICAL** impact.
+
+---
+
+### FMA L2 Message Passing Assertions (`fma-l2-message-passing-assertions.a.sol`)
+
+This collection validates cross-chain message passing contracts, corresponding to the [Message Passing FMA document](packages/contracts-bedrock/assertions/fma/fma-message-passing-contracts.md):
+
+#### Key Checks:
+- **FM1: Destination Chain Validation** - Ensures messages aren't sent to invalid destinations (same chain, zero chain ID, etc.)
+- **FM2: Message Validation Integrity** - Validates message identifiers and parameters for cross-chain message validation
+- **FM3: Message Relay Completeness** - Ensures sent messages are properly recorded and can be relayed
+- **FM4: Replay Protection** - Prevents duplicate message execution through proper `successfulMessages` tracking
+- **FM5: Reentrancy Protection** - Ensures message relay functions are atomic and non-reentrant
+- **FM6: Repeated Identifier Validation** - Prevents duplicate identifier usage within the same transaction
+
+#### Risk Context:
+These assertions address **CRITICAL** failure modes where message passing bugs could lead to asset theft, duplicate minting, or lost funds, with **MEDIUM** likelihood and **HIGH/CRITICAL** impact depending on the specific failure mode.
+
+---
+
+### Overall Pattern
+
+All three assertion collections follow a consistent pattern of:
+1. **Access Control Validation** - Ensuring only authorized entities can perform critical operations
+2. **State Consistency Checks** - Validating that state transitions maintain invariants
+3. **Replay/Reentrancy Protection** - Preventing duplicate or concurrent execution of critical functions
+4. **Migration Safety** - Ensuring upgrade and migration processes maintain system integrity
+
+The assertions are designed to catch the most critical failure modes identified in the FMA documents, focusing on scenarios that could lead to fund loss, withdrawal failures, or system compromise.
+

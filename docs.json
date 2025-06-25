@@ -73,7 +73,10 @@
                 "pages": [
                   {
                     "group": "Real World Protocols",
-                    "pages": ["assertions-book/assertions/aave-v3-suite"]
+                    "pages": [
+                      "assertions-book/assertions/aave-v3-suite",
+                      "assertions-book/assertions/optimism-fma-suite"
+                    ]
                   },
                   {
                     "group": "Access Control & Administrative Changes",
