@@ -185,26 +185,6 @@ The transaction should timeout after about 20 seconds which means that the asser
 Error: transaction was not confirmed within the timeout
 ```
 
-If you try to do another transaction with the same private key, you will most likely get this a replacement transaction error:
-
-```bash
-- server returned an error response: error code -32603: replacement transaction underpriced
-```
-
-This is a known limitation of the system - when an assertion reverts a transaction, it gets dropped by the builder rather than being included in a block. This means that wallets and tools like `cast` will still increment their local nonce, potentially causing issues with subsequent transactions. While this creates some UX friction, it only occurs when someone attempts to violate an assertion (i.e., attempt to hack a protocol), so we consider this an acceptable tradeoff. In the future, we plan to work with wallet providers to better surface these dropped transactions.
-
-We recommend doing a simple ether transfer with a higher gas price, to replace the dropped transaction:
-
-```bash
-cast nonce <your-address> --rpc-url <your-rpc>
-```
-
-and then use the nonce to send a new transaction:
-
-```bash
-cast send <your-address> --value 0 --gas-price <higher-gas-price> --nonce <nonce> --private-key <your-private-key> --rpc-url <your-rpc>
-```
-
 To confirm that the ownership hasn't changed, let's check the owner again:
 
 ```bash
