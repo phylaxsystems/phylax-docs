@@ -31,6 +31,30 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
 
+      - name: Debug token and permissions
+        run: |
+          echo "Checking token availability..."
+          if [ -n "${{ secrets.GH_TOKEN }}" ]; then
+            echo "GH_TOKEN is set"
+            # Test token validity by making a simple API call
+            curl -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+                 -H "Accept: application/vnd.github.v3+json" \
+                 https://api.github.com/user | head -20
+          else
+            echo "GH_TOKEN is not set"
+            exit 1
+          fi
+
+          echo "Checking repository access..."
+          curl -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               https://api.github.com/repos/phylaxsystems/assertion-examples | head -20
+
+          echo "Checking organization access..."
+          curl -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               https://api.github.com/orgs/phylaxsystems | head -20
+
       - name: Create temporary directory and clone assertion-examples repository
         run: |
           # Create temporary directory
@@ -75,6 +99,16 @@ jobs:
 
           echo "Generated MDX files:"
           ls -la snippets/*.mdx || echo "No MDX files generated"
+
+      - name: Test Git operations
+        run: |
+          echo "Testing basic Git operations..."
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Test if we can fetch from the current repository
+          git fetch origin main
+          echo "Git fetch successful"
 
       - name: Create Pull Request
         id: cpr
