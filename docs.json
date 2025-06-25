@@ -72,6 +72,10 @@
                 "group": "General Use Cases",
                 "pages": [
                   {
+                    "group": "Real World Protocols",
+                    "pages": ["assertions-book/assertions/aave-v3-suite"]
+                  },
+                  {
                     "group": "Access Control & Administrative Changes",
                     "pages": [
                       "assertions-book/assertions/ass01-impl-addr-change",
