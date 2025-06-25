@@ -3,26 +3,23 @@ title: 'Frequently Asked Questions (FAQ)'
 description: 'Common questions about the Phylax Credible Layer'
 ---
 
-Welcome to the Phylax Credible Layer FAQ! Here you'll find answers to common questions about the PCL's 
+Welcome to the Phylax Credible Layer FAQ! Here you'll find answers to common questions about the Credible Layer's 
 features, capabilities, and usage. If you can't find what you're looking for, please reach out in 
 our [Telegram](https://t.me/phylax_credible_layer).
 
 ## General Questions
 
-### What is the Phylax Credible Layer (PCL)?
-The Credible Layer is security infrastructure that enables developers to link security rules to their smart contracts on-chain.
-Then, the network validates every transaction that interacts with their smart contracts against their security rules, dropping any invalidating transaction.
-
-For now it is available on select OP stack L2s.
+### What is the Phylax Credible Layer?
+The Credible Layer is a network extension that enables apps to define security rules and prevents transactions from violating them.
 
 ### Why do I need the Credible Layer when I can write rules in my contracts?
 There are several key advantages:
 
 1. **Off-chain Execution**: Rules that would be too expensive or impossible to express on-chain due to gas costs and limits can be implemented easily as assertions as they are run off-chain. Our current benchmarks show around 1000x efficiency gains.
 2. **Simpler Security Model**: By writing invariants that define a state to prevent instead of every edge case that would lead there, you simplify and strengthen your protocol. If you are confused about what an invariant is, read on 👇🏻
-3. **No Redeployment, downtime or APIs**: Add new security rules without modifying your existing contracts. You can even add rules to immutable contracts. To learn how this is possible read “**How do you extend the validation logic of the sequencer to the dApp?”** below**.**
+3. **No Redeployment, downtime or APIs**: Add new security rules without modifying your existing contracts. You can even add rules to immutable contracts. To learn how this is possible read the [How do you extend the validation logic of the sequencer to the dApp?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-dapp) section below.
 
-### How does PCL differ from other security approaches?
+### How does the Credible Layer differ from other security approaches?
 The Credible Layer offers several key advantages:
 
 1. **Prevention First**: Stops attacks before they happen by removing hack transactions during the sequencing process, rather than detecting them after it's too late. 
@@ -122,22 +119,26 @@ You will be able to see all assertions deployed by other protocols on the transp
 
 ## Implementation and Adoption
 
-### How does PCL work at the sequencer level?
-The PCL uses our modified Flashbots rBuilder that:
+### How does the Credible Layer work at the sequencer level?
+The Credible Layer uses our modified Flashbots rBuilder that:
 1. Simulates each transaction against relevant assertions
 2. Allows valid transactions to proceed
 3. Filters out transactions that violate assertions
 4. Maintains Superchain compliance for L2 compatibility
 
+### How does the Credible Layer work with decentralized sequencers?
+- **Enshrine assertions** as part of state transition function or fork-choice rule, making them integral to the protocol.
+- **Credible sequencers** that mark blocks as safe by running invariants and posting attestations on-chain, ensuring safety without compromising performance
+
 ### How are forced inclusion transactions handled?
-For L1 → L2 deposits and other forced transactions, the PCL:
+For L1 → L2 deposits and other forced transactions, the Credible Layer:
 1. Intercepts incoming L1 blocks
 2. Validates deposit transactions
 3. Applies mitigations previously defined by the dApp when necessary
 
 ### Does the Credible Layer introduce new trust assumptions?
 No. For single-sequencer L2s, users already trust the sequencer with transaction inclusion, because, in theory, a sequencer can censor transactions arbitrarily when it receives them at the RPC layer. 
-The PCL simply extends the sequencer's validation logic with dApp-defined rules, expressed as Assertions (EVM bytecode).
+The Credible Layer simply extends the sequencer's validation logic with dApp-defined rules, expressed as Assertions (EVM bytecode).
 
 ### How do you extend the validation logic of the sequencer to the dApp?
 
@@ -152,7 +153,7 @@ This requires no changes to contracts as it is effectively middleware.
 Anyone can write the assertions, but only the owner of the contract that the assertions protect can “activate” them. 
 This way, we ensure that no malicious third party reduces functionality by writing assertions for your contract. 
 
-### My protocol doesn't support the owner interface, can I still use the PCL?
+### My protocol doesn't support the owner interface, can I still use the Credible Layer?
 
 We are working on more authentication techniques to service dApps with non-traditional ownership architectures. 
 
@@ -189,14 +190,14 @@ We will use timelocks on protocols with immutable contracts as many of the users
 
 ### How do I test my assertions?
 
-Testing assertions is similar to standard Forge testing, with additional PCL-specific features:
+Testing assertions is similar to standard Forge testing, with additional Credible Layer-specific features:
 
 1. **Standard Testing Tools**:
    - Use familiar Forge assertions (`assertEq`, `assertTrue`)
    - Access standard cheatcodes (`vm.prank`, `vm.deal`)
    - Leverage console logging for debugging
 
-2. **PCL-Specific Testing**:
+2. **Credible Layer-Specific Testing**:
    - Register assertions using `cl.addAssertion()`
    - Validate transactions with `cl.validate()`
    - Test both positive and negative cases
