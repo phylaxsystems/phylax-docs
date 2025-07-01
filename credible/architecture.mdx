@@ -1,0 +1,193 @@
+---
+title: 'Credible Layer Architecture'
+description: 'Technical architecture of the Phylax Credible Layer'
+---
+
+# Introduction
+
+This page provides a comprehensive overview of the architecture of the Credible Layer. It details the primary system components, their roles, and how they interact to enforce security rules for smart contracts. The document includes architectural diagrams, step-by-step flow explanations, and descriptions of supporting infrastructure.
+
+# Stage 1 Architecture
+
+```mermaid
+---
+title: Phylax Credible Layer Architecture
+---
+flowchart TD
+
+%% Set default styles
+classDef default fill:#fff,color:black
+classDef deployed fill:#66ccff
+classDef dependency fill:#cccc00
+
+subgraph Sequencer[**Sequencer**]
+    SequencerCL[["fa:fa-handshake" op-node]]
+    SequencerEL[["fa:fa-check-to-slot" op-geth/op-reth]]
+    SequencerEL <--> |Consensus| SequencerCL
+end
+
+subgraph CredibleLayer[**Credible Layer**]
+    AssertionEnforcerBlockBuilder[["fa:fa-cube" Block Builder]]
+    AssertionEnforcerCL[["fa:fa-handshake" op-node]]
+    AssertionEnforcerCLI[["fa:fa-terminal" CLI]]
+    AssertionEnforcerDapp[["fa:fa-arrow-pointer" dApp]]
+    AssertionDA[["fa:fa-database" Assertion DA]]
+end
+
+subgraph RollupBoost[**Rollup-Boost**]
+    RollupBoostProxy[["fa:fa-arrows-rotate" Proxy]]
+end
+
+AssertionEnforcerCL <--> |Consensus| AssertionEnforcerBlockBuilder
+AssertionDA --> |Serve Assertions| AssertionEnforcerBlockBuilder
+AssertionEnforcerCLI --> |Submit Assertions| AssertionEnforcerDapp
+AssertionEnforcerDapp --> |OAuth| AssertionEnforcerCLI
+AssertionEnforcerDapp --> |Submit Assertions| AssertionDA
+
+Sequencer --> |Pulls State + Txs| AssertionEnforcerDapp
+
+AssertionEnforcerBlockBuilder --> |Credible Blocks| RollupBoost
+
+RollupBoost --> |New Block Requests| SequencerCL
+SequencerEL --> |Fallback Blocks + Validation| RollupBoost
+
+%% Style all nodes and text to be dark
+class SequencerCL,SequencerEL,SequencerBatcher,SequencerProposer default
+class AssertionEnforcerBlockBuilder,AssertionEnforcerCL,AssertionEnforcerCLI,AssertionEnforcerDapp,AssertionDA deployed
+class RollupBoostProxy dependency
+
+class Sequencer subgraphStyle
+```
+
+### System Elements Explained
+
+- **[Sequencer](/credible/glossary#sequencer)**
+  - **op-node**: The main orchestrator node in the OP Stack, responsible for sequencing transactions and maintaining consensus with the execution layer.
+  - **op-geth/op-reth**: The execution layer clients (Geth or Reth) that process and execute transactions, providing the EVM environment for the rollup.
+
+- **[Credible Layer](/credible/glossary#pcl-phylax-credible-layer)**
+  - **[Block Builder](/credible/glossary#block-builder)**: The implementation of the [Assertion Enforcer](/credible/glossary#assertion-enforcer) role, responsible for constructing blocks, enforcing assertions, and ensuring only valid transactions are included.
+  - **op-node**: A node within the Credible Layer that participates in consensus and interacts with the block builder.
+  - **[pcl CLI](/credible/glossary#pcl-cli)**: Command-line interface for developers to write, test, and submit assertions to the system.
+  - **[dApp](/credible/glossary#credible-dapp)**: The web application interface to register, manage, and view assertions and projects.
+  - **[Assertion DA](/credible/glossary#assertion-da-data-availability)**: The Assertion Data Availability layer, which stores assertion bytecode and serves it to both end-users and the Assertion Enforcer for execution.
+
+- **Rollup-Boost**
+  - **Proxy**: Acts as a bridge between the block builder and the sequencer, enabling integration without requiring changes to the sequencer code. It handles new block requests and fallback validation.
+
+**Interactions:**
+- The Sequencer pulls state and transactions from the Credible Layer dApp.
+- The Block Builder (Assertion Enforcer) enforces assertions and produces credible blocks, which are passed to Rollup-Boost.
+- Rollup-Boost proxies block requests and validation between the block builder and the sequencer.
+- The Assertion DA serves assertion bytecode to the Block Builder, ensuring up-to-date enforcement.
+- The pcl CLI and Credible dApp provide interfaces for assertion submission and management.
+
+## Transaction Flow
+
+The following diagram illustrates the transaction flow through the Credible Layer. Each step is explained in detail below:
+
+![Transaction Flow](../images/tx-flow-credible.png "Transaction flow through the Credible Layer")
+
+1. User submits a transaction to the network.
+2. Transaction enters the Mempool.
+3. [OP-Talos](/credible/glossary#op-talos) receives the transaction for potential inclusion in a block.
+4. For each transaction, OP-Talos:
+    - References the [Assertions](/credible/glossary#assertion) stored in the [Credible Layer](/credible/glossary#pcl-phylax-credible-layer) that are related to the contracts the transaction interacts with.
+    - Fetches [Assertion Bytecode](/credible/glossary#assertion-bytecode) from the [Assertion DA](/credible/glossary#assertion-da-data-availability).
+    - The [PhEVM](/credible/glossary#phevm-phylax-evm):
+        - Simulates transaction execution.
+        - Creates [pre-transaction state](/credible/glossary#pre-statepost-state) and [post-transaction state](/credible/glossary#pre-statepost-state) snapshots.
+        - Executes all relevant assertions against these transactions.
+    - The PhEVM returns assertion results:
+        - If any assertion reverts (invalid state), the transaction is flagged as invalid.
+        - If all assertions pass, the transaction is considered valid.
+5. OP-Talos makes inclusion decisions:
+    - Invalid transactions are not included in the block.
+    - Valid transactions are included in the block.
+6. OP-Talos submits the validated block to the sequencer via Rollup-Boost.
+7. The sequencer accepts and processes the validated block.
+
+## Auxiliary Components
+
+- **[Assertion DA](/credible/glossary#assertion-da-data-availability)**: A centralized server that is operated by Phylax Systems Inc and is responsible for storing the Assertion bytecode, so that it's available to both end-users for inspection as also to the Assertion Enforcer for execution. The Assertion ID is derived by hashing the bytecode. This component will be decentralized in the future.
+
+- **[pcl CLI](/credible/glossary#pcl-cli):** The CLI which developers use to develop and test assertions. It is also used to store and submit assertions, so they can be registered on-chain.
+    - A quickstart guide for the `pcl` is available [here](/credible/pcl-quickstart).
+
+- **[Credible dApp](/credible/glossary#credible-dapp)**: The dApp that enables end-users and developers to interact with the Credible Layer.
+    - It is used by [Assertion Adopters](/credible/glossary#assertion-adopter) to submit and manage their assertions.
+    - It is used by end users (consumers) to view the registered dApps and their assertions. It builds trust, as end users know exactly what security properties the dApps they use have.
+    - An overview of the dApp is available [here](/credible/dapp-guide).
+
+## Sequencer Components
+
+- **OP-Talos**: Implementation of [rbuilder](https://github.com/flashbots/rbuilder) as the Assertion Enforcer.
+- **Rollup-Boost**: Developed by Flashbots, integrates OP-Talos with the Sequencer without code changes to the Sequencer.
+
+```mermaid
+---
+title: OP-Talos Component Diagram
+---
+flowchart TD
+
+%% Set default styles
+classDef default fill:#fff,stroke:#333,color:#333
+classDef subgraphStyle fill:#EBEBEB,stroke:#333,color:#333
+
+subgraph L1Layer[**L1**]
+style L1Layer fill:#EBEBEB,stroke:black
+L1EL[["fa:fa-check-to-slot" L1 Execution Layer]]
+L1CL[["fa:fa-handshake" L1 Consensus Layer]]
+L1CL <--> |Consensus| L1EL
+end
+
+subgraph Sequencer[**Sequencer**]
+style Sequencer fill:#EBEBEB,stroke:black
+SequencerCL[["fa:fa-handshake" op-node]]
+SequencerEL[["fa:fa-check-to-slot" op-geth/op-reth]]
+SequencerBatcher[["fa:fa-bars-progress" Batcher]]
+SequencerProposer[["fa:fa-gears" Proposer]]
+SequencerCL --> |Engine API| RollupBoostProxy
+end
+
+subgraph CredibleLayer[**Assertion Enforcer**]
+style CredibleLayer fill:#EBEBEB,stroke:black
+AssertionEnforcerBlockBuilder[["fa:fa-cube" Block Builder]]
+AssertionEnforcerCL[["fa:fa-handshake" op-node]]
+AssertionEnforcerEL[["fa:fa-check-to-slot" op-reth + block builder]]
+AssertionEnforcerLoader[["fa:fa-list-check" Assertion Loader]]
+AssertionEnforcerCL --> |engine_api| AssertionEnforcerEL
+end
+
+RollupBoostProxy[["fa:fa-arrows-rotate" Rollup-Boost Proxy]]
+AssertionDA[["fa:fa-database" Assertion DA]]
+
+%% Connect L1 Layer to existing components
+SequencerBatcher --> |Publishes Transactions| L1Layer
+SequencerProposer --> |Posts State Roots| L1Layer
+
+%% Existing connections
+RollupBoostProxy --> |Engine API| SequencerEL
+AssertionEnforcerBlockBuilder <--> |Sends Credible Blocks, Receives new blocks| RollupBoostProxy
+AssertionEnforcerLoader <--> |Fetches New Assertions| AssertionDA
+AssertionEnforcerLoader --> |Streams Assertions| AssertionEnforcerBlockBuilder
+Sequencer --> |Indexes Assertion Events| AssertionEnforcerLoader
+SequencerBatcher --> |Approves Blocks| SequencerCL
+
+%% Style all nodes and text to be dark
+class L1EL,L1CL,SequencerCL,SequencerEL,SequencerBatcher,SequencerProposer,AssertionEnforcerBlockBuilder,AssertionEnforcerCL,AssertionEnforcerEL,AssertionEnforcerLoader,RollupBoostProxy,AssertionDA default
+
+class L1Layer,Sequencer,CredibleLayer subgraphStyle
+```
+
+*OP-Talos Component Diagram: This diagram shows the interaction between the L1 Layer, Sequencer, Assertion Enforcer, Rollup-Boost Proxy, and Assertion DA in the context of assertion enforcement and block production.*
+
+- **L1 Layer**: Represents the Ethereum mainnet, consisting of the L1 Execution Layer and L1 Consensus Layer. It receives published transactions and state roots from the sequencer.
+- **Sequencer**: Composed of the op-node, execution clients (op-geth/op-reth), batcher, and proposer. The sequencer is responsible for building blocks, validating transactions, and interfacing with both the Rollup-Boost Proxy and L1 Layer.
+- **Credible Layer (Assertion Enforcer)**: Contains the Block Builder (which enforces assertions), its own op-node and execution layer, and the Assertion Loader. The Assertion Loader fetches new assertions from the Assertion DA and streams them to the Block Builder for enforcement.
+- **Rollup-Boost Proxy**: Acts as a bridge between the sequencer and the Assertion Enforcer, handling block requests and validation without requiring changes to the sequencer code.
+- **Assertion DA**: The data availability layer that stores assertion bytecode and metadata, making them accessible to the Assertion Loader and Block Builder.
+
+# Stage 2 Architecture
+
+Stage 2 will be dedicated to solving forced inclusion in the OP Stack. We have a solution in development to address this, and more information will be provided as the design and implementation mature.
