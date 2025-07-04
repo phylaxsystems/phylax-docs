@@ -5,9 +5,7 @@ description: 'What is the Phylax Credible Layer?'
 
 # The Phylax Credible Layer
 
-The Credible Layer is a network extension that enables apps to define security rules and prevents transactions from violating them. Then, the network validates every transaction that interacts with their smart contracts against their security rules, preventing any invalidating transaction.
-
-Unlike traditional security approaches that merely monitor or mitigate damage after an attack has occurred, the Credible Layer enables block builders to prevent hacks by removing malicious transactions before they can be executed on-chain.
+The Credible Layer is a network extension that enables apps to define security rules and prevents transactions from violating them.
 
 <Columns cols={2}>
   <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
@@ -22,7 +20,14 @@ If you prefer visual learning over reading text, watch this introductory video f
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/J7uPS1ruR04?si=GkQEASccP6BHoPGt" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
-_The Credible Layer is currently only available on OP-stack blockchains. Join the waitlist and we'll let you know if there's a fit._
+## Key Benefits
+
+- **Prevents Hacks, Doesn't Just Detect Them**: Stop attacks before they succeed, not after funds are lost
+- **No False Positives**: Only blocks transactions that explicitly violate defined rules
+- **Developer-Friendly**: Assertions are written in Solidity, which means no need for context switching or learning a new language
+- **Non-Invasive**: Add protection without modifying existing contracts
+- **High Performance**: Processes 1,500 transactions in under 50ms
+- **Transparent Security**: All assertions are visible on-chain
 
 ## How It Works
 
@@ -124,15 +129,6 @@ Above is a high level overview of the system components and their interactions.
 
 ![Credible Layer dApp](/images/credible-dapp-ui-project.png)
 *Screenshot of the Credible Layer dApp UI for a project*
-
-## Key Benefits
-
-- **Prevents Hacks, Doesn't Just Detect Them**: Stop attacks before they succeed, not after funds are lost
-- **No False Positives**: Only blocks transactions that explicitly violate defined rules
-- **Developer-Friendly**: Assertions are written in Solidity, which means no need for context switching or learning a new language
-- **Non-Invasive**: Add protection without modifying existing contracts
-- **High Performance**: Processes 1,500 transactions in under 50ms
-- **Transparent Security**: All assertions are visible on-chain
 
 ## Use Cases
 
