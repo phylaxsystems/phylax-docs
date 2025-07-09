@@ -1,6 +1,6 @@
 ---
 title: Aave V3 Suite
-description: Assertions for Aave V3
+description: Credible Layer Assertions for Aave V3
 ---
 
 We've taken a deep dive into the Aave V3 protocol and have created a suite of assertions that can be used to increase the security of the protocol.
@@ -19,7 +19,13 @@ Specifically, the [invariants specification](https://github.com/aave-dao/aave-v3
 
 We have mocked parts of the protocol in order to properly test the assertions and ensure that they only revert transactions that break the invariants. The mocks are located in the [mocks](https://github.com/phylaxsystems/aave-v3-origin/tree/feat/assertions/assertions/mocks) directory.
 
-## Here Be Dragons
+## Maturity
+
+The Aave V3 assertion suite has been tested quite thoroughly given the early stage of the Credible Layer testing capabilities. We feel confident that the production assertions could be added to an Aave V3 deployment and add value to the security and robustness of the protocol.
+
+We would recommend running the assertions in a test environment against old transactions to ensure that the assertions do not trigger false positives or other unexpected behavior. This is standard best practice that should be followed for any protocol upgrades and does not just apply to assertions.
+
+## Here Be Dragons 🐲
 
 In order to showcase the real power of assertions, we have introduced a bug in the protocol.
 
@@ -28,27 +34,135 @@ Anyone borrowing exactly `333e6` tokens will receive double the amount of tokens
 The bug can be found in the [BorrowLogic.sol](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/src/contracts/protocol/libraries/logic/BorrowLogic.sol#L128-L144) file.
 
 <Warning>
-DO NOT USE THIS VERSION OF AAVE V3 IN PRODUCTION!!!
+**DO NOT USE THIS VERSION OF AAVE V3 IN PRODUCTION!**
 </Warning>
 
-## Assertion Collections Overview
+## Key Features
 
-- [BaseInvariants](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/BaseInvariants.a.sol) - Core protocol invariants for debt token supply validation, ensuring the sum of individual user debt balances matches the total debt token supply for specific assets.
+- Protocol violation detection
+- Comprehensive operation coverage (supply, borrow, repay, withdraw, liquidation, flash loans)
+- Based on Aave's official invariants
+- Extensive test suite
 
-- [BorrowLogicErrorAssertion](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/BorrowLogicErrorAssertion.a.sol) - Validates that borrow amounts correctly match underlying token balance changes, ensuring users receive the exact amount they borrowed.
+## Assertion Types
 
-- [BorrowingInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/BorrowingInvariantAssertions.a.sol) - Comprehensive borrowing post-condition checks including liability decreases, health factor validation, reserve state verification, borrow caps, and balance/debt change tracking.
+### Production Assertions (High Value)
 
-- [FlashloanInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/FlashloanInvariantAssertions.a.sol) - Ensures flash loans are properly repaid with sufficient funds (amount + fee) returned to the protocol.
+These assertions provide unique value beyond pure Solidity capabilities:
 
-- [HealthFactorAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/HealthFactorAssertions.a.sol) - Validates health factor invariants across all operations, ensuring healthy accounts don't become unhealthy, proper actor isolation, and correct health factor transitions for different action types.
+- **Cross-transaction validation**: Verify invariants across multiple operations
+- **Oracle security**: Detect price manipulation and consistency issues
+- **Complex state relationships**: Validate accounting integrity
+- **Proxy/delegatecall resilience**: Use event logs for robust verification
 
-- [LendingInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/LendingInvariantAssertions.a.sol) - Supply and withdrawal post-condition checks including reserve state validation, supply caps, balance change verification, and collateral withdrawal health requirements.
+### Showcase Assertions (Demonstrative)
 
-- [LiquidationInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/LiquidationInvariantAssertions.a.sol) - Liquidation-specific invariants covering health factor thresholds, grace periods, close factor conditions, deficit creation/accounting, and reserve state requirements.
+These demonstrate assertion capabilities but could be implemented in Solidity:
 
-- [OracleAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/OracleAssertions.a.sol) - Price oracle validation including maximum price deviation checks (5%) and price consistency verification across transactions.
+- **Basic balance validation**: Simple balance change checks
+- **Health factor validation**: Standard health factor maintenance
+- **Reserve state validation**: Basic reserve condition checks
+- **Cap validation**: Supply/borrow cap enforcement
 
-Each collection focuses on specific protocol operations and ensures critical invariants are maintained during Aave V3's core lending, borrowing, and liquidation functions.
+## Assertion Collections
 
+### Production Assertions (High Value)
 
+#### Core Invariants
+
+- **[BaseInvariants](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/production/BaseInvariants.t.sol)** - Cross-transaction accounting validation:
+  - Debt token supply consistency across operations
+  - AToken supply consistency across operations
+  - Underlying balance invariant validation
+  - Virtual balance sanity checks
+  - Liquidity index integrity verification
+
+#### Oracle Security
+
+- **[OracleAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/production/OracleAssertions.t.sol)** - Price manipulation detection:
+  - Borrow/supply/liquidation price deviation monitoring (5% max)
+  - Price consistency validation across transactions
+  - Oracle manipulation attack prevention
+
+#### Flashloan Protection
+
+- **[FlashloanInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/production/FlashloanInvariantAssertions.t.sol)** - Flashloan security:
+  - Repayment verification (amount + fee)
+  - Fee payment validation
+  - Reserve state integrity
+
+#### Robust Verification
+
+- **[LogBasedAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/production/LogBasedAssertions.t.sol)** - Proxy/delegatecall resilient validation:
+  - Balance change verification using event logs
+  - Works with complex call patterns
+
+### Showcase Assertions (Demonstrative)
+
+#### Operation Validation
+
+- **[BorrowingInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/showcase/BorrowingInvariantAssertions.t.sol)** - Standard borrow checks:
+  - Liability decrease verification
+  - Health factor maintenance
+  - Reserve state consistency
+  - Borrow cap enforcement
+  - Balance/debt tracking
+
+- **[LendingInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/showcase/LendingInvariantAssertions.t.sol)** - Standard supply/withdrawal checks:
+  - Reserve state validation
+  - Supply cap enforcement
+  - Balance change verification
+  - Collateral withdrawal health
+
+- **[LiquidationInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/showcase/LiquidationInvariantAssertions.t.sol)** - Standard liquidation checks:
+  - Health factor thresholds
+  - Grace period validation
+  - Close factor conditions
+  - Deficit accounting
+  - Reserve state requirements
+
+#### Health Factor Management
+
+- **[HealthFactorAssertions](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/showcase/HealthFactorAssertions.t.sol)** - Health factor transitions:
+  - Non-decreasing health factor actions
+  - Healthy to unhealthy transition prevention
+  - Supply/withdraw/repay health maintenance
+
+#### Basic Validation
+
+- **[BorrowLogicErrorAssertion](https://github.com/phylaxsystems/aave-v3-origin/blob/feat/assertions/assertions/src/showcase/BorrowLogicErrorAssertion.t.sol)** - Simple balance validation:
+  - Borrow amount matches underlying balance change
+
+## Testing
+
+### Structure
+
+- Positive tests: Valid operations pass
+- Negative tests: Invalid operations fail
+- Integration tests: Multi-operation sequences
+- Edge cases: Boundary conditions
+
+### Categories
+
+- Individual operation tests
+- Batch operation tests
+- Error condition tests
+- Mock protocol tests
+
+## Intentional Bugs
+
+1. **333e6 Borrow Bug**: Borrowing exactly 333e6 tokens returns double amount
+   - Location: `BorrowLogic.sol` lines 128-144
+   - Test: `test_BASE_INVARIANT_A_DebtTokenSupply_333e6Bug()`
+
+2. **Mock Protocol**: `BrokenPool.sol` for controlled testing
+
+## Usage
+
+```bash
+# Run all assertion tests
+FOUNDRY_PROFILE=assertions pcl test
+
+# Run specific test file
+FOUNDRY_PROFILE=assertions pcl test assertions/test/BaseInvariants.t.sol
+```
