@@ -4,6 +4,10 @@ title: GMX v1 AUM Manipulation Hack
 
 On July 9, 2025, [GMX v1 lost around ~\$42 million to an attack](https://x.com/GMX_IO/status/1942989975814820347) that exploited how the protocol calculated its total value (Assets Under Management or AUM). This was GMX's second hack of 2025, following a $13 million loss in March. The attacker used a reentrancy vulnerability to manipulate pricing data, artificially inflating the protocol's apparent value, then immediately withdrew tokens at the inflated price.
 
+- [Exploit tx](http://arbiscan.io/tx/0x03182d3f0956a91c4e4c8f225bbc7975f9434fab042228c7acdc5ec9a32626ef)
+- [Exploiter address Arbitrum](https://arbiscan.io/address/0xdf3340a436c27655ba62f8281565c9925c3a5221)
+- [Exploiter address Mainnet](https://etherscan.io/address/0xdf3340a436c27655ba62f8281565c9925c3a5221)
+
 ## Core Vulnerability Mechanism
 
 The attack exploited a design flaw where short position operations immediately updated `globalShortAveragePrices`, which directly impacted AUM calculations used for GLP token minting and redemption. The attacker used reentrancy to establish massive short positions within a single transaction, artificially inflating GLP prices.
