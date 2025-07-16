@@ -73,8 +73,8 @@ They are fundamental to the Credible Layer's approach to security, and assertion
 While invariants define what should always be true, assertions give you the practical means to enforce these rules across your entire protocol:
 
 1. **Definition**:
-   - Mathematical properties that must hold true throughout execution
-   - Core rules that define valid vs. invalid protocol states
+   - Properties that must hold true throughout execution
+   - Core rules that define valid and invalid protocol states
    - Security guarantees that shouldn't be violated
 2. **Common Examples**:
    - Total supply must equal sum of all balances
@@ -83,11 +83,12 @@ While invariants define what should always be true, assertions give you the prac
    - Price changes must stay within acceptable bounds
 3. **Advantages**:
    - Easier to reason about security properties
-   - Can catch every attack vector
+   - Path Independent: Any state transition that breaks the invariant is flagged
 
 For a good explainer on invariants see [this article](https://blog.trailofbits.com/2025/02/12/the-call-for-invariant-driven-development/)
 
 ### How do assertions work?
+
 Although assertions are stored on-chain to enable transparency, assertions run off-chain through the PhEVM (Phylax EVM) by the sequencer for performance reasons and can:
 
 1. Compare state before and after transactions
@@ -132,13 +133,12 @@ The Credible Layer uses our modified Flashbots rBuilder that:
 - **Enshrine assertions** as part of state transition function or fork-choice rule, making them integral to the protocol.
 - **Credible sequencers** that mark blocks as safe by running invariants and posting attestations on-chain, ensuring safety without compromising performance
 
-### How are forced inclusion transactions handled?
-For L1 → L2 deposits and other forced transactions, the Credible Layer:
-1. Intercepts incoming L1 blocks
-2. Validates deposit transactions
-3. Applies mitigations previously defined by the dApp when necessary
+### How are forced included transactions handled for OP Stack Rollups?
+
+The solution is currently in implementation. Ask us about it!
 
 ### Does the Credible Layer introduce new trust assumptions?
+
 No. For single-sequencer L2s, users already trust the sequencer with transaction inclusion, because, in theory, a sequencer can censor transactions arbitrarily when it receives them at the RPC layer. 
 The Credible Layer simply extends the sequencer's validation logic with dApp-defined rules, expressed as Assertions (EVM bytecode).
 
