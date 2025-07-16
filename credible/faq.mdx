@@ -133,13 +133,12 @@ The Credible Layer uses our modified Flashbots rBuilder that:
 - **Enshrine assertions** as part of state transition function or fork-choice rule, making them integral to the protocol.
 - **Credible sequencers** that mark blocks as safe by running invariants and posting attestations on-chain, ensuring safety without compromising performance
 
-### How are forced inclusion transactions handled?
-For L1 → L2 deposits and other forced transactions, the Credible Layer:
-1. Intercepts incoming L1 blocks
-2. Validates deposit transactions
-3. Applies mitigations previously defined by the dApp when necessary
+### How are forced included transactions handled for OP Stack Rollups?
+
+The solution is currently in implementation. Ask us about it!
 
 ### Does the Credible Layer introduce new trust assumptions?
+
 No. For single-sequencer L2s, users already trust the sequencer with transaction inclusion, because, in theory, a sequencer can censor transactions arbitrarily when it receives them at the RPC layer. 
 The Credible Layer simply extends the sequencer's validation logic with dApp-defined rules, expressed as Assertions (EVM bytecode).
 
