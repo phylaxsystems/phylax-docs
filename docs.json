@@ -145,7 +145,6 @@
               {
                 "group": "Previous Hacks Assertions",
                 "pages": [
-                  "assertions-book/previous-hacks-intro",
                   "assertions-book/previous-hacks/hack1-radiant-capital",
                   "assertions-book/previous-hacks/hack2-vestra-dao",
                   "assertions-book/previous-hacks/compound-upgrade-bug",
