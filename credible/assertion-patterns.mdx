@@ -44,14 +44,13 @@ interface IOwnable {
 }
 
 contract OwnerChangeAssertion is Assertion {
-    IOwnable public target = IOwnable(address(0xbeef));
-    
     function triggers() external view override {
         // Register trigger for changes to the owner storage slot
         registerStorageChangeTrigger(this.assertOwnerChange.selector, bytes32(uint256(0))); // Assuming owner in slot 0
     }
     
     function assertOwnerChange() external {
+        IOwnable target = IOwnable(ph.getAssertionAdopter());
         // Layer 1: Simple State Check
         // Check if owner changed between pre and post state
         ph.forkPreState();
