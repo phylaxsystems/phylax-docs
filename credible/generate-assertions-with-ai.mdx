@@ -15,25 +15,9 @@ As the number of example assertions grows, we expect the quality of the generate
 Similarly, we hope that more and more protocols will start clearly documenting their invariants, as it's both an important step towards better security in general and towards more efficient assertions generation.
 
 ### Setup
+- We assume you've already installed the Credible Layer CLI (`pcl`) and have a project set up. If you don't have one set up yet, you can follow the [pcl quickstart guide](/credible/pcl-quickstart) to get started.
 
-1. In your existing smart contract repository, install the credible-std library:
-   ```bash
-   forge install https://github.com/phylaxsystems/credible-std/
-   ```
-
-2. Create an assertions directory next to your source files folder:
-   ```
-   your-project/
-   ├── src/
-   └── assertions/
-       ├── src/           # Assertion implementation files (.a.sol)
-       └── test/          # Test files (.t.sol)
-   ```
-   Note: Assertion files should use the `.a.sol` extension to distinguish them from regular Solidity files.
-   
-   For more information on installing the library, see the [PCL Quickstart](/credible/pcl-quickstart).
-
-3. Open your repository in Cursor and configure Cursor settings:
+- Open your project in Cursor and configure Cursor settings:
    - Add Phylax docs for context: [https://docs.phylax.systems](https://docs.phylax.systems/)
    - Let Cursor's model index your project files
 
@@ -52,7 +36,7 @@ To generate high-quality assertions, your prompts should include:
 
 #### Prompt Template
 ```
-I need to create Phylax assertions to protect my protocol. Here's the context:
+Create Phylax assertions to protect my protocol. Here's the context:
 
 1. Contract: [paste your contract code or describe its function]
 
@@ -81,7 +65,7 @@ We'll demonstrate using [Origin Protocol's contracts](https://github.com/OriginP
 
 #### Sample Prompt
 ```
-I need to create Phylax assertions for Origin Protocol's token contract. 
+Create Phylax assertions for Origin Protocol's token contract. 
 
 1. Context: Origin Protocol's OUSD token has rebasing and non-rebasing accounts. It needs to ensure that specific invariants are maintained during operations.
 
