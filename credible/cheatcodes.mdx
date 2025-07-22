@@ -116,7 +116,7 @@ function bar() public {
 ```
 </Info>
 
-Delegate calls for example in a proxy contract will trigger two calls and hence there will be two entries per call in the returned array. You can filter these duplicates by checking if the `bytecode_address` is the same as the `target_address`. If they're not the same, you can assume it's a delegate call. We are working on improving the devex around this.
+Delegate calls, for example in a proxy contract, will trigger two calls and hence there will be two entries per call in the returned array. You can filter these duplicates by checking if the `bytecode_address` is the same as the `target_address`. If they're not the same, you can assume it's a delegate call. We are working on improving the devex around this.
 
 ## State Change Tracking
 
