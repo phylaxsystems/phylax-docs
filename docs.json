@@ -35,7 +35,8 @@
               "credible/ownership-verification",
               "credible/pcl-reference-guide",
               "credible/credible-std-overview",
-              "credible/glossary"
+              "credible/glossary",
+              "credible/generate-assertions-with-ai"
             ]
           },
           {
@@ -72,6 +73,7 @@
               {
                 "group": "General Use Cases",
                 "pages": [
+                  "assertions-book/assertions/use-cases-index",
                   {
                     "group": "Real World Protocols",
                     "pages": [
@@ -144,7 +146,7 @@
               {
                 "group": "Previous Hacks Assertions",
                 "pages": [
-                  "assertions-book/previous-hacks-intro",
+                  "assertions-book/previous-hacks/prev-hacks-index",
                   "assertions-book/previous-hacks/hack1-radiant-capital",
                   "assertions-book/previous-hacks/hack2-vestra-dao",
                   "assertions-book/previous-hacks/compound-upgrade-bug",

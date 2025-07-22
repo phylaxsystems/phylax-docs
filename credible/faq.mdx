@@ -50,7 +50,7 @@ No. We are a permissionless protocol that enables hack definition and prevention
 ## Technical Details
 
 ### What exactly is an assertion?
-An assertion is a Solidity contract, that defines an invariant about your protocol, some state you want to prevent, and that is stored on-chain. You can think of it as an inverse intent - you define the state you don't want to occur without specifying or caring about all the specifc vectors that could lead to it.
+An assertion is a Solidity contract, that defines an invariant about your protocol, some state you want to prevent, and that is stored on-chain. You can think of it as an inverse intent - you define the state you don't want to occur without specifying or caring about all the specific vectors that could lead to it.
 
 Assertions are binary in nature, implemented through Solidity's **`require`** statement:
 
@@ -142,6 +142,10 @@ The solution is currently in implementation. Ask us about it!
 No. For single-sequencer L2s, users already trust the sequencer with transaction inclusion, because, in theory, a sequencer can censor transactions arbitrarily when it receives them at the RPC layer. 
 The Credible Layer simply extends the sequencer's validation logic with dApp-defined rules, expressed as Assertions (EVM bytecode).
 
+### Does the Credible Layer slow down the network?
+
+No. We have performed worst-case stress tests, using the most inefficient operations available (hashing), to execute assertions worth 1bn gas per block without slowing down the block time. This is because the Credible Layer heavily parallelizes execution and can fully utilize CPU cores compared to standard serial execution of transactions.
+
 ### How do you extend the validation logic of the sequencer to the dApp?
 
 Flashbots introduced a piece of software that enables a Sequencer to have an external block-builder that implements custom block-building logic, without changing the sequencer itself.
@@ -161,7 +165,7 @@ We are working on more authentication techniques to service dApps with non-tradi
 
 ### How can you write rules for immutable contracts?
 
-As mentioned above in “How do you extend the validation logic of the sequencer to the dApp?”, the Credible Layer is functionally middleware as it enables the sequencer to remove transactions that would break the dApp's rules.
+As mentioned above in [How do you extend the validation logic of the sequencer to the dApp?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-dapp), the Credible Layer is functionally middleware as it enables the sequencer to remove transactions that would break the dApp's rules.
 The Credible Layer will still work with immutable contracts because the prevention happens at the sequencing step, which is where the L2 has ultimate power over transaction inclusion. 
 
 ### What are the ramifications of writing rules for supposedly immutable contracts?

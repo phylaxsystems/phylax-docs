@@ -5,18 +5,17 @@ description: Overview of the cheatcodes made available for the Phylax Credible L
 
 ## Introduction
 
-Cheatcodes are PhEVM (Phylax EVM) specific instructions implemented in native code instead of EVM 
-bytecode. They can communicate with Internal APIs and support all existing Ethereum cheatcodes up 
-to Dancun, plus new capabilities for:
+Cheatcodes are specialized testing and assertion utilities in the Phylax Credible Layer that extend beyond traditional EVM capabilities. Implemented as native code (Rust) rather than EVM bytecode, they provide developers with powerful tools for writing and testing assertions by offering deep inspection into transaction execution, storage changes, call traces, and blockchain state. Some of the main capabilities cheatcodes provide are:
 
-1. Manipulation of the PhEVM state
-2. Forking of state from one or multiple EVM networks
-3. Utilities for writing and managing assertions
+- Forking the state of the blockchain before and after a transaction
+- Callstack introspection in ways not possible with standard EVM tools
+- State change tracking for specific storage slots
+- Triggering assertions on specific events
 
 <Note>
 You may notice the terms "precompiles" and "cheatcodes" used interchangeably 
 in some contexts. We use the term "cheatcodes" as it's more familiar to Solidity developers who are 
-already using testing frameworks like Foundry/Forge or Hardhat. Both terms refer to native functions 
+already using testing frameworks like Foundry or Hardhat. Both terms refer to native functions 
 that extend the EVM's capabilities, but "cheatcodes" better reflects their role in the developer 
 experience.
 </Note>
@@ -38,6 +37,8 @@ function load(
     bytes32 slot
 ) external view returns (bytes32 data)
 ```
+
+You can see an example of how to use this cheatcode in the [Storage Lookups](/credible/use-case-mappings/storage-lookups) use case mapping.
 
 ## State Management
 
@@ -77,6 +78,8 @@ struct Log {
 function getLogs() external returns (Log[] memory logs)
 ```
 
+You can see an example of how to use this cheatcode in the [Read Logs](/credible/use-case-mappings/read-logs) use case mapping.
+
 ### `getCallInputs`
 
 Gets the call inputs of all the calls made in the current transaction and returns them in an array of `CallInputs` structs.
@@ -98,6 +101,8 @@ function getCallInputs(
 ) external view returns (CallInputs[] memory calls);
 ```
 
+You can see an example of how to use this cheatcode in the [Function Call Inputs](/credible/use-case-mappings/function-call-inputs) use case mapping.
+
 <Info>
 Internal calls are not actual EVM calls but rather a Solidity language feature. They are not traced by the CallTracer and will not result in `CallInputs` or trigger call-based assertions. However, using the `this` keyword (e.g., `this.functionName()`) creates an external call that will be traced and can trigger assertions.
 
@@ -117,6 +122,8 @@ function bar() public {
 ```
 </Info>
 
+Delegate calls, for example in a proxy contract, will trigger two calls and hence there will be two entries per call in the returned array. You can filter these duplicates by checking if the `bytecode_address` is the same as the `target_address`. If they're not the same, you can assume it's a delegate call. We are working on improving the devex around this.
+
 ## State Change Tracking
 
 ### `getStateChanges`
@@ -134,6 +141,8 @@ function getStateChanges(
     bytes32 slot
 ) external view returns (bytes32[] memory stateChanges);
 ```
+
+You can see an example of how to use this cheatcode in the [State Changes](/credible/use-case-mappings/state-changes) use case mapping.
 
 <Note>
 The array returned includes the initial value of the slot as the first element, so the length of the array is either 0 or >= 2.
@@ -187,7 +196,7 @@ Triggers determine when your assertion functions will be executed. You can regis
 different types of triggers in your assertion's `triggers()` function.
 
 <Note>
-Use triggers to make sure that assertions are only called when they are needed in order to save gas and resources.
+Use triggers to ensure that assertions are only called when they are needed in order to save gas and resources.
 For example, instead of triggering an assertion on every call to a contract, you can trigger it only on specific function calls that are able to change the state of the specific value you are asserting on.
 </Note>
 
@@ -301,7 +310,7 @@ Get assertion adopter contract address associated with the assertion triggering 
 function getAssertionAdopter() external view returns (address);
 ```
 
-This cheat code allows for not defining an assertion adopter contract in the assertion contract constructor.
+This cheatcode removes the need to define an assertion adopter contract in the assertion contract constructor.
 
-The cheat code is only available in the `triggers()` function and the assertion functions.
+The cheatcode is only available in the `triggers()` function and the assertion functions.
 It cannot be used in the constructor since assertion contracts have no state during deployment.
