@@ -35,7 +35,8 @@
               "credible/ownership-verification",
               "credible/pcl-reference-guide",
               "credible/credible-std-overview",
-              "credible/glossary"
+              "credible/glossary",
+              "credible/generate-assertions-with-ai"
             ]
           },
           {
