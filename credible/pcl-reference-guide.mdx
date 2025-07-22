@@ -16,9 +16,22 @@ The `pcl` command expects the following directory structure:
 
 ```text
 root-dir/
-  assertions-dir/
+  assertions/
     src/      # Assertion source files (.a.sol)
     test/     # Test files (.t.sol)
+```
+
+You will most likely have a `src` directory on the same level as the `assertions` directory, where you develop your protocol smart contracts and a `test` directory where you develop your tests, so a typical project structure might look like this:
+
+```text
+my-protocol/
+  assertions/
+    src/      # Assertion source files (.a.sol)
+    test/     # Test files (.t.sol)
+  src/
+    MyProtocol.sol # Protocol smart contracts
+  test/
+    MyProtocol.t.sol # Protocol tests
 ```
 
 ## Commands
