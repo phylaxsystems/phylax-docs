@@ -89,8 +89,6 @@ import {Assertion} from "credible-std/Assertion.sol";
 import {Ownable} from "../../src/Ownable.sol"; // Ownable contract
 
 contract OwnableAssertion is Assertion {
-    Ownable public ownable;
-
     // The triggers function tells the Credible Layer which assertion functions to run
     // This is required by the Assertion interface
     function triggers() external view override {
@@ -103,7 +101,7 @@ contract OwnableAssertion is Assertion {
         // Get the adopter contract address using the cheatcode
         // This can be done instead of using the constructor and
         // is less error prone while storing and submitting the assertion
-        ownable = Ownable(ph.getAssertionAdopter());
+        Ownable ownable = Ownable(ph.getAssertionAdopter());
 
         // Create a snapshot of the blockchain state before the transaction
         ph.forkPreState();
@@ -154,19 +152,16 @@ contract OwnableAssertion is Assertion {
 
 #### 2. State Variables and Constructor
 ```solidity
-Ownable public ownable;
-
 // Optional constructor
 constructor() {}
 ```
-- State variables store the address of contract the assertion is protecting
-- The `ph.getAssertionAdopter()` cheatcode is used to get the address of the contract the assertion is protecting and provided the most flexibility.
-- If you are defining other state variables your assertion should know about this can be done in the constructor.
+
+- If you are defining state variables for additional contracts your assertion should know about this can be done in the constructor.
 - The constructor is optional and can be initialized during the storing and submitting of the assertion through the `pcl`.
+- In this example we entirely leave out the constructor, since we use the `ph.getAssertionAdopter()` cheatcode to get the address of the contract we want to protect.
 - The constructor runs against an empty state. This means you can pass values in the constructor but you can not read values from other contracts.
 - Storage that is set in the constructor persists in the assertion contract.
 - Cheatcodes/precompiles are not accessible in the constructor.
-- You can hardcode the address of the contract you want to protect in the assertion contract, but this is not a flexible or recommended approach.
 
 #### 3. Triggering Assertions
 ```solidity
@@ -193,7 +188,7 @@ function assertionOwnershipChange() external {
     // Get the adopter contract address using the cheatcode
     // This can be done instead of using the constructor and
     // is less error prone while storing and submitting the assertion
-    ownable = Ownable(ph.getAssertionAdopter());
+    Ownable ownable = Ownable(ph.getAssertionAdopter());
 
     // Create a snapshot of the blockchain state before the transaction
     ph.forkPreState();
