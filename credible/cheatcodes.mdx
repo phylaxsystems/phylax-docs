@@ -38,7 +38,7 @@ function load(
 ) external view returns (bytes32 data)
 ```
 
-You can see an exampple of how to use this cheatcode in the [Storage Lookups](/credible/use-case-mappings/storage-lookups) use case mapping.
+You can see an example of how to use this cheatcode in the [Storage Lookups](/credible/use-case-mappings/storage-lookups) use case mapping.
 
 ## State Management
 
@@ -78,7 +78,7 @@ struct Log {
 function getLogs() external returns (Log[] memory logs)
 ```
 
-You can see an exampple of how to use this cheatcode in the [Read Logs](/credible/use-case-mappings/read-logs) use case mapping.
+You can see an example of how to use this cheatcode in the [Read Logs](/credible/use-case-mappings/read-logs) use case mapping.
 
 ### `getCallInputs`
 
@@ -101,7 +101,7 @@ function getCallInputs(
 ) external view returns (CallInputs[] memory calls);
 ```
 
-You can see an exampple of how to use this cheatcode in the [Function Call Inputs](/credible/use-case-mappings/function-call-inputs) use case mapping.
+You can see an example of how to use this cheatcode in the [Function Call Inputs](/credible/use-case-mappings/function-call-inputs) use case mapping.
 
 <Info>
 Internal calls are not actual EVM calls but rather a Solidity language feature. They are not traced by the CallTracer and will not result in `CallInputs` or trigger call-based assertions. However, using the `this` keyword (e.g., `this.functionName()`) creates an external call that will be traced and can trigger assertions.
@@ -142,7 +142,7 @@ function getStateChanges(
 ) external view returns (bytes32[] memory stateChanges);
 ```
 
-You can see an exampple of how to use this cheatcode in the [State Changes](/credible/use-case-mappings/state-changes) use case mapping.
+You can see an example of how to use this cheatcode in the [State Changes](/credible/use-case-mappings/state-changes) use case mapping.
 
 <Note>
 The array returned includes the initial value of the slot as the first element, so the length of the array is either 0 or >= 2.
