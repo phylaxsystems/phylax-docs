@@ -70,7 +70,7 @@ These demonstrate assertion capabilities but could be implemented in Solidity:
 
 #### Core Invariants
 
-- **[BaseInvariants](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/BaseInvariants.t.sol)** - Cross-transaction accounting validation:
+- **[BaseInvariants](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/BaseInvariants.a.sol)** - Cross-transaction accounting validation:
   - Debt token supply consistency across operations
   - AToken supply consistency across operations
   - Underlying balance invariant validation
@@ -79,21 +79,21 @@ These demonstrate assertion capabilities but could be implemented in Solidity:
 
 #### Oracle Security
 
-- **[OracleAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/OracleAssertions.t.sol)** - Price manipulation detection:
+- **[OracleAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/OracleAssertions.a.sol)** - Price manipulation detection:
   - Borrow/supply/liquidation price deviation monitoring (5% max)
   - Price consistency validation across transactions
   - Oracle manipulation attack prevention
 
 #### Flashloan Protection
 
-- **[FlashloanInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/FlashloanInvariantAssertions.t.sol)** - Flashloan security:
+- **[FlashloanInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/FlashloanInvariantAssertions.a.sol)** - Flashloan security:
   - Repayment verification (amount + fee)
   - Fee payment validation
   - Reserve state integrity
 
 #### Robust Verification
 
-- **[LogBasedAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/LogBasedAssertions.t.sol)** - Proxy/delegatecall resilient validation:
+- **[LogBasedAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/LogBasedAssertions.a.sol)** - Proxy/delegatecall resilient validation:
   - Balance change verification using event logs
   - Works with complex call patterns
 
@@ -101,20 +101,20 @@ These demonstrate assertion capabilities but could be implemented in Solidity:
 
 #### Operation Validation
 
-- **[BorrowingInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/BorrowingInvariantAssertions.t.sol)** - Standard borrow checks:
+- **[BorrowingInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/BorrowingInvariantAssertions.a.sol)** - Standard borrow checks:
   - Liability decrease verification
   - Health factor maintenance
   - Reserve state consistency
   - Borrow cap enforcement
   - Balance/debt tracking
 
-- **[LendingInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/LendingInvariantAssertions.t.sol)** - Standard supply/withdrawal checks:
+- **[LendingInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/LendingInvariantAssertions.a.sol)** - Standard supply/withdrawal checks:
   - Reserve state validation
   - Supply cap enforcement
   - Balance change verification
   - Collateral withdrawal health
 
-- **[LiquidationInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/LiquidationInvariantAssertions.t.sol)** - Standard liquidation checks:
+- **[LiquidationInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/LiquidationInvariantAssertions.a.sol)** - Standard liquidation checks:
   - Health factor thresholds
   - Grace period validation
   - Close factor conditions
@@ -123,14 +123,14 @@ These demonstrate assertion capabilities but could be implemented in Solidity:
 
 #### Health Factor Management
 
-- **[HealthFactorAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/HealthFactorAssertions.t.sol)** - Health factor transitions:
+- **[HealthFactorAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/HealthFactorAssertions.a.sol)** - Health factor transitions:
   - Non-decreasing health factor actions
   - Healthy to unhealthy transition prevention
   - Supply/withdraw/repay health maintenance
 
 #### Basic Validation
 
-- **[BorrowLogicErrorAssertion](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/srcshowcase/BorrowLogicErrorAssertion.t.sol)** - Simple balance validation:
+- **[BorrowLogicErrorAssertion](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/BorrowLogicErrorAssertion.a.sol)** - Simple balance validation:
   - Borrow amount matches underlying balance change
 
 ## Testing
