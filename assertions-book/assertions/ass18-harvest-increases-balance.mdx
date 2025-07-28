@@ -5,62 +5,24 @@ description: 'Make sure that the balance increases after a harvest'
 
 import ass18HarvestIncreasesBalance from "/snippets/ass18-harvest-increases-balance.a.mdx";
 
-## Use Case
-In DeFi yield farming protocols, users can deposit assets into a pool and earn rewards. The process of claiming the compounded rewards is called "harvesting". This assertion ensures that harvesting operations maintain protocol integrity by:
+## Use Case & Applications
 
-- Preventing harvests that decrease vault balances
-- Ensuring price per share remains stable or increases
-- Detecting potential yield farming exploits
-- Maintaining protocol solvency by enforcing proper reward distribution
+Ensures harvest operations in yield farming protocols maintain integrity by preventing balance decreases and price per share manipulation. Critical for yield farming protocols (Beefy, Yearn, Harvest), liquidity mining programs, staking protocols with reward distribution, and auto-compounding vaults.
 
-This is a critical security parameter because:
-- Incorrect harvest implementations could lead to loss of user funds
-- Price per share manipulation could enable flash loan attacks
-- Balance decreases during harvest could indicate protocol insolvency
-- Yield farming exploits often target harvest mechanisms
-
-### Applicable Protocols
-- Yield farming protocols (e.g., Beefy, Yearn, Harvest)
-- Liquidity mining programs
-- Staking protocols with reward distribution
-- Auto-compounding vaults
-
-These protocols need this assertion because:
-- Yield farming protocols rely on accurate reward distribution
-- Liquidity mining programs must maintain proper reward accounting
-- Staking protocols need to ensure rewards are properly distributed
-- Auto-compounding vaults must maintain accurate share pricing
+Incorrect harvest implementations could lead to loss of user funds, price per share manipulation enabling flash loan attacks, or protocol insolvency through improper reward distribution.
 
 ## Explanation
-The assertion implements a multi-layered approach to verify harvest operations:
 
-1. **Pre-harvest State Check**:
-   - Uses `forkPreState()` to capture vault balance and price per share
-   - Establishes baseline metrics before harvest
+Implements multi-layered approach to verify harvest operations:
 
-2. **Post-harvest Validation**:
-   - Uses `forkPostState()` to verify metrics after harvest
-   - Ensures balance hasn't decreased (can stay the same if harvested recently)
-   - Confirms price per share hasn't decreased
+- `forkPreState()` / `forkPostState()`: Capture vault balance and price per share before/after harvest
+- `getStateChangesUint()`: Monitor all balance changes during transaction execution
+- `registerCallTrigger()`: Trigger on harvest function calls
+- Ensures balance hasn't decreased (can stay same if harvested recently)
+- Confirms price per share hasn't decreased
+- Prevents manipulation through multiple harvest calls
 
-3. **Sequential State Change Validation**:
-   - Uses `getStateChangesUint()` to monitor all balance changes
-   - Verifies each balance change is valid relative to the previous state
-   - Prevents manipulation through multiple harvest calls
-   - Ensures no balance decreases occur at any point during the transaction
-
-The assertion uses the following cheatcodes:
-- `forkPreState()`: Captures pre-harvest metrics
-- `forkPostState()`: Verifies post-harvest metrics
-- `getStateChangesUint()`: Monitors all balance changes
-- `registerCallTrigger()`: Triggers on harvest function calls
-
-This approach ensures that:
-1. Harvests never decrease vault balances
-2. Price per share remains stable or increases
-3. No unauthorized balance modifications occur
-4. Protocol solvency is maintained
-5. Multiple harvest calls in the same transaction are handled correctly
+The assertion verifies each balance change is valid relative to previous state, ensuring no balance decreases occur at any point and maintaining protocol solvency.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -68,28 +30,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass18HarvestIncreasesBalance />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion:
-
-1. Deploy a test instance of the yield farming vault
-2. Set up initial vault state with assets and rewards
-3. Execute harvest operations with varying conditions:
-   - Single harvest with rewards
-   - Multiple harvests in same transaction
-   - Harvest with no new rewards
-4. Verify the assertion correctly:
-   - Allows harvests that maintain or increase balance
-   - Prevents harvests that decrease balance
-   - Maintains price per share stability
-   - Handles multiple harvest calls correctly
-
-## Assertion Best Practices
-- Combine with other assertions like [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain) for comprehensive protection
-- Use appropriate balance thresholds based on protocol reward rates
-- Consider adding maximum balance increase limits to prevent reward manipulation
-- Add checks for price per share throughout the callstack (could be a separate assertion for modularity)
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
