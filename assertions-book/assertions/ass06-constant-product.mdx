@@ -5,50 +5,21 @@ description: Assert that a constant product is maintained in an AMM pool
 
 import ass6ConstantProduct from "/snippets/ass6-constant-product.a.mdx";
 
-## Use Case
-Check if the constant product (k = x * y) is maintained in an AMM pool. This is a critical security parameter for Automated Market Maker (AMM) protocols as it ensures:
+## Use Case & Applications
 
-- Prevention of unauthorized manipulation of pool reserves
-- Detection of potential flash loan attacks that could drain the pool
-- Verification that trades maintain the expected mathematical relationship between assets
-- Protection against arithmetic overflow/underflow vulnerabilities in reserve calculations
+Ensures the constant product (k = x * y) is maintained in AMM pools, preventing unauthorized manipulation of pool reserves and potential flash loan attacks. Critical for Uniswap V2-style AMMs, DEX aggregators, lending protocols using AMM price oracles, and yield farming protocols providing liquidity.
 
-The constant product formula (k = x * y) is fundamental to many AMM designs, particularly those following the Uniswap V2 model. Any deviation from this invariant could indicate a serious security issue or potential exploit.
-
-### Applicable Protocols
-- Uniswap V2-style AMMs that use the x * y = k formula
-- DEX aggregators that interact with constant product pools
-- Lending protocols that use AMM pools as price oracles
-- Yield farming protocols that provide liquidity to AMM pools
-
-These protocols rely heavily on the constant product invariant for:
-- Price discovery and trading
-- Liquidity provision calculations
-- Fee calculations
-- Oracle price feeds
+The constant product formula is fundamental to many AMM designs - any deviation could indicate a serious security issue or potential exploit.
 
 ## Explanation
-The assertion monitors the product of reserves (k) in an AMM pool to ensure it remains constant after transactions:
 
-1. Pre-state verification: Captures the initial state of pool reserves
-2. Post-state verification: Checks the final state after transactions
-3. Constant product validation: Ensures k = reserve0 * reserve1 remains unchanged
+Monitors the product of reserves (k) in AMM pools to ensure it remains constant after transactions using:
 
-The assertion uses the following cheatcodes:
-- `forkPreState()`: Creates a fork of the state before the transaction to capture initial reserves
-- `forkPostState()`: Creates a fork of the state after the transaction to verify final reserves
-- `getStateChanges()`: Monitors reserve changes throughout the transaction callstack to detect potential manipulations
+- `forkPreState()` / `forkPostState()`: Compare reserve product before and after transaction
+- `getStateChanges()`: Monitor reserve changes throughout transaction callstack
+- Direct validation that k = reserve0 * reserve1 remains unchanged
 
-The implementation performs two checks:
-1. A direct comparison between pre-state and post-state constant product values
-2. Verification that the final product equals the initial product
-
-This approach ensures that:
-- The constant product invariant is maintained throughout the transaction
-- No unauthorized manipulation of reserves occurs
-- The mathematical relationship between assets is preserved
-
-Note that as mentioned in the code comments, an ideal solution would allow for checking the invariant at any point during the transaction's execution, not just at the beginning and end.
+The assertion verifies both initial/final states and detects potential manipulations during transaction execution.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -56,23 +27,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass6ConstantProduct />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion:
-1. Deploy an AMM pool with the constant product formula
-2. Set up the assertion contract with the pool address
-3. Test various scenarios:
-   - Normal trades that maintain the constant product
-   - Edge cases with very small/large numbers
-   - Attempted manipulations that should be caught
-   - Flash loan attacks that try to drain the pool
-
-## Assertion Best Practices
-- Consider combining this assertion with [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations) for comprehensive AMM security
-- Use precise arithmetic checks to prevent rounding errors from triggering false positives
-- Monitor both reserve slots to catch any unauthorized modifications
-- Add detailed error messages to help with debugging when assertions fail
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations)
