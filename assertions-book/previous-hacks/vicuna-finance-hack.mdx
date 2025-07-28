@@ -1,0 +1,56 @@
+---
+title: Vicuna Finance Oracle Manipulation Hack
+description: Vicuna Finance lost $700K due to LP token oracle manipulation that ignored invariant-based pricing
+---
+
+## Description
+
+The Vicuna Finance hack resulted in a $700K loss through oracle manipulation of Beets LP tokens used as collateral on the Sonic chain. **The Core Bug** was that LP tokens were priced using a simple sum formula: `price_lp = price_token1 * amount_token1 + price_token0 * amount_token0` instead of fair pricing that accounts for the underlying pool's constant product formula.
+
+**Exploitation Steps:**
+1. **Pool Manipulation**: Attacker swapped large amounts from token0 to token1, artificially inflating the LP token's oracle-reported price
+2. **Over-Collateralization**: Deposited the overvalued LP tokens as collateral and borrowed assets against the inflated value  
+3. **Price Deflation**: Reversed the swap (token1 back to token0), deflating the LP price and creating bad debt in the protocol
+
+The attack was executed across two markets - the $S market and the stablecoin market - draining approximately $700K in total. The fundamental issue was that the oracle treated LP tokens like regular assets without considering that their value should reflect extractable value, not just the sum of underlying token values.
+
+## Proposed Solution
+
+A targeted price deviation check on all calls could have prevented this oracle manipulation attack. The assertion function monitors how each call affects oracle prices and reverts if any single call causes price swings exceeding 5%:
+
+```solidity
+function assertPriceDeviation() external view {
+    BeetsLP assertionAdopter = BeetsLP(ph.getAssertionAdopter());
+    ph.forkTxPre();
+    uint256 preOraclePrice = oracle.getPrice(token); // Get the price before the transaction
+
+    // Using swap calls as an example, but any call that affects price should be checked
+    PhEvm.CallInputs[] memory calls = ph.getCallInputs(address(assertionAdopter), assertionAdopter.swap.selector);
+    for (uint256 i = 0; i < calls.length; i++) {
+        ph.forkCallPost(calls[i].id);
+        
+        uint256 postOraclePrice = oracle.getPrice(token);
+
+        // Calculate deviation and require change is within range
+        uint256 deviation = ((postOraclePrice - preOraclePrice) * 10000) / preOraclePrice;
+        require(deviation <= MAX_DEVIATION_BPS, "ORACLE_PRICE_MANIPULATION: Token price changed by more than 5% in single transaction");
+    }
+    
+}
+```
+
+## How This Assertion Prevents the Exploit
+
+This assertion function detects oracle price manipulation by monitoring how each call affects prices.
+
+**How it works:**
+1. **Captures baseline**: Uses `ph.forkTxPre()` to get the oracle price before any calls
+2. **Monitors each call**: Iterates through calls (like swaps) that could affect the oracle price  
+3. **Checks price impact**: Uses `ph.forkCallPost()` to see how each call changed the oracle price
+4. **Enforces limits**: Reverts if any single call causes >5% price deviation from the baseline
+
+Using Phylax cheatcodes allows checking the oracle price at every call in the transaction, detecting price manipulation as it happens and preventing attacks that rely on temporary price distortions.
+
+## Related Resources
+
+- [Oracle Manipulation Example](/assertions-book/assertions/ass28-intra-tx-oracle-deviation)
