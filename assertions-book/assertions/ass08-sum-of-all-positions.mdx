@@ -5,105 +5,36 @@ description: Assert that the sum of all positions is the same as the total suppl
 
 import ass8PositionsSum from "/snippets/ass8-positions-sum.a.mdx";
 
-## Use Case
-This assertion verifies that the sum of all individual positions in a protocol exactly matches the total supply reported by the protocol. This is a critical security check that prevents several potential vulnerabilities:
+## Use Case & Applications
 
-- **Supply Manipulation**: Ensures that positions cannot be minted or burned without being properly accounted for in the total supply
-- **Double Counting**: Prevents the same assets from being counted multiple times in different positions
-- **Missing Deductions**: Catches cases where assets are removed from positions but not subtracted from the total supply
-- **Accounting Discrepancies**: Identifies any discrepancies between the protocol's internal accounting and the reported total supply
+Verifies that the sum of all individual positions exactly matches the total supply reported by the protocol, preventing supply manipulation, double counting, and accounting discrepancies. Critical for lending protocols, liquidity pools, staking mechanisms, synthetic asset protocols, and fractionalized NFT protocols where accurate position accounting is fundamental to security.
 
-This assertion is particularly critical for protocols that manage user deposits and withdrawals, as any discrepancy between individual positions and total supply could lead to:
-- Incorrect interest calculations
-- Inability to withdraw funds
-- Protocol insolvency
-- Potential for economic attacks
-
-## Applicable Protocols
-
-This assertion is essential for:
-
-- **Lending Protocols**: Where users deposit assets and receive interest, and the protocol must maintain accurate accounting of all deposits
-- **Liquidity Pools**: Such as AMMs or yield farms where users provide liquidity and the protocol tracks their share of the pool
-- **Staking Mechanisms**: Where users stake tokens and the protocol must accurately track all staked positions
-- **Synthetic Asset Protocols**: Where the protocol creates synthetic representations of assets and must maintain a 1:1 relationship between the underlying and synthetic assets
-- **Fractionalized NFT Protocols**: Where NFTs are split into multiple shares that must sum to the total value of the NFT
-
-For these protocols, maintaining the integrity of the relationship between individual positions and total supply is fundamental to their security and economic model.
+Any discrepancy between individual positions and total supply could lead to incorrect calculations, withdrawal failures, or protocol insolvency.
 
 ## Explanation
 
-This assertion works by comparing two key metrics:
-
-1. The sum of all individual positions in the protocol
-2. The total supply reported by the protocol
-
-In a correctly functioning protocol, these two values should always be equal. Any discrepancy indicates a potential vulnerability in the protocol's accounting system.
-
-### Implementation Approach
-
-Since direct iteration over all non-zero entries in a mapping is not currently supported, we use a workaround based on function call inputs:
+Since direct iteration over all positions isn't currently supported, this assertion uses a workaround that tracks position changes through function calls:
 
 1. Capture the pre-state total supply before the transaction
-2. Execute the transaction
-3. Identify all function calls that modify positions (e.g., deposit, withdraw)
-4. Calculate the sum of changes to these positions
-5. Verify that the new total supply equals the pre-state total supply plus the sum of position changes
+2. Monitor all function calls that modify positions (deposit, withdraw)
+3. Calculate the sum of changes to these positions
+4. Verify that the new total supply equals the pre-state total supply plus the sum of position changes
 
-This approach avoids the need to iterate over all positions while still effectively detecting accounting discrepancies.
+Uses these cheatcodes:
+- `ph.forkPreState()` / `ph.forkPostState()`: Capture total supply before and after transaction
+- `ph.getCallInputs()`: Track function calls that modify positions
+- `registerCallTrigger()`: Trigger on position-modifying functions
 
-Check the [Modified Keys](/credible/use-case-mappings/unsupported-use-cases/modified-keys) use case for a detailed breakdown of what the iteration over all positions would look like.
+Check the [Modified Keys](/credible/use-case-mappings/unsupported-use-cases/modified-keys) use case for details on what direct position iteration would look like.
 
-### Cheatcodes Used
-
-The assertion uses the following cheatcodes and functions:
-- `ph.forkPreState()`: Captures the state before the transaction
-- `ph.forkPostState()`: Creates a fork of the state after the transaction
-- `ph.getCallInputs()`: Gets the inputs to function calls for tracking position changes
-- `registerCallTrigger()`: Registers a trigger for deposit function calls
-
-You can find more information about the cheatcodes in the [Cheatcodes Documentation](/credible/cheatcodes).
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
 
 <ass8PositionsSum />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-
-To test this assertion effectively:
-
-1. **Setup a test environment** with a mock lending protocol that has:
-   - A total supply function
-   - A balance mapping for user positions
-   - Functions to deposit and withdraw assets
-
-2. **Create test scenarios** that:
-   - Make normal deposits and withdrawals
-   - Attempt to manipulate the total supply without updating positions
-   - Create edge cases with very large or very small position changes
-
-3. **Verify the assertion catches**:
-   - Discrepancies between position changes and total supply changes
-   - Cases where the total supply is updated incorrectly
-
-## Assertion Best Practices
-
-When implementing this assertion:
-
-1. **Function Call Tracking**: Ensure you're tracking all relevant function calls that modify positions. For complex protocols, this may include deposit, withdraw, transfer, and other custom functions.
-
-2. **Precision Handling**: Be careful with integer precision when summing changes, especially for protocols with very large numbers or when dealing with multiple function calls.
-
-3. **Separate Assertions**: Consider creating separate assertion functions for different types of position-modifying functions (deposits, withdrawals, transfers) to make the code more maintainable and easier to debug.
-
-4. **Debugging Tips**:
-   - Log the pre-state total supply, position changes, and new total supply
-   - Compare the expected vs. actual values when failures occur
-
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
-
 - [Lending Health Factor](/assertions-book/assertions/ass07-lending-health-factor): Ensures user balances are consistent across different views
 - [Liquidation Health Factor](/assertions-book/assertions/ass16-liquidation-health-factor): Verifies that the total supply doesn't exceed protocol limits
