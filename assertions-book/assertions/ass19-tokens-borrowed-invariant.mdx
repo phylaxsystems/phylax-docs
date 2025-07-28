@@ -5,50 +5,22 @@ description: 'Make sure that the tokens borrowed are not more than the tokens de
 
 import ass19TokensBorrowedInvariant from "/snippets/ass19-tokens-borrowed-invariant.a.mdx";
 
-## Use Case
-In lending protocols, a fundamental invariant is that the total tokens borrowed cannot exceed the total tokens deposited. Violating this invariant could lead to:
+## Use Case & Applications
 
-- Protocol insolvency due to insufficient collateral
-- Loss of user funds when withdrawals cannot be processed
-- Protocol-wide security compromise
-- Destabilization of dependent DeFi ecosystems
+Ensures the fundamental lending protocol invariant that total tokens borrowed never exceed total tokens deposited, preventing protocol insolvency and ensuring withdrawal requests can be honored. Critical for lending and borrowing platforms (Aave, Compound, Morpho), money markets with deposit/borrow pools, yield aggregators implementing lending strategies, and synthetic asset protocols with collateralized debt positions.
 
-This assertion is particularly important for:
-- Protecting protocol solvency by enforcing collateralization requirements
-- Preventing potential economic attacks that drain liquidity
-- Ensuring the protocol can always honor withdrawal requests
-- Maintaining trust in the lending market
-
-### Applicable Protocols
-- Lending and borrowing platforms (e.g., Aave, Compound, Morpho)
-- Money markets that maintain deposit and borrow pools
-- Yield aggregators that implement lending strategies
-- Synthetic asset protocols with collateralized debt positions
-
-These protocols need this assertion because:
-- Lending protocols rely on proper collateralization for solvency
-- Money markets must maintain balanced deposit/borrow ratios
-- Yield aggregators often leverage lending protocols for returns
-- Synthetic asset protocols need proper backing for minted assets
+Violating this invariant could lead to protocol insolvency, loss of user funds, or destabilization of dependent DeFi ecosystems.
 
 ## Explanation
-The assertion implements a straightforward approach to verify the fundamental invariant that total tokens borrowed never exceed total tokens deposited.
 
-The assertion works by:
-1. Using `forkPostState()` to capture the protocol state after a transaction
-2. Checking the total supply of assets (tokens deposited) and total borrowed assets
-3. Asserting that the total supply is always greater than or equal to total borrowed assets
+Implements straightforward verification that total tokens borrowed never exceed total tokens deposited:
 
-The assertion uses the following cheatcodes and functions:
-- `ph.forkPostState()`: Creates a fork of the state after the transaction to verify the invariant holds
-- `registerStorageChangeTrigger()`: Registers the assertion to trigger on relevant storage slots that track supply and borrow totals
+- `ph.forkPostState()`: Capture protocol state after transaction to verify invariant holds
+- `registerStorageChangeTrigger()`: Trigger on storage slots tracking supply and borrow totals
+- Check total supply of assets (tokens deposited) and total borrowed assets
+- Assert total supply ≥ total borrowed assets
 
-This approach ensures that:
-1. The protocol remains solvent after any state transitions
-2. No transaction can cause the final borrowed amount to exceed the final supplied amount
-3. The protocol maintains a proper collateralization ratio at the end of each transaction
-
-While we can't accurately check each intermediate state within the callstack against its corresponding values, triggering the assertion on any change to these critical storage values ensures the invariant is enforced after every relevant operation. This is a known limitation of the current assertion system - we cannot capture and compare the exact state of multiple variables at the precise moment one variable changes during execution. Instead, we verify the final state after all operations in the transaction have completed, ensuring the invariant holds at transaction boundaries.
+The assertion verifies final state after all transaction operations complete, ensuring the invariant holds at transaction boundaries. This is a known limitation - we cannot capture intermediate state changes during execution, only the final result.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -56,28 +28,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass19TokensBorrowedInvariant />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion:
-
-1. Deploy a test instance of the lending protocol with the proper assertion contract
-2. Create supply and borrow positions with various balances
-3. Execute transactions that modify the supply/borrow ratio, including:
-   - Adding supply (which should always succeed)
-   - Borrowing assets (should succeed if within limits)
-   - Borrowing assets that exceed total supply (should be caught by the assertion)
-   - Withdrawing supply that would result in borrow > supply (should be caught by the assertion)
-   - Liquidations that affect the total supply/borrow ratio
-4. Verify the assertion correctly triggers when the invariant is violated
-
-Note that this assertion only checks the final state after a transaction completes, so it won't detect temporary invariant violations that are corrected within the same transaction.
-
-## Assertion Best Practices
-- Combine with [Liquidation Health Factor](/assertions-book/assertions/ass16-liquidation-health-factor) to ensure both individual positions and protocol-wide invariants are protected
-- For complex lending protocols with multiple assets, implement separate assertions for each asset type
-- Always use the specific storage slots for your protocol implementation - the example uses slots 0 and 1, but real implementations may differ
-- Consider adding additional assertions for complementary invariants like minimum collateralization ratios
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [Liquidation Health Factor](/assertions-book/assertions/ass16-liquidation-health-factor)
