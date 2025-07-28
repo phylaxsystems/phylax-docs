@@ -5,45 +5,26 @@ description: 'Ensure message validity, unique usernames, and rate limits in Farc
 
 import ass22FarcasterMessageValidity from "/snippets/ass22-farcaster-message-validity.a.mdx";
 
-## Use Case
+## Use Case & Applications
 
-Farcaster is a decentralized social media protocol where security and integrity of the platform depends on maintaining several critical invariants. While not directly handling financial assets like DeFi protocols, the security concerns are still significant:
+Ensures security and integrity of decentralized social media protocols by maintaining critical invariants: data integrity (proper message signatures), identity protection (preventing username spoofing), DoS prevention (rate limiting), and platform stability. Critical for social protocols (Farcaster, Lens Protocol), identity systems managing unique identifiers, content publishing platforms, and governance systems requiring message validity.
 
-- **Data Integrity**: Ensuring that all messages are properly signed by their claimed author
-- **Identity Protection**: Preventing username spoofing or duplication that could enable impersonation
-- **DoS Prevention**: Protecting network resources from abuse through rate limiting
-- **Platform Stability**: Maintaining defined constraints on content size and format
-
-Without proper validation, attackers could:
-- Post messages as other users by bypassing signature verification
-- Register usernames that are already taken, breaking user identity uniqueness
-- Flood the network with posts to cause resource exhaustion
-- Create invalid content that could break client applications
-
-## Applicable Protocols
-
-This assertion is particularly valuable for:
-
-- **Social Protocols**: Decentralized social networks like Farcaster, Lens Protocol, and similar platforms where user identity and content integrity are crucial
-- **Identity Systems**: Any protocol managing unique identifiers or usernames in a decentralized context
-- **Content Publishing Platforms**: Systems that store user-generated content on-chain or in decentralized storage with on-chain references
-- **Governance Systems**: Protocols where message validity is critical for voting or proposal submission
+Without proper validation, attackers could post messages as other users, register duplicate usernames, flood the network, or create invalid content that breaks client applications.
 
 ## Explanation
 
-This assertion provides comprehensive protection for Farcaster-like protocols by monitoring three critical aspects:
+Provides comprehensive protection by monitoring three critical aspects:
 
-1. **Message Validity**: Validates that all posted messages have proper signatures from the claimed author, meet content requirements, and pass protocol-specific validation checks
-2. **Username Uniqueness**: Ensures that usernames remain unique across the system and that ownership is properly tracked
-3. **Rate Limiting**: Enforces posting rate limits to prevent network abuse
+- **Message Validity**: Validates posted messages have proper signatures, meet content requirements, and pass protocol-specific checks
+- **Username Uniqueness**: Ensures usernames remain unique and ownership is properly tracked  
+- **Rate Limiting**: Enforces posting rate limits to prevent network abuse
 
-The assertion uses the following cheatcodes:
-- `ph.forkPreState()`: Creates execution contexts to check system state before operations
-- `ph.forkPostState()`: Creates execution contexts to check system state after operations
-- `ph.getCallInputs()`: Retrieves and decodes the parameters from function calls
-- `registerCallTrigger()`: Registers the assertion to be triggered when specific functions are called
+Uses these cheatcodes:
+- `ph.forkPreState()` / `ph.forkPostState()`: Check system state before and after operations
+- `ph.getCallInputs()`: Retrieve and decode function call parameters
+- `registerCallTrigger()`: Trigger when specific functions are called
 
-The multi-layered approach first checks basic invariants, then performs deeper validation of protocol-specific rules. This provides both performance efficiency and comprehensive coverage.
+The multi-layered approach checks basic invariants first, then performs deeper validation of protocol-specific rules for both performance efficiency and comprehensive coverage.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -51,31 +32,4 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass22FarcasterMessageValidity />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-
-To effectively test this assertion:
-
-1. **Message Validity Testing**:
-   - Create valid and invalid message scenarios (invalid signatures, empty content, oversized content)
-   - Test with malformed messages that attempt to bypass signature verification
-   - Verify that the assertion rejects messages with invalid timestamps
-
-2. **Username Uniqueness Testing**:
-   - Attempt to register the same username multiple times
-   - Try to register a username and then change its ownership improperly
-   - Test edge cases with similar usernames (case sensitivity, special characters)
-
-3. **Rate Limit Testing**:
-   - Create scenarios where users attempt to post more frequently than the cooldown period allows
-   - Test with legitimate posts that respect the rate limit
-
-## Assertion Best Practices
-
-1. **Core Protocol Changes Monitoring**:
-   - Update rate limit constants if the protocol's policies change (new assertions should be deployed for this)
-   - Adjust validation logic if message format specifications are modified
-
-2. **Combining with Other Assertions**:
-   - Pair with governance / admin assertions to monitor admin functions that could modify rules
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).

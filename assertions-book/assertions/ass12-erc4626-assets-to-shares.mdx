@@ -5,53 +5,21 @@ description: Make sure that the total shares are not more than the total assets
 
 import ass12Erc4626AssetsShares from "/snippets/ass12-erc4626-assets-shares.a.mdx";
 
-## Use Case
-ERC4626 is a standard for creating yield-bearing tokens that are compatible with ERC20. This assertion enforces a critical security invariant in ERC4626 vaults: the total shares must never exceed the total assets converted to shares. This is essential because:
+## Use Case & Applications
 
-- Prevents share price manipulation that could lead to loss of user funds
-- Ensures the vault maintains proper accounting of user deposits
-- Protects against potential overflow attacks in share calculations
-- Maintains the integrity of the yield-bearing token's value proposition
+Enforces a critical ERC4626 vault invariant: total shares must never exceed total assets converted to shares, preventing share price manipulation and fund loss. Critical for yield aggregators, lending protocols implementing ERC4626, liquidity pools using ERC4626 for LP tokens, and staking protocols with ERC4626 vaults.
 
-For example, in a vault with 1000 USDC total assets and 1000 total shares:
-- Normal case: 1 share = 1 USDC
-- If somehow total shares become 2000: 1 share = 0.5 USDC
-- Users who deposited expecting 1:1 ratio would lose 50% of their value
-
-This assertion is particularly important for:
-- Preventing unauthorized share minting that could dilute existing holders
-- Ensuring accurate share price calculations for deposits and withdrawals
-- Maintaining proper accounting of user positions in the vault
-- Protecting against potential arithmetic overflow in share calculations
-- Detecting direct storage manipulation attempts
-- Ensuring fair distribution of yield to all holders
-
-### Applicable Protocols
-- Yield aggregators that use ERC4626 for their vaults
-- Lending protocols implementing ERC4626 for their deposit tokens
-- Liquidity pools using ERC4626 for LP token representation
-- Staking protocols that wrap rewards in ERC4626 vaults
-
-Each of these protocol types relies on accurate share-to-asset conversion for:
-- Proper distribution of yield to depositors
-- Accurate calculation of user positions
-- Fair withdrawal amounts for users
-- Correct accounting of protocol fees
+Any violation could allow unauthorized share minting that dilutes existing holders or enables withdrawal of more assets than deposited, potentially leading to protocol insolvency.
 
 ## Explanation
-The assertion implements a basic approach to verify the ERC4626 share-to-asset relationship. This relationship is fundamental to ERC4626 vaults, where shares represent proportional ownership of the vault's assets. The total assets must always be sufficient to back all outstanding shares to maintain the integrity of the vault's accounting.
 
-The assertion uses the following cheatcodes and functions:
-- `registerStorageChangeTrigger()`: Triggers the assertion when the total supply storage slot changes
+Verifies the fundamental ERC4626 share-to-asset relationship using a basic approach:
 
-The implementation performs a fundamental check:
-- It verifies that the total assets are sufficient to back all outstanding shares
-- This ensures that share value is preserved and users can withdraw their assets
+- `registerStorageChangeTrigger()`: Trigger when total supply storage slot changes
+- Verify total assets are sufficient to back all outstanding shares
+- Ensure share value is preserved and users can withdraw their assets
 
-This approach ensures that:
-1. There are always enough assets to back all shares
-2. Users' share values remain accurate and fair
-3. No value can be extracted improperly from the vault
+This ensures there are always enough assets to back all shares, maintaining accurate share values and preventing value extraction from the vault.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -59,24 +27,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass12Erc4626AssetsShares />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion effectively:
-
-1. Basic Functionality:
-   - Deploy an ERC4626 vault with test tokens
-   - Verify the assertion passes for normal deposits and withdrawals
-   - Test edge cases with zero assets and maximum values
-
-2. Manipulation Attempts:
-   - Try to manipulate share calculations through direct storage access
-   - Attempt to create more shares than assets through complex transactions
-   - Test potential overflow scenarios in share calculations
-
-## Assertion Best Practices
-- Combine this assertion with assertions covering other ERC4626 invariants
-- Monitor both total assets and total shares changes for complete coverage
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [ERC4626 Deposit and Withdrawal](/assertions-book/assertions/ass13-erc4626-deposit-withdraw)

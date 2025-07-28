@@ -5,54 +5,22 @@ description: 'Prevent tokens from being drained from a contract'
 
 import ass20ERC20Drain from "/snippets/ass20-erc20-drain.a.mdx";
 
-## Use Case
-Monitoring and limiting token outflows is a critical security measure for DeFi protocols. When exploits occur, attackers typically attempt to drain protocol assets as quickly as possible. Sudden large token outflows are a strong indicator of an ongoing attack.
+## Use Case & Applications
 
-This assertion is particularly important for:
-- Preventing catastrophic asset loss during exploits
-- Creating a delay window for emergency response teams
-- Enabling protocol administrators to activate circuit breakers
-- Preserving protocol solvency by limiting outflow rates
-- Protecting user funds by enforcing reasonable token transfer thresholds
+Monitors and limits token outflows to prevent catastrophic asset loss during exploits, creating a delay window for emergency response. Critical for lending protocols with token reserves (Compound, Aave, Morpho), liquidity pools and DEXs, treasury management systems and DAOs, yield aggregators, and cross-chain bridges holding tokens in escrow.
 
-By limiting the rate of token outflows, protocols gain valuable time to respond to security incidents, even if complete prevention isn't possible.
-
-### Applicable Protocols
-- Lending protocols with token reserves (e.g., Compound, Aave, Morpho)
-- Liquidity pools and DEXs with concentrated token positions
-- Treasury management systems and DAOs with significant token holdings
-- Yield aggregators that accumulate deposits in reserve contracts
-- Cross-chain bridges that hold tokens in escrow contracts
-
-These protocols benefit from this assertion because:
-- Lending protocols must guard against flash loan exploits that drain reserves
-- Liquidity pools are prime targets for price manipulation attacks
-- Treasury systems require strict controls on withdrawal rates
-- Yield aggregators need to prevent strategy exploits from draining all assets
-- Bridge contracts must limit withdrawal rates to prevent reserve draining
+By limiting outflow rates, protocols gain valuable time to respond to security incidents and activate circuit breakers, even if complete prevention isn't possible.
 
 ## Explanation
-The assertion implements a percentage-based limit on token outflows in a single transaction. It works by:
 
-1. Capturing the token balance before the transaction using `forkPreState()`
-2. Checking the token balance after the transaction using `forkPostState()`
-3. Calculating the percentage of tokens withdrawn in the transaction
-4. Reverting if the withdrawal percentage exceeds the configured threshold
+Implements percentage-based limit on token outflows in a single transaction:
 
-The assertion uses the following cheatcodes:
-- `forkPreState()`: Creates a fork of the state before the transaction to capture the initial token balance
-- `forkPostState()`: Creates a fork of the state after the transaction to capture the final token balance
-- `registerCallTrigger()`: Registers the assertion to run on every transaction, without specifying a particular function signature
+- `forkPreState()` / `forkPostState()`: Capture token balance before and after transaction
+- `registerCallTrigger()`: Trigger on every transaction without specifying particular function signature
+- Calculate percentage of tokens withdrawn in transaction
+- Revert if withdrawal percentage exceeds configured threshold
 
-This approach ensures that:
-1. Normal protocol operations can continue unimpeded
-2. Suspicious large withdrawals are blocked
-3. Attackers cannot drain the entire protocol at once
-4. Token outflows stay within reasonable operational parameters
-
-Since this assertion uses a generic trigger without specifying a target function, it will run after every transaction that might affect the protected contract's token balance, regardless of which function caused the balance change. This makes it effective at catching outflows regardless of the mechanism used to withdraw tokens.
-
-While this doesn't prevent a determined attacker from draining funds through multiple transactions (each below the threshold), it significantly slows the attack and creates an opportunity for intervention.
+The assertion ensures normal protocol operations continue unimpeded while blocking suspicious large withdrawals and maintaining token outflows within reasonable operational parameters.
 
 <Warning>
 This assertion is meant to be an example of monitoring token outflows. Due to the nature of how assertions work, only the owner of a contract can enable assertions on it. Since ERC20 tokens are contracts that track balances, but you don't physically store the tokens in your own contract, you cannot directly control balance changes in the token contract itself. This assertion would need to be implemented by the protocol contract owner to monitor their own contract's token balances.
@@ -64,20 +32,4 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass20ERC20Drain />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion:
-
-1. Deploy a test instance of the protocol and token
-2. Set up various balance scenarios in the protocol contract
-3. Attempt token withdrawals at different percentage thresholds:
-   - Below the maximum allowed percentage (should succeed)
-   - Equal to the maximum allowed percentage (should succeed)
-   - Above the maximum allowed percentage (should revert)
-4. Verify the assertion correctly enforces the maximum drain percentage
-
-## Assertion Best Practices
-- Adjust the `MAX_DRAIN_PERCENTAGE_BPS` based on your protocol's normal operation patterns
-- Potentially use a whitelist of addresses that are allowed to drain large amounts of tokens (e.g. a multisig wallet)
-- Consider excluding certain admin/governance functions from the drain checks if they legitimately need to move large amounts
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).

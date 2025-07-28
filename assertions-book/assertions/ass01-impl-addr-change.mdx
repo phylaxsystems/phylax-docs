@@ -5,40 +5,21 @@ description: Assert that the address of an implementation has not changed unexpe
 
 import ass1ImplAddrChange from "/snippets/ass1-implementation-change.a.mdx";
 
-## Use Case
-Check that the implementation address of a proxy contract does not change unexpectedly. In proxy-based upgradeable contracts, the implementation address is a critical security parameter that determines which contract's logic is executed. An unauthorized change to this address could allow an attacker to replace the entire contract logic with malicious code.
+## Use Case & Applications
 
-This assertion is particularly important for:
-- Preventing unauthorized upgrades to proxy contracts
-- Ensuring implementation changes only occur through proper governance channels
-- Detecting potential proxy hijacking attempts
-- Maintaining protocol security by enforcing implementation address invariants
+Prevents unauthorized changes to proxy implementation addresses, which could allow attackers to replace contract logic with malicious code. Critical for proxy-based upgradeable contracts in DeFi protocols (lending pools, yield aggregators), governance systems with timelocks, and cross-chain bridges.
 
-For example, it would be possible to define a list of allowed implementations that would be whitelisted and any other implementation would be considered an invalid state.
-
-### Applicable Protocols
-- Proxy-based upgradeable contracts that need to enforce strict upgrade controls
-- DeFi protocols using proxy patterns for their core functionality (e.g., lending pools, yield aggregators)
-- Governance systems that control implementation upgrades through timelocks or multi-sig
-- Cross-chain bridges and bridges that use proxy patterns for their core logic
+For example, it's possible to define a whitelist of allowed implementations - any other implementation would be considered an invalid state.
 
 ## Explanation
-The assertion monitors changes to the implementation address storage slot in proxy contracts. In proxy patterns, the implementation address is typically stored in a specific storage slot (often slot 0) and determines which contract's logic is executed when calls are delegated.
 
-The assertion uses the following cheatcodes and functions:
-- `ph.forkPreState()`: Creates a fork of the state before the transaction to capture the original implementation address
-- `ph.forkPostState()`: Creates a fork of the state after the transaction to detect any changes
-- `getStateChangesAddress()`: Gets all state changes for the implementation address storage slot to detect unauthorized modifications throughout the callstack of the transaction
-- `registerStorageChangeTrigger()`: Triggers the assertion when a change is detected in the implementation address storage slot
+Monitors changes to the implementation address storage slot in proxy contracts using:
 
-The implementation performs two checks:
-1. A direct comparison between pre-state and post-state implementation addresses
-2. A thorough verification of all state changes to the implementation slot during the transaction's execution
+- `ph.forkPreState()` / `ph.forkPostState()`: Compare implementation address before and after transaction
+- `getStateChangesAddress()`: Track all changes to the implementation slot during transaction execution  
+- `registerStorageChangeTrigger()`: Trigger when implementation address changes
 
-This multi-layered approach ensures that:
-1. The implementation address remains constant unless explicitly changed through proper channels
-2. Any unauthorized attempts to modify the implementation address are detected
-3. The proxy contract's logic cannot be replaced with malicious code
+The assertion performs both direct pre/post comparison and verification of all intermediate state changes to detect unauthorized modifications.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -46,14 +27,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass1ImplAddrChange />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Assertion Best Practices
-- Consider combining this assertion with other assertions like [Owner Change](/assertions-book/assertions/ass05-ownership-change) for comprehensive security
-- Use the `getStateChangesAddress` cheatcode to detect changes to the implementation address throughout the callstack of the transaction
-- Consider whitelisting specific implementation addresses if you know the set of allowed future implementations
-- Ensure proper error messages in the assertion to help with debugging
-- Be aware that the example assumes the implementation address is stored in slot 0, which may vary across different proxy implementations
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [Owner Change](/assertions-book/assertions/ass05-ownership-change)

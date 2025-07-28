@@ -5,79 +5,33 @@ description: 'Ensure protocol behaves correctly during emergency pause states'
 
 import ass17PanicStateVerification from "/snippets/ass17-panic-state-verificatoin.a.mdx";
 
-## Use Case
-Check that protocols maintain proper security controls during emergency pause states. When a protocol enters a panic/pause state, it's critical to ensure that:
+## Use Case & Applications
 
-- No new deposits can be made to the protocol
-- Existing users can still withdraw their funds
-- Protocol state changes are restricted to emergency operations only
-- No unauthorized state modifications occur during the pause
+Ensures protocols maintain proper security controls during emergency pause states, allowing existing users to withdraw funds while preventing new deposits. Critical for yield aggregators and vaults (Yearn, Beefy), lending protocols with pause mechanisms, DEXs with emergency circuit breakers, cross-chain bridges with pause functionality, and any protocol with emergency pause capabilities.
 
-This assertion is particularly important because:
-- Emergency pause mechanisms are a critical security feature for DeFi protocols
-- Improper handling of pause states can lead to fund lockups or unauthorized access
-- Many high-profile hacks have been prevented by proper pause mechanisms
-- Users need confidence they can exit during emergencies
-
-### Applicable Protocols
-- Yield aggregators and vaults (e.g., Yearn, Beefy)
-- Lending protocols with pause mechanisms
-- DEXs with emergency circuit breakers
-- Cross-chain bridges with pause functionality
-- Any protocol with emergency pause capabilities
-
-These protocols particularly need this assertion because:
-- They often hold significant user funds
-- They have complex state transitions that must be restricted during emergencies
-- Users need guaranteed withdrawal capabilities during crises
-- Protocol upgrades or maintenance should be blocked during pause states
+Improper handling of pause states can lead to fund lockups, unauthorized access, or users being unable to exit during emergencies.
 
 ## Explanation
-The assertion monitors the protocol's balance and pause state to ensure proper behavior during emergencies. It uses a multi-layered approach:
 
-1. First, it checks if the protocol is in a paused state
-2. If paused, it verifies that the protocol's balance can only decrease (allowing withdrawals)
-3. It uses state change tracking to detect any unauthorized modifications
+Monitors protocol balance and pause state to ensure proper emergency behavior using a multi-layered approach:
 
-The assertion uses the following cheatcodes and functions:
-- `ph.forkPreState()`: Captures the initial state before the transaction
-- `ph.forkPostState()`: Captures the final state after the transaction
-- `getStateChangesUint()`: Tracks all state changes during the transaction
-- `registerCallTrigger()`: Monitors all function calls to the contract
+- `ph.forkPreState()` / `ph.forkPostState()`: Capture protocol state before and after transaction
+- `getStateChangesUint()`: Track all state changes during transaction
+- `registerCallTrigger()`: Monitor all function calls to the contract
+- Verify protocol balance can only decrease when paused (allowing withdrawals)
+- Detect unauthorized modifications during pause periods
 
-This approach ensures that:
-1. Users can always withdraw their funds during emergencies
-2. No new deposits can be made while paused
-3. Protocol state remains consistent during pause periods
-
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
+The assertion ensures users can withdraw funds during emergencies while preventing new deposits and maintaining protocol state consistency.
 
 > **Note:** In the future, this assertion could be optimized with a new trigger type that only fires when a specific storage slot has a specific value (e.g., when the pause flag is true). This would reduce unnecessary assertion checks and improve efficiency.
+
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
 
 <ass17PanicStateVerification />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion:
-1. Deploy the assertion contract with a test vault
-2. Set up test scenarios:
-   - Normal operation (not paused)
-   - Paused state with withdrawals
-   - Paused state with attempted deposits
-   - Paused state with multiple state changes in a single transaction
-3. Verify the assertion correctly:
-   - Allows balance decreases during pause
-   - Blocks balance increases during pause
-   - Maintains proper state during complex transactions
-
-## Assertion Best Practices
-- Combine with other assertions like [Owner Change](/assertions-book/assertions/ass05-ownership-change) for comprehensive security
-- Use `getStateChangesUint` to detect unauthorized modifications throughout the call stack during pause states
-- Consider adding whitelisted addresses that can modify state during emergencies (e.g. for upgrades or liquidity management)
-- Implement proper error messages to help with debugging
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)

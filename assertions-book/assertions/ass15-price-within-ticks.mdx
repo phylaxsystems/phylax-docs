@@ -5,48 +5,22 @@ description: 'Make sure that the price is within the tick range'
 
 import ass15PriceWithinTicks from "/snippets/ass15-price-within-ticks.a.mdx";
 
-## Use Case
-In Automated Market Makers (AMMs), particularly those using concentrated liquidity models like Uniswap V3, the price is represented by ticks. A tick is a discrete unit of measurement for the price of an asset, and maintaining proper tick boundaries is critical for protocol security.
+## Use Case & Applications
 
-This assertion is particularly important for:
-- Preventing price manipulation through tick boundary violations
-- Ensuring trades execute at valid price points
-- Maintaining protocol invariants around price representation
-- Detecting potential exploits that could manipulate tick boundaries
+Ensures prices remain within valid tick boundaries in concentrated liquidity AMMs, preventing price manipulation and maintaining protocol mathematical validity. Critical for AMMs using concentrated liquidity models (Uniswap V3, PancakeSwap V3), protocols with tick-based price calculations, DeFi protocols interacting with tick-based AMMs, and cross-chain bridges using tick-based price feeds.
 
-For example, if an attacker could push the price outside the valid tick range, they could potentially:
-- Execute trades at invalid prices
-- Manipulate liquidity positions
-- Cause protocol calculations to fail
-
-### Applicable Protocols
-- AMMs using concentrated liquidity models (e.g., Uniswap V3, PancakeSwap V3)
-- Protocols that rely on tick-based price calculations
-- DeFi protocols that interact with tick-based AMMs
-- Cross-chain bridges that use tick-based price feeds
+If attackers could push prices outside valid tick ranges, they could execute trades at invalid prices, manipulate liquidity positions, or cause protocol calculations to fail.
 
 ## Explanation
-The assertion implements a focused approach to verify tick integrity:
 
-1. **Tick Range Validation**:
-   - Verifies that ticks stay within global bounds (-887272 to 887272)
-   - Prevents tick manipulation outside valid ranges
-   - Ensures the AMM's mathematical model remains valid
+Implements focused tick integrity verification:
 
-2. **Tick Spacing Alignment**:
-   - Ensures ticks align with the pool's tick spacing
-   - Maintains proper concentrated liquidity calculations
-   - Prevents position management errors
+- `ph.forkPreState()` / `ph.forkPostState()`: Capture tick state before and after transaction
+- `registerStorageChangeTrigger()`: Monitor changes to tick-related storage slots
+- Verify ticks stay within global bounds (-887272 to 887272)
+- Ensure ticks align with pool's tick spacing requirements
 
-The assertion uses the following cheatcodes and functions:
-- `ph.forkPreState()`: Captures the initial tick state
-- `ph.forkPostState()`: Captures the final tick state
-- `registerStorageChangeTrigger()`: Monitors changes to tick-related storage slots
-
-This focused approach ensures:
-1. Ticks remain within protocol-defined bounds
-2. Tick spacing rules are enforced
-3. Core AMM functionality remains secure
+The assertion maintains proper concentrated liquidity calculations and prevents position management errors by enforcing tick boundaries and spacing rules.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -54,22 +28,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass15PriceWithinTicks />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion:
-
-1. Deploy a mock Uniswap V3 pool contract
-2. Create test scenarios that:
-   - Execute trades within valid tick ranges
-   - Attempt trades that would push ticks outside bounds
-   - Test tick spacing alignment
-
-## Assertion Best Practices
-- Combine this assertion with other AMM-related assertions like [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations)
-- Consider protocol-specific parameters for:
-  - Tick spacing requirements
-  - Global tick bounds (if different from Uniswap V3)
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations)

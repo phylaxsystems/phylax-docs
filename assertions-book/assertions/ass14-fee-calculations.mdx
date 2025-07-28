@@ -5,57 +5,22 @@ description: 'Make sure that the fees do not change unexpectedly'
 
 import ass14FeeVerification from "/snippets/ass14-fee-verification.a.mdx";
 
-## Use Case
-In AMMs and other DeFi protocols, trading fees are a critical security parameter that directly impacts user returns and protocol revenue. Unexpected fee changes can lead to:
-- Unauthorized fee manipulation by malicious actors
-- Protocol revenue loss through fee bypasses
-- User losses from unexpected fee increases
-- Market manipulation through fee changes
+## Use Case & Applications
 
-This assertion is particularly important because:
-- Fees are a primary revenue source for many DeFi protocols
-- Fee changes can be used as an attack vector to drain protocol value
-- Users rely on consistent fee structures for trading strategies
-- Protocol sustainability depends on predictable fee mechanisms
+Prevents unauthorized fee manipulation in AMMs and DeFi protocols by using a whitelist approach to control fee changes. Critical for AMMs (Velodrome, Aerodrome, Curve), DEX aggregators, lending protocols with origination fees, yield aggregators with performance fees, and cross-chain bridges with transfer fees.
 
-### Applicable Protocols
-- AMMs (Automated Market Makers) like Velodrome, Aerodrome, and Curve
-- DEX aggregators that charge routing fees
-- Lending protocols with origination fees
-- Yield aggregators with performance fees
-- Cross-chain bridges with transfer fees
-
-Each protocol type needs this assertion because:
-- AMMs: Fee changes can be used to manipulate price impact and drain liquidity
-- DEX aggregators: Fee manipulation could bypass routing security
-- Lending protocols: Fee changes could affect interest calculations
-- Yield aggregators: Performance fee changes could drain protocol value
-- Bridges: Fee changes could be used to manipulate cross-chain arbitrage
+Unexpected fee changes can lead to unauthorized manipulation, protocol revenue loss, user losses, or market manipulation through fee bypasses.
 
 ## Explanation
-The assertion uses a whitelist approach to control fee changes:
 
-1. Trigger Registration:
-   - Uses `registerStorageChangeTrigger` to detect any changes to the fee storage slot
-   - When triggered, we know a fee change has occurred
+Uses a whitelist approach to control fee changes:
 
-2. Whitelist Validation:
-   - Maintains hardcoded allowed fee values for both stable and non-stable pools
-   - For stable pools: allows 0.1% (1) and 0.15% (15)
-   - For non-stable pools: allows 0.25% (25) and 0.30% (30)
-   - When a change occurs, verifies the new fee matches one of the allowed values
-   - Prevents unauthorized fee modifications
+- `registerStorageChangeTrigger()`: Detect changes to fee storage slot
+- `ph.load()`: Retrieve new fee value after change
+- `getStateChangesUint()`: Verify all state changes for fee storage slot
+- Maintains hardcoded allowed fee values for stable pools (0.1%, 0.15%) and non-stable pools (0.25%, 0.30%)
 
-The assertion uses the following cheatcodes and functions:
-- `registerStorageChangeTrigger()`: Detects changes to the fee storage slot
-- `ph.load()`: Retrieves the new fee value after a change
-- `getStateChangesUint()`: Gets all state changes for the fee storage slot to verify intermediate changes
-
-This approach ensures that:
-1. Only whitelisted fee values are allowed
-2. Protocol can still update fees through proper channels
-3. Unauthorized fee modifications are prevented
-4. All intermediate fee changes in the callstack are also validated
+When triggered, verifies the new fee matches one of the allowed values, preventing unauthorized modifications while allowing proper protocol updates.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -63,17 +28,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass14FeeVerification />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion:
-1. Deploy the assertion contract with a test pool
-2. Execute transactions that should maintain fees
-3. Attempt transactions that would modify fees
-4. Verify the assertion catches unauthorized changes
-
-## Assertion Best Practices
-- Use whitelists to explicitly define allowed fee values
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [Price Within Ticks](/assertions-book/assertions/ass15-price-within-ticks)

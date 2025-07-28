@@ -5,57 +5,23 @@ description: Assert that oracle price updates stay within an acceptable deviatio
 
 import ass28IntraTxOracleDeviation from "/snippets/ass28-intra-tx-oracle-deviation.a.mdx";
 
-## Use Case
-This assertion monitors oracle price updates to detect and prevent price manipulation within a single transaction. Price oracles are critical security components that many DeFi protocols rely on for valuation, liquidations, and trading decisions. Intra-transaction price manipulations can lead to:
+## Use Case & Applications
 
-- Flash loan attacks that temporarily manipulate oracle prices
-- Malicious arbitrage exploiting large price deviations
-- Theft of funds through manipulated liquidations or swaps
-- Protocol insolvency due to incorrect asset valuations
+Monitors oracle price updates to detect and prevent price manipulation within a single transaction, protecting against flash loan attacks and malicious arbitrage. Critical for AMM-based DEXs using oracle prices, lending protocols relying on oracles for collateral valuation, synthetic asset platforms, derivatives protocols using oracles for settlement, and yield farming platforms calculating rewards based on asset prices.
 
-This assertion is particularly important for:
-- Preventing price manipulation attacks that exploit multiple price updates
-- Ensuring price stability across oracle updates within a transaction
-- Protecting protocols from flash-loan based oracle attacks
-- Maintaining protocol security by enforcing price deviation thresholds
-
-### Applicable Protocols
-- AMM-based DEXs that use oracle prices for various operations
-- Lending protocols that rely on oracles for collateral valuation
-- Synthetic asset platforms that need stable and accurate price feeds
-- Derivatives protocols that use oracles for settlement prices
-- Yield farming platforms that calculate rewards based on asset prices
-
-These protocols need this assertion because:
-- DEXs can be exploited through price manipulation to extract value
-- Lending protocols need accurate price data to maintain proper collateralization
-- Synthetic asset platforms require stable oracle prices to maintain peg
-- Derivatives protocols depend on reliable pricing for fair settlement
-- Yield platforms may miscalculate rewards with manipulated prices
+Intra-transaction price manipulations can lead to flash loan attacks, theft of funds through manipulated liquidations, or protocol insolvency due to incorrect asset valuations.
 
 ## Explanation
-The assertion implements a simple but effective approach to verify oracle price updates:
 
-1. **Pre/Post State Comparison**:
-   - Uses `forkPreState()` to capture the price before the transaction
-   - Uses `forkPostState()` to capture the price after the transaction
-   - Compares pre and post states to detect price deviations (reverts early if deviation is detected)
+Implements approach to verify oracle price updates using both pre/post state comparison and intra-transaction inspection:
 
-2. **Intra-Transaction Inspection**:
-   - Uses `getCallInputs()` to capture all price update calls within the transaction 
-   - Verifies each update's price parameter against the initial price
-   - Enforces that no price update can deviate more than the maximum allowed percentage from the initial price
+- `forkPreState()` / `forkPostState()`: Capture oracle price before and after transaction, compare for deviations
+- `getCallInputs()`: Monitor all price update function calls within transaction
+- `registerCallTrigger()`: Trigger when oracle price update is detected
+- Verify each update's price parameter against initial price
+- Enforce no price update can deviate more than maximum allowed percentage
 
-The assertion uses the following cheatcodes:
-- `forkPreState()`: Captures the oracle price before any updates
-- `forkPostState()`: Captures the oracle price after all updates
-- `getCallInputs()`: Monitors all price update function calls within the transaction
-- `registerCallTrigger()`: Triggers the assertion when an oracle price update is detected
-
-This approach ensures that:
-1. Oracle prices remain within an acceptable deviation range throughout a transaction
-2. Flash loan attacks attempting to manipulate prices are detected and prevented
-3. Both the final price and any intermediate price updates are validated against the initial price
+The assertion ensures oracle prices remain within acceptable deviation range throughout transaction, detecting and preventing flash loan attacks that attempt to manipulate prices.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -63,29 +29,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass28IntraTxOracleDeviation />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion:
-
-1. Deploy a test oracle contract with price update functionality
-2. Create test scenarios with varying price update patterns:
-   - Single price updates with different deviation amounts
-   - Multiple price updates within acceptable ranges
-   - Multiple price updates with excessive deviations
-   - Flash loan-style attacks with price manipulation
-3. Verify the assertion correctly:
-   - Allows updates within acceptable deviation thresholds
-   - Blocks updates exceeding deviation thresholds
-   - Detects suspicious patterns of sequential updates
-
-## Assertion Best Practices
-- Adjust the `MAX_DEVIATION_PERCENTAGE` based on the specific asset's volatility
-- Combine with [Oracle Validation](/assertions-book/assertions/ass10-oracle-validation) for comprehensive oracle protection
-- Consider implementing time-weighted average prices (TWAP) in volatile markets
-- Add specific detection for sandwich patterns (price up then down, or vice versa)
-- Monitor transaction origin to detect potential flash loan sources
-- Consider different thresholds for different assets or market conditions
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [Oracle Validation](/assertions-book/assertions/ass10-oracle-validation)

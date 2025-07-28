@@ -5,58 +5,25 @@ description: 'Make sure that ether is not drained from a contract'
 
 import ass21EtherDrain from "/snippets/ass21-ether-drain.a.mdx";
 
-## Use Case
-Protecting protocols from rapid ETH draining is a critical security measure. Malicious actors often attempt to extract all available ETH from a contract in a single transaction after discovering an exploit, leading to catastrophic loss of funds. This assertion prevents sudden large withdrawals of ETH, giving protocols time to respond to potential exploits.
+## Use Case & Applications
+
+Prevents rapid ETH draining by limiting sudden large withdrawals, giving protocols time to respond to potential exploits. Critical for DeFi lending platforms using ETH as collateral, cross-chain bridges with large ETH reserves, DAOs and protocol treasuries, staking protocols managing ETH deposits, yield aggregators holding ETH, and centralized exchanges.
+
+Malicious actors often attempt to extract all available ETH in a single transaction after discovering exploits, leading to catastrophic fund loss.
 
 > **Real-world example:** In February 2025, Bybit suffered one of the largest hacks in crypto history, losing approximately $1.4 billion USD when attackers compromised Safe Wallet's UI and changed the implementation address of their proxy contract. This allowed the attackers to drain all assets without requiring additional approvals from the original owners. ETH drain assertions, especially with whitelist functionality, could have prevented or significantly limited the impact of this attack. See the [Bybit Safe UI attack](/assertions-book/previous-hacks/bybit-safe-ui) for more details.
 
-This assertion is particularly important for:
-- Detecting and limiting the impact of flash loan attacks targeting ETH reserves
-- Preventing complete draining of protocol treasury funds in a single transaction
-- Buying time for protocol teams to activate circuit breakers or emergency pauses
-- Limiting the economic damage from zero-day exploits by enforcing withdrawal rate limits
-- Ensuring larger ETH transfers only occur to trusted, whitelisted addresses
-
-### Applicable Protocols
-- DeFi lending platforms that use ETH as collateral
-- Cross-chain bridges holding large ETH reserves
-- DAOs and protocol treasuries with significant ETH holdings
-- Staking protocols managing ETH deposits
-- Yield aggregators and vaults holding ETH
-- Centralized exchanges holding large ETH reserves
-
-These protocols need this assertion because:
-- Lending platforms need to maintain adequate ETH collateral reserves
-- Cross-chain bridges are frequent targets of large-scale ETH draining attacks
-- Treasury contracts often lack rate-limiting on withdrawals
-- Staking protocols need to protect depositor funds from sudden drains
-- Yield-generating protocols need to detect abnormal ETH outflows
-- Centralized exchanges need to protect their large ETH reserves
-
 ## Explanation
-The assertion implements a straightforward yet effective approach to detect rapid ETH draining with a tiered protection strategy:
 
-1. **Pre-transaction Analysis**:
-   - Uses `forkPreState()` to capture the contract's ETH balance before the transaction
-   - Records the balances of all whitelisted addresses before the transaction
-   - Establishes the baseline for detecting significant withdrawals
+Implements tiered protection strategy to detect rapid ETH draining:
 
-2. **Post-transaction Verification with Dual Security Paths**:
-   - Uses `forkPostState()` to check the contract's ETH balance after the transaction
-   - For small withdrawals (below threshold): Allows the transaction regardless of destination
-   - For large withdrawals (above threshold): Requires the destination to be a whitelisted address
-   - If no whitelist is defined, blocks all large withdrawals as a safety measure
+- `forkPreState()` / `forkPostState()`: Capture contract's ETH balance and whitelist balances before/after transaction
+- `registerBalanceChangeTrigger()`: Trigger when ETH balances change
+- For small withdrawals (below threshold): Allow regardless of destination
+- For large withdrawals (above threshold): Require destination to be whitelisted address
+- If no whitelist defined, block all large withdrawals as safety measure
 
-The assertion uses the following cheatcodes:
-- `forkPreState()`: Captures the contract's ETH balance and whitelist balances before execution
-- `forkPostState()`: Captures the contract's ETH balance and whitelist balances after execution
-- `registerBalanceChangeTrigger()`: Triggers the assertion when ETH balances change
-
-This tiered approach ensures that:
-1. Normal operations with small withdrawals continue uninterrupted
-2. Large withdrawals are restricted to trusted, whitelisted addresses
-3. Protocols can define their own risk thresholds for withdrawal sizes
-4. Smart contracts maintain secure yet flexible ETH management
+The tiered approach ensures normal operations with small withdrawals continue uninterrupted while restricting large withdrawals to trusted addresses.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -64,34 +31,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass21EtherDrain />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion:
-
-1. Deploy a test contract with ETH balance
-2. Attempt various ETH withdrawal scenarios:
-   - Small withdrawals below the threshold
-   - Large withdrawals that exceed the threshold
-   - Multiple withdrawals in sequence
-3. Verify the assertion correctly:
-   - Allows withdrawals below the maximum percentage
-   - Blocks withdrawals that exceed the maximum percentage
-   - Properly handles edge cases like zero balance
-   - Permits large withdrawals only to whitelisted addresses
-
-## Assertion Best Practices
-- Combine with time-based monitoring to limit withdrawal frequency
-- Adjust the maximum percentage based on the protocol's specific risk profile
-- Consider implementing a tiered system where larger withdrawals require longer timeouts
-- Define a comprehensive whitelist of trusted addresses at deployment time (deploy new assertion to update whitelist)
-- Use alongside other assertions like [Ownership Change](/assertions-book/assertions/ass05-ownership-change) or [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change) for comprehensive protection
-
-When implementing this assertion:
-- Consider protocol user patterns to set appropriate drain limits
-- Be careful not to set limits too low, which could impair normal protocol functionality 
-- Remember that attackers can still drain funds incrementally if no time-based limits are added
-- For critical systems, combine with automated alerting to notify the team of any large withdrawals
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)

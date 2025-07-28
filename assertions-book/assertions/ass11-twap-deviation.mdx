@@ -5,49 +5,21 @@ description: Assert that the TWAP price doesn't deviate more than X% from the pr
 
 import ass11TwapDeviation from "/snippets/ass11-twap-deviation.a.mdx";
 
-## Use Case
-Check that the TWAP (Time-Weighted Average Price) reported by an oracle doesn't deviate more than X% from the pre-state TWAP price. This is a critical security parameter for DeFi protocols that rely on TWAP oracles for pricing assets, as sudden price deviations could indicate manipulation or oracle failure.
+## Use Case & Applications
 
-This assertion is particularly important for:
-- Preventing price manipulation through flash loan attacks
-- Ensuring oracle reliability and accuracy
-- Protecting against oracle manipulation in lending protocols
-- Maintaining protocol stability during market volatility
-- Detecting potential oracle failures or attacks
+Prevents TWAP (Time-Weighted Average Price) price manipulation by ensuring oracle prices don't deviate more than X% from pre-state TWAP prices. Critical for AMMs and DEXs (price discovery), lending protocols (collateral valuation), yield aggregators (rebalancing), options protocols (settlement), and cross-chain bridges (asset pricing).
 
-For example, if a protocol allows a 5% deviation, an attacker could potentially manipulate prices within this range to extract value, making this a critical security parameter that requires careful consideration.
-
-### Applicable Protocols
-- AMMs and DEXs that use TWAP for price discovery
-- Lending protocols that use TWAP for collateral valuation
-- Yield aggregators that rely on TWAP for rebalancing
-- Options protocols that use TWAP for settlement prices
-- Cross-chain bridges that use TWAP for asset pricing
-
-Each protocol type needs this assertion because:
-- AMMs: Prevents price manipulation during large trades
-- Lending: Ensures accurate collateral valuation for liquidations
-- Yield: Maintains fair rebalancing prices
-- Options: Guarantees fair settlement prices
-- Bridges: Prevents cross-chain arbitrage attacks
+Sudden price deviations could indicate manipulation through flash loan attacks or oracle failures, potentially leading to protocol insolvency or fund extraction.
 
 ## Explanation
-The assertion monitors changes to the current price by comparing it against the TWAP price from before the transaction. It uses a two-stage approach to ensure price stability:
 
-The assertion uses the following cheatcodes:
-- `ph.forkPreState()`: Creates a fork of the state before the transaction to capture the TWAP price as our reference point
-- `ph.forkPostState()`: Creates a fork of the state after the transaction to get the final price
-- `getStateChangesUint()`: Gets all state changes for the current price to detect manipulation throughout the callstack
-- `registerStorageChangeTrigger()`: Triggers the assertion when the price storage slot changes
+Monitors TWAP price changes using a two-stage approach to ensure price stability:
 
-The implementation performs two checks:
-1. A comparison between the post-transaction price and the pre-transaction TWAP
-2. Verification of all price changes during the transaction's execution
+- `ph.forkPreState()` / `ph.forkPostState()`: Compare post-transaction price against pre-transaction TWAP
+- `getStateChangesUint()`: Track all price changes during transaction execution
+- `registerStorageChangeTrigger()`: Trigger when price storage slot changes
 
-This multi-layered approach ensures that:
-1. The current price remains within acceptable bounds of the pre-transaction TWAP
-2. Any attempts to manipulate the price during the transaction are detected
-3. The protocol's pricing mechanism cannot be exploited through flash loans or other attacks
+The assertion verifies both the final price and any intermediate price updates against the initial TWAP to detect flash loan attacks and price manipulation throughout the transaction.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -55,19 +27,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass11TwapDeviation />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion:
-1. Deploy a mock pool contract with TWAP functionality
-2. Set up test scenarios with various price movements
-3. Verify the assertion catches deviations above the threshold
-4. Test edge cases like zero prices and extreme values
-
-## Assertion Best Practices
-- Consider combining this assertion with other price-related assertions like [Intra-tx Oracle Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation) for comprehensive security
-- Use the `getStateChangesUint` cheatcode to detect price manipulation throughout the callstack
-- Consider implementing different deviation thresholds for different market conditions (eg. stablecoin pools vs volatile assets)
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [Intra-tx Oracle Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation)

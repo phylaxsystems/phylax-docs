@@ -5,98 +5,41 @@ description: Assert that ERC4626 deposit and withdrawal operations maintain corr
 
 import ass13Erc4626DepositWithdraw from "/snippets/ass13-erc4626-deposit-withdraw.a.mdx";
 
-## Use Case
-ERC4626 is a standard for creating yield-bearing tokens that are compatible with ERC20. This assertion collection ensures that deposit and withdrawal operations maintain correct accounting for both assets and shares, which are critical security parameters for any ERC4626 vault.
+## Use Case & Applications
 
-This assertion collection is particularly important for:
-- Preventing share calculation errors that could lead to loss of user funds
-- Ensuring deposits and withdrawals maintain the correct ratio between assets and shares
-- Detecting potential accounting errors in yield-bearing vaults
-- Maintaining protocol security by enforcing share calculation invariants
-- Verifying round-trip operations (deposit followed by withdrawal) preserve value
-- Ensuring that share value never decreases unexpectedly (share value monotonicity)
+Ensures ERC4626 deposit and withdrawal operations maintain correct accounting for both assets and shares, preventing share calculation errors and fund loss. Critical for yield aggregators (Yearn, Aave, Compound), lending protocols with ERC4626 interest-bearing tokens, liquidity pools using ERC4626 for LP tokens, and staking protocols with ERC4626 staking tokens.
 
-For example, if a vault incorrectly calculates shares during deposits or withdrawals, users could receive fewer shares or assets than they should, effectively losing value.
-
-### Applicable Protocols
-- Yield aggregators that use ERC4626 for their vaults (e.g., Yearn, Aave, Compound)
-- Lending protocols that implement ERC4626 for their interest-bearing tokens
-- Liquidity pools that use ERC4626 for their LP tokens
-- Staking protocols that implement ERC4626 for their staking tokens
+Any discrepancy between preview functions and actual operations could lead to users receiving incorrect amounts, potentially resulting in value loss.
 
 ## Explanation
-The assertion collection is split into five separate assertion functions to ensure comprehensive verification of deposit and withdrawal operations:
 
-### Deposit Assertions
-1. **Deposit Asset Accounting**: Verifies that the total assets in the vault increase by exactly the amount deposited. This ensures that no assets are lost or duplicated during deposits.
+Collection of five assertion functions providing comprehensive verification of deposit/withdrawal operations:
 
-2. **Deposit Share Accounting**: Verifies that each depositor receives the correct number of shares for their deposit. This is done by comparing the actual shares received with the expected shares calculated by `previewDeposit()`.
+**Deposit Assertions:**
+- **Asset Accounting**: Total vault assets increase by exact deposit amount
+- **Share Accounting**: Depositors receive correct shares (verified against `previewDeposit()`)
 
-### Withdrawal Assertions
-3. **Withdrawal Asset Accounting**: Verifies that the total assets in the vault decrease by exactly the amount withdrawn. This ensures that no assets are lost or unexpectedly gained during withdrawals.
+**Withdrawal Assertions:**
+- **Asset Accounting**: Total vault assets decrease by exact withdrawal amount  
+- **Share Accounting**: Correct shares burned (verified against `previewWithdraw()`)
 
-4. **Withdrawal Share Accounting**: Verifies that the correct number of shares are burned for each withdrawal. This is done by comparing the actual shares burned with the expected shares calculated by `previewWithdraw()`.
+**Share Value Assertion:**
+- **Share Value Monotonicity**: Share value never decreases unexpectedly
 
-### Share Value Assertion
-5. **Share Value Monotonicity**: Verifies that the value of shares (measured in underlying assets) never decreases unexpectedly. This ensures that yield accrual is working correctly and there is no unauthorized value extraction. For a complete implementation, this assertion would need to be extended with custom logic to handle legitimate cases where share value might decrease, such as fee collection or investment losses.
+Uses these cheatcodes:
+- `ph.getCallInputs()`: Track deposit/withdraw call inputs
+- `ph.forkPreState()` / `ph.forkPostState()`: Compare balances before/after operations
+- `registerCallTrigger()`: Trigger on ERC4626 vault operations
 
-The assertion collection uses the following cheatcodes and functions:
-- `ph.getCallInputs()`: Retrieves the input data from all deposit or withdraw calls that triggered the assertion functions
-- `ph.forkPreState()`: Creates a fork of the state before the operation to capture initial balances
-- `ph.forkPostState()`: Creates a fork of the state after the operation to verify that the actual changes match the expected changes
-- `registerCallTrigger()`: Sets up the assertion functions to be triggered whenever deposit or withdraw calls are made to the ERC4626 vault
+The assertions verify no discrepancy exists between preview function predictions and actual operation results.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
-
-This multi-layered approach ensures that:
-1. Total assets are correctly updated after deposits and withdrawals
-2. Share calculations are accurate and consistent with the preview functions
-3. User balances are properly incremented or decremented with the correct share amount
-4. The ERC4626 vault maintains its invariants during all operations
-5. Share value either remains the same or increases over time (except during expected fee events or losses)
-
-The assertion functions specifically check that there is no discrepancy between what the preview functions predict and what actually happens during the operations. This is critical because any mismatch could lead to users receiving incorrect amounts of shares or assets, potentially resulting in loss of value.
 
 ## Code Example
 
 <ass13Erc4626DepositWithdraw />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion collection:
-1. Deploy an ERC4626 vault with known asset and share calculation logic
-2. Perform deposits and withdrawals with various asset amounts
-3. Verify that all assertion functions correctly identify any discrepancies:
-   - Between total assets before and after operations
-   - Between preview calculations and actual shares/assets received
-   - In share value changes over time
-4. Test edge cases like:
-   - Zero deposits and withdrawals
-   - Maximum deposits and withdrawals
-   - Deposits followed immediately by withdrawals (round-trip operations)
-   - Withdrawals with fee-on-transfer tokens
-
-## Assertion Best Practices
-- Use all five assertion functions together for comprehensive security verification
-- The asset accounting checks are simpler and can fail fast if there's an issue
-- The share accounting checks provide detailed verification of calculation accuracy
-- The share value monotonicity assertion catches subtle issues that might not be detected by the other assertions
-- Consider adding additional checks for:
-  - Round-trip operations (deposit followed by withdrawal)
-  - Rounding errors in share calculations
-  - Fee calculations if the vault charges fees
-  - Slippage protection based on preview functions
-
-## ERC4626 Compliance Requirements
-The ERC4626 standard requires several invariants to be maintained:
-1. `convertToShares(convertToAssets(x)) <= x` - Converting assets to shares and back should never create value
-2. `previewDeposit` must return the same value as the actual deposit operation
-3. `previewWithdraw` must return the same value as the actual withdraw operation
-4. Asset accounting must be exact - total assets must correctly reflect deposits and withdrawals
-5. Share value should generally increase or stay the same as the vault accrues yield, except during explicit fee collections or loss events
-
-These assertion functions verify compliance with these requirements, helping to ensure the vault operates correctly according to the standard.
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
