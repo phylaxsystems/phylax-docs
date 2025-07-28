@@ -5,62 +5,22 @@ description: 'Make sure that liquidations can only happen if the position is unh
 
 import ass16LiquidationHealthFactor from "/snippets/ass16-liquidation-health-factor.a.mdx";
 
-## Use Case
-In DeFi lending protocols, positions can be liquidated when they become unhealthy due to market movements or other factors. The health factor is a critical security parameter that determines when a position can be liquidated. An incorrect health factor calculation or validation could lead to:
+## Use Case & Applications
 
-- Unauthorized liquidations of healthy positions
-- Loss of user funds through forced liquidations
-- Protocol insolvency if positions can't be liquidated when needed
-- Market manipulation through targeted liquidations
+Ensures liquidations only occur when positions are unhealthy, preventing unauthorized liquidations of healthy positions and protecting user funds. Critical for lending protocols (Aave, Compound, Morpho), margin trading platforms with position health monitoring, perpetual futures protocols with liquidation mechanisms, and any DeFi protocol using health factors for position solvency.
 
-This assertion is particularly important for:
-- Preventing liquidations of positions that are still healthy
-- Ensuring liquidations only occur when necessary for protocol solvency
-- Protecting users from unfair liquidations
-- Maintaining protocol stability by enforcing proper liquidation thresholds
-
-### Applicable Protocols
-- Lending protocols (e.g., Aave, Compound, Morpho) where positions can be liquidated
-- Margin trading platforms that require position health monitoring
-- Perpetual futures protocols with liquidation mechanisms
-- Any DeFi protocol that uses health factors to determine position solvency
-
-These protocols need this assertion because:
-- Lending protocols rely on liquidations to maintain solvency
-- Margin trading platforms need precise health factor calculations
-- Perpetual futures protocols use liquidations for risk management
-- Incorrect liquidation logic could lead to significant protocol losses
+Incorrect health factor validation could lead to unfair liquidations, protocol insolvency, or market manipulation through targeted liquidations.
 
 ## Explanation
-The assertion implements a multi-layered approach to verify liquidation health factors:
 
-1. **Pre-liquidation Check**:
-   - Uses `forkPreState()` to capture the health factor before liquidation
-   - Verifies the position is actually unhealthy (below liquidation threshold)
-   - Prevents liquidations of healthy positions
+Implements multi-layered liquidation health factor verification:
 
-2. **Post-liquidation Validation**:
-   - Uses `forkPostState()` to verify the health factor after liquidation
-   - Ensures the health factor improves after liquidation
-   - Confirms the position meets minimum health requirements
-
-3. **Parameter Validation**:
-   - Uses `getCallInputs()` to monitor liquidation function calls
-   - Validates that seized assets and repaid shares are non-zero
-   - Enforces a maximum liquidation amount to prevent protocol destabilization
-   - Ensures liquidation parameters are within safe bounds
-
-The assertion uses the following cheatcodes and functions:
-- `ph.forkPreState()`: Captures the health factor before liquidation
-- `ph.forkPostState()`: Verifies the health factor after liquidation
-- `ph.getCallInputs()`: Monitors liquidation function calls
+- **Pre-liquidation**: `forkPreState()` captures health factor before liquidation, verifies position is actually unhealthy
+- **Post-liquidation**: `forkPostState()` verifies health factor improves after liquidation
+- **Parameter validation**: `getCallInputs()` monitors liquidation calls, validates seized assets and repaid shares are non-zero, enforces maximum liquidation amounts
 - `registerCallTrigger()`: Triggers on liquidation function calls
 
-This approach ensures that:
-1. Only unhealthy positions can be liquidated
-2. Liquidations improve the position's health
-3. The protocol maintains proper risk management
-4. Liquidation amounts are within safe limits
+The assertion ensures only unhealthy positions can be liquidated, liquidations improve position health, and liquidation amounts remain within safe limits for proper protocol risk management.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
@@ -68,22 +28,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass16LiquidationHealthFactor />
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/). For a full examples with mock protocol code and tests please refer to the repository.
-
-## Testing
-To test this assertion:
-
-1. Deploy a test instance of the lending protocol
-2. Create positions with varying health factors
-3. Attempt liquidations on both healthy and unhealthy positions
-4. Verify the assertion correctly:
-   - Prevents liquidations of healthy positions
-   - Allows liquidations of unhealthy positions
-   - Ensures health factor improvement after liquidation
-
-## Assertion Best Practices
-- Combine with other assertions like [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain) for comprehensive protection
-- Use appropriate health factor thresholds based on protocol risk parameters
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
 ## Related Assertions
 - [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
