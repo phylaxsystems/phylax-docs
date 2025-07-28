@@ -5,92 +5,39 @@ description: Assert that the health factor of updated positions in a lending pro
 
 import ass07LendingHealthFactor from "/snippets/ass7-lending-health-factor.a.mdx";
 
-## Use Case
-Check that the health factor of updated positions in a lending protocol is above a certain threshold. The health factor is a critical security parameter that determines whether a position is at risk of liquidation. An unhealthy position could lead to:
+## Use Case & Applications
 
-- Unauthorized liquidations of user positions
-- Protocol insolvency if positions become undercollateralized
-- Cascading liquidations that could destabilize the entire protocol
-- Loss of user funds through forced liquidations at unfavorable prices
+Ensures the health factor of updated positions in lending protocols remains above a threshold, preventing unauthorized liquidations and protocol insolvency. Critical for lending protocols (Aave, Compound, Morpho), margin trading platforms, and any DeFi protocol using health factors for position management.
 
-This assertion is particularly important for:
-- Preventing positions from becoming undercollateralized
-- Ensuring protocol solvency is maintained
-- Detecting potential manipulation of health factor calculations
-- Maintaining protocol security by enforcing health factor invariants
-
-### Expected vs Unexpected Health Factor Violations
-It's important to distinguish between expected and unexpected health factor violations:
-
-**Expected Violations:**
-- Market price movements causing positions to become undercollateralized
-- Protocol-initiated liquidations as part of normal risk management
-- Scheduled parameter updates that may temporarily affect health factors
-- Protocol upgrades that include health factor adjustments
-
-**Unexpected Violations:**
-- Bugs in health factor calculations
-- Unauthorized modifications to position parameters
-- Exploits that manipulate collateral or debt values
-- Missing health factor checks in new protocol functions
-
-The assertion focuses on ensuring that core lending operations (supply, borrow, withdraw, repay) maintain healthy positions, while allowing other protocol functions (like liquidations) to operate as designed.
-
-### Applicable Protocols
-- Lending protocols (e.g., Aave, Compound, Morpho) that need to enforce strict health factor requirements
-- Margin trading protocols that rely on health factors for position management
-- Cross-collateral lending systems where health factors are critical for risk management
-- Protocols using health factors as a key risk parameter for position management
+Focuses on core lending operations (supply, borrow, withdraw, repay) while allowing other functions like liquidations to operate as designed.
 
 ## Explanation
-The assertion monitors the health factors of positions in lending protocols during specific lending operations. The health factor is calculated as the ratio of the total value of collateral to the total value of debt, and it determines whether a position is at risk of liquidation.
 
-The assertion uses the following cheatcodes:
-- `getCallInputs()`: Retrieves information about all function calls to the specified protocol functions
-- `registerCallTrigger()`: Triggers the assertion when specific lending operations are called
-- If no `forkPreState()` or `forkPostState()` is provided, the assertion will use the `forkPostState()` cheatcode by default
+Monitors health factors of positions during specific lending operations using:
 
-This approach ensures that:
-1. Each lending operation (supply, borrow, withdraw, repay) is monitored individually
-2. The assertion directly checks the health factor after each operation
-3. Positions affected by these operations remain healthy
-4. All protocol users' positions are verified after relevant operations
+- `getCallInputs()`: Track all function calls to specified protocol functions
+- `registerCallTrigger()`: Trigger on lending operations (supply, borrow, withdraw, repay)
+- `forkPostState()`: Verify health factor after each operation (used by default if no pre-state specified)
+
+The assertion checks each lending operation individually to ensure positions affected by these operations remain healthy.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes).
 
 ## Code Example
+
 <ass07LendingHealthFactor/>
 
-> **Note:** This code example is maintained in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/) where you can also find test examples.
+> **Note:** Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/assertions_book/).
 
-> **Extending Assertions:** When new functions are added to the protocol that should maintain healthy positions, you can create a new assertion file (e.g., `LendingHealthFactorExtendedAssertion.sol`) that follows the same pattern. This allows you to:
-> - Keep the original assertions active for existing functions
-> - Add new assertions for new functions without modifying existing code
-> - Maintain clear separation of concerns between different protocol features
-
-## Testing
-To test this assertion:
-1. Deploy a test instance of the lending protocol
-2. Create positions with varying health factors
-3. Test operations that should maintain healthy positions:
-   - Supply collateral
-   - Borrow assets
-   - Withdraw collateral
-   - Repay borrowed assets
-4. Verify the assertion ensures positions remain healthy after these operations
-5. Test edge cases:
-   - Multiple positions affected by a single transaction
-   - Positions near the health factor threshold
-   - Concurrent operations on the same position
-
-For test examples, see the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples).
-
-## Assertion Best Practices
-- Combine this assertion with other lending-related assertions like [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain) for comprehensive security
-- Use appropriate health factor thresholds based on protocol risk parameters
-- Consider the impact of market conditions on position health when designing the assertion
+<Info>
+**Extending Assertions:** When new functions are added to the protocol that should maintain healthy positions, you can create a new assertion file (e.g., `LendingHealthFactorExtendedAssertion.sol`) that follows the same pattern. This allows you to:
+- Keep the original assertions active for existing functions
+- Add new assertions for new functions without modifying existing code
+- Maintain clear separation of concerns between different protocol features
+</Info>
 
 ## Related Assertions
+- [Full Aave Assertion Suite](/assertions-book/assertions/aave-v3-suite)
 - [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
 - [Panic State Validation](/assertions-book/assertions/ass17-panic-state-validation)
 - [Owner Change](/assertions-book/assertions/ass05-ownership-change)
