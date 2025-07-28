@@ -34,8 +34,7 @@ function assertPriceDeviation() external view {
         // Calculate deviation and require change is within range
         uint256 deviation = ((postOraclePrice - preOraclePrice) * 10000) / preOraclePrice;
         require(deviation <= MAX_DEVIATION_BPS, "ORACLE_PRICE_MANIPULATION: Token price changed by more than 5% in single transaction");
-    }
-    
+    }  
 }
 ```
 
