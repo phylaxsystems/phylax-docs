@@ -17,35 +17,29 @@ These rules are defined in Solidity, executed off-chain, and enforced on-chain. 
 ### Why do I need the Credible Layer when I can write rules in my contracts?
 There are several key advantages:
 
-1. **Off-chain Execution**: Rules that would be too expensive or impossible to express on-chain due to gas costs and limits can be implemented easily as assertions as they are run off-chain. Our current benchmarks show around 1000x efficiency gains.
+1. **Off-chain Execution**: Rules that would be too expensive or impossible to express on-chain due to gas costs and limits can be implemented easily as assertions as they are run off-chain. Our current benchmarks show around 1000x efficiency gains and we are able to add whatever precompiles we want.
 2. **Simpler Security Model**: By writing invariants that define a state to prevent instead of every edge case that would lead there, you simplify and strengthen your protocol. If you are confused about what an invariant is, read on 👇🏻
 3. **No Redeployment, downtime or APIs**: Add new security rules without modifying your existing contracts. You can even add rules to immutable contracts. To learn how this is possible read the [How do you extend the validation logic of the sequencer to the dApp?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-dapp) section below.
 
 ### How does the Credible Layer differ from other security approaches?
 The Credible Layer offers several key advantages:
 
-1. **Prevention First**: Stops attacks before they happen by removing hack transactions during the sequencing process, rather than detecting them after it's too late. 
-2. **Protocol-Defined Security**: Your team can define exact states in Solidity that you want to prevent, eliminating false positives while preventing hacks. 
-3. **No Contract Changes**: Add new security rules without modifying your contracts.
-4. **Comprehensive Coverage**: Define rules that span multiple contracts and complex interactions.
-5. **Full Transparency**: Unlike AI/LLM analysis which operates in an opaque rather than transparent way, assertions are posted on-chain and their logic is fully transparent and verifiable.
-6. **Economic Incentives**: Creates a market where sequencers earn fees for enforcing security rules, rather than extracting value from the dApps and the rest of the ecosystem.
+1. **Deterministic Prevention**: Binary enforcement with zero false positives rather than AI/heuristic guessing
+2. **Pre-execution Protection**: Stop hacks during sequencing rather than detecting after damage
+3. **Network-Native Security**: Protocol-controlled rules enforced by the network itself, with no external dependencies or single points of failure
+4. **Transparent Enforcement**: Public, verifiable Solidity rules rather than opaque algorithms
+5. **Instant Deployment**: Add new protections without contract modifications, downtime, or governance votes
+6. **Aligned Economic Incentives**: Sequencers earn fees for protecting protocols rather than extracting value from the ecosystem
 
 ### What's the difference between assertions and traditional audits?
-While audits provide one-time code reviews, the Credible Layer offers continuous protection via the sequencer actively validating every transaction that interacts with your contracts. Our system provides real-time protection against:
-
-- New attack vectors discovered after deployment.
-- Unexpected contract interactions.
-- Changes in market conditions.
-- Updates to protocol parameters.
-- Governance decisions.
+While audits provide point-in-time code reviews, the Credible Layer offers continuous protection via the sequencer actively validating every transaction that interacts with your contracts against your assertions. 
 
 ### What is the transparency dashboard?
 The transparency dashboard is a tool that allows anyone to view and browse all assertions deployed by different protocols.
 It is a useful tool for end users as they can verify the security guarantees of any protocol, while devs can use it to copy assertions from protocols with similar contracts.
 
 ### Is the Credible Layer a SaaS protocol?
-No. We are a permissionless protocol that enables hack definition and prevention. No APIs for dApps.
+No. We are a permissionless protocol that enables hack definition and prevention. No APIs for dApps. No points of failure. No additional trust assumptions. 
 
 ## Technical Details
 
@@ -55,14 +49,14 @@ An assertion is a Solidity contract, that defines an invariant about your protoc
 Assertions are binary in nature, implemented through Solidity's **`require`** statement:
 
 - If the **`require`** condition is met, the transaction is valid
-- If the **`require`** fails, the transaction is invalid and will be filtered out
+- If the **`require`** fails, the transaction is invalid and will be dropped by the network
 
-This simple binary structure makes assertions both powerful and easy to reason with - there's no ambiguity about what constitutes a violation. It either is or isn't a hack.
+This simple binary structure makes assertions both powerful and easy to understand - there's no ambiguity about what constitutes a violation. It either is or isn't a hack.
 
 Common examples include:
 
 - Unauthorized admin changes
-- Suspicious price movements
+- Violent price movements
 - Violation of core protocol invariants
 - Complex cross-contract validations
 
@@ -89,7 +83,7 @@ For a good explainer on invariants see [this article](https://blog.trailofbits.c
 
 ### How do assertions work?
 
-Although assertions are stored on-chain to enable transparency, assertions run off-chain through the PhEVM (Phylax EVM) by the sequencer for performance reasons and can:
+Although assertions are stored on-chain for transparency's sake, assertions are run off-chain through the PhEVM (Phylax EVM) by the sequencer for performance reasons and can:
 
 1. Compare state before and after transactions
 2. Monitor specific function calls
@@ -105,17 +99,17 @@ beyond standard Solidity.
 For detailed documentation and examples of all available cheatcodes, see our 
 [Cheatcodes Reference Guide](/credible/cheatcodes).
 
-### How do I upgrade assertions?
+### How do I edit assertions?
 
-There might be cases where you want to upgrade an assertion to add new checks or modify existing ones.
+There might be cases where you want to edit an assertion to add new checks or change existing ones.
 
-Upgrading an assertion is straightforward:
-1. Disable current assertion
-2. Deploy new assertion pointing and point it to the contract you're protecting
+Editing an assertion is straightforward:
+1. Disable the current assertion
+2. Deploy new assertion and point it to the contract you're protecting
 3. Enable new assertion
 
 ### Can I copy assertions from other protocols?
-Yes, you can copy and adapt assertions from other protocols and use them in your own protocol. 
+Yes, you can copy and adapt assertions from other protocols and use them to protect your own protocol. 
 You should make sure that the assertions are compatible with your protocol. 
 It will make the most sense to copy assertions for standard libraries and interfaces.
 You will be able to see all assertions deployed by other protocols on the transparency dashboard.
@@ -123,11 +117,9 @@ You will be able to see all assertions deployed by other protocols on the transp
 ## Implementation and Adoption
 
 ### How does the Credible Layer work at the sequencer level?
-The Credible Layer uses our modified Flashbots rBuilder that:
 1. Simulates each transaction against relevant assertions
 2. Allows valid transactions to proceed
 3. Filters out transactions that violate assertions
-4. Maintains Superchain compliance for L2 compatibility
 
 ### How does the Credible Layer work with decentralized sequencers?
 - **Enshrine assertions** as part of state transition function or fork-choice rule, making them integral to the protocol.
@@ -135,11 +127,11 @@ The Credible Layer uses our modified Flashbots rBuilder that:
 
 ### How are forced included transactions handled for OP Stack Rollups?
 
-The solution is currently in implementation. Ask us about it!
+The solution is currently in development. Ask us about it!
 
-### Does the Credible Layer introduce new trust assumptions?
+### Does the Credible Layer introduce new trust assumptions or centralization points?
 
-No. For single-sequencer L2s, users already trust the sequencer with transaction inclusion, because, in theory, a sequencer can censor transactions arbitrarily when it receives them at the RPC layer. 
+No. For single-sequencer L2s, users/dApps already trust the sequencer with transaction inclusion, because, in theory, a sequencer can censor transactions arbitrarily when it receives them at the RPC layer. 
 The Credible Layer simply extends the sequencer's validation logic with dApp-defined rules, expressed as Assertions (EVM bytecode).
 
 ### Does the Credible Layer slow down the network?
@@ -148,10 +140,11 @@ No. We have performed worst-case stress tests, using the most inefficient operat
 
 ### How do you extend the validation logic of the sequencer to the dApp?
 
-Flashbots introduced a piece of software that enables a Sequencer to have an external block-builder that implements custom block-building logic, without changing the sequencer itself.
-This is also what powers Flashblocks. 
+For OP stack chains, Flashbots introduced a piece of software that enables a Sequencer to have an external block-builder that implements custom block-building logic, without changing the sequencer itself. This is also what powers Flashblocks. 
 
-Our custom block builder enables the sequencer to check each transaction against assertions defined by the dApp while staying completely Superchain compliant.
+For other chains, the exact implementation varries but generally follows the following architecture: 
+
+Our custom block builder enables the sequencer to check each transaction against assertions defined by the dApp.
 This requires no changes to contracts as it is effectively middleware. 
 
 ### Can anyone write assertions for my contracts?
@@ -161,12 +154,12 @@ This way, we ensure that no malicious third party reduces functionality by writi
 
 ### My protocol doesn't support the owner interface, can I still use the Credible Layer?
 
-We are working on more authentication techniques to service dApps with non-traditional ownership architectures. 
+We are working on more authentication techniques to service dApps with non-traditional ownership architectures. Reach out!
 
 ### How can you write rules for immutable contracts?
 
 As mentioned above in [How do you extend the validation logic of the sequencer to the dApp?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-dapp), the Credible Layer is functionally middleware as it enables the sequencer to remove transactions that would break the dApp's rules.
-The Credible Layer will still work with immutable contracts because the prevention happens at the sequencing step, which is where the L2 has ultimate power over transaction inclusion. 
+The Credible Layer will still work with immutable contracts because the prevention happens at the sequencing step, which is where the L2 has ultimate power over transaction inclusion, whether or not they come from immutable contracts.
 
 ### What are the ramifications of writing rules for supposedly immutable contracts?
 
