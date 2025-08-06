@@ -22,12 +22,17 @@ If you prefer visual learning over reading text, watch this introductory video f
 
 ## Key Benefits
 
-- **Prevents Hacks, Doesn't Just Detect Them**: Stop attacks before they succeed, not after funds are lost
-- **No False Positives**: Only blocks transactions that explicitly violate defined rules
-- **Developer-Friendly**: Assertions are written in Solidity, which means no need for context switching or learning a new language
-- **Non-Invasive**: Add protection without modifying existing contracts
-- **High Performance**: Processes 1,500 transactions in under 50ms
-- **Transparent Security**: All assertions are visible on-chain
+### For dApps
+
+- **Network-Native, Rule-Based Security**: Every transaction that violates your rules is removed by the network at the sequencer level. This deterministic approach means there are no false positives
+- **Easy to Use**: Written in Solidity, with foundry-like syntax, assertions are just like an in-contract require statement, but faster and more expressive. With no contract modifications or downtime during implementation
+- **Transparent Security**: All active assertions are public and verifiable. Users can inspect the exact rules protecting their funds, and developers can fork proven rule sets from similar protocols
+
+### For Networks
+
+- **No Lock-In**: Once integrated, the Credible Layer runs natively as part of your network infrastructure - no external services required, no ongoing vendor risk
+- **No throughput degradation**: Assertions are executed in parallel during sequencing. We tested a 30 megagas/s and we ran 1 gigagas/s of assertions. 
+- **Attract Institutional Capital**: Reduce the probability of a hack and provide easily auditable security rules, enabling more risk-averse institutions to LP
 
 ## How It Works
 
