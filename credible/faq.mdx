@@ -17,7 +17,7 @@ These rules are defined in Solidity, executed off-chain, and enforced on-chain. 
 ### Why do I need the Credible Layer when I can write rules in my contracts?
 There are several key advantages:
 
-1. **Off-chain Execution**: Rules that would be too expensive or impossible to express on-chain due to gas costs and limits can be implemented easily as assertions as they are run off-chain. Our current benchmarks show around 1000x efficiency gains and we are able to add whatever precompiles we want.
+1. **Off-chain Execution**: Rules that would be too expensive or impossible to express on-chain due to gas costs and limits can be implemented easily as assertions as they are run off-chain. Our current benchmarks show around 1000x efficiency gains.
 2. **Simpler Security Model**: By writing invariants that define a state to prevent instead of every edge case that would lead there, you simplify and strengthen your protocol. If you are confused about what an invariant is, read on 👇🏻
 3. **No Redeployment, downtime or APIs**: Add new security rules without modifying your existing contracts. You can even add rules to immutable contracts. To learn how this is possible read the [How do you extend the validation logic of the sequencer to the dApp?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-dapp) section below.
 
@@ -29,7 +29,6 @@ The Credible Layer offers several key advantages:
 3. **Network-Native Security**: Protocol-controlled rules enforced by the network itself, with no external dependencies or single points of failure
 4. **Transparent Enforcement**: Public, verifiable Solidity rules rather than opaque algorithms
 5. **Instant Deployment**: Add new protections without contract modifications, downtime, or governance votes
-6. **Aligned Economic Incentives**: Sequencers earn fees for protecting protocols rather than extracting value from the ecosystem
 
 ### What's the difference between assertions and traditional audits?
 While audits provide point-in-time code reviews, the Credible Layer offers continuous protection via the sequencer actively validating every transaction that interacts with your contracts against your assertions. 
@@ -49,14 +48,14 @@ An assertion is a Solidity contract, that defines an invariant about your protoc
 Assertions are binary in nature, implemented through Solidity's **`require`** statement:
 
 - If the **`require`** condition is met, the transaction is valid
-- If the **`require`** fails, the transaction is invalid and will be dropped by the network
+- If the **`require`** fails, the transaction is invalid and is dropped by the network
 
 This simple binary structure makes assertions both powerful and easy to understand - there's no ambiguity about what constitutes a violation. It either is or isn't a hack.
 
 Common examples include:
 
 - Unauthorized admin changes
-- Violent price movements
+- Significant price movements
 - Violation of core protocol invariants
 - Complex cross-contract validations
 
@@ -140,7 +139,7 @@ No. We have performed worst-case stress tests, using the most inefficient operat
 
 ### How do you extend the validation logic of the sequencer to the dApp?
 
-For OP stack chains, Flashbots introduced a piece of software that enables a Sequencer to have an external block-builder that implements custom block-building logic, without changing the sequencer itself. This is also what powers Flashblocks. 
+For OP stack chains, Flashbots introduced a piece of software that enables a sequencer to have an external block-builder that implements custom block-building logic, without changing the sequencer itself. This is also what powers Flashblocks. 
 
 For other chains, the exact implementation varries but generally follows the following architecture: 
 
