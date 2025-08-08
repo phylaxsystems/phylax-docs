@@ -228,7 +228,7 @@ function assertionOwnershipChange() external {
 
 Testing assertions is a critical step in developing effective security prevention. Since assertions act as automated guardians for your protocol, it's essential to verify they correctly identify both safe and unsafe conditions. A false positive could unnecessarily block legitimate protocol operations, while a false negative could miss critical security violations.
 
-To run the tests, you can use the following command:
+To run the tests, use the following command:
 
 ```bash
 pcl test
@@ -237,7 +237,7 @@ pcl test
 Good assertion tests should:
 - Verify that assertions fail when they should (e.g., when detecting unauthorized changes)
 - Confirm that assertions pass during normal operation
-- Simulate realistic protocol interactions
+- Simulate realistic protocol interactions as well as edge cases
 
 Let's break down how to test our assertion:
 
@@ -252,7 +252,7 @@ import {Test} from "forge-std/Test.sol";
 
 Let's examine each import:
 
-- `OwnableAssertion`: This imports the assertion we created that we want to test
+- `OwnableAssertion`: Imports the assertion we created that we want to test
 - `Ownable`: Imports the protocol contract that our assertion is protecting
 - `CredibleTest`: Provides special testing utilities for assertion testing, including the `cl` cheatcode interface
 - `Test`: Standard testing base contract from Forge, providing utilities like `vm.prank` and `vm.expectRevert`
@@ -295,34 +295,32 @@ This test checks that the assertion reverts when ownership changes.
 ```solidity
 // Test case: Ownership changes should trigger the assertion
 function test_assertionOwnershipChanged() public {
-    address aaAddress = address(assertionAdopter);
-    string memory label = "OwnableAssertion";
+    assertEq(assertionAdopter.owner(), initialOwner);
 
-    // Associate the assertion with the protocol
-    // cl will manage the correct assertion execution when the protocol is called
-    cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
+    cl.assertion({
+        adopter: address(assertionAdopter),
+        createData: type(OwnableAssertion).creationCode,
+        fnSelector: OwnableAssertion.assertionOwnershipChange.selector
+    });
 
     // Simulate a transaction that changes ownership
     vm.prank(initialOwner);
-    vm.expectRevert("Assertions Reverted");
-    cl.validate(
-        label, aaAddress, 0, abi.encodePacked(assertionAdopter.transferOwnership.selector, abi.encode(newOwner))
-    );
+    vm.expectRevert("Ownership has changed");
+    assertionAdopter.transferOwnership(newOwner);
+
+    // Check that owner didn't change
+    assertEq(assertionAdopter.owner(), initialOwner);
 }
 ```
 Key components:
-1. `cl.addAssertion()`: Links the assertion to the contract being protected
-   - First argument: Label of the assertion (use the name of the assertion you are testing)
-   - Second argument: Address of contract to protect
-   - Third argument: Bytecode of the assertion contract
-   - Fourth argument: Constructor argument(s) for the assertion
+1. `cl.assertion()`: Sets up the assertion to be run on the next transaction
+   - `adopter`: Address of contract to protect
+   - `createData`: Bytecode of the assertion contract
+   - `fnSelector`: Selector of the assertion function to run
 2. `vm.prank()`: Simulates a call from the owner's address
-3. `vm.expectRevert()`: Expects the assertion to revert with "Assertions Reverted" (only current error message)
-4. `cl.validate()`: Run a transaction against the assertion. If the assertion reverts, the transaction will be reverted and not included in the block.
-   - First argument: Label of the assertion (use the name of the assertion you are testing)
-   - Second argument: Address of contract to call the function on
-   - Third argument: ETH value (0 in this case)
-   - Fourth argument: Encoded function call to the protected contract (transferOwnership in this case)
+3. `vm.expectRevert()`: Explicitly expects the assertion to revert with "Ownership has changed"
+4. `assertionAdopter.transferOwnership(newOwner)`: Simulates a transaction that changes ownership
+5. `assertEq(assertionAdopter.owner(), initialOwner)`: Checks that the owner didn't change
 
 <Note>
 `cl` is the cheatcode exposed by the `CredibleTest` contract used specifically for testing assertions. It provides tools to validate your assertions under different conditions without having to deploy them to a real blockchain.
@@ -333,21 +331,20 @@ Key components:
 ```solidity
 // Test case: No ownership change should pass the assertion
 function test_assertionOwnershipNotChanged() public {
-    address aaAddress = address(assertionAdopter);
-    string memory label = "OwnableAssertion";
-
-    cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
+    cl.assertion({
+        adopter: address(assertionAdopter),
+        createData: type(OwnableAssertion).creationCode,
+        fnSelector: OwnableAssertion.assertionOwnershipChange.selector
+    });
 
     // Simulate a transaction that doesn't change ownership (transferring to same owner)
     vm.prank(initialOwner);
-    cl.validate(
-        label, aaAddress, 0, abi.encodePacked(assertionAdopter.transferOwnership.selector, abi.encode(initialOwner))
-    );
+    assertionAdopter.transferOwnership(initialOwner);
 }
 ```
 - Similar to the failing test, but tests the case where no ownership change occurs.
 - Uses transferOwnership to the same owner to simulate a transaction that doesn't change the state in ways that violate our assertion
-- `cl.validate()` will not revert if the assertion passes so we don't need to use `vm.expectRevert()`
+- `transferOwnership` will not revert if the assertion passes so we don't need to use `vm.expectRevert()`
 
 ### Full Test Contract
 
@@ -374,44 +371,44 @@ contract TestOwnableAssertion is CredibleTest, Test {
 
     // Test case: Ownership changes should trigger the assertion
     function test_assertionOwnershipChanged() public {
-        address aaAddress = address(assertionAdopter);
-        string memory label = "Ownership has changed";
+        assertEq(assertionAdopter.owner(), initialOwner);
 
-        // Associate the assertion with the protocol
-        // cl will manage the correct assertion execution when the protocol is called
-        cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
+        cl.assertion({
+            adopter: address(assertionAdopter),
+            createData: type(OwnableAssertion).creationCode,
+            fnSelector: OwnableAssertion.assertionOwnershipChange.selector
+        });
 
         // Simulate a transaction that changes ownership
         vm.prank(initialOwner);
-        vm.expectRevert("Assertions Reverted");
-        cl.validate(
-            label, aaAddress, 0, abi.encodePacked(assertionAdopter.transferOwnership.selector, abi.encode(newOwner))
-        );
+        vm.expectRevert("Ownership has changed");
+        assertionAdopter.transferOwnership(newOwner);
+
+        // Check that owner didn't change
+        assertEq(assertionAdopter.owner(), initialOwner);
     }
 
     // Test case: No ownership change should pass the assertion
     function test_assertionOwnershipNotChanged() public {
-        string memory label = "Ownership has not changed";
-        address aaAddress = address(assertionAdopter);
-
-        cl.addAssertion(label, aaAddress, type(OwnableAssertion).creationCode, abi.encode(assertionAdopter));
+        cl.assertion({
+            adopter: address(assertionAdopter),
+            createData: type(OwnableAssertion).creationCode,
+            fnSelector: OwnableAssertion.assertionOwnershipChange.selector
+        });
 
         // Simulate a transaction that doesn't change ownership (transferring to same owner)
         vm.prank(initialOwner);
-        cl.validate(
-            label, aaAddress, 0, abi.encodePacked(assertionAdopter.transferOwnership.selector, abi.encode(initialOwner))
-        );
+        assertionAdopter.transferOwnership(initialOwner);
     }
 }
+
 ```
 
 ### Key Testing Concepts
 
-1. **Assertion Registration**: Use `cl.addAssertion()` to register assertions with contracts
-2. **Transaction Simulation**: Use `cl.validate()` to test how assertions respond to transactions
-3. **State Manipulation**: Use Forge's cheatcodes (`vm.prank`, `vm.deal`) to set up test scenarios
-4. **Verification**: Use `vm.expectRevert()` to verify that the assertion reverts when expected
-5. **Labeling**: Use the name of the assertion you are testing as the label for improved feedback in logs
+1. **Assertion Registration**: Use `cl.assertion()` to register assertions that will be run on the next transaction
+2. **State Manipulation**: Use Forge's cheatcodes (`vm.prank`, `vm.deal`) to set up test scenarios
+3. **Verification**: Use `vm.expectRevert()` to verify that the assertion reverts when expected
 
 ### Running the Tests
 
