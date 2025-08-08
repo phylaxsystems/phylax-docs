@@ -12,33 +12,20 @@ Testing assertions is very similar to writing regular Forge tests. If you're fam
 
 ## Credible Layer Testing Interface
 
-The Credible Layer extends Forge's testing capabilities with additional utilities specifically for testing assertions. Here's the key interface:
+The Credible Layer extends Forge's testing capabilities with additional utilities specifically for testing assertions. We want to keep the interface minimal and easy to use:
 
 ```solidity
-contract CLTestEnv {
-    // Represents a transaction to test against assertions
-    struct AssertionTransaction {
-        address from;
-        address to;
-        uint256 value;
-        bytes data;
-    }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
 
-    // Add an assertion to a contract
-    function addAssertion(
-        string memory label,          // Identifier for the assertion
-        address assertionAdopter,     // Contract to monitor
-        bytes memory assertionCode,   // Assertion contract bytecode
-        bytes memory constructorArgs  // Constructor arguments
-    ) external;
+import {Vm} from "../lib/forge-std/src/Vm.sol";
 
-    // Test if a transaction would pass assertions
-    function validate(
-        string memory label,    // Assertion identifier
-        address to,             // Transaction target
-        uint256 value,          // ETH value
-        bytes calldata data     // Transaction calldata
-    ) external;
+interface VmEx is Vm {
+    function assertion(address adopter, bytes calldata createData, bytes4 fnSelector) external;
+}
+
+contract CredibleTest {
+    VmEx public constant cl = VmEx(address(uint160(uint256(keccak256("hevm cheat code")))));
 }
 ```
 
@@ -47,52 +34,55 @@ contract CLTestEnv {
 Here's how to use these utilities in your tests:
 
 ```solidity
-import { CredibleTest } from "credible-std/CredibleTest.sol";
-import { Test } from "forge-std/Test.sol";
-import { OwnableAssertion } from "../src/OwnableAssertion.a.sol";
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
 
-contract TestOwnableAssertion is Test, CredibleTest {
-    address public newOwner = address(0xdeadbeef);
+import {OwnableAssertion} from "../src/OwnableAssertion.a.sol";
+import {Ownable} from "../../src/Ownable.sol";
+import {CredibleTest} from "credible-std/CredibleTest.sol";
+import {Test} from "forge-std/Test.sol";
+
+contract TestOwnableAssertion is CredibleTest, Test {
+    // Contract state variables
     Ownable public assertionAdopter;
+    address public initialOwner = address(0xf00);
+    address public newOwner = address(0xdeadbeef);
 
+    // Set up the test environment
     function setUp() public {
-        assertionAdopter = new Ownable();
-        vm.deal(assertionAdopter.owner(), 1 ether);       
+        assertionAdopter = new Ownable(initialOwner);
+        vm.deal(initialOwner, 1 ether);
     }
 
+    // Test case: Ownership changes should trigger the assertion
     function test_assertionOwnershipChanged() public {
-        // Add assertion to a contract
-        cl.addAssertion(
-            "OwnershipAssertion",                  // Label
-            address(assertionAdopter),             // Target contract
-            type(OwnableAssertion).creationCode,   // Assertion bytecode
-            abi.encode(constructorArgs)            // Constructor args
-        );
+        assertEq(assertionAdopter.owner(), initialOwner);
 
-        // Test a transaction that should invalidate the assertion
-        vm.expectRevert(); // Expect assertions validation to revert
-        
-        cl.validate(
-            "OwnershipAssertion",                   // Label
-            address(assertionAdopter),              // Target contract
-            0,                                      // No ETH value
-            abi.encodeCall(                         // Transaction data
-                assertionAdopter.transferOwnership, 
-                (newOwner)
-            )
-        );
+        cl.assertion({
+            adopter: address(assertionAdopter), // Address of the contract to protect
+            createData: type(OwnableAssertion).creationCode, // Bytecode of the assertion contract
+            fnSelector: OwnableAssertion.assertionOwnershipChange.selector // Selector of the assertion function to run
+        });
+
+        // Simulate a transaction that changes ownership
+        vm.prank(initialOwner);
+        vm.expectRevert("Ownership has changed");
+        assertionAdopter.transferOwnership(newOwner); // This will trigger the assertion
+
+        // Check that owner didn't change
+        assertEq(assertionAdopter.owner(), initialOwner);
     }
 }
 ```
 
 Key concepts:
-- Use `cl.addAssertion()` to register assertions with contracts you want to monitor
-- Use `cl.validate()` to test how assertions respond to transactions
-- No return value from `cl.validate()`, but you can use `vm.expectRevert()` to check if it reverts
-- Multiple assertions can be linked to the same contract
-- Use the `label` to specify the assertion contract name for easier debugging
-
-This means you can leverage your existing Forge testing knowledge while using these additional features to verify your assertions work correctly.
+- Use `cl.assertion()` to register assertions that will be run on the next transaction
+- Only one assertion function can be registered at a time, which allows you to test assertion functions in isolation
+- Use `vm.prank()` to simulate a transaction from a specific address
+- Use `vm.expectRevert()` to verify that the assertion reverts when expected
+- `vm.expectRevert()` allows you to verify the exact error message returned by the assertion
+- The next transaction after `cl.assertion()` will be validated against the assertion
+- State changes caused by a non-reverting transaction will be persisted
 
 ## Testing Patterns
 
@@ -129,18 +119,15 @@ contract BatchOperations {
 
 // Test function
 function testMultipleOperations() public {
-    // Regular test setup and cl.addAssertion() omitted for brevity
+    // Regular test setup omitted for brevity
     
     // Create helper contract
     BatchOperations batch = new BatchOperations(address(target));
 
+    // cl.assertion() omitted for brevity
+
     // Execute all operations in one transaction
-    cl.validate(
-        "AssertionLabel",
-        address(batch),
-        0,
-        new bytes(0) // Empty calldata triggers fallback
-    );
+    batch.call("");
 }
 ```
 
