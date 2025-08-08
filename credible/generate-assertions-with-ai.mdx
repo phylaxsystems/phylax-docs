@@ -213,8 +213,7 @@ I need to create test cases for my Phylax assertion. Here's the context:
    - Import the proper testing libraries (forge-std/Test and credible-std/CredibleTest)
    - Set up the testing environment correctly
    - Test both positive scenarios (assertions should pass) and negative scenarios (assertions should fail)
-   - Use cl.addAssertion() to associate assertions with contracts
-   - Use cl.validate() to test the assertions against specific transactions
+   - Use cl.assertion() to register assertions that will be run on the next transaction
    - Include clear test function names that describe what's being tested
    - Use vm.prank() and other testing utilities as needed
 
@@ -241,6 +240,10 @@ Follow the Phylax documentation testing patterns and include comprehensive setup
 ```
 
 ### Generated Test Cases
+
+<Note>
+This was generated in April 2025. The testing interface has changed since then. See the [Testing Assertions](/credible/testing-assertions) guide for the current interface.
+</Note>
 
 Using AI, we can generate test cases like this example:
 

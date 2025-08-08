@@ -204,8 +204,7 @@ Testing assertions is similar to standard Forge testing, with additional Credibl
    - Leverage console logging for debugging
 
 2. **Credible Layer-Specific Testing**:
-   - Register assertions using `cl.addAssertion()`
-   - Validate transactions with `cl.validate()`
+   - Register assertion function to be run on the next transaction using `cl.assertion()`
    - Test both positive and negative cases
    - Verify assertion behavior across different scenarios
 
