@@ -26,7 +26,7 @@ Another convenient way to install `pcl` is using Cargo. It does require a couple
 - **Git**
 
 ```bash
-cargo +nightly install --git https://github.com/phylaxsystems/pcl --locked
+cargo +nightly install --git https://github.com/phylaxsystems/credible-sdk --locked pcl
 ```
 
 This will install the `pcl` binary in your Cargo installation directory (typically `~/.cargo/bin` on Unix-like systems). Make sure this directory is in your PATH.
@@ -41,13 +41,13 @@ Prerequisites:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/phylaxsystems/pcl
+   git clone https://github.com/phylaxsystems/credible-sdk
    cd pcl
    ```
 
 2. Build the CLI:
    ```bash
-   make build
+   cargo build --release --bin pcl
    ```
 
 3. The compiled binary will be available in the `target/release` directory.
