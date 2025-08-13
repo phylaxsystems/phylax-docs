@@ -90,12 +90,12 @@ This section shows useful patterns that can be used when testing assertions.
 
 ### Batch Operation Testing Pattern
 
-This pattern is used to test assertions that need to verify behavior across multiple operations in a single transaction. It involves creating a helper contract that performs multiple operations in its fallback function, allowing us to test the assertion's ability to track and validate the cumulative effect of these operations.
+This pattern is used to test assertions that need to verify behavior across multiple operations in a single transaction. It involves creating a helper contract that performs multiple operations in a single function, allowing us to test the assertion's ability to track and validate the cumulative effect of these operations.
 
 #### Key Components:
 
-1. A helper contract with a fallback function that performs multiple operations
-2. Testing by calling the helper contract's fallback with empty calldata
+1. A helper contract with a function that performs multiple operations
+2. Testing by calling the helper contract's function with empty calldata
 3. Verification of the final state after all operations
 
 #### Example Implementation:
@@ -109,7 +109,7 @@ contract BatchOperations {
         target = TargetContract(target_);
     }
 
-    fallback() external {
+    function batchOperations() external {
         // Perform multiple operations in a single transaction
         target.deposit(100);
         target.deposit(200);
@@ -127,9 +127,21 @@ function testMultipleOperations() public {
     // cl.assertion() omitted for brevity
 
     // Execute all operations in one transaction
-    batch.call("");
+    batch.batchOperations();
 }
 ```
+
+<Note>
+If you use a fallback function, you need to call it with `address(batchUpdater).call("")`.
+This is not the recommended way to do batch operations, since it's a low level call and it doesn't properly bubble up the revert reason. We recommend using the pattern above instead.
+
+If you do use a fallback function, you can use the following pattern to check the result of the batch operation:
+
+```solidity
+(bool success,) = address(batchUpdater).call(""); // Empty calldata triggers fallback
+require(!success, "assertion reason");
+```
+</Note>
 
 #### Benefits:
 
