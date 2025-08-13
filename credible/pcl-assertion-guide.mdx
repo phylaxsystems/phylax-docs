@@ -104,13 +104,13 @@ contract OwnableAssertion is Assertion {
         Ownable ownable = Ownable(ph.getAssertionAdopter());
 
         // Create a snapshot of the blockchain state before the transaction
-        ph.forkPreState();
+        ph.forkPreTx();
 
         // Get the owner before the transaction
         address preOwner = ownable.owner();
 
         // Create a snapshot of the blockchain state after the transaction
-        ph.forkPostState();
+        ph.forkPostTx();
 
         // Get the owner after the transaction
         address postOwner = ownable.owner();
@@ -191,13 +191,13 @@ function assertionOwnershipChange() external {
     Ownable ownable = Ownable(ph.getAssertionAdopter());
 
     // Create a snapshot of the blockchain state before the transaction
-    ph.forkPreState();
+    ph.forkPreTx();
 
     // Get the owner before the transaction
     address preOwner = ownable.owner();
 
     // Create a snapshot of the blockchain state after the transaction
-    ph.forkPostState();
+    ph.forkPostTx();
 
     // Get the owner after the transaction
     address postOwner = ownable.owner();
@@ -208,8 +208,8 @@ function assertionOwnershipChange() external {
 }
 ```
 - The main assertion logic uses cheatcodes:
-  - `ph.forkPreState()`: Creates a snapshot of the blockchain state before the transaction.
-  - `ph.forkPostState()`: Creates a snapshot of the blockchain state after the transaction.
+  - `ph.forkPreTx()`: Creates a snapshot of the blockchain state before the transaction.
+  - `ph.forkPostTx()`: Creates a snapshot of the blockchain state after the transaction.
 - The assertion reverts if the condition is not met. You can have several require checks in the same function to make sure no rules are violated.
 - The `ph` namespace gives access to the Credible Layer cheatcodes, which provide utility functions for assertions. For more information see the [cheatcodes documentation](/credible/cheatcodes).
 - All assertion functions must be public or external to be callable by the Credible Layer.
@@ -219,9 +219,11 @@ function assertionOwnershipChange() external {
 1. **Single Responsibility**: Each assertion should verify one specific property or invariant.
     - Sometimes it makes sense to check multiple properties in the same assertion function.
     - Aim to have as many specific assertion functions as possible, since the Credible Layer executes assertions in parallel.
-2. **State Management**: Use `forkPreState()` and `forkPostState()` to compare values before and after transactions.
-3. **Gas Optimization**: Use triggers to make sure that assertions are only called when they are needed in order to save gas and resources.
-4. **Return Early**: When writing more complex assertions checking multiple function calls in the callstack, it is recommended to check basic invariants first before starting to iterate over the callstack.
+2. **State Management**: Use `forkPreTx()` and `forkPostTx()` to compare values before and after transactions.
+3. **State Management**: Use `forkPreCall()` and `forkPostCall()` to compare values before and after specific calls.
+4. **Gas Optimization**: Use triggers to make sure that assertions are only called when they are needed in order to save gas and resources.
+5. **Return Early**: When writing more complex assertions checking multiple function calls in the callstack, it is recommended to check basic invariants first before starting to iterate over the callstack.
+6. **Debugging**: Use `console.log()` in assertion functions to print debug information to the console during testing with `pcl test`.
 
 
 ## 3. Testing the Assertion
