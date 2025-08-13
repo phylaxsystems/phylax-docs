@@ -33,16 +33,25 @@ The `credible-std` library provides several essential components for implementin
    - Pre and post transaction state comparison
    - Call stack level inspection of state changes
    - Access to intermediate state during transaction execution
+   - Direct storage slot inspection and loading
 
-3. **Testing Framework**
-   - Comprehensive testing utilities
-   - Built-in validation helpers
+3. **Advanced Forking Capabilities**
+   - Fork to pre/post transaction states
+   - Fork to specific call execution points
+   - Granular state inspection at any call level
+
+4. **Comprehensive Call Tracing**
+   - Get all call inputs or filter by call type (CALL, STATICCALL, DELEGATECALL, CALLCODE)
+   - Avoid double-counting issues with proxy contracts
+   - Detailed call information including gas limits, values, and execution addresses
+   - Transaction log retrieval for assertion logic
+
+5. **Testing Framework**
+   - Testing utilities for assertion development and validation
    - Integration with Forge testing framework
 
-4. **PhEvm Integration**
-   - Direct access to the PhEvm precompile
-   - Advanced assertion logic and validation
-   - Support for complex security rules
+6. **Debugging Tools**
+   - Console logging for assertion debugging
 
 For a detailed overview of currently supported use cases and examples, see our [Use Case Mappings](/credible/use-case-mappings/intro-use-case-mapping).
 
