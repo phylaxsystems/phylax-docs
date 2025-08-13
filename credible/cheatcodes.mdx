@@ -20,6 +20,44 @@ that extend the EVM's capabilities, but "cheatcodes" better reflects their role 
 experience.
 </Note>
 
+## State Management
+
+### `forkPreTx`
+
+Updates the active fork to the state prior to the assertion triggering transaction. Useful for:
+- Checking chain state before a transaction
+- Comparing values between pre and post states
+
+```solidity
+function forkPreTx() external
+```
+
+### `forkPostTx`
+
+Updates the active fork to the state after the assertion triggering transaction. Useful for:
+- Verifying chain state after a transaction
+- Comparing values between pre and post states
+
+```solidity
+function forkPostTx() external
+```
+
+### `forkPreCall`
+
+Updates the active fork to the state at the start of call execution for the specified id. `getCallInputs(..)` can be used to get ids to fork to.
+
+```solidity
+function forkPreCall(uint256 id) external
+```
+
+### `forkPostCall`
+
+Updates the active fork to the state after the call execution for the specified id. `getCallInputs(..)` can be used to get ids to fork to.
+
+```solidity
+function forkPostCall(uint256 id) external
+```
+
 ## Storage Operations
 
 ### `load`
@@ -40,33 +78,11 @@ function load(
 
 You can see an example of how to use this cheatcode in the [Storage Lookups](/credible/use-case-mappings/storage-lookups) use case mapping.
 
-## State Management
-
-### `forkPreState`
-
-Updates the active fork to the state before the triggering transaction. Useful for:
-- Checking chain state before a transaction
-- Comparing values between pre and post states
-
-```solidity
-function forkPreState() external
-```
-
-### `forkPostState`
-
-Updates the active fork to the state after the triggering transaction. Useful for:
-- Verifying chain state after a transaction
-- Comparing values between pre and post states
-
-```solidity
-function forkPostState() external
-```
-
 ## Transaction Data
 
 ### `getLogs`
 
-Retrieves all logs emitted by the latest transaction.
+Retrieves logs from the assertion triggering transaction.
 
 ```solidity
 struct Log {
@@ -80,10 +96,9 @@ function getLogs() external returns (Log[] memory logs)
 
 You can see an example of how to use this cheatcode in the [Read Logs](/credible/use-case-mappings/read-logs) use case mapping.
 
-### `getCallInputs`
+### `getAllCallInputs`
 
-Gets the call inputs of all the calls made in the current transaction and returns them in an array of `CallInputs` structs.
-This is a useful precompile to use for intra-transaction assertions such as checking if the price reported by an oracle deviates from an allowed range, which could be a sign of an oracle manipulation.
+Gets all call inputs for a given target and selector. This includes all types of calls (CALL, STATICCALL, DELEGATECALL, CALLCODE).
 
 ```solidity
 struct CallInputs {
@@ -93,8 +108,20 @@ struct CallInputs {
     address target_address;     // Storage modification target
     address caller;             // Transaction caller
     uint256 value;              // Call value
+    uint256 id;                 // Call id (used for forkPreCall and forkPostCall)
 }
 
+function getAllCallInputs(
+    address target, 
+    bytes4 selector
+) external view returns (CallInputs[] memory calls);
+```
+
+### `getCallInputs`
+
+Gets call inputs for a given target and selector. Only includes calls made using 'CALL' opcode.
+
+```solidity
 function getCallInputs(
     address target, 
     bytes4 selector
@@ -102,6 +129,63 @@ function getCallInputs(
 ```
 
 You can see an example of how to use this cheatcode in the [Function Call Inputs](/credible/use-case-mappings/function-call-inputs) use case mapping.
+
+### `getStaticCallInputs`
+
+Gets static call inputs for a given target and selector. Only includes calls made using 'STATICCALL' opcode.
+
+```solidity
+function getStaticCallInputs(
+    address target, 
+    bytes4 selector
+) external view returns (CallInputs[] memory calls);
+```
+
+### `getDelegateCallInputs`
+
+Gets delegate call inputs for a given target and selector. Only includes calls made using 'DELEGATECALL' opcode.
+
+```solidity
+function getDelegateCallInputs(
+    address target, 
+    bytes4 selector
+) external view returns (CallInputs[] memory calls);
+```
+
+### `getCallCodeInputs`
+
+Gets call code inputs for a given target and selector. Only includes calls made using 'CALLCODE' opcode.
+
+```solidity
+function getCallCodeInputs(
+    address target, 
+    bytes4 selector
+) external view returns (CallInputs[] memory calls);
+```
+
+The specific call input cheatcodes (`getCallInputs`, `getStaticCallInputs`, `getDelegateCallInputs`, `getCallCodeInputs`) eliminate double-counting issues by allowing you to target only the specific call type you need. Use these instead of `getAllCallInputs()` when you want to avoid duplicate entries from proxy contracts.
+
+For example, if you're monitoring a proxy contract and only want the actual delegate calls (not the proxy calls), use `getDelegateCallInputs()` instead of `getAllCallInputs()`.
+
+```solidity
+// GOOD: Only get delegate calls, no duplicates
+CallInputs[] memory delegateCalls = ph.getDelegateCallInputs(target, selector);
+
+// AVOID: May include both proxy and delegate calls for the same operation
+CallInputs[] memory allCalls = ph.getAllCallInputs(target, selector);
+```
+
+If you must use `getAllCallInputs()`, you may still need to filter out proxy calls:
+
+```solidity
+// Filter proxy calls when using getAllCallInputs
+for (uint256 i = 0; i < callInputs.length; i++) {
+  if (callInputs[i].bytecode_address == callInputs[i].target_address) {
+    continue; // Skip proxy calls, only process delegate calls
+  }
+  // Process the actual call
+}
+```
 
 <Info>
 Internal calls are not actual EVM calls but rather a Solidity language feature. They are not traced by the CallTracer and will not result in `CallInputs` or trigger call-based assertions. However, using the `this` keyword (e.g., `this.functionName()`) creates an external call that will be traced and can trigger assertions.
@@ -121,8 +205,6 @@ function bar() public {
 }
 ```
 </Info>
-
-Delegate calls, for example in a proxy contract, will trigger two calls and hence there will be two entries per call in the returned array. You can filter these duplicates by checking if the `bytecode_address` is the same as the `target_address`. If they're not the same, you can assume it's a delegate call. We are working on improving the devex around this.
 
 ## State Change Tracking
 
@@ -301,6 +383,29 @@ function triggers() external view override {
 ```
 
 ## Helpers
+
+### `console.log`
+
+Prints debug information to the console during assertion execution. Useful for debugging assertion logic and understanding transaction flow.
+
+```solidity
+function console.log(string memory message) external;
+```
+
+Example:
+```solidity
+function assertionExample() external {
+    ph.forkPreTx();
+    uint256 preBalance = token.balanceOf(user);
+    
+    ph.forkPostTx();
+    uint256 postBalance = token.balanceOf(user);
+    
+    console.log("Checking user balance assertion");
+    
+    require(postBalance >= preBalance, "Balance should not decrease");
+}
+```
 
 ### `getAssertionAdopter`
 
