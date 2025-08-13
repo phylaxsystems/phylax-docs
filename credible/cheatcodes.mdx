@@ -384,29 +384,6 @@ function triggers() external view override {
 
 ## Helpers
 
-### `console.log`
-
-Prints debug information to the console during assertion execution. Useful for debugging assertion logic and understanding transaction flow.
-
-```solidity
-function console.log(string memory message) external;
-```
-
-Example:
-```solidity
-function assertionExample() external {
-    ph.forkPreTx();
-    uint256 preBalance = token.balanceOf(user);
-    
-    ph.forkPostTx();
-    uint256 postBalance = token.balanceOf(user);
-    
-    console.log("Checking user balance assertion");
-    
-    require(postBalance >= preBalance, "Balance should not decrease");
-}
-```
-
 ### `getAssertionAdopter`
 
 Get assertion adopter contract address associated with the assertion triggering transaction.
@@ -419,3 +396,28 @@ This cheatcode removes the need to define an assertion adopter contract in the a
 
 The cheatcode is only available in the `triggers()` function and the assertion functions.
 It cannot be used in the constructor since assertion contracts have no state during deployment.
+
+### `console.log`
+
+Prints debug information to the console during testing with `pcl test`. Useful for debugging assertion logic and understanding transaction flow.
+
+```solidity
+function console.log(string memory message) external;
+```
+
+Example:
+```solidity
+import { console } from "credible-std/console.sol";
+
+function assertionExample() external {
+    ph.forkPreTx();
+    uint256 preBalance = token.balanceOf(user);
+    
+    ph.forkPostTx();
+    uint256 postBalance = token.balanceOf(user);
+    
+    console.log("Checking user balance assertion");
+    
+    require(postBalance >= preBalance, "Balance should not decrease");
+}
+```
