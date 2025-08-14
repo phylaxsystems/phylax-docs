@@ -58,16 +58,16 @@ The protocol has three target users. They can use the Credible Layer in the foll
     - Verify the specific security rules protecting your funds
     - Confidently deploy their capital, knowing that malicious transactions that would result in exploits are prevented
 3. **Network Operators**:
-    - Run OP-Talos alongside your sequencer
-    - Configure integration with Rollup Boost
+    - Run OP-Talos or other sidecar alongside your sequencer
+    - Configure integration with Rollup Boost or other infra
     - All transactions will automatically be validated against registered assertions
 
 ## Transaction Flow
 
 1. User submits transaction to the network
 2. Transaction enters the mempool
-3. OP-Talos receives the transaction for potential inclusion in a block
-4. For each transaction, OP-Talos:
+3. The sidecar receives the transaction for potential inclusion in a block
+4. For each transaction, the sidecar:
     - References the assertions stored in the **Credible Layer Protocol** that are related to the contracts the transaction interacts with
     - Fetches assertion bytecode from the Assertion DA
     - The PhEVM:
@@ -77,10 +77,10 @@ The protocol has three target users. They can use the Credible Layer in the foll
     - The PhEVM returns assertion results:
         - If any assertion reverts (invalid state), the transaction is flagged as invalid
         - If all assertions pass, the transaction is considered valid
-5. OP-Talos makes inclusion decisions:
+5. The sidecar makes inclusion decisions:
     - Invalid transactions are not included in the block
     - Valid transactions are included in the block
-6. OP-Talos submits the validated block to the sequencer via Rollup Boost
+6. The sidecar submits the validated block to the sequencer via Rollup Boost
 7. Sequencer accepts and processes the validated block
 
 ![Transaction Flow Diagram](/images/tx-flow-credible.png)
