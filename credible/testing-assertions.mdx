@@ -84,6 +84,22 @@ Key concepts:
 - The next transaction after `cl.assertion()` will be validated against the assertion
 - State changes caused by a non-reverting transaction will be persisted
 
+### Testing Assertion Contracts with Constructor Arguments
+
+Most of the time it's best practice to use `ph.getAssertionAdopter()` to get the assertion adopter instead of explicitly setting it in the constructor of the assertion contract.
+There might however be cases where you want to define additional values that your assertion contract should have access to. For example, this could be the address of a token.
+In this case you need to append the ABI-encoded constructor arguments to the contract bytecode.
+The `abi.encodePacked()` function concatenates the bytecode with the encoded arguments, creating the complete deployment data needed to deploy the contract with the correct constructor parameters.
+
+```solidity
+createData: abi.encodePacked(type(OwnableAssertion).creationCode, abi.encode(address(token)))
+```
+
+This combines:
+
+- `type(OwnableAssertion).creationCode` - the contract bytecode
+- `abi.encode(address(token))` - the encoded constructor arguments
+
 ## Testing Patterns
 
 This section shows useful patterns that can be used when testing assertions.

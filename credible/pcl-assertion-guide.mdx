@@ -160,6 +160,7 @@ constructor() {}
 - The constructor is optional and can be initialized during the storing and submitting of the assertion through the `pcl`.
 - In this example we entirely leave out the constructor, since we use the `ph.getAssertionAdopter()` cheatcode to get the address of the contract we want to protect.
 - The constructor runs against an empty state. This means you can pass values in the constructor but you can not read values from other contracts.
+- The constructor can be used to set additional values that your assertion contract should have access to. For example, the address of a token that you are checking the balance of.
 - Storage that is set in the constructor persists in the assertion contract.
 - Cheatcodes/precompiles are not accessible in the constructor.
 
