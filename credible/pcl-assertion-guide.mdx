@@ -215,6 +215,11 @@ function assertionOwnershipChange() external {
 - The `ph` namespace gives access to the Credible Layer cheatcodes, which provide utility functions for assertions. For more information see the [cheatcodes documentation](/credible/cheatcodes).
 - All assertion functions must be public or external to be callable by the Credible Layer.
 
+<Note>
+It is possible to call write functions inside assertion functions. This is not recommended though, since this leads to unexpected behavior.
+Assertions should only be thought of as a way to check the current state of a protocol and revert if an undesired state is detected.
+</Note>
+
 ### Best Practices for Writing Assertions
 
 1. **Single Responsibility**: Each assertion should verify one specific property or invariant.
