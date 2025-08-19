@@ -1,0 +1,44 @@
+---
+title: Advanced Assertion Testing
+description: How to make sure your assertions are thoroughly tested
+---
+
+## Introduction
+
+On this page we will cover some of the more advanced testing techniques for assertions.
+All testing tools available in Forge are also available in Credible Layer testing, making it powerful and easy to write comprehensive tests for assertions.
+
+## Fuzz Testing
+
+Fuzz testing is a technique to test general robustness of code as it runs many tests with random input.
+This is useful for assertions as it helps identify edge cases and unexpected behavior.
+You can use Forge's built-in fuzz testing capabilities to test your assertions with random inputs.
+
+```solidity
+function testAssertionAllowsValidWithdrawalFuzz(uint256 withdrawalAmount) public {
+    // Bound the withdrawal amount to reasonable values
+    vm.assume(withdrawalAmount > 0);
+    vm.assume(withdrawalAmount <= assertionAdopter.deposits(user1));
+    vm.assume(withdrawalAmount <= 100 ether); // Reasonable upper bound
+
+    assertEq(assertionAdopter.deposits(user1), 5 ether);
+    // Setup assertion for next transaction
+    cl.assertion({
+        adopter: address(assertionAdopter),
+        createData: type(PhyLockAssertion).creationCode,
+        fnSelector: PhyLockAssertion.assertionWithdrawInvariant.selector
+    });
+
+    // Execute withdrawal - this should succeed
+    vm.prank(user1);
+    assertionAdopter.withdraw(withdrawalAmount);
+
+    assertEq(assertionAdopter.deposits(user1), 5 ether - withdrawalAmount);
+}
+```
+
+This would run the test with 256 different values for `withdrawalAmount` that adhere to the bounds set by the `vm.assume()` constraints.
+
+<Note>
+Use `vm.assume()` to filter out invalid inputs that would cause the test to fail for reasons unrelated to your assertion logic.
+</Note>
