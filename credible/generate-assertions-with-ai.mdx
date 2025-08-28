@@ -8,7 +8,7 @@ import phylaxAssertionsRules from "/snippets/phylax-assertions-rules.mdx";
 
 ## Overview
 
-AI tools can significantly enhance your assertion development workflow by generating templates that follow Phylax best practices. This guide shows you how to leverage AI assistants like Claude Code or Cursor to create a great starting point for your assertions.
+AI tools can significantly enhance your assertion development workflow by generating templates that follow Phylax best practices. This guide shows you how to leverage AI assistants and editors like Claude Code, Gemini Code, Cursor, Zed etc. to create a great starting point for your assertions.
 
 <Note>
 This guide focuses on Cursor, but you can adapt the approach for any AI coding assistant.
@@ -30,12 +30,11 @@ We always encourage protocols to document their invariants clearly as this impro
 Add this to `.cursor/rules/phylax-assertions.mdc` in your repository:
 <phylaxAssertionsRules />
 
-
-### Defining Effective Invariants
+### Defining Effective Invariants for Assertions Generation
 
 - Get a basic understanding of invariants in this [guide by our DevRel Jacob](https://jstcz.eth.link/blog/2025/08/13/intro-to-invariants/)
 - Focus on security-critical invariants that protect against real attacks
-- Avoid invariants already enforced by `require` statements with CEI or FREI-PI patterns
+- Avoid invariants already enforced by `require` statements with CEI or [FREI-PI](https://www.nascent.xyz/idea/youre-writing-require-statements-wrong) patterns as these are already covered in your code
 - Target invariants that cannot be directly checked with `require` statements, such as:
   - State changes occurring in the callstack
   - Price manipulation attacks via flash loans
@@ -56,6 +55,8 @@ Use this template in your protocol repository:
 Create Phylax assertions to protect the protocol in this repository.
 
 The invariants that should be protected are defined in this document: [reference your invariants document]
+
+If invariant tests are available check them for additional context.
 
 The user-facing contracts that can trigger assertions are: [list contracts]
 
