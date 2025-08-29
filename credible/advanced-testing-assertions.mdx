@@ -140,6 +140,25 @@ If nothing is specified, the default profile is used.
 
 Backtesting runs your assertions against actual historical transactions from a specified block range. This helps ensure your assertions work correctly with real transaction patterns and don't trigger false positives on legitimate protocol operations.
 
+### RPC Call Requirements
+
+Backtesting makes RPC calls in two phases:
+
+1. **Transaction Fetching**: 1 RPC call per block using `eth_getBlockByNumber`
+2. **Transaction Validation**: 1 RPC call per transaction that triggers the assertion (via `vm.createSelectFork`)
+
+**Example for 100 blocks:**
+- If 100 blocks contain 50 transactions that trigger your assertion:
+  - Fetching phase: 100 RPC calls
+  - Validation phase: 50 RPC calls
+  - **Total: 150 RPC calls**
+
+The tool processes blocks in parallel batches (default: 20 blocks per batch, 10 concurrent requests) to optimize performance while respecting RPC rate limits.
+
+<Note>
+For larger block ranges (>1,000 blocks), consider using paid RPC providers to avoid rate limiting issues.
+</Note>
+
 ### Example
 
 ```solidity
