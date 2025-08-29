@@ -5,20 +5,8 @@ pragma solidity ^0.8.13;
 import {Assertion} from "credible-std/Assertion.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
-// Aerodrome style interface
-interface IPool {
-    function fee() external view returns (uint256);
-    function stable() external view returns (bool);
-}
-
 // Check that fee invariants are maintained
 contract AmmFeeVerificationAssertion is Assertion {
-    IPool public pool;
-
-    constructor(address _pool) {
-        pool = IPool(_pool);
-    }
-
     // Hardcoded whitelist of allowed fee values
     uint256 private constant STABLE_POOL_FEE_1 = 1; // 0.1%
     uint256 private constant STABLE_POOL_FEE_2 = 15; // 0.15%
@@ -31,10 +19,13 @@ contract AmmFeeVerificationAssertion is Assertion {
     }
 
     // Verify that any fee change is to an allowed value
-    function assertFeeVerification() external {
+    function assertFeeVerification() external view {
+        // Get the assertion adopter address
+        IPool adopter = IPool(ph.getAssertionAdopter());
+
         // Get the new fee value and pool type
-        bool isStable = pool.stable();
-        uint256 newFee = uint256(ph.load(address(pool), bytes32(uint256(1))));
+        bool isStable = adopter.stable();
+        uint256 newFee = uint256(ph.load(address(adopter), bytes32(uint256(1))));
 
         // Check if the new fee is in the whitelist
         bool isAllowed = isStable
@@ -44,7 +35,7 @@ contract AmmFeeVerificationAssertion is Assertion {
         require(isAllowed, "Fee change to unauthorized value");
 
         // If the simple check passes, verify no unauthorized changes in the callstack
-        uint256[] memory changes = getStateChangesUint(address(pool), bytes32(uint256(1)));
+        uint256[] memory changes = getStateChangesUint(address(adopter), bytes32(uint256(1)));
 
         // Check each change against the whitelist
         for (uint256 i = 0; i < changes.length; i++) {
@@ -54,5 +45,11 @@ contract AmmFeeVerificationAssertion is Assertion {
             require(isAllowed, "Unauthorized fee change detected in callstack");
         }
     }
+}
+
+// Aerodrome style interface
+interface IPool {
+    function fee() external view returns (uint256);
+    function stable() external view returns (bool);
 }
 ```

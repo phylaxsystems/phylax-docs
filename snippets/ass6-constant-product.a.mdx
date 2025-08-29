@@ -11,12 +11,6 @@ interface IAmm {
 }
 
 contract ConstantProductAssertion is Assertion {
-    IAmm public amm;
-
-    constructor(address _amm) {
-        amm = IAmm(_amm);
-    }
-
     function triggers() external view override {
         // Register triggers for both reserve slots for each assertion
         // This ensures we catch any modifications to either reserve
@@ -37,14 +31,18 @@ contract ConstantProductAssertion is Assertion {
     // to violate the invariant during the transaction, then restore them before
     // the end of the transaction to avoid detection in a pre/post comparison.
     function assertionConstantProduct() external {
+        // TOOD: Use new call frame forking to fix this assertion
+        // Get the assertion adopter address
+        IAmm adopter = IAmm(ph.getAssertionAdopter());
+
         // Get pre-state reserves and calculate initial k
-        ph.forkPreState();
-        (uint256 reserve0Pre, uint256 reserve1Pre) = amm.getReserves();
+        ph.forkPreTx();
+        (uint256 reserve0Pre, uint256 reserve1Pre) = adopter.getReserves();
         uint256 kPre = reserve0Pre * reserve1Pre;
 
         // Get post-state reserves and calculate final k
-        ph.forkPostState();
-        (uint256 reserve0Post, uint256 reserve1Post) = amm.getReserves();
+        ph.forkPostTx();
+        (uint256 reserve0Post, uint256 reserve1Post) = adopter.getReserves();
         uint256 kPost = reserve0Post * reserve1Post;
 
         // Verify the final state maintains the constant product

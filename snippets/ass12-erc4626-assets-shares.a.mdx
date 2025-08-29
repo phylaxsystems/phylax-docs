@@ -5,20 +5,7 @@ pragma solidity ^0.8.13;
 import {Assertion} from "credible-std/Assertion.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
-interface IERC4626 {
-    function totalAssets() external view returns (uint256);
-    function totalSupply() external view returns (uint256);
-    function convertToShares(uint256 assets) external view returns (uint256);
-    function convertToAssets(uint256 shares) external view returns (uint256);
-}
-
 contract ERC4626AssetsSharesAssertion is Assertion {
-    IERC4626 public vault;
-
-    constructor(address _vault) {
-        vault = IERC4626(_vault);
-    }
-
     function triggers() external view override {
         // Register trigger specifically for changes to the total supply storage slot
         registerStorageChangeTrigger(
@@ -28,15 +15,25 @@ contract ERC4626AssetsSharesAssertion is Assertion {
     }
 
     // Assert that the total assets are sufficient to back all shares
-    function assertionAssetsShares() external {
-        uint256 totalAssets = vault.totalAssets();
-        uint256 totalSupply = vault.totalSupply();
+    function assertionAssetsShares() external view {
+        // Get the assertion adopter address
+        IERC4626 adopter = IERC4626(ph.getAssertionAdopter());
+
+        uint256 totalAssets = adopter.totalAssets();
+        uint256 totalSupply = adopter.totalSupply();
 
         // Calculate how many assets are needed to back all shares
-        uint256 requiredAssets = vault.convertToAssets(totalSupply);
+        uint256 requiredAssets = adopter.convertToAssets(totalSupply);
 
         // The total assets should be at least what's needed to back all shares
         require(totalAssets >= requiredAssets, "Not enough assets to back all shares");
     }
+}
+
+interface IERC4626 {
+    function totalAssets() external view returns (uint256);
+    function totalSupply() external view returns (uint256);
+    function convertToShares(uint256 assets) external view returns (uint256);
+    function convertToAssets(uint256 shares) external view returns (uint256);
 }
 ```

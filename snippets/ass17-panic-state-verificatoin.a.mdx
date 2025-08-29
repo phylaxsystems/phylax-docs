@@ -5,18 +5,7 @@ pragma solidity ^0.8.13;
 import {Assertion} from "credible-std/Assertion.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
-interface IEmergencyPausable {
-    function paused() external view returns (bool);
-    function balance() external view returns (uint256);
-}
-
 contract EmergencyStateAssertion is Assertion {
-    IEmergencyPausable public vault;
-
-    constructor(address vault_) {
-        vault = IEmergencyPausable(vault_);
-    }
-
     function triggers() external view override {
         // Register trigger for all function calls to ensure comprehensive coverage
         registerCallTrigger(this.assertionPanickedCanOnlyDecreaseBalance.selector);
@@ -25,14 +14,17 @@ contract EmergencyStateAssertion is Assertion {
     // Check that if the state is panicked that the pool balance can only decrease
     // This ensures users can withdraw but prevents new deposits
     function assertionPanickedCanOnlyDecreaseBalance() external {
+        // Get the assertion adopter address
+        IEmergencyPausable adopter = IEmergencyPausable(ph.getAssertionAdopter());
+
         // Get pre-state values
-        ph.forkPreState();
-        bool isPanicked = vault.paused();
-        uint256 preBalance = vault.balance();
+        ph.forkPreTx();
+        bool isPanicked = adopter.paused();
+        uint256 preBalance = adopter.balance();
 
         // Get post-state values
-        ph.forkPostState();
-        uint256 postBalance = vault.balance();
+        ph.forkPostTx();
+        uint256 postBalance = adopter.balance();
 
         // If protocol is paused, ensure balance can only decrease
         if (isPanicked) {
@@ -40,7 +32,7 @@ contract EmergencyStateAssertion is Assertion {
 
             // Additional check: verify no unauthorized state changes
             uint256[] memory changes = getStateChangesUint(
-                address(vault),
+                address(adopter),
                 bytes32(uint256(1)) // Balance storage slot, change according to your contract
             );
 
@@ -50,5 +42,10 @@ contract EmergencyStateAssertion is Assertion {
             }
         }
     }
+}
+
+interface IEmergencyPausable {
+    function paused() external view returns (bool);
+    function balance() external view returns (uint256);
 }
 ```

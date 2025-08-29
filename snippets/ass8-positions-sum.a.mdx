@@ -5,38 +5,27 @@ pragma solidity ^0.8.13;
 import {Assertion} from "credible-std/Assertion.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
-// We use a simple lending contract as an example
-// Adjust accordingly to the interface of your protocol
-interface ILending {
-    function totalSupply() external view returns (uint256);
-    function balanceOf(address account) external view returns (uint256);
-    function deposit(address user, uint256 amount) external;
-}
-
 // Assert that the sum of all positions is the same as the total supply reported by the protocol
 contract PositionSumAssertion is Assertion {
-    ILending public lending;
-
-    constructor(address _lending) {
-        lending = ILending(_lending);
-    }
-
     function triggers() external view override {
         // Register trigger for changes to the total supply
-        registerCallTrigger(this.assertionPositionsSum.selector, lending.deposit.selector);
+        registerCallTrigger(this.assertionPositionsSum.selector, ILending.deposit.selector);
     }
 
     // Compare the sum of all updated positions to the total supply reported by the protocol
     function assertionPositionsSum() external {
+        // Get the assertion adopter address
+        ILending adopter = ILending(ph.getAssertionAdopter());
+
         // Capture the pre-state total supply
-        ph.forkPreState();
-        uint256 preStateTotalSupply = lending.totalSupply();
+        ph.forkPreTx();
+        uint256 preStateTotalSupply = adopter.totalSupply();
 
         // Execute the transaction
-        ph.forkPostState();
+        ph.forkPostTx();
 
         // Get the new total supply
-        uint256 newTotalSupply = lending.totalSupply();
+        uint256 newTotalSupply = adopter.totalSupply();
 
         // Calculate the expected change in total supply
         uint256 expectedTotalSupplyChange = newTotalSupply - preStateTotalSupply;
@@ -45,12 +34,12 @@ contract PositionSumAssertion is Assertion {
         uint256 positionChangesSum = 0;
 
         // Get deposit function call inputs
-        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(lending), lending.deposit.selector);
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(adopter), adopter.deposit.selector);
 
         // Process deposit function calls
         for (uint256 i = 0; i < callInputs.length; i++) {
             // Decode the function call input
-            (address user, uint256 amount) = abi.decode(callInputs[i].input, (address, uint256));
+            (, uint256 amount) = abi.decode(callInputs[i].input, (address, uint256));
 
             // Add the deposit amount to the position changes sum
             positionChangesSum += amount;
@@ -64,5 +53,13 @@ contract PositionSumAssertion is Assertion {
         // Verify that the sum of position changes equals the change in total supply
         require(positionChangesSum == expectedTotalSupplyChange, "Positions sum does not match total supply");
     }
+}
+
+// We use a simple lending contract as an example
+// Adjust accordingly to the interface of your protocol
+interface ILending {
+    function totalSupply() external view returns (uint256);
+    function balanceOf(address account) external view returns (uint256);
+    function deposit(address user, uint256 amount) external;
 }
 ```
