@@ -31,25 +31,17 @@ import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract ERC4626OperationsAssertion is Assertion {
-    // The contract we're monitoring
-    CoolVault coolVault;
-
-    // Constructor takes the address of the contract to monitor
-    constructor(address _coolVault) {
-        coolVault = CoolVault(_coolVault);
-    }
-
     // The triggers function tells the Credible Layer which assertion functions to run
     function triggers() external view override {
         // Batch operations assertion - triggers on any of the four functions
-        registerCallTrigger(this.assertionBatchOperationsConsistency.selector, coolVault.deposit.selector);
-        registerCallTrigger(this.assertionBatchOperationsConsistency.selector, coolVault.mint.selector);
-        registerCallTrigger(this.assertionBatchOperationsConsistency.selector, coolVault.withdraw.selector);
-        registerCallTrigger(this.assertionBatchOperationsConsistency.selector, coolVault.redeem.selector);
+        registerCallTrigger(this.assertionBatchOperationsConsistency.selector, CoolVault.deposit.selector);
+        registerCallTrigger(this.assertionBatchOperationsConsistency.selector, CoolVault.mint.selector);
+        registerCallTrigger(this.assertionBatchOperationsConsistency.selector, CoolVault.withdraw.selector);
+        registerCallTrigger(this.assertionBatchOperationsConsistency.selector, CoolVault.redeem.selector);
 
         // Deposit-specific assertions
-        registerCallTrigger(this.assertionDepositIncreasesBalance.selector, coolVault.deposit.selector);
-        registerCallTrigger(this.assertionDepositerSharesIncreases.selector, coolVault.deposit.selector);
+        registerCallTrigger(this.assertionDepositIncreasesBalance.selector, CoolVault.deposit.selector);
+        registerCallTrigger(this.assertionDepositerSharesIncreases.selector, CoolVault.deposit.selector);
 
         // Base invariant assertion - triggers on storage changes
         registerStorageChangeTrigger(this.assertionVaultAlwaysAccumulatesAssets.selector, bytes32(uint256(2)));
@@ -62,11 +54,14 @@ contract ERC4626OperationsAssertion is Assertion {
      * within the same transaction and ensures the final state is mathematically correct
      */
     function assertionBatchOperationsConsistency() external {
+        // Get the assertion adopter address
+        CoolVault adopter = CoolVault(ph.getAssertionAdopter());
+
         // Get call inputs for all four functions
-        PhEvm.CallInputs[] memory depositInputs = ph.getCallInputs(address(coolVault), coolVault.deposit.selector);
-        PhEvm.CallInputs[] memory mintInputs = ph.getCallInputs(address(coolVault), coolVault.mint.selector);
-        PhEvm.CallInputs[] memory withdrawInputs = ph.getCallInputs(address(coolVault), coolVault.withdraw.selector);
-        PhEvm.CallInputs[] memory redeemInputs = ph.getCallInputs(address(coolVault), coolVault.redeem.selector);
+        PhEvm.CallInputs[] memory depositInputs = ph.getCallInputs(address(adopter), adopter.deposit.selector);
+        PhEvm.CallInputs[] memory mintInputs = ph.getCallInputs(address(adopter), adopter.mint.selector);
+        PhEvm.CallInputs[] memory withdrawInputs = ph.getCallInputs(address(adopter), adopter.withdraw.selector);
+        PhEvm.CallInputs[] memory redeemInputs = ph.getCallInputs(address(adopter), adopter.redeem.selector);
 
         // Calculate net changes from all operations
         uint256 totalAssetsAdded = 0;
@@ -78,37 +73,37 @@ contract ERC4626OperationsAssertion is Assertion {
         for (uint256 i = 0; i < depositInputs.length; i++) {
             (uint256 assets,) = abi.decode(depositInputs[i].input, (uint256, address));
             totalAssetsAdded += assets;
-            totalSharesAdded += coolVault.previewDeposit(assets);
+            totalSharesAdded += adopter.previewDeposit(assets);
         }
 
         // Process mint operations (increase assets and supply)
         for (uint256 i = 0; i < mintInputs.length; i++) {
             (uint256 shares,) = abi.decode(mintInputs[i].input, (uint256, address));
             totalSharesAdded += shares;
-            totalAssetsAdded += coolVault.previewMint(shares);
+            totalAssetsAdded += adopter.previewMint(shares);
         }
 
         // Process withdraw operations (decrease assets and supply)
         for (uint256 i = 0; i < withdrawInputs.length; i++) {
             (uint256 assets,,) = abi.decode(withdrawInputs[i].input, (uint256, address, address));
             totalAssetsRemoved += assets;
-            totalSharesRemoved += coolVault.previewWithdraw(assets);
+            totalSharesRemoved += adopter.previewWithdraw(assets);
         }
 
         // Process redeem operations (decrease assets and supply)
         for (uint256 i = 0; i < redeemInputs.length; i++) {
             (uint256 shares,,) = abi.decode(redeemInputs[i].input, (uint256, address, address));
             totalSharesRemoved += shares;
-            totalAssetsRemoved += coolVault.previewRedeem(shares);
+            totalAssetsRemoved += adopter.previewRedeem(shares);
         }
 
-        ph.forkPreState();
-        uint256 preVaultAssets = coolVault.totalAssets();
-        uint256 preVaultSupply = coolVault.totalSupply();
+        ph.forkPreTx();
+        uint256 preVaultAssets = adopter.totalAssets();
+        uint256 preVaultSupply = adopter.totalSupply();
 
-        ph.forkPostState();
-        uint256 postVaultAssets = coolVault.totalAssets();
-        uint256 postVaultSupply = coolVault.totalSupply();
+        ph.forkPostTx();
+        uint256 postVaultAssets = adopter.totalAssets();
+        uint256 postVaultSupply = adopter.totalSupply();
 
         // Calculate expected changes
         uint256 expectedAssetsAdded = postVaultAssets > preVaultAssets ? postVaultAssets - preVaultAssets : 0;
@@ -128,29 +123,38 @@ contract ERC4626OperationsAssertion is Assertion {
      * This ensures that when users deposit assets, the vault's total assets increase by exactly the deposited amount
      */
     function assertionDepositIncreasesBalance() external {
-        // create a snapshot of the blockchain state before the transaction
-        ph.forkPreState();
+        // Get the assertion adopter address
+        CoolVault adopter = CoolVault(ph.getAssertionAdopter());
 
-        // get the balance of the vault before the transaction
-        uint256 vaultAssetPreBalance = CoolVault(coolVault).totalAssets();
+        // Get all deposit calls to the vault
+        PhEvm.CallInputs[] memory inputs = ph.getCallInputs(address(adopter), adopter.deposit.selector);
 
-        PhEvm.CallInputs[] memory inputs = ph.getCallInputs(address(coolVault), coolVault.deposit.selector);
-
-        uint256 totalBalanceDeposited = 0;
         for (uint256 i = 0; i < inputs.length; i++) {
-            (uint256 assets,) = abi.decode(inputs[i].input, (uint256, address));
-            totalBalanceDeposited += assets;
+            (uint256 assets, address receiver) = abi.decode(inputs[i].input, (uint256, address));
+
+            // Check pre-state
+            ph.forkPreTx();
+            uint256 vaultAssetPreBalance = adopter.totalAssets();
+            uint256 userSharesPreBalance = adopter.balanceOf(receiver);
+            uint256 expectedShares = adopter.previewDeposit(assets);
+
+            // Check post-state
+            ph.forkPostTx();
+            uint256 vaultAssetPostBalance = adopter.totalAssets();
+            uint256 userSharesPostBalance = adopter.balanceOf(receiver);
+
+            // Verify vault assets increased by exactly the deposited amount
+            require(
+                vaultAssetPostBalance == vaultAssetPreBalance + assets,
+                "Deposit assertion failed: Vault assets did not increase by the correct amount"
+            );
+
+            // Verify user received exactly the expected number of shares
+            require(
+                userSharesPostBalance == userSharesPreBalance + expectedShares,
+                "Deposit assertion failed: User did not receive the correct number of shares"
+            );
         }
-
-        // get the snapshot of state after the transaction
-        ph.forkPostState();
-
-        uint256 vaultAssetPostBalance = CoolVault(coolVault).totalAssets();
-
-        require(
-            vaultAssetPostBalance == vaultAssetPreBalance + totalBalanceDeposited,
-            "Deposit assertion failed: Vault assets did not increase by the correct amount"
-        );
     }
 
     /**
@@ -158,18 +162,21 @@ contract ERC4626OperationsAssertion is Assertion {
      * This ensures that when users deposit assets, they receive the correct number of shares
      */
     function assertionDepositerSharesIncreases() external {
-        PhEvm.CallInputs[] memory inputs = ph.getCallInputs(address(coolVault), coolVault.deposit.selector);
+        // Get the assertion adopter address
+        CoolVault adopter = CoolVault(ph.getAssertionAdopter());
+
+        PhEvm.CallInputs[] memory inputs = ph.getCallInputs(address(adopter), adopter.deposit.selector);
 
         for (uint256 i = 0; i < inputs.length; i++) {
-            ph.forkPreState();
+            ph.forkPreTx();
             (uint256 assets,) = abi.decode(inputs[i].input, (uint256, address));
-            uint256 previewPreAssets = CoolVault(coolVault).previewDeposit(assets);
+            uint256 previewPreAssets = adopter.previewDeposit(assets);
             address depositer = inputs[0].caller;
-            uint256 preShares = CoolVault(coolVault).balanceOf(depositer);
+            uint256 preShares = adopter.balanceOf(depositer);
 
-            ph.forkPostState();
+            ph.forkPostTx();
 
-            uint256 postShares = CoolVault(coolVault).balanceOf(depositer);
+            uint256 postShares = adopter.balanceOf(depositer);
 
             require(
                 postShares == preShares + previewPreAssets,
@@ -183,10 +190,13 @@ contract ERC4626OperationsAssertion is Assertion {
      * This is a fundamental invariant of ERC4626 vaults - they should never have more shares than assets
      */
     function assertionVaultAlwaysAccumulatesAssets() external {
-        ph.forkPostState();
+        // Get the assertion adopter address
+        CoolVault adopter = CoolVault(ph.getAssertionAdopter());
 
-        uint256 vaultAssetPostBalance = CoolVault(coolVault).totalAssets();
-        uint256 vaultSharesPostBalance = CoolVault(coolVault).balanceOf(address(coolVault));
+        ph.forkPostTx();
+
+        uint256 vaultAssetPostBalance = adopter.totalAssets();
+        uint256 vaultSharesPostBalance = adopter.balanceOf(address(adopter));
 
         require(
             vaultAssetPostBalance >= vaultSharesPostBalance, "Base invariant failed: Vault has more shares than assets"

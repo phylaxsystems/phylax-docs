@@ -5,18 +5,7 @@ pragma solidity ^0.8.13;
 import {Assertion} from "credible-std/Assertion.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
-interface IOwnership {
-    function owner() external view returns (address);
-    function admin() external view returns (address);
-}
-
 contract OwnerChangeAssertion is Assertion {
-    IOwnership public ownership;
-
-    constructor(address _ownership) {
-        ownership = IOwnership(_ownership);
-    }
-
     function triggers() external view override {
         // Register triggers for changes to both owner and admin storage slots
         registerStorageChangeTrigger(this.assertionOwnerChange.selector, bytes32(uint256(0)));
@@ -25,13 +14,16 @@ contract OwnerChangeAssertion is Assertion {
 
     // Assert that the owner address doesn't change during the state transition
     function assertionOwnerChange() external {
+        // Get the assertion adopter address
+        IOwnership adopter = IOwnership(ph.getAssertionAdopter());
+
         // Get pre-state owner
-        ph.forkPreState();
-        address preOwner = ownership.owner();
+        ph.forkPreTx();
+        address preOwner = adopter.owner();
 
         // Get post-state owner
-        ph.forkPostState();
-        address postOwner = ownership.owner();
+        ph.forkPostTx();
+        address postOwner = adopter.owner();
 
         // Verify owner hasn't changed after the transaction
         // Fail early if the owner has changed
@@ -40,7 +32,7 @@ contract OwnerChangeAssertion is Assertion {
         // Get all state changes for the owner slot
         // This checks if the owner address has changed throughout the callstack
         address[] memory changes = getStateChangesAddress(
-            address(ownership),
+            address(adopter),
             bytes32(uint256(0)) // First storage slot for owner address
         );
 
@@ -52,17 +44,20 @@ contract OwnerChangeAssertion is Assertion {
 
     // Assert that the admin address doesn't change during the state transition
     function assertionAdminChange() external {
+        // Get the assertion adopter address
+        IOwnership adopter = IOwnership(ph.getAssertionAdopter());
+
         // Get pre-state admin
-        ph.forkPreState();
-        address preAdmin = ownership.admin();
+        ph.forkPreTx();
+        address preAdmin = adopter.admin();
 
         // Get post-state admin
-        ph.forkPostState();
-        address postAdmin = ownership.admin();
+        ph.forkPostTx();
+        address postAdmin = adopter.admin();
 
         // Get all state changes for the admin slot
         address[] memory changes = getStateChangesAddress(
-            address(ownership),
+            address(adopter),
             bytes32(uint256(1)) // Second storage slot for admin address
         );
 
@@ -74,5 +69,10 @@ contract OwnerChangeAssertion is Assertion {
             require(changes[i] == preAdmin, "Unauthorized admin change detected");
         }
     }
+}
+
+interface IOwnership {
+    function owner() external view returns (address);
+    function admin() external view returns (address);
 }
 ```

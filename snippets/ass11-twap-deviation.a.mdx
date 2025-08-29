@@ -5,18 +5,7 @@ pragma solidity ^0.8.13;
 import {Assertion} from "credible-std/Assertion.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
-interface IPool {
-    function price() external view returns (uint256);
-    function twap() external view returns (uint256);
-}
-
 contract TwapDeviationAssertion is Assertion {
-    IPool public pool;
-
-    constructor(address _pool) {
-        pool = IPool(_pool);
-    }
-
     function triggers() external view override {
         // Register trigger for changes to the current price
         // We assume that the price is stored in storage slot 0
@@ -25,13 +14,16 @@ contract TwapDeviationAssertion is Assertion {
 
     // Assert that the current price doesn't deviate more than 5% from the TWAP price
     function assertionTwapDeviation() external {
+        // Get the assertion adopter address
+        IPool adopter = IPool(ph.getAssertionAdopter());
+
         // Get TWAP price before the transaction (our reference point)
-        ph.forkPreState();
-        uint256 preTwapPrice = pool.twap();
+        ph.forkPreTx();
+        uint256 preTwapPrice = adopter.twap();
 
         // Get price after the transaction
-        ph.forkPostState();
-        uint256 postPrice = pool.price();
+        ph.forkPostTx();
+        uint256 postPrice = adopter.price();
 
         uint256 maxDeviation = 5;
 
@@ -42,7 +34,7 @@ contract TwapDeviationAssertion is Assertion {
         // Second check: If the simple check passes, inspect all price changes in the callstack
         // This is more expensive but catches manipulation attempts within the transaction
         uint256[] memory priceChanges = getStateChangesUint(
-            address(pool),
+            address(adopter),
             bytes32(uint256(0)) // Current price storage slot
         );
 
@@ -58,5 +50,10 @@ contract TwapDeviationAssertion is Assertion {
         return (((currentPrice > referencePrice) ? currentPrice - referencePrice : referencePrice - currentPrice) * 100)
             / referencePrice;
     }
+}
+
+interface IPool {
+    function price() external view returns (uint256);
+    function twap() external view returns (uint256);
 }
 ```

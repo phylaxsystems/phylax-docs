@@ -5,17 +5,7 @@ pragma solidity ^0.8.13;
 import {Assertion} from "credible-std/Assertion.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
-interface IImplementation {
-    function implementation() external view returns (address);
-}
-
 contract ImplementationChangeAssertion is Assertion {
-    IImplementation public implementation;
-
-    constructor(address _implementation) {
-        implementation = IImplementation(_implementation);
-    }
-
     function triggers() external view override {
         // Register trigger for changes to the implementation address storage slot
         // The implementation address is typically stored in the first storage slot (slot 0)
@@ -25,17 +15,20 @@ contract ImplementationChangeAssertion is Assertion {
     // Assert that the implementation contract address doesn't change
     // during the state transition
     function implementationChange() external {
+        // Get the assertion adopter address
+        IImplementation adopter = IImplementation(ph.getAssertionAdopter());
+
         // Get pre-state implementation
-        ph.forkPreState();
-        address preImpl = implementation.implementation();
+        ph.forkPreTx();
+        address preImpl = adopter.implementation();
 
         // Get post-state implementation
-        ph.forkPostState();
-        address postImpl = implementation.implementation();
+        ph.forkPostTx();
+        address postImpl = adopter.implementation();
 
         // Get all state changes for the implementation slot
         address[] memory changes = getStateChangesAddress(
-            address(implementation),
+            address(adopter),
             bytes32(uint256(0)) // First storage slot for implementation address
         );
 
@@ -47,5 +40,9 @@ contract ImplementationChangeAssertion is Assertion {
             require(changes[i] == preImpl, "Unauthorized implementation change detected");
         }
     }
+}
+
+interface IImplementation {
+    function implementation() external view returns (address);
 }
 ```
