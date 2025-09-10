@@ -1,0 +1,165 @@
+---
+title: Bunni XYZ Rounding Error Exploit
+description: Sophisticated rounding error exploitation in Bunni AMM led to $8.4M loss through disproportionate liquidity manipulation
+---
+
+## Description
+
+On September 2, 2025, Bunni was exploited for $8.4M through a rounding error in the protocol's withdrawal mechanism. The attack affected two pools: weETH/ETH on Unichain and USDC/USDT on Ethereum.
+
+
+## Core Vulnerability Mechanism
+
+The attack exploited a rounding error in Bunni's idle balance update mechanism during withdrawals. The vulnerability occurred in `BunniHubLogic::withdraw()`:
+
+```solidity
+// decrease idle balance proportionally to the amount removed
+{
+    ...
+    uint256 newBalance = balance - balance.mulDiv(shares, currentTotalSupply);
+    ...
+}
+```
+
+**The Flaw:**
+The `mulDiv` function was intentionally rounded down during development, with the assumption that this would round up the idle balance and round down the active balance. The developers considered this "safe" since lower liquidity meant more price impact during swaps, favoring the pool.
+
+**Why This Assumption Failed:**
+While the rounding direction was safe for individual operations, it became exploitable when combined with multiple operations in sequence.
+
+## Attack Execution
+
+The exploit consisted of three steps:
+
+### Step 1: Swap with Flashloaned Funds
+1. Attacker flashborrowed 3M USDT from external venues (Uniswap v3 and Morpho)
+2. Made multiple swaps from USDT (token1) to USDC (token0)
+3. Pushed the pool's spot price tick to 5000 (1 USDC = 1.68 USDT)
+4. Pool's active balance in USDC decreased to 28 wei
+
+### Step 2: Exploiting Rounding Errors
+1. Attacker made 44 tiny withdrawals in a single transaction that exploited the rounding error
+2. USDC active balance decreased from 28 wei to 4 wei (85.7% decrease)
+3. This decrease was disproportionate to the amount of liquidity shares being burned
+4. Total liquidity decreased by 84.4% from 5.83e16 to 9.114e15
+
+### Step 3: Sandwich Attack
+1. With liquidity artificially decreased, attacker made a large swap from USDT to USDC
+2. Spot price tick pushed to 839189 (1 USDC = 2.77e36 USDT)
+3. The swap caused total liquidity to increase by 16.8% from 9.114e15 to 1.065e16
+4. Attacker made a second swap from USDC to USDT at inflated prices
+5. After repaying flashloan, attacker gained 1.33M USDC and 1M USDT
+
+## Why Unichain USDC/USD₮0 Pool Wasn't Exploited
+
+The largest Bunni pool (Unichain USDC/USD₮0) was spared due to insufficient flashloan liquidity:
+- Required 17M flashloan but only 11M was available on Euler
+- Uniswap v4 couldn't be used due to conflicts with step 2 withdrawals
+- Pool assets were rehypothecated to Euler, making them unavailable for exploitation
+
+## Root Cause Analysis
+
+**The Issue:**
+A rounding direction that's safe for individual operations may not be safe for multiple operations in sequence.
+
+**Technical Details:**
+1. Bunni uses two estimates of total liquidity and takes the smaller one
+2. The series of withdrawals disproportionately reduced `totalLiquidityEstimate0` (USDC-based)
+3. The first swap in step 3 caused `totalDensity0X96` to become miniscule (1 wei)
+4. This made `totalLiquidityEstimate1` (USDT-based) the chosen estimate, which was larger than the artificially decreased value from step 2
+5. The liquidity increase was then sandwiched by the attacker
+
+## Proposed Solution
+
+A withdrawal proportionality assertion could have prevented this attack by ensuring that active balance decreases are proportional to shares burned:
+
+```solidity
+contract BunniWithdrawalInvariantAssertion is Assertion {
+    function triggers() external view override {
+        registerCallTrigger(
+            this.assertionWithdrawalProportionality.selector,
+            IBunniHub.withdraw.selector
+        );
+    }
+
+    /// @notice Ensures withdrawals decrease pool balances proportionally to shares burned
+    function assertionWithdrawalProportionality() external {
+        IBunniHub hub = IBunniHub(ph.getAssertionAdopter());
+        
+        PhEvm.CallInputs[] memory withdrawals = ph.getCallInputs(
+            address(hub),
+            IBunniHub.withdraw.selector
+        );
+        
+        for (uint256 i = 0; i < withdrawals.length; i++) {
+            // Decode withdrawal parameters
+            (PoolId poolId, uint256 shares, address to, uint256 deadline) = 
+                abi.decode(withdrawals[i].input, (PoolId, uint256, address, uint256));
+            
+            // Get pool state before withdrawal
+            ph.forkPreCall(withdrawals[i].id);
+            uint256 totalSupplyBefore = hub.bunniTokenOfPool(poolId).totalSupply();
+            uint256 activeBalance0Before = hub.getPoolBalance(poolId, 0);
+            uint256 activeBalance1Before = hub.getPoolBalance(poolId, 1);
+            
+            // Get pool state after withdrawal
+            ph.forkPostCall(withdrawals[i].id);
+            uint256 totalSupplyAfter = hub.bunniTokenOfPool(poolId).totalSupply();
+            // Assuming `getPoolBalance` function exists for simplicity
+            uint256 activeBalance0After = hub.getPoolBalance(poolId, 0);
+            uint256 activeBalance1After = hub.getPoolBalance(poolId, 1);
+            
+            // Calculate expected vs actual changes
+            uint256 sharesBurned = totalSupplyBefore - totalSupplyAfter;
+            require(sharesBurned == shares, "Shares burned mismatch");
+            
+            // Active balance decreases must be proportional to shares burned
+            uint256 expectedBalance0Decrease = activeBalance0Before * shares / totalSupplyBefore;
+            uint256 expectedBalance1Decrease = activeBalance1Before * shares / totalSupplyBefore;
+            
+            uint256 actualBalance0Decrease = activeBalance0Before - activeBalance0After;
+            uint256 actualBalance1Decrease = activeBalance1Before - activeBalance1After;
+            
+            // Dynamic tolerance: 1% of expected decrease or minimum 1 wei
+            uint256 tolerance0 = expectedBalance0Decrease / 100 + 1;
+            uint256 tolerance1 = expectedBalance1Decrease / 100 + 1;
+            
+            require(
+                actualBalance0Decrease <= expectedBalance0Decrease + tolerance0 &&
+                actualBalance0Decrease >= expectedBalance0Decrease - tolerance0,
+                "Token0 active balance decrease not proportional to shares burned"
+            );
+            
+            require(
+                actualBalance1Decrease <= expectedBalance1Decrease + tolerance1 &&
+                actualBalance1Decrease >= expectedBalance1Decrease - tolerance1,
+                "Token1 active balance decrease not proportional to shares burned"
+            );
+        }
+    }
+}
+```
+
+### How This Assertion Prevents the Attack
+
+**What it does:**
+1. Monitors all withdrawals to the Bunni protocol
+2. Calculates expected balance decreases based on shares burned and total supply
+3. Uses dynamic tolerance that scales with transaction size (1% of expected decrease + 1 wei minimum)
+4. Reverts on disproportionate changes that exceed the tolerance
+
+**Why it catches the exploit:**
+The attacker's 44 tiny withdrawals in a single transaction caused the USDC active balance to decrease from 28 wei to 4 wei (85.7% decrease) while burning only a small amount of shares. This disproportion would trigger the assertion:
+
+- Expected decrease: Proportional to shares burned (small amount, e.g., 0.1 wei)
+- Actual decrease: 24 wei (28 - 4) 
+- Dynamic tolerance: 1% of expected + 1 wei (e.g., 1 wei for tiny withdrawals)
+- Result: The 24 wei actual decrease vs 0.1 wei expected would exceed the 1 wei tolerance, triggering the assertion
+
+**Key insight**: This assertion enforces that withdrawals must decrease pool balances proportionally to shares burned - a rule that the rounding error attack violated.
+
+## Key Takeaway
+
+The Bunni attack succeeded because the protocol's rounding assumptions were safe for individual operations but exploitable in combination. The attack demonstrates that mathematical properties must hold not just for individual operations, but across sequences of operations.
+
+A proportionality check - ensuring balance decreases match share burns - would have prevented this $8.4M loss. This principle applies to any DeFi protocol: if accounting doesn't maintain mathematical consistency across operations, the protocol is vulnerable to attacks that exploit the gaps between assumptions and reality.

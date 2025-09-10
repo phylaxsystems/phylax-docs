@@ -32,6 +32,12 @@ Each analysis includes:
 **Root Cause:** Rounding error in RebaseToken mechanism allowed base value inflation  
 **Prevention:** Invariant checks ensuring debt shares consistency
 
+### [Bunni XYZ Rounding Error Exploit](/assertions-book/previous-hacks/bunni-xyz-rounding-error)
+**Attack Type:** Rounding Error + Liquidity Manipulation  
+**Loss:** $8.4M USD  
+**Root Cause:** Rounding error in withdrawal mechanism led to disproportionate liquidity decreases  
+**Prevention:** Withdrawal proportionality assertions ensuring balance decreases match share burns
+
 ### [Compound Upgrade Bug](/assertions-book/previous-hacks/compound-upgrade-bug)
 **Attack Type:** Logic Error in Upgrade  
 **Loss:** $280K USD (limited by quick response)  
