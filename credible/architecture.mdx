@@ -7,11 +7,108 @@ description: 'Technical architecture of the Phylax Credible Layer'
 
 This page provides a comprehensive overview of the architecture of the Credible Layer. It details the primary system components, their roles, and how they interact to enforce security rules for smart contracts. The document includes architectural diagrams, step-by-step flow explanations, and descriptions of supporting infrastructure.
 
-# Stage 1 Architecture
+# How the Credible Layer Works
+
+## Abstract Overview
+
+The Credible Layer is a **sidecar security infrastructure** that validates every transaction against developer-defined security rules (assertions) before they are included in blocks. As a sidecar, it runs alongside the L2 network's main components, intercepting transactions during the block building process and ensuring they don't violate any registered security properties.
+
+### Sidecar Architecture
+
+The sidecar pattern allows the Credible Layer to:
+- **Operate independently** from the main L2 infrastructure
+- **Validate transactions** without modifying core L2 code
+- **Scale separately** from the main network components
+- **Fail gracefully** without affecting L2 operations
+
+### Core Concept
 
 ```mermaid
 ---
-title: Phylax Credible Layer Architecture
+title: Credible Layer Abstract Architecture
+---
+flowchart TD
+    subgraph l2["L2 Network"]
+        TX["Transaction"]
+        BB["Block Builder"]
+        BC["Blockchain"]
+    end
+    
+    subgraph cl["Credible Layer (Sidecar)"]
+        AS["Assertion DA"]
+        AV["Assertion Enforcer"]
+        PhEVM["PhEVM"]
+    end
+    
+    subgraph dev["Developer Tools"]
+        CLI["pcl CLI"]
+        dApp["Credible dApp"]
+    end
+    
+    TX --> BB
+    BB --> AV
+    AV --> PhEVM
+    PhEVM --> AS
+    AS --> AV
+    AV --> |Valid| BB
+    AV --> |Invalid| TX
+    BB --> BC
+    
+    CLI --> dApp
+    dApp --> AS
+    
+    classDef l2 fill:#e1f5fe
+    classDef cl fill:#f3e5f5
+    classDef dev fill:#e8f5e8
+    
+    class TX,BB,BC l2
+    class AS,AV,PhEVM cl
+    class CLI,dApp dev
+```
+
+### Key Components
+
+1. **Assertion DA**: Data availability layer responsible for storing assertion code and metadata, ensuring assertions are accessible and verifiable by anyone
+2. **Assertion Enforcer**: The entity responsible for enforcing assertions and vouching for not including any transactions that would invalidate them
+3. **PhEVM**: Specialized EVM implementation that includes additional capabilities for assertion verification and state manipulation
+4. **Developer Tools**: CLI and web interface for creating, testing, and managing assertions
+
+### How It Works
+
+1. **Assertion Registration**: Developers write and submit assertions that define security properties for their contracts
+2. **Transaction Interception**: During block building, transactions are intercepted before inclusion
+3. **Assertion Validation**: Each transaction is validated against relevant assertions using PhEVM
+4. **Block Inclusion**: Only transactions that pass all relevant assertions are included in blocks
+5. **Security Enforcement**: Invalid transactions are rejected, preventing security violations
+
+## Implementation Approaches
+
+The Credible Layer can be implemented using different architectural patterns depending on the L2 network's infrastructure:
+
+### Rollup-Boost Pattern (OP Stack)
+- Uses external sidecar components to integrate with the L2 sequencer
+- Minimal changes to L2 node code
+- Suitable for modular L2 architectures
+- **OP-Talos** acts as the assertion validation sidecar
+
+### Plugin Pattern (Linea/Besu)
+- Integrates directly as a plugin within the L2 node
+- Uses dedicated sidecar processes for assertion execution
+- Better performance and tighter integration
+- Suitable for L2s with plugin architectures
+- **Assertion Executor Sidecar** runs in parallel with the main node
+
+Both patterns implement the Credible Layer as a **sidecar system** that operates alongside the main L2 infrastructure, providing security validation without interfering with core L2 operations.
+
+# Implementation Details
+
+## OP Stack Implementation
+
+The OP Stack implementation uses an **Rollup-Boost Pattern** that connects external sidecar assertion validation components with the L2 sequencer through a bridge proxy.
+
+```mermaid
+---
+title: OP Stack Implementation Architecture
 ---
 flowchart TD
 
@@ -19,23 +116,24 @@ flowchart TD
 classDef default fill:#fff,color:black
 classDef deployed fill:#66ccff
 classDef dependency fill:#cccc00
+classDef subgraphStyle fill:#EBEBEB,stroke:#333,color:#333
 
 subgraph Sequencer[**Sequencer**]
-    SequencerCL[["fa:fa-handshake" op-node]]
-    SequencerEL[["fa:fa-check-to-slot" op-geth/op-reth]]
+    SequencerCL[op-node]
+    SequencerEL[op-geth/op-reth]
     SequencerEL <--> |Consensus| SequencerCL
 end
 
 subgraph CredibleLayer[**Credible Layer**]
-    AssertionEnforcerBlockBuilder[["fa:fa-cube" Block Builder]]
-    AssertionEnforcerCL[["fa:fa-handshake" op-node]]
-    AssertionEnforcerCLI[["fa:fa-terminal" CLI]]
-    AssertionEnforcerDapp[["fa:fa-arrow-pointer" dApp]]
-    AssertionDA[["fa:fa-database" Assertion DA]]
+    AssertionEnforcerBlockBuilder[Block Builder]
+    AssertionEnforcerCL[op-node]
+    AssertionEnforcerCLI[CLI]
+    AssertionEnforcerDapp[dApp]
+    AssertionDA[Assertion DA]
 end
 
 subgraph RollupBoost[**Rollup-Boost**]
-    RollupBoostProxy[["fa:fa-arrows-rotate" Proxy]]
+    RollupBoostProxy[Proxy]
 end
 
 AssertionEnforcerCL <--> |Consensus| AssertionEnforcerBlockBuilder
@@ -52,21 +150,21 @@ RollupBoost --> |New Block Requests| SequencerCL
 SequencerEL --> |Fallback Blocks + Validation| RollupBoost
 
 %% Style all nodes and text to be dark
-class SequencerCL,SequencerEL,SequencerBatcher,SequencerProposer default
+class SequencerCL,SequencerEL default
 class AssertionEnforcerBlockBuilder,AssertionEnforcerCL,AssertionEnforcerCLI,AssertionEnforcerDapp,AssertionDA deployed
 class RollupBoostProxy dependency
 
-class Sequencer subgraphStyle
+class Sequencer,CredibleLayer,RollupBoost subgraphStyle
 ```
 
-### System Elements Explained
+### OP Stack System Elements
 
 - **[Sequencer](/credible/glossary#sequencer)**
   - **op-node**: The main orchestrator node in the OP Stack, responsible for sequencing transactions and maintaining consensus with the execution layer.
   - **op-geth/op-reth**: The execution layer clients (Geth or Reth) that process and execute transactions, providing the EVM environment for the rollup.
 
-- **[Credible Layer](/credible/glossary#pcl-phylax-credible-layer)**
-  - **[Block Builder](/credible/glossary#block-builder)**: The implementation of the [Assertion Enforcer](/credible/glossary#assertion-enforcer) role, responsible for constructing blocks, enforcing assertions, and ensuring only valid transactions are included.
+- **[Credible Layer (Sidecar)](/credible/glossary#pcl-phylax-credible-layer)**
+  - **[Block Builder](/credible/glossary#block-builder)**: The component of the network that simulates transactions and runs assertions before transaction finalization to ensure they don't violate defined conditions.
   - **op-node**: A node within the Credible Layer that participates in consensus and interacts with the block builder.
   - **[pcl CLI](/credible/glossary#pcl-cli)**: Command-line interface for developers to write, test, and submit assertions to the system.
   - **[dApp](/credible/glossary#credible-dapp)**: The web application interface to register, manage, and view assertions and projects.
@@ -82,16 +180,116 @@ class Sequencer subgraphStyle
 - The Assertion DA serves assertion bytecode to the Block Builder, ensuring up-to-date enforcement.
 - The pcl CLI and Credible dApp provide interfaces for assertion submission and management.
 
+### OP Stack Sequencer Components
+
+- **OP-Talos**: Implementation of [rbuilder](https://github.com/flashbots/rbuilder) as the Assertion Enforcer.
+- **Rollup-Boost**: Developed by Flashbots, integrates OP-Talos with the Sequencer without code changes to the Sequencer.
+
+## Linea/Besu Implementation
+
+The Linea implementation uses a **Plugin Pattern** that integrates directly with the Besu node through its plugin system and uses a sidecar process for assertion execution.
+
+#### System Overview
+
+The integration leverages Besu's plugin system to intercept transactions during block building and validate them against assertions in a separate Rust-based executor. The assertion executor maintains its own state replica by re-executing all transactions with Linea-compatible EVM rules.
+
+#### Architecture Diagram
+
+```mermaid
+---
+title: Linea Besu Implementation Architecture
+---
+flowchart LR
+    subgraph besu["Linea Besu Node"]
+        direction TB
+        subgraph core["Core Components"]
+            TXP("Transaction Pool")
+            B("Block Builder")
+            PS("Plugin System")
+            WS[("World State<br/>Database")]
+        end
+
+        subgraph plugin["Assertion Plugin"]
+            ATS("Assertion<br/>Transaction Selector")
+            CC("Communication<br/>Client")
+            ATS --> CC
+        end
+
+        TXP --> B
+        B --> PS
+        PS --> ATS
+    end
+
+    subgraph sidecar["Assertion Executor Sidecar (Rust)"]
+        direction TB
+        subgraph bridge["Bridge"]
+            CS("gRPC/JNI<br/>Server")
+        end
+
+        subgraph exec["Execution Engine"]
+            AE("Assertion<br/>Executor")
+            REVM("revm<br/>+ Linea Support")
+            AE --> REVM
+        end
+
+        subgraph storage["Storage"]
+            SR[("State<br/>Replica")]
+            AS[("Assertion<br/>Store")]
+        end
+
+        CS --> AE
+        REVM --> SR
+        AE --> AS
+    end
+
+    CC ==>|"Async/Parallel<br/>Validation"| CS
+    WS -.->|"Initial State<br/>Sync"| SR
+
+    classDef mainContainer fill:#f8f9fa,stroke:#6c757d,stroke-width:2px,color:#212529
+    classDef subContainer fill:#ffffff,stroke:#adb5bd,stroke-width:1px,color:#495057
+    classDef highlight fill:#e7f3ff,stroke:#0056b3,stroke-width:2px,color:#004085
+    classDef bridge fill:#fff3cd,stroke:#856404,stroke-width:2px,color:#533f03
+    classDef database fill:#d4edda,stroke:#155724,stroke-width:2px,color:#0b2e13
+    classDef component fill:#e2e3e5,stroke:#6c757d,stroke-width:1px,color:#383d41
+
+    class besu,sidecar mainContainer
+    class core,exec,storage,plugin subContainer
+    class ATS,CC,AE,REVM highlight
+    class bridge,CS bridge
+    class WS,SR,AS database
+    class TXP,B,PS component
+```
+
+#### Linea System Components
+
+The system consists of three main components:
+
+1. **Linea Besu Plugin** - A transaction selection plugin that intercepts transactions during block building
+2. **Communication Bridge** - JNI or gRPC interface enabling async communication between Java and Rust
+3. **Assertion Executor Sidecar** - Parallel Rust process with Linea-compatible EVM that validates assertions
+
+#### Linea Implementation Details
+
+**Autonomous State Management**
+The assertion executor maintains its own state by re-executing all Linea transactions independently. This eliminates complex state-sharing APIs between Java (Besu) and Rust (assertion executor) - instead, both systems execute the same transactions and maintain separate state.
+
+**Parallel Execution Model**
+Transactions are validated in parallel with Besu's execution, with validation time "hidden" within Besu's processing time. This ensures minimal latency overhead while providing fail-safe operation.
+
+**Plugin-Based Integration**
+Uses Besu's `PluginTransactionSelector` interface to intercept transactions during block building without modifying core Besu code. The plugin starts async validation in the pre-processing hook and checks results in the post-processing hook.
+
 ## Transaction Flow
 
-The following diagram illustrates the transaction flow through the Credible Layer. Each step is explained in detail below:
+The following diagram illustrates the transaction flow through the Credible Layer using the OP Stack implementation as an example. The general flow is very similar across all implementations, with only the specific components and communication patterns differing.
 
-![Transaction Flow](../images/tx-flow-credible.png "Transaction flow through the Credible Layer")
+![Transaction Flow](../images/tx-flow-credible.png "Transaction flow through the Credible Layer (OP Stack example)")
 
-1. User submits a transaction to the network.
-2. Transaction enters the Mempool.
-3. [OP-Talos](/credible/glossary#op-talos) receives the transaction for potential inclusion in a block.
-4. For each transaction, OP-Talos:
+#### General Transaction Flow
+
+1. **Transaction Submission**: User submits a transaction to the network.
+2. **Mempool Entry**: Transaction enters the mempool for processing.
+3. **Assertion Validation**: The assertion validation system receives the transaction for potential inclusion:
     - References the [Assertions](/credible/glossary#assertion) stored in the [Credible Layer](/credible/glossary#pcl-phylax-credible-layer) that are related to the contracts the transaction interacts with.
     - Fetches [Assertion Bytecode](/credible/glossary#assertion-bytecode) from the [Assertion DA](/credible/glossary#assertion-da-data-availability).
     - The [PhEVM](/credible/glossary#phevm-phylax-evm):
@@ -101,15 +299,21 @@ The following diagram illustrates the transaction flow through the Credible Laye
     - The PhEVM returns assertion results:
         - If any assertion reverts (invalid state), the transaction is flagged as invalid.
         - If all assertions pass, the transaction is considered valid.
-5. OP-Talos makes inclusion decisions:
+4. **Inclusion Decision**: The validation system makes inclusion decisions:
     - Invalid transactions are not included in the block.
     - Valid transactions are included in the block.
-6. OP-Talos submits the validated block to the sequencer via Rollup-Boost.
-7. The sequencer accepts and processes the validated block.
+5. **Block Finalization**: The validated block is finalized and added to the blockchain.
+
+#### Implementation-Specific Details
+
+The exact mechanism for steps 3-5 varies depending on the implementation pattern:
+
+- **OP Stack (Rollup-Boost Pattern)**: Uses OP-Talos for external block validation and Rollup-Boost for bridge communication
+- **Linea/Besu (Plugin Pattern)**: Uses internal plugin validation with dedicated sidecar execution
 
 ## Auxiliary Components
 
-- **[Assertion DA](/credible/glossary#assertion-da-data-availability)**: A centralized server that is operated by Phylax Systems Inc and is responsible for storing the Assertion bytecode, so that it's available to both end-users for inspection as also to the Assertion Enforcer for execution. The Assertion ID is derived by hashing the bytecode. This component will be decentralized in the future.
+- **[Assertion DA](/credible/glossary#assertion-da-data-availability)**: Data Availability layer that is responsible for storing the Assertion bytecode, making it available to both end-users for inspection and to the Assertion Enforcer for execution.
 
 - **[pcl CLI](/credible/glossary#pcl-cli):** The CLI which developers use to develop and test assertions. It is also used to store and submit assertions, so they can be registered on-chain.
     - A quickstart guide for the `pcl` is available [here](/credible/pcl-quickstart).
@@ -119,75 +323,6 @@ The following diagram illustrates the transaction flow through the Credible Laye
     - It is used by end users (consumers) to view the registered dApps and their assertions. It builds trust, as end users know exactly what security properties the dApps they use have.
     - An overview of the dApp is available [here](/credible/dapp-guide).
 
-## Sequencer Components
-
-- **OP-Talos**: Implementation of [rbuilder](https://github.com/flashbots/rbuilder) as the Assertion Enforcer.
-- **Rollup-Boost**: Developed by Flashbots, integrates OP-Talos with the Sequencer without code changes to the Sequencer.
-
-```mermaid
----
-title: OP-Talos Component Diagram
----
-flowchart TD
-
-%% Set default styles
-classDef default fill:#fff,stroke:#333,color:#333
-classDef subgraphStyle fill:#EBEBEB,stroke:#333,color:#333
-
-subgraph L1Layer[**L1**]
-style L1Layer fill:#EBEBEB,stroke:black
-L1EL[["fa:fa-check-to-slot" L1 Execution Layer]]
-L1CL[["fa:fa-handshake" L1 Consensus Layer]]
-L1CL <--> |Consensus| L1EL
-end
-
-subgraph Sequencer[**Sequencer**]
-style Sequencer fill:#EBEBEB,stroke:black
-SequencerCL[["fa:fa-handshake" op-node]]
-SequencerEL[["fa:fa-check-to-slot" op-geth/op-reth]]
-SequencerBatcher[["fa:fa-bars-progress" Batcher]]
-SequencerProposer[["fa:fa-gears" Proposer]]
-SequencerCL --> |Engine API| RollupBoostProxy
-end
-
-subgraph CredibleLayer[**Assertion Enforcer**]
-style CredibleLayer fill:#EBEBEB,stroke:black
-AssertionEnforcerBlockBuilder[["fa:fa-cube" Block Builder]]
-AssertionEnforcerCL[["fa:fa-handshake" op-node]]
-AssertionEnforcerEL[["fa:fa-check-to-slot" op-reth + block builder]]
-AssertionEnforcerLoader[["fa:fa-list-check" Assertion Loader]]
-AssertionEnforcerCL --> |engine_api| AssertionEnforcerEL
-end
-
-RollupBoostProxy[["fa:fa-arrows-rotate" Rollup-Boost Proxy]]
-AssertionDA[["fa:fa-database" Assertion DA]]
-
-%% Connect L1 Layer to existing components
-SequencerBatcher --> |Publishes Transactions| L1Layer
-SequencerProposer --> |Posts State Roots| L1Layer
-
-%% Existing connections
-RollupBoostProxy --> |Engine API| SequencerEL
-AssertionEnforcerBlockBuilder <--> |Sends Credible Blocks, Receives new blocks| RollupBoostProxy
-AssertionEnforcerLoader <--> |Fetches New Assertions| AssertionDA
-AssertionEnforcerLoader --> |Streams Assertions| AssertionEnforcerBlockBuilder
-Sequencer --> |Indexes Assertion Events| AssertionEnforcerLoader
-SequencerBatcher --> |Approves Blocks| SequencerCL
-
-%% Style all nodes and text to be dark
-class L1EL,L1CL,SequencerCL,SequencerEL,SequencerBatcher,SequencerProposer,AssertionEnforcerBlockBuilder,AssertionEnforcerCL,AssertionEnforcerEL,AssertionEnforcerLoader,RollupBoostProxy,AssertionDA default
-
-class L1Layer,Sequencer,CredibleLayer subgraphStyle
-```
-
-*OP-Talos Component Diagram: This diagram shows the interaction between the L1 Layer, Sequencer, Assertion Enforcer, Rollup-Boost Proxy, and Assertion DA in the context of assertion enforcement and block production.*
-
-- **L1 Layer**: Represents the Ethereum mainnet, consisting of the L1 Execution Layer and L1 Consensus Layer. It receives published transactions and state roots from the sequencer.
-- **Sequencer**: Composed of the op-node, execution clients (op-geth/op-reth), batcher, and proposer. The sequencer is responsible for building blocks, validating transactions, and interfacing with both the Rollup-Boost Proxy and L1 Layer.
-- **Credible Layer (Assertion Enforcer)**: Contains the Block Builder (which enforces assertions), its own op-node and execution layer, and the Assertion Loader. The Assertion Loader fetches new assertions from the Assertion DA and streams them to the Block Builder for enforcement.
-- **Rollup-Boost Proxy**: Acts as a bridge between the sequencer and the Assertion Enforcer, handling block requests and validation without requiring changes to the sequencer code.
-- **Assertion DA**: The data availability layer that stores assertion bytecode and metadata, making them accessible to the Assertion Loader and Block Builder.
-
 # Stage 2 Architecture
 
-Stage 2 will be dedicated to solving forced inclusion in the OP Stack. We have a solution in development to address this, and more information will be provided as the design and implementation mature.
+Stage 2 will be dedicated to solving forced inclusion in L2 networks. We have a solution in development to address this, and more information will be provided as the design and implementation mature.
