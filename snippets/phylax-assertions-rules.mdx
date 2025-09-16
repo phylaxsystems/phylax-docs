@@ -107,14 +107,14 @@ contract ProtocolAssertion is Assertion {
     function assertionFunction() external {
         // Get protocol instance
         Protocol protocol = Protocol(ph.getAssertionAdopter());
-        
+
         // State comparison logic
         ph.forkPreTx();
         // ... pre-state logic
-        
+
         ph.forkPostTx();
         // ... post-state logic
-        
+
         // Require statements for invariants
         require(condition, "Descriptive error message");
     }
@@ -164,7 +164,7 @@ contract ProtocolAssertion is Assertion {
 function triggers() external view override {
     // Single function trigger
     registerCallTrigger(this.assertionFunction.selector, Protocol.functionToMonitor.selector);
-    
+
     // Multiple functions trigger same assertion
     registerCallTrigger(this.assertionFunction.selector, Protocol.function1.selector);
     registerCallTrigger(this.assertionFunction.selector, Protocol.function2.selector);
@@ -196,13 +196,13 @@ function triggers() external view override {
 ```solidity
 function assertionStateInvariant() external {
     Protocol protocol = Protocol(ph.getAssertionAdopter());
-    
+
     ph.forkPreTx();
     uint256 preValue = protocol.someValue();
-    
+
     ph.forkPostTx();
     uint256 postValue = protocol.someValue();
-    
+
     require(postValue >= preValue, "Value cannot decrease");
 }
 ```
@@ -212,16 +212,16 @@ function assertionStateInvariant() external {
 ```solidity
 function assertionCallValidation() external {
     Protocol protocol = Protocol(ph.getAssertionAdopter());
-    
+
     PhEvm.CallInputs[] memory calls = ph.getCallInputs(
-        address(protocol), 
+        address(protocol),
         protocol.functionToMonitor.selector
     );
-    
+
     for (uint256 i = 0; i < calls.length; i++) {
         // Decode function parameters
         (uint256 param1, address param2) = abi.decode(calls[i].input, (uint256, address));
-        
+
         // Validate parameters
         require(param1 > 0, "Parameter must be positive");
         require(param2 != address(0), "Address cannot be zero");
@@ -234,27 +234,27 @@ function assertionCallValidation() external {
 ```solidity
 function assertionComplexInvariant() external {
     Protocol protocol = Protocol(ph.getAssertionAdopter());
-    
+
     // Layer 1: Basic state check (cheapest)
     ph.forkPreTx();
     uint256 preBalance = protocol.balance();
-    
+
     ph.forkPostTx();
     uint256 postBalance = protocol.balance();
-    
+
     if (postBalance < preBalance) {
         // Layer 2: Detailed analysis only if basic check fails
         PhEvm.CallInputs[] memory calls = ph.getCallInputs(
-            address(protocol), 
+            address(protocol),
             protocol.withdraw.selector
         );
-        
+
         uint256 totalWithdrawn = 0;
         for (uint256 i = 0; i < calls.length; i++) {
             uint256 amount = abi.decode(calls[i].input, (uint256));
             totalWithdrawn += amount;
         }
-        
+
         require(postBalance == preBalance - totalWithdrawn, "Balance mismatch");
     }
 }
@@ -265,15 +265,15 @@ function assertionComplexInvariant() external {
 ```solidity
 function assertionIntraTxOracleDeviation() external {
     IOracle oracle = IOracle(ph.getAssertionAdopter());
-    
+
     // Get initial state before transaction
     ph.forkPreTx();
     uint256 initialPrice = oracle.price();
-    
+
     // Calculate allowed deviation thresholds
     uint256 maxAllowedPrice = (initialPrice * 110) / 100; // +10%
     uint256 minAllowedPrice = (initialPrice * 90) / 100;  // -10%
-    
+
     // Check final state after transaction
     ph.forkPostTx();
     uint256 finalPrice = oracle.price();
@@ -281,18 +281,18 @@ function assertionIntraTxOracleDeviation() external {
         finalPrice >= minAllowedPrice && finalPrice <= maxAllowedPrice,
         "Oracle final price deviation exceeds threshold"
     );
-    
+
     // Get all price update calls in this transaction
     PhEvm.CallInputs[] memory priceUpdates = ph.getCallInputs(
-        address(oracle), 
+        address(oracle),
         oracle.updatePrice.selector
     );
-    
+
     // Check each intermediate state after each call
     for (uint256 i = 0; i < priceUpdates.length; i++) {
         // Snapshot state after this specific call
         ph.forkPostCall(priceUpdates[i].id);
-        
+
         // Check price at this point in the transaction
         uint256 intermediatePrice = oracle.price();
         require(
@@ -323,7 +323,7 @@ contract TestProtocolAssertion is CredibleTest, Test {
     function setUp() public {
         assertionAdopter = new Protocol();
         assertion = new ProtocolAssertion();
-        
+
         // Setup test environment
         vm.deal(address(0xBEEF), 100 ether);
     }
@@ -357,6 +357,48 @@ contract TestProtocolAssertion is CredibleTest, Test {
 ```
 
 ### Testing Specifics
+
+It is extremely important to understand that `cl.assertion()` runs only on the next function call.
+So if you are testing `assertionAdopter.safeFunction`, there should be no other transaction between `cl.assertion` and that function call.
+Any function calls that are used to setup the state for the test, should happen before `cl.assertion`.
+
+Do:
+```solidity
+function testAssertionPasses() public {
+    // Setup before cl.assertion
+    vm.deal(address(0xBEEF), 100 ether);
+
+    // Register assertion for next transaction
+    cl.assertion({
+        adopter: address(assertionAdopter),
+        createData: type(ProtocolAssertion).creationCode,
+        fnSelector: ProtocolAssertion.assertionFunction.selector
+    });
+
+    // Execute valid transaction
+    vm.prank(address(0xBEEF));
+    assertionAdopter.safeFunction(); // <-- Assertion run against this
+}
+```
+
+Don't:
+```solidity
+function testAssertionPasses() public {
+    // Register assertion for next transaction
+    cl.assertion({
+        adopter: address(assertionAdopter),
+        createData: type(ProtocolAssertion).creationCode,
+        fnSelector: ProtocolAssertion.assertionFunction.selector
+    });
+
+    // Setup after `cl.assertion`
+    vm.deal(address(0xBEEF), 100 ether); // <-- Assertion run against this
+
+    // Execute valid transaction
+    vm.prank(address(0xBEEF));
+    assertionAdopter.safeFunction();
+}
+```
 
 - **One `cl.assertion()` can only trigger one assertion function per test**
 - Create separate test functions for each assertion function that can be triggered
@@ -479,6 +521,9 @@ require(condition, "Specific invariant violation description");
 - Document any assumptions or limitations
 - Keep documentation in the code files, unless specified otherwise
 
+Make sure to add comments to the assertion functions that explain the invaraint it's checking for as well as explaining how it works.
+The same goes for the tests, make it clear which scenario a given test covers.
+
 ### Testing Coverage
 
 - Test both valid and invalid scenarios
@@ -499,7 +544,7 @@ function assertionFunction() external {
     // Use string concatenation since console.log only accepts strings
     console.log(string.concat("Pre-state value: ", Strings.toString(someValue)));
     ph.forkPreTx();
-    
+
     ph.forkPostTx();
     console.log(string.concat("Post-state value: ", Strings.toString(someValue)));
 }
