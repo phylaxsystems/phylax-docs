@@ -7,6 +7,55 @@ description: "Overview of the Phylax credible-std Library"
 
 You can find the repository on [GitHub](https://github.com/phylaxsystems/credible-std).
 
+## Installation
+
+<Note>
+`credible-std` requires [Foundry](https://book.getfoundry.sh/getting-started/installation) to be installed on your system.
+</Note>
+
+### Option 1: Using Forge Install (Recommended)
+
+The easiest way to install `credible-std` is to use `forge install`:
+
+```bash
+forge install credible-std=https://github.com/phylaxsystems/credible-std/
+```
+
+### Option 2: Using Git Submodules
+
+For more control over the dependency, you can add it as a git submodule:
+
+```bash
+git submodule add https://github.com/phylaxsystems/credible-std.git lib/credible-std
+```
+
+### Setting Up Remappings
+
+After installation, add the following to your `remappings.txt` file:
+
+```bash
+credible-std/=lib/credible-std/src/
+```
+
+### Verifying Installation
+
+To verify that `credible-std` is properly installed, create a simple test file:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import {Assertion} from "credible-std/Assertion.sol";
+
+contract TestAssertion is Assertion {
+    function triggers() external view override {
+        // Empty for testing
+    }
+}
+```
+
+If this compiles without errors, `credible-std` is properly installed and configured.
+
 ## Key Components
 
 The `credible-std` library provides several essential components for implementing assertions:
