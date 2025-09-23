@@ -5,14 +5,11 @@ description: How to make sure your assertions are thoroughly tested
 
 ## Introduction
 
-On this page we will cover some of the more advanced testing techniques for assertions.
-All testing tools available in Forge are also available in Credible Layer testing, making it powerful and easy to write comprehensive tests for assertions.
+This page covers advanced testing techniques for assertions. All testing tools available in Forge are also available in Credible Layer testing, making it powerful and easy to write comprehensive tests for assertions.
 
 ## Fuzz Testing
 
-Fuzz testing is a technique to test general robustness of code as it runs many tests with random input.
-This is useful for assertions as it helps identify edge cases and unexpected behavior.
-You can use Forge's built-in fuzz testing capabilities to test your assertions with random inputs.
+Fuzz testing is a technique for testing general robustness of code by running many tests with random inputs. This is useful for assertions as it helps identify edge cases and unexpected behavior. You can use Forge's built-in fuzz testing capabilities to test your assertions with random inputs.
 
 ```solidity
 function testAssertionAllowsValidWithdrawalFuzz(uint256 withdrawalAmount) public {
@@ -131,11 +128,123 @@ The `assertions` profile:
 
 When using `pcl test` or setting `FOUNDRY_PROFILE=assertions`, Foundry uses this profile configuration instead of the default one.
 
-You can set the `FOUNDRY_PROFILE` environment variable to `assertions` in your CI/CD workflow.
-Or can specify the profile to use when running tests like this:
+You can set the `FOUNDRY_PROFILE` environment variable to `assertions` in your CI/CD workflow. Or you can specify the profile to use when running tests like this:
 
 ```bash
 FOUNDRY_PROFILE=assertions pcl test
 ```
 
 If nothing is specified, the default profile is used.
+
+## Backtesting
+
+Backtesting runs your assertions against actual historical transactions from a specified block range. This helps ensure your assertions work correctly with real transaction patterns and don't trigger false positives on legitimate protocol operations.
+
+### RPC Call Requirements
+
+Backtesting makes RPC calls in two phases:
+
+1. **Transaction Fetching**: 1 RPC call per block using `eth_getBlockByNumber`
+2. **Transaction Validation**: 1 RPC call per transaction that triggers the assertion (via `vm.createSelectFork`)
+
+**Example for 100 blocks:**
+- If 100 blocks contain 50 transactions that trigger your assertion:
+  - Fetching phase: 100 RPC calls
+  - Validation phase: 50 RPC calls
+  - **Total: 150 RPC calls**
+
+The tool processes blocks in parallel batches (default: 20 blocks per batch, 10 concurrent requests) to optimize performance while respecting RPC rate limits.
+
+<Note>
+For larger block ranges (>1,000 blocks), consider using paid RPC providers to avoid rate limiting issues.
+</Note>
+
+### Example
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {CredibleTestWithBacktesting} from "../src/backtesting/CredibleTestWithBacktesting.sol";
+import {BacktestingTypes} from "../src/backtesting/BacktestingTypes.sol";
+import {MyAssertion} from "../assertions/src/MyAssertion.a.sol";
+
+contract MyBacktestingTest is CredibleTestWithBacktesting {
+    function testHistoricalTransactions() public {
+        // Execute backtesting with one function call
+        BacktestingTypes.BacktestingResults memory results = executeBacktest({
+            targetContract: 0x5fd84259d66Cd46123540766Be93DFE6D43130D7, // USDC on Optimism Sepolia
+            endBlock: 31336940, // Latest block to test
+            blockRange: 20, // Number of blocks to test (start at `latest block - blockRange`)
+            assertionCreationCode: type(MyAssertion).creationCode, // Bytecode for assertion contract
+            assertionSelector: MyAssertion.assertionInvariant.selector, // Function selector to trigger
+            rpcUrl: "https://sepolia.optimism.io" // RPC URL endpoint
+        });
+
+        // Check results
+        assert(results.assertionFailures == 0, "Found protocol violations!");
+    }
+}
+```
+
+Unlike regular tests, backtesting extends `CredibleTest`, so you need to inherit from `CredibleTestWithBacktesting` instead of `CredibleTest`. From here it's straightforward to write tests that run against historical transactions. The `executeBacktest` function returns a `BacktestingTypes.BacktestingResults` struct that contains the results of the backtest.
+
+<Tip>
+Consider excluding the backtesting from your CI/CD pipeline as it can take a long time to run. Backtesting should be run manually on demand to increase confidence in your assertions before a deployment.
+</Tip>
+
+### Running Backtesting Tests
+
+You can specify the RPC URL either as an environment variable or as a parameter:
+
+```bash
+# Set RPC URL environment variable
+export RPC_URL="https://sepolia.optimism.io"
+
+# Run backtesting tests
+pcl test --ffi --match-test testHistoricalTransactions
+
+# With RPC URL in the command
+pcl test --ffi --match-test testHistoricalTransactions --rpc-url https://sepolia.optimism.io
+```
+
+<Note>
+Backtesting requires the `--ffi` flag to enable foreign function interface for RPC calls. It can take quite some time to fetch old transactions and run the tests, so start out with small block ranges until you are confident everything is set up properly and then expand to larger ranges.
+</Note>
+
+### API Reference
+
+```solidity
+function executeBacktest(
+    address targetContract,             // Contract to test assertions against
+    uint256 endBlock,                   // Latest block to test (works backwards)
+    uint256 blockRange,                 // Number of blocks to test
+    bytes memory assertionCreationCode, // Bytecode for assertion contract
+    bytes4 assertionSelector,           // Function selector to trigger
+    string memory rpcUrl                // RPC URL endpoint (use if rpcUrl is not set in the environment)
+) public returns (BacktestingTypes.BacktestingResults memory results)
+```
+
+#### BacktestingResults
+
+The `BacktestingResults` struct contains the results of the backtest:
+
+```solidity
+/// @notice Enhanced backtesting results with detailed categorization
+struct BacktestingResults {
+    uint256 totalTransactions;      // Total number of transactions for the defined contract in the block range
+    uint256 processedTransactions;  // Number of transactions checked against the assertion (excluding skipped)
+    uint256 successfulValidations;  // Transactions that did not revert the assertion
+    uint256 failedValidations;      // Transactions that reverted the assertion
+    uint256 assertionFailures;      // Real protocol violations
+    uint256 unknownErrors;          // Unexpected failures (e.g. RPC errors, transaction failures etc.)
+}
+```
+
+You can use these results to check for various outcomes and most importantly ensure that no assertions are reverting.
+
+<Tip>
+Start with a small block range to test your assertion logic, then expand to larger ranges once you're confident in the results.
+</Tip>
+
+For concrete examples of how to use backtesting, see the [backtesting test examples](https://github.com/phylaxsystems/credible-std/tree/master/test/backtesting).
