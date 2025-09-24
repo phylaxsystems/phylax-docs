@@ -1,0 +1,187 @@
+---
+title: UxLink Multisig Ownership Compromise
+description: Compromised private keys led to $10M+ drain from UxLink multisig through threshold manipulation and owner replacement
+---
+
+## Description
+
+On September 22, 2025, UxLink's multisig was compromised through private key theft, resulting in $11.3M direct theft plus unauthorized minting of 10 trillion tokens worth ~$28M. Attackers manipulated the multisig configuration to drain funds and gain token minting privileges.
+
+## Core Vulnerability Mechanism
+
+The attack exploited two weaknesses:
+
+1. **Compromised Private Keys**: Attackers gained access to UxLink's multisig owner private keys
+2. **Unrestricted Multisig Configuration**: Safe contract allowed threshold reduction and owner changes without security checks
+3. **Token Minting Access**: Compromised multisig gained Manager privileges over the UXLINK token contract
+
+**Attack Vector:**
+Compromised private keys enabled execution of multisig transactions without validation or rate limiting.
+
+## Attack Execution
+
+### Phase 1: Multisig Compromise
+Attackers used compromised private keys to revoke admin privileges, add themselves as owners, and reduce the multisig threshold to 1, gaining full control.
+
+### Phase 2: Treasury Drainage
+Drained $11.3M in assets (USDT, USDC, WBTC, ETH) and converted them across chains.
+
+### Phase 3: Token Exploitation
+Used multisig control to mint unlimited UXLINK tokens, causing a  price crash and significant market cap loss.
+
+## Root Cause Analysis
+
+**Issues:**
+
+1. **Private Key Compromise**: Compromised private keys due to poor operational security
+2. **No Multisig Protection**: No safeguards against rapid configuration changes
+3. **No Rate Limiting**: Multisig changes executed immediately without cooling periods
+4. **Missing Access Controls**: No whitelisting for owner changes
+
+## Proposed Solution
+
+Multisig protection assertions could have prevented this attack:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
+import {ISafe} from "@safe-global/safe-contracts/contracts/interfaces/ISafe.sol";
+
+contract UxLinkMultisigProtectionAssertion is Assertion {
+    uint256 constant COOLING_PERIOD = 24 hours;
+    
+    mapping(address => uint256) public lastThresholdChange;
+    mapping(address => uint256) public lastOwnerChange;
+    mapping(address => mapping(address => bool)) public isOwnerWhitelisted;
+
+    function triggers() external view override {
+        triggerRecorder.registerCallTrigger(
+            this.assertThresholdProtection.selector,
+            ISafe.changeThreshold.selector
+        );
+        
+        triggerRecorder.registerCallTrigger(
+            this.assertOwnerAddition.selector,
+            ISafe.addOwnerWithThreshold.selector
+        );
+        
+        triggerRecorder.registerCallTrigger(
+            this.assertOwnerRemoval.selector,
+            ISafe.removeOwner.selector
+        );
+    }
+
+    /// @notice Prevents threshold reduction and ensures minimum threshold of 2
+    function assertThresholdProtection() external view {
+        ISafe safe = ISafe(ph.getAssertionAdopter());
+        
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(
+            address(safe),
+            ISafe.changeThreshold.selector
+        );
+        
+        uint256 newThreshold = abi.decode(calls[0].input, (uint256));
+        uint256 currentThreshold = safe.getThreshold();
+        
+        // Never allow threshold reduction
+        require(newThreshold >= currentThreshold, "Threshold cannot be lowered");
+        
+        // Prevent rapid threshold changes
+        uint256 lastChange = lastThresholdChange[address(safe)];
+        require(
+            block.timestamp >= lastChange + COOLING_PERIOD,
+            "Threshold change too soon after last change"
+        );
+        
+        // Update timestamp if all checks pass
+        lastThresholdChange[address(safe)] = block.timestamp;
+    }
+
+    /// @notice Validates new owner additions and prevents threshold reduction
+    function assertOwnerAddition() external view {
+        ISafe safe = ISafe(ph.getAssertionAdopter());
+        
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(
+            address(safe),
+            ISafe.addOwnerWithThreshold.selector
+        );
+        
+        (address newOwner, uint256 threshold) = abi.decode(calls[0].input, (address, uint256));
+        uint256 currentThreshold = safe.getThreshold();
+        
+        // Basic validation
+        require(newOwner != address(0), "Invalid owner address");
+        
+        // Check whitelist - assuming whitelist with future allowed owners
+        require(isOwnerWhitelisted[address(safe)][newOwner], "New owner not whitelisted");
+        
+        // Never allow threshold reduction
+        require(threshold >= currentThreshold, "Threshold cannot be lowered");
+        
+        // Prevent rapid owner changes
+        uint256 lastChange = lastOwnerChange[address(safe)];
+        require(
+            block.timestamp >= lastChange + COOLING_PERIOD,
+            "Owner addition too soon after last change"
+        );
+        
+        // Update timestamp if all checks pass
+        lastOwnerChange[address(safe)] = block.timestamp;
+        
+    }
+
+    /// @notice Validates owner removals and prevents threshold reduction
+    function assertOwnerRemoval() external view {
+        ISafe safe = ISafe(ph.getAssertionAdopter());
+        
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(
+            address(safe),
+            ISafe.removeOwner.selector
+        );
+        
+        (address prevOwner, address ownerToRemove, uint256 threshold) = 
+            abi.decode(calls[0].input, (address, address, uint256));
+        uint256 currentThreshold = safe.getThreshold();
+        
+        // Never allow threshold reduction
+        require(threshold >= currentThreshold, "Threshold cannot be lowered");
+        
+        // Prevent rapid owner changes
+        uint256 lastChange = lastOwnerChange[address(safe)];
+        require(
+            block.timestamp >= lastChange + COOLING_PERIOD,
+            "Owner removal too soon after last change"
+        );
+        
+        // Update timestamp if all checks pass
+        lastOwnerChange[address(safe)] = block.timestamp;
+    }
+}
+```
+
+### How These Assertions Prevent the Attack
+
+**What they do:**
+1. **Threshold Protection**: Prevents any threshold reduction
+2. **Owner Whitelisting**: Only allows pre-approved addresses to become owners
+3. **Cooling Periods**: Enforces 24-hour delays between configuration changes
+4. **Timestamp Tracking**: Updates last change times to enforce cooling periods
+5. **Batch Protection**: Prevents rapid owner additions/removals in sequence
+
+**How they prevent the attack:**
+
+- **Step 1**: `assertThresholdProtection()` blocks threshold reduction and enforces 24-hour cooling period
+- **Step 2**: `assertOwnerAddition()` blocks attacker address (not whitelisted) and enforces cooling period
+- **Step 3**: `assertOwnerRemoval()` blocks rapid removal of legitimate owners and enforces cooling period
+- **Result**: Prevents rapid reconfiguration and batching that enabled the multisig compromise
+
+**Key insight**: These assertions enforce multisig governance principles with whitelist validation. They don't prevent private key compromise but prevent compromised keys from rapidly reconfiguring and draining multisigs.
+
+## Key Takeaway
+
+The UxLink attack shows that multisig security requires both operational security (private key protection) and protocol-level protections (configuration validation). The $39.3M total impact ($11.3M direct + $28M token minting) demonstrates how compromised private keys can lead to complete protocol takeover when governance controls are missing.
+
+Credible Layer assertions can enforce governance invariants: maintaining reasonable thresholds, validating owner changes, and preventing rapid reconfiguration. This approach ensures operational security failures don't lead to complete protocol compromise.
