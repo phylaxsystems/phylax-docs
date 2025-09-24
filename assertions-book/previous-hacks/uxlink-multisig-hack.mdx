@@ -1,11 +1,11 @@
 ---
 title: UxLink Multisig Ownership Compromise
-description: Compromised private keys led to $10M+ drain from UxLink multisig through threshold manipulation and owner replacement
+description: Compromised private keys led to \$10M+ drain from UxLink multisig through threshold manipulation and owner replacement
 ---
 
 ## Description
 
-On September 22, 2025, UxLink's multisig was compromised through private key theft, resulting in $11.3M direct theft plus unauthorized minting of 10 trillion tokens worth ~$28M. Attackers manipulated the multisig configuration to drain funds and gain token minting privileges.
+On September 22, 2025, UxLink's multisig was compromised through private key theft, resulting in \$11.3M direct theft plus unauthorized minting of 10 trillion tokens worth ~\$28M. Attackers manipulated the multisig configuration to drain funds and gain token minting privileges.
 
 ## Core Vulnerability Mechanism
 
@@ -18,20 +18,20 @@ The attack exploited two weaknesses:
 **Attack Vector:**
 Compromised private keys enabled execution of multisig transactions without validation or rate limiting.
 
-## Attack Execution
+## Attack Analysis
 
-### Phase 1: Multisig Compromise
+### Attack Sequence
+
+**Phase 1: Multisig Compromise**
 Attackers used compromised private keys to revoke admin privileges, add themselves as owners, and reduce the multisig threshold to 1, gaining full control.
 
-### Phase 2: Treasury Drainage
-Drained $11.3M in assets (USDT, USDC, WBTC, ETH) and converted them across chains.
+**Phase 2: Treasury Drainage**
+Drained \$11.3M in assets (USDT, USDC, WBTC, ETH) and converted them across chains.
 
-### Phase 3: Token Exploitation
-Used multisig control to mint unlimited UXLINK tokens, causing a  price crash and significant market cap loss.
+**Phase 3: Token Exploitation**
+Used multisig control to mint unlimited UXLINK tokens, causing a price crash and significant market cap loss.
 
-## Root Cause Analysis
-
-**Issues:**
+### Root Causes
 
 1. **Private Key Compromise**: Compromised private keys due to poor operational security
 2. **No Multisig Protection**: No safeguards against rapid configuration changes
@@ -182,6 +182,6 @@ contract UxLinkMultisigProtectionAssertion is Assertion {
 
 ## Key Takeaway
 
-The UxLink attack shows that multisig security requires both operational security (private key protection) and protocol-level protections (configuration validation). The $39.3M total impact ($11.3M direct + $28M token minting) demonstrates how compromised private keys can lead to complete protocol takeover when governance controls are missing.
+The UxLink attack shows that multisig security requires both operational security (private key protection) and protocol-level protections (configuration validation). The \$39.3M total impact (\$11.3M direct + \$28M token minting) demonstrates how compromised private keys can lead to complete protocol takeover when governance controls are missing.
 
 Credible Layer assertions can enforce governance invariants: maintaining reasonable thresholds, validating owner changes, and preventing rapid reconfiguration. This approach ensures operational security failures don't lead to complete protocol compromise.
