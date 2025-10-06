@@ -92,12 +92,6 @@ The Credible Layer can be implemented using different architectural patterns dep
 - Suitable for modular L2 architectures
 - **OP-Talos** acts as the assertion validation sidecar
 
-### Plugin Pattern (Linea/Besu)
-- Integrates directly as a plugin within the L2 node
-- Uses dedicated sidecar processes for assertion execution
-- Suitable for L2s with plugin architectures
-- **Assertion Executor Sidecar** runs in parallel with the main node
-
 Both patterns implement the Credible Layer as a **sidecar system** that operates alongside the main L2 infrastructure, providing security validation without interfering with core L2 operations.
 
 # Implementation Details
@@ -190,100 +184,6 @@ class Sequencer,CredibleLayer,RollupBoost subgraphStyle
 - **OP-Talos**: Implementation of [rbuilder](https://github.com/flashbots/rbuilder) as the Assertion Enforcer.
 - **Rollup-Boost**: Developed by Flashbots, integrates OP-Talos with the Sequencer without code changes to the Sequencer.
 
-## Linea/Besu Implementation
-
-The Linea implementation uses a **Plugin Pattern** that integrates directly with the Besu node through its plugin system and uses a sidecar process for assertion execution.
-
-### System Overview
-
-The integration leverages Besu's plugin system to intercept transactions during block building and validate them against assertions in a separate Rust-based executor. The assertion executor maintains its own state replica by re-executing all transactions with Linea-compatible EVM rules.
-
-### Architecture Diagram
-
-```mermaid
----
-title: Linea Besu Implementation Architecture
----
-flowchart LR
-    subgraph besu["Linea Besu Node"]
-        direction TB
-        subgraph core["Core Components"]
-            TXP("Transaction Pool")
-            B("Block Builder")
-            PS("Plugin System")
-            WS[("World State<br/>Database")]
-        end
-
-        subgraph plugin["Assertion Plugin"]
-            ATS("Assertion<br/>Transaction Selector")
-            CC("Communication<br/>Client")
-            ATS --> CC
-        end
-
-        TXP --> B
-        B --> PS
-        PS --> ATS
-    end
-
-    subgraph sidecar["Assertion Executor Sidecar (Rust)"]
-        direction TB
-        subgraph bridge["Bridge"]
-            CS("gRPC/JNI<br/>Server")
-        end
-
-        subgraph exec["Execution Engine"]
-            AE("Assertion<br/>Executor")
-            REVM("revm<br/>+ Linea Support")
-            AE --> REVM
-        end
-
-        subgraph storage["Storage"]
-            SR[("State<br/>Replica")]
-            AS[("Assertion<br/>Store")]
-        end
-
-        CS --> AE
-        REVM --> SR
-        AE --> AS
-    end
-
-    CC ==>|"Async/Parallel<br/>Validation"| CS
-    WS -.->|"Initial State<br/>Sync"| SR
-
-    classDef mainContainer fill:#f8f9fa,stroke:#6c757d,stroke-width:2px,color:#212529
-    classDef subContainer fill:#ffffff,stroke:#adb5bd,stroke-width:1px,color:#495057
-    classDef highlight fill:#e7f3ff,stroke:#0056b3,stroke-width:2px,color:#004085
-    classDef bridge fill:#fff3cd,stroke:#856404,stroke-width:2px,color:#533f03
-    classDef database fill:#d4edda,stroke:#155724,stroke-width:2px,color:#0b2e13
-    classDef component fill:#e2e3e5,stroke:#6c757d,stroke-width:1px,color:#383d41
-
-    class besu,sidecar mainContainer
-    class core,exec,storage,plugin subContainer
-    class ATS,CC,AE,REVM highlight
-    class bridge,CS bridge
-    class WS,SR,AS database
-    class TXP,B,PS component
-```
-
-### Linea System Components
-
-The system consists of three main components:
-
-1. **Linea Besu Plugin** - A transaction selection plugin that intercepts transactions during block building
-2. **Communication Bridge** - gRPC interface enabling async communication between Java and Rust
-3. **Assertion Executor Sidecar** - Parallel Rust process with Linea-compatible EVM that validates assertions
-
-### Linea Implementation Details
-
-**Autonomous State Management**
-The assertion executor maintains its own state by re-executing all Linea transactions independently. This eliminates complex state-sharing APIs between Java (Besu) and Rust (assertion executor) - instead, both systems execute the same transactions and maintain separate state.
-
-**Parallel Execution Model**
-Transactions are validated in parallel with Besu's execution, with validation time "hidden" within Besu's processing time. This ensures minimal latency overhead while providing fail-safe operation.
-
-**Plugin-Based Integration**
-Uses Besu's `PluginTransactionSelector` interface to intercept transactions during block building without modifying core Besu code. The plugin starts async validation in the pre-processing hook and checks results in the post-processing hook.
-
 ## Transaction Flow
 
 The following diagram illustrates the transaction flow through the Credible Layer using the OP Stack implementation as an example. The general flow is very similar across all implementations, with only the specific components and communication patterns differing.
@@ -314,7 +214,6 @@ The following diagram illustrates the transaction flow through the Credible Laye
 The exact mechanism for steps 3-5 varies depending on the implementation pattern:
 
 - **OP Stack (Rollup-Boost Pattern)**: Uses OP-Talos for external block validation and Rollup-Boost for bridge communication
-- **Linea/Besu (Plugin Pattern)**: Uses internal plugin validation with dedicated sidecar execution
 
 ## Auxiliary Components
 
