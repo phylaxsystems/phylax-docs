@@ -125,5 +125,15 @@ contract AbracadabraCookSolvencyAssertion is Assertion {
 
 **How It Works:**
 
+The assertion triggers on every `cook()` call and:
+
+1. Identifies the caller using `getCallInputs`
+2. Compares their borrow amount before (`forkPreTx`) and after (`forkPostTx`) the transaction
+3. If borrowing increased, calculates their collateral value using oracle prices
+4. Validates that collateral meets the required threshold for their debt
+5. Reverts if insufficient collateral is detected
+
+This approach validates the outcome rather than the execution path:
+
 - **Without assertion**: Developers must remember to add solvency checks in every function that modifies debt, handle complex state transitions, and guard against flag manipulation
 - **With assertion**: Define the invariant once. It catches any bug that results in undercollateralized positions, whether from flag manipulation, reentrancy, rounding errors, or future code changes
