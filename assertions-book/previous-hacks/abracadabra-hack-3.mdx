@@ -1,0 +1,129 @@
+---
+title: Abracadabra CauldronV4 Cook Function Exploit
+description: Logic flaw in the cook() function allowed bypassing solvency checks, enabling $1.8M in uncollateralized borrowing
+---
+
+## Description
+
+A logic flaw in Abracadabra's `cook()` function allowed an attacker to borrow $1.8M in MIM tokens without posting any collateral.
+
+**The Bug:**
+
+The `CauldronV4` contract's `cook()` function executes multiple actions in sequence while tracking a `CookStatus` struct. This struct contains a flag indicating whether solvency checks are required.
+
+- Action 5 (borrow) sets the solvency check flag to `true`
+- Action 0 calls `_additionalCookAction()`, which returns a fresh `CookStatus` with all fields set to `false`
+
+By chaining [Action 5, Action 0], the borrow executes and marks that a solvency check is needed. But Action 0 immediately clears this flag before any validation runs.
+
+**Exploitation:**
+
+1. Call `cook()` with [Action 5 (borrow), Action 0]
+2. Borrow MIM tokens without collateral
+3. Repeat across six cauldron contracts
+4. Total stolen: 1,793,755 MIM (~$1.8M)
+
+## Proposed Solution
+
+This exploit could have been prevented by enforcing a fundamental invariant: **users cannot borrow without sufficient collateral**.
+
+The beauty of this approach is that it doesn't require understanding the exploit's specific mechanism. Developers don't need to know about:
+- The `CookStatus` struct and how it tracks solvency checks
+- The `_additionalCookAction()` helper function that resets flags
+- The specific action sequence [Action 5, Action 0] that triggers the bug
+- How the internal solvency check logic works
+
+Instead, an assertion simply states the protocol's core rule: after any transaction, if a user's borrow increased, their collateral must cover the debt. This works regardless of which code path led to the borrow or what internal checks were bypassed.
+
+**Why This Matters:**
+
+Complex protocols like Abracadabra have many functions and execution paths. The `cook()` function alone can execute dozens of different action combinations. Trying to secure each path individually is error-prone - as this exploit demonstrates, one forgotten check or edge case can drain millions.
+
+Assertions flip this model. Rather than validating each execution path, you validate the outcome. The protocol can have 100 different ways to borrow, but only one invariant to check: collateral >= required collateral.
+
+**Implementation:**
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "credible-std/Assertion.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+interface ICauldronV4 {
+    function userBorrowPart(address user) external view returns (uint256);
+    function userCollateralShare(address user) external view returns (uint256);
+    function totalBorrow() external view returns (uint128 elastic, uint128 base);
+    function oracle() external view returns (address);
+    function oracleData() external view returns (bytes memory);
+    function COLLATERIZATION_RATE() external view returns (uint256);
+    function cook(
+        uint8[] calldata actions,
+        uint256[] calldata values,
+        bytes[] calldata datas
+    ) external payable returns (uint256, uint256);
+}
+
+interface IOracle {
+    function peek(bytes calldata data) external view returns (bool success, uint256 rate);
+}
+
+contract AbracadabraCookSolvencyAssertion is Assertion {
+    uint256 constant COLLATERIZATION_RATE_PRECISION = 1e5;
+
+    function triggers() public view override {
+        triggerRecorder.registerCallTrigger(
+            this.assertUserSolvency.selector,
+            ICauldronV4.cook.selector
+        );
+    }
+
+    function assertUserSolvency() external view {
+        ICauldronV4 cauldron = ICauldronV4(ph.getAssertionAdopter());
+
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(
+            address(cauldron),
+            ICauldronV4.cook.selector
+        );
+
+        require(calls.length > 0, "No cook calls found");
+        address caller = calls[0].caller;
+
+        // Get borrow amount before transaction
+        ph.forkPreTx();
+        uint256 borrowPartBefore = cauldron.userBorrowPart(caller);
+
+        // Get borrow amount after transaction
+        ph.forkPostTx();
+        uint256 borrowPartAfter = cauldron.userBorrowPart(caller);
+
+        // Only check if borrow increased
+        if (borrowPartAfter <= borrowPartBefore) {
+            return;
+        }
+
+        uint256 collateralShare = cauldron.userCollateralShare(caller);
+        (uint128 elastic, uint128 base) = cauldron.totalBorrow();
+
+        uint256 userDebt = base > 0 ? (borrowPartAfter * uint256(elastic)) / uint256(base) : 0;
+
+        address oracle = cauldron.oracle();
+        bytes memory oracleData = cauldron.oracleData();
+        (, uint256 exchangeRate) = IOracle(oracle).peek(oracleData);
+
+        uint256 collateralValue = (collateralShare * exchangeRate) / 1e18;
+        uint256 collateralizationRate = cauldron.COLLATERIZATION_RATE();
+        uint256 requiredCollateral = (userDebt * COLLATERIZATION_RATE_PRECISION) / collateralizationRate;
+
+        require(
+            collateralValue >= requiredCollateral,
+            "INSUFFICIENT_COLLATERAL: Borrow exceeds collateral value"
+        );
+    }
+}
+```
+
+**How It Works:**
+
+- **Without assertion**: Developers must remember to add solvency checks in every function that modifies debt, handle complex state transitions, and guard against flag manipulation
+- **With assertion**: Define the invariant once. It catches any bug that results in undercollateralized positions, whether from flag manipulation, reentrancy, rounding errors, or future code changes
