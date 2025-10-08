@@ -86,6 +86,7 @@
                     "group": "Access Control & Administrative Changes",
                     "pages": [
                       "assertions-book/assertions/ass01-impl-addr-change",
+                      "assertions-book/assertions/ass04-kyc-whitelist",
                       "assertions-book/assertions/ass05-ownership-change",
                       "assertions-book/assertions/ass09-timelock-verification"
                     ]
