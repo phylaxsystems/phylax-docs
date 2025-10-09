@@ -133,6 +133,10 @@ The solution is currently in development. Ask us about it!
 No. For single-sequencer L2s, users/dApps already trust the sequencer with transaction inclusion, because, in theory, a sequencer can censor transactions arbitrarily when it receives them at the RPC layer. 
 The Credible Layer simply extends the sequencer's validation logic with dApp-defined rules, expressed as Assertions (EVM bytecode).
 
+### Is this a form of censorship?
+
+The Credible Layer simply lets dApps define assertions that can prevent certain states regardless of the contract code. You can think of it as an override: if the contract were to execute a hack, the assertion will signal to the sequencer to prevent it, as it has been defined as a hack by the dApp. These assertions should be thought of as an addition to the dApps' core contracts. It would be censorship if a 3rd party (anyone other than the dApp) could write assertions for a dApp's contracts. This is not how the Credible Layer works, and hence this is not censorship.
+
 ### Does the Credible Layer slow down the network?
 
 No. We have performed worst-case stress tests, using the most inefficient operations available (hashing), to execute assertions worth 1bn gas per block without slowing down the block time. This is because the Credible Layer heavily parallelizes execution and can fully utilize CPU cores compared to standard serial execution of transactions.
