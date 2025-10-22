@@ -31,7 +31,7 @@ If you prefer visual learning over reading text, watch this introductory video f
 ### For Networks
 
 - **No Lock-In**: Once integrated, the Credible Layer runs natively as part of your network infrastructure - no external services required, no ongoing vendor risk
-- **No throughput degradation**: Assertions are executed in parallel during sequencing. We tested a 30 megagas/s and we ran 1 gigagas/s of assertions. 
+- **No throughput degradation**: Assertions are executed in parallel during sequencing. We tested a 30 megagas/s and we ran 1 gigagas/s of assertions.
 - **Attract Institutional Capital**: Reduce the probability of a hack and provide easily auditable security rules, enabling more risk-averse institutions to LP
 
 ## How It Works
@@ -66,20 +66,19 @@ The protocol has three target users. They can use the Credible Layer in the foll
 
 1. **Transaction Submission**: User submits a transaction to the network.
 2. **Mempool Entry**: Transaction enters the mempool for processing.
-3. **Assertion Validation**: The assertion validation system receives the transaction for potential inclusion:
-    - References the [Assertions](/credible/glossary#assertion) stored in the [Credible Layer](/credible/glossary#pcl-phylax-credible-layer) that are related to the contracts the transaction interacts with.
-    - Fetches [Assertion Bytecode](/credible/glossary#assertion-bytecode) from the [Assertion DA](/credible/glossary#assertion-da-data-availability).
-    - The [PhEVM](/credible/glossary#phevm-phylax-evm):
-        - Simulates transaction execution.
-        - Creates [pre-transaction state](/credible/glossary#pre-statepost-state) and [post-transaction state](/credible/glossary#pre-statepost-state) snapshots.
-        - Executes all relevant assertions against these transactions.
-    - The PhEVM returns assertion results:
-        - If any assertion reverts (invalid state), the transaction is flagged as invalid.
-        - If all assertions pass, the transaction is considered valid.
-4. **Inclusion Decision**: The validation system makes inclusion decisions:
-    - Invalid transactions are not included in the block.
-    - Valid transactions are included in the block.
-5. **Block Finalization**: The validated block is finalized and added to the blockchain.
+3. **Transaction Validation**: The system performs basic transaction validation (signature, nonce, gas, etc.).
+4. **Assertion Validation**: The system validates the transaction against registered [Assertions](/credible/glossary#assertion):
+    - Identifies which assertions apply to the contracts the transaction interacts with
+    - Fetches [Assertion Bytecode](/credible/glossary#assertion-bytecode) from the [Assertion DA](/credible/glossary#assertion-da-data-availability)
+    - The [PhEVM](/credible/glossary#phevm-phylax-evm) simulates transaction execution and creates [pre-transaction state](/credible/glossary#pre-statepost-state) and [post-transaction state](/credible/glossary#pre-statepost-state) snapshots
+    - Executes all relevant assertions against these states
+    - Returns validation result:
+        - If any assertion reverts (invalid state), the transaction is flagged as invalid
+        - If all assertions pass, the transaction is considered valid
+5. **Inclusion Decision**: The validation system makes inclusion decisions:
+    - Invalid transactions are rejected and not included in the block
+    - Valid transactions are included in the block
+6. **Block Finalization**: The validated block is finalized and added to the blockchain.
 
 The diagram below shows how transactions flow through the system components:
 
@@ -89,37 +88,81 @@ title: General Transaction Flow
 ---
 flowchart TD
     TX["Transaction Submission"] -->|"1"| MP["Mempool Entry"]
-    MP -->|"2"| AV["Assertion Validation"]
-    
-    AV -->|"3a"| REF["References assertions"]
-    AV -->|"3b"| FETCH["Fetches assertion bytecode"]
-    REF -->|"4"| PhEVM["PhEVM executes assertions"]
-    FETCH -->|"4"| PhEVM
-    
-    PhEVM -->|"5a"| INVALID["Transaction invalid"]
-    PhEVM -->|"5b"| VALID["Transaction valid"]
-    
-    INVALID -->|"6a"| REJECT["Reject transaction"]
-    VALID -->|"6b"| INCLUDE["Include in block"]
-    
-    INCLUDE -->|"7"| FINAL["Block Finalization"]
-    
+    MP -->|"2"| TV["Transaction Validation"]
+
+    TV -->|"3"| AV["Assertion Validation"]
+
+    AV -->|"4a"| INVALID["Transaction Invalid"]
+    AV -->|"4b"| VALID["Transaction Valid"]
+
+    INVALID -->|"5a"| REJECT["Reject Transaction"]
+    VALID -->|"5b"| INCLUDE["Include in Block"]
+
+    INCLUDE -->|"6"| FINAL["Block Finalization"]
+
     classDef step fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef fetch fill:#fff8e1,stroke:#f57c00,stroke-width:2px
-    classDef process fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef validation fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef valid fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
     classDef invalid fill:#ffebee,stroke:#c62828,stroke-width:2px
-    
-    class TX,MP,AV,FINAL step
-    class REF,FETCH fetch
-    class PhEVM process
+
+    class TX,MP,TV,FINAL step
+    class AV validation
     class VALID,INCLUDE valid
     class INVALID,REJECT invalid
 ```
 
-Ultimately, if a transaction would result in a hack, if the contract is protected by the Credible Layer, the transaction will be dropped. If the contract is not protected, the transaction will be included in the block.
+### Assertion Validation Detail
 
-![Enforcement Diagram](/images/block-state-transitions.png)
+The diagram below shows what happens inside the Assertion Validation step:
+
+```mermaid
+---
+title: Assertion Validation Detail
+---
+flowchart LR
+    TX["Transaction"]
+    STATE1["Pre-Transaction State<br/>(State1)"]
+
+    subgraph simulation["EVM Simulation"]
+        EVM["Execute Transaction"]
+    end
+
+    STATE2["Post-Transaction State<br/>(State2)"]
+
+    subgraph validation["PhEVM Assertion Validation"]
+        PhEVM["Validate Against Assertions"]
+    end
+
+    ASSERTIONS["Registered Assertions"]
+    RESULT["Valid/Invalid"]
+
+    TX --> EVM
+    STATE1 --> EVM
+    EVM --> STATE2
+
+    TX -.-> PhEVM
+    STATE1 -.-> PhEVM
+    STATE2 -.-> PhEVM
+    ASSERTIONS --> PhEVM
+
+    PhEVM --> RESULT
+
+    classDef state fill:#ffe0e0,stroke:#c62828,stroke-width:2px
+    classDef evm fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef phevm fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef assertions fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef tx fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    classDef result fill:#fff8e1,stroke:#f57c00,stroke-width:2px
+
+    class STATE1,STATE2 state
+    class EVM evm
+    class PhEVM phevm
+    class ASSERTIONS assertions
+    class TX tx
+    class RESULT result
+```
+
+Ultimately, if a transaction would result in a hack, if the contract is protected by the Credible Layer, the transaction will be dropped. If the contract is not protected, the transaction will be included in the block.
 
 **Now you're probably thinking that forced inclusion transactions are not caught by the Credible Layer...
 Well, think again! We have found a way to handle this and are actively working on implementing it.**
@@ -163,18 +206,18 @@ flowchart TD
         BB["Block Builder"]
         BC["Blockchain"]
     end
-    
+
     subgraph cl["Credible Layer (Sidecar)"]
         AS["Assertion DA"]
         AV["Assertion Enforcer"]
         PhEVM["PhEVM"]
     end
-    
+
     subgraph dev["Developer Tools"]
         CLI["pcl CLI"]
         dApp["Credible dApp"]
     end
-    
+
     TX --> BB
     BB --> AV
     AV --> PhEVM
@@ -183,14 +226,14 @@ flowchart TD
     AV --> |Valid| BB
     AV --> |Invalid| TX
     BB --> BC
-    
+
     CLI --> dApp
     dApp --> AS
-    
+
     classDef l2 fill:#e1f5fe
     classDef cl fill:#f3e5f5
     classDef dev fill:#e8f5e8
-    
+
     class TX,BB,BC l2
     class AS,AV,PhEVM cl
     class CLI,dApp dev
@@ -202,11 +245,11 @@ The diagram above shows the high-level architecture and how all system component
 
 *Neutrality is critical. It determines who controls the system. Who controls the system decides how the system is regulated.*
 
-As middleware, the Credible Layer extends network capabilities without introducing new trust assumptions. Protocols define security rules through existing governance channels, and networks enforce these rules through existing mechanisms. 
+As middleware, the Credible Layer extends network capabilities without introducing new trust assumptions. Protocols define security rules through existing governance channels, and networks enforce these rules through existing mechanisms.
 
 Networks can remove the Credible Layer anytime and still execute their core functionality. dApps can remove (or add) assertions anytime, and the system passes the off-switch test.
 
-By avoiding centralized control points, this architecture preserves decentralization for both dApps and networks. 
+By avoiding centralized control points, this architecture preserves decentralization for both dApps and networks.
 
 Policymakers are becoming increasingly aware of decentralization and see its value. Systems that quietly rely on centralized emergency controls for security risk falling on the wrong side of laws meant to capture decentralized-in-name-only projects.
 
