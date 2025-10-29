@@ -33,18 +33,18 @@ flowchart TD
         BB["Block Builder"]
         BC["Blockchain"]
     end
-    
+
     subgraph cl["Credible Layer (Sidecar)"]
         AS["Assertion DA"]
         AV["Assertion Enforcer"]
         PhEVM["PhEVM"]
     end
-    
+
     subgraph dev["Developer Tools"]
         CLI["pcl CLI"]
         dApp["Credible dApp"]
     end
-    
+
     TX --> BB
     BB --> AV
     AV --> PhEVM
@@ -53,14 +53,14 @@ flowchart TD
     AV --> |Valid| BB
     AV --> |Invalid| TX
     BB --> BC
-    
+
     CLI --> dApp
     dApp --> AS
-    
-    classDef l2 fill:#e1f5fe
-    classDef cl fill:#f3e5f5
-    classDef dev fill:#e8f5e8
-    
+
+    classDef l2 fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
+    classDef cl fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+    classDef dev fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+
     class TX,BB,BC l2
     class AS,AV,PhEVM cl
     class CLI,dApp dev
@@ -106,11 +106,9 @@ title: OP Stack Implementation Architecture
 ---
 flowchart TD
 
-%% Set default styles
-classDef default fill:#fff,color:black
-classDef deployed fill:#66ccff
-classDef dependency fill:#cccc00
-classDef subgraphStyle fill:#EBEBEB,stroke:#333,color:#333
+classDef sequencer fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
+classDef credible fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+classDef rollupBoost fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
 
 subgraph Sequencer[**Sequencer**]
     SequencerCL[op-node]
@@ -118,15 +116,13 @@ subgraph Sequencer[**Sequencer**]
 end
 
 subgraph CredibleLayer[**Credible Layer**]
-    AssertionEnforcerBlockBuilder[Block Builder]
     AssertionEnforcerEL[op-reth]
     AssertionEnforcerCLI[CLI]
     AssertionEnforcerDapp[dApp]
     AssertionDA[Assertion DA]
-end
-
-subgraph AssertionEnforcerBlockBuilder[**Block Builder**]
-    AssertionEnforcer
+    subgraph AssertionEnforcerBlockBuilder[Block Builder]
+        AssertionEnforcer
+    end
 end
 
 subgraph RollupBoost[**Rollup-Boost**]
@@ -145,14 +141,9 @@ AssertionEnforcerEL <--> |Provide Best Transactions| AssertionEnforcerBlockBuild
 RollupBoost <--> |Request Credible Blocks| AssertionEnforcerBlockBuilder
 RollupBoost <--> |Request Credible Blocks| SequencerCL
 
-
-
-%% Style all nodes and text to be dark
-class SequencerCL,SequencerEL default
-class AssertionEnforcerBlockBuilder,AssertionEnforcerEL,AssertionEnforcerCLI,AssertionEnforcerDapp,AssertionDA deployed
-class RollupBoostProxy,AssertionEnforcer dependency
-
-class Sequencer,CredibleLayer,RollupBoost subgraphStyle
+class SequencerCL,SequencerEL sequencer
+class AssertionEnforcerBlockBuilder,AssertionEnforcerEL,AssertionEnforcerCLI,AssertionEnforcerDapp,AssertionDA credible
+class RollupBoostProxy,AssertionEnforcer rollupBoost
 ```
 
 ### OP Stack System Elements

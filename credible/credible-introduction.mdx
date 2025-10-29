@@ -100,10 +100,10 @@ flowchart TD
 
     INCLUDE -->|"6"| FINAL["Block Finalization"]
 
-    classDef step fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef validation fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef valid fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
-    classDef invalid fill:#ffebee,stroke:#c62828,stroke-width:2px
+    classDef step fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
+    classDef validation fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    classDef valid fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    classDef invalid fill:#d32f2f,stroke:#b71c1c,stroke-width:2px,color:#fff
 
     class TX,MP,TV,FINAL step
     class AV validation
@@ -147,12 +147,12 @@ flowchart LR
 
     PhEVM --> RESULT
 
-    classDef state fill:#ffe0e0,stroke:#c62828,stroke-width:2px
-    classDef evm fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef phevm fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef assertions fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
-    classDef tx fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
-    classDef result fill:#fff8e1,stroke:#f57c00,stroke-width:2px
+    classDef state fill:#e91e63,stroke:#880e4f,stroke-width:2px,color:#fff
+    classDef evm fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
+    classDef phevm fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    classDef assertions fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    classDef tx fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+    classDef result fill:#ffa726,stroke:#e65100,stroke-width:2px,color:#fff
 
     class STATE1,STATE2 state
     class EVM evm
@@ -230,9 +230,9 @@ flowchart TD
     CLI --> dApp
     dApp --> AS
 
-    classDef l2 fill:#e1f5fe
-    classDef cl fill:#f3e5f5
-    classDef dev fill:#e8f5e8
+    classDef l2 fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
+    classDef cl fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+    classDef dev fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
 
     class TX,BB,BC l2
     class AS,AV,PhEVM cl
