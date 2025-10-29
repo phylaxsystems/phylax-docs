@@ -1,0 +1,116 @@
+---
+title: CI/CD Integration
+description: Automate assertion testing in your CI/CD pipeline
+---
+
+You can set up CI/CD workflows to ensure all assertion tests pass before merging code. The setup is very similar to standard Foundry/Forge workflows, with the addition of installing `pcl` and running `pcl test` for testing.
+
+## GitHub Actions Example
+
+```yaml
+name: Phylax Assertion Tests
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "assertions/**"
+      - "src/**"
+  workflow_dispatch:
+
+env:
+  FOUNDRY_PROFILE: assertions
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install PCL CLI
+        run: |
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/phylaxsystems/credible-sdk/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
+          curl -L "https://github.com/phylaxsystems/credible-sdk/releases/download/${LATEST_VERSION}/pcl-${LATEST_VERSION}-linux-x86_64.tar.gz" | tar -xz
+          sudo mv pcl/pcl /usr/local/bin/
+          sudo chmod +x /usr/local/bin/pcl
+
+      - name: Run tests
+        run: |
+          pcl test
+```
+
+This workflow:
+
+- **Triggers on pull requests** to main/develop branches when assertion or source files change
+- **Supports manual runs** with `workflow_dispatch`
+- **Uses the assertions profile** via `FOUNDRY_PROFILE: assertions`
+- **Installs the latest PCL CLI** from GitHub releases
+- **Runs all assertion tests** with `pcl test`
+
+<Tip>
+Use the `FOUNDRY_PROFILE: assertions` environment variable to ensure the correct Foundry profile is used for testing assertions.
+</Tip>
+
+## Foundry Profile Configuration
+
+Foundry profiles allow you to configure different compilation and testing settings for different parts of your project. For assertions, you typically want a separate profile that focuses on the assertion-specific source code.
+
+This configuration goes in your project's `foundry.toml` file, which you should be familiar with if you have used Foundry before.
+
+```toml
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.29"
+optimizer = true
+optimizer_runs = 200
+
+[profile.assertions]
+src = "assertions/src"
+out = "assertions/out"
+libs = ["lib"]
+solc_version = "0.8.29"
+optimizer = true
+optimizer_runs = 200
+```
+
+The `assertions` profile:
+
+- **Separate source directory** (`assertions/src`) - Keeps assertion code isolated
+- **Separate output directory** (`assertions/out`) - Prevents conflicts with main project artifacts
+- **Same compiler settings** - Ensures consistency with main project
+
+When using `pcl test` or setting `FOUNDRY_PROFILE=assertions`, Foundry uses this profile configuration instead of the default one.
+
+## Running Tests Locally with Profile
+
+You can set the `FOUNDRY_PROFILE` environment variable to `assertions` when running tests locally:
+
+```bash
+FOUNDRY_PROFILE=assertions pcl test
+```
+
+If nothing is specified, the default profile is used.
+
+## Best Practices
+
+1. **Run tests on PR** - Catch issues before merging
+2. **Use path filters** - Only run tests when relevant files change
+3. **Cache dependencies** - Speed up CI runs (Foundry toolchain action handles this)
+4. **Separate profiles** - Keep assertion compilation separate from main project
+5. **Pin versions** - Consider pinning PCL CLI version for reproducibility
+
+**Learn More:**
+- [Testing Assertions](/credible/testing-assertions) - Basic testing guide
+- [Fuzz Testing](/credible/fuzz-testing) - Test with random inputs
+- [Foundry Book - Testing](https://book.getfoundry.sh/forge/tests)

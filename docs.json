@@ -22,24 +22,36 @@
               "credible/how-it-works",
               "credible/credible-install",
               "credible/pcl-quickstart",
-              "credible/dapp-guide",
               "credible/faq"
             ]
           },
           {
-            "group": "Credible Layer",
+            "group": "Guides",
             "pages": [
               "credible/pcl-assertion-guide",
-              "credible/testing-assertions",
-              "credible/cheatcodes",
-              "credible/architecture",
               "credible/assertion-patterns",
-              "credible/advanced-testing-assertions",
-              "credible/ownership-verification",
+              "credible/testing-assertions",
+              "credible/dapp-guide",
+              "credible/generate-assertions-with-ai"
+            ]
+          },
+          {
+            "group": "Advanced Testing",
+            "pages": [
+              "credible/backtesting",
+              "credible/fuzz-testing",
+              "credible/ci-cd-integration"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "credible/architecture",
+              "credible/cheatcodes",
               "credible/pcl-reference-guide",
               "credible/credible-std-overview",
-              "credible/glossary",
-              "credible/generate-assertions-with-ai"
+              "credible/ownership-verification",
+              "credible/glossary"
             ]
           },
           {

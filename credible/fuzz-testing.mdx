@@ -1,0 +1,65 @@
+---
+title: Fuzz Testing
+description: Test assertions with random inputs to identify edge cases
+---
+
+Fuzz testing is a technique for testing general robustness of code by running many tests with random inputs. This is useful for assertions as it helps identify edge cases and unexpected behavior. You can use Forge's built-in fuzz testing capabilities to test your assertions with random inputs.
+
+## Example
+
+```solidity
+function testAssertionAllowsValidWithdrawalFuzz(uint256 withdrawalAmount) public {
+    // Bound the withdrawal amount to reasonable values
+    vm.assume(withdrawalAmount > 0);
+    vm.assume(withdrawalAmount <= assertionAdopter.deposits(user1));
+    vm.assume(withdrawalAmount <= 100 ether); // Reasonable upper bound
+
+    assertEq(assertionAdopter.deposits(user1), 5 ether);
+    // Setup assertion for next transaction
+    cl.assertion({
+        adopter: address(assertionAdopter),
+        createData: type(PhyLockAssertion).creationCode,
+        fnSelector: PhyLockAssertion.assertionWithdrawInvariant.selector
+    });
+
+    // Execute withdrawal - this should succeed
+    vm.prank(user1);
+    assertionAdopter.withdraw(withdrawalAmount);
+
+    assertEq(assertionAdopter.deposits(user1), 5 ether - withdrawalAmount);
+}
+```
+
+This would run the test with 256 different values for `withdrawalAmount` that adhere to the bounds set by the `vm.assume()` constraints.
+
+<Note>
+Use `vm.assume()` to filter out invalid inputs that would cause the test to fail for reasons unrelated to your assertion logic.
+</Note>
+
+## Best Practices
+
+1. **Set reasonable bounds** - Use `vm.assume()` to constrain inputs to valid ranges
+2. **Test multiple parameters** - Fuzz multiple inputs simultaneously to catch interaction bugs
+3. **Use meaningful ranges** - Consider the actual values your protocol will encounter
+4. **Check for reverts** - Ensure assertions don't false-positive on valid edge cases
+
+## Running Fuzz Tests
+
+Fuzz tests run automatically with `pcl test`:
+
+```bash
+pcl test --match-test testFuzz
+```
+
+You can configure the number of runs in your `foundry.toml`:
+
+```toml
+[fuzz]
+runs = 256  # Default is 256
+max_test_rejects = 65536  # Maximum rejected inputs before failing
+```
+
+**Learn More:**
+- [Testing Assertions](/credible/testing-assertions) - Basic testing guide
+- [CI/CD Integration](/credible/ci-cd-integration) - Automate your tests
+- [Forge Fuzz Testing Documentation](https://book.getfoundry.sh/forge/fuzz-testing)

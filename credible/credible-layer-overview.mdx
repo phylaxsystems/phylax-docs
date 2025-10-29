@@ -67,7 +67,7 @@ The invariant can be expressed in plain English as follows:
 
 And mathematically like this:
 
-$$\frac{\text{balanceDecrease}}{\text{totalBalance}} = \frac{\text{sharesWithdrawn}}{\text{totalShares}}$$
+$$\dfrac{\text{balanceDecrease}}{\text{totalBalance}} = \dfrac{\text{sharesWithdrawn}}{\text{totalShares}}$$
 
 To express this as an assertion, we can declare that withdrawals must decrease the pool's balance proportionally.
 If someone withdraws 10% of shares, the pool balance should decrease accordingly.
@@ -111,7 +111,7 @@ Now that we understand how invariants are selected and written as assertions, le
 
 ## Network Enforcement of Assertions
 
-Now that we have our assertion and the target contract that triggers it, we have to let the network sidecar know the contract should be protected by the provided assertion. We call this **submitting** the assertion for enforcement.
+Now that we have our assertion and the target contract that triggers it, we have to let the network sidecar know the contract should be protected by the provided assertion. We call this submitting the assertion for enforcement.
 
 As seen in the diagram below, the dapp submits the assertions to the Credible Layer Smart Contracts. These smart contracts are the source of truth and supply the sidecar with the relevant assertion when a transaction interacts with a protected contract:
 
