@@ -1,0 +1,184 @@
+---
+title: 'Credible Layer Overview'
+description: 'This guide explains each aspect of the Credible Layer system to give you an accurate picture of how exploit prevention works, without requiring deep technical knowledge.'
+---
+
+## Introduction
+
+Phylax's real-time security system detects and pre-emptively removes exploits before losses can be realized.
+
+![System Overview](/images/overview-step-0.png)
+
+At a glance:
+
+- **[Invariants](/credible/glossary#protocol-invariants)** are mapped and defined by the DeFi protocol/dapp team
+- **Invariants** are converted into **[assertions](/credible/glossary#assertion)** so that the network node knows when to trigger and perform validation
+- The **Credible Layer Smart Contracts** track assertions and the target contracts they apply to. These smart contracts exist on any network that the sidecar is supported on
+- The **Node Sidecar** fetches data from the Credible Layer Smart Contract and runs checks against end-user transactions as they come in. This sidecar is operated by the network validator
+- The **network validator or node** includes or drops the transaction based on the result given by the sidecar
+
+## Mapping and Defining Invariant Rules
+
+![Mapping and defining invariants](/images/overview-step-1.png)
+
+### Why Use Invariants?
+
+[Invariants](/credible/glossary#protocol-invariants) are statements about your contract that must remain true no matter how users interact with it. They express the essential conditions that keep your system secure and functional—the business logic that must always hold.
+
+Instead of exhaustively predicting every exploit path, you define the _states that must never occur_. If one of these states is violated, something fundamental has gone wrong.
+
+### Preparing Invariants for Network Enforcement
+
+Restated simply: an invariant is a rule whose falsification means a core assumption of your protocol has broken.
+
+Phylax's sidecar allows network nodes to automatically reject any transaction that would falsify such an invariant.
+However, to make that possible, the invariant must be _prepared for enforcement_.
+This means it must be translated into an executable form that the network node can evaluate in real time. This process turns a code invariant into an **assertion**.
+
+When preparing an invariant for enforcement, these key steps are required:
+
+- **Define the trigger context**: Specify _when_ the invariant should be triggered. For example, "Run this invariant every time a deposit happens."
+- **Provide required data as inputs**: Add any data such as asset prices, user balances, or total supply so that the network node can compare the values. For example, "Fetch the price of ETH before and after the transaction."
+
+When we add this additional information, we say that the invariant is prepared for enforcement, and thus it is now an **assertion**, not just an invariant.
+
+### Example Walkthrough Using a Previous Hack
+
+Here is a way to visualize the journey of creating invariants and converting them into assertions.
+In this example, Bunni's protocol must ensure that when users withdraw funds, the share of ownership is updated to match the amount removed from the pool.
+
+The invariant can be expressed in plain English as follows:
+
+> _"Pool balance decrease must match the percentage of shares being withdrawn"_
+
+And mathematically like this:
+
+$$\frac{\text{balanceDecrease}}{\text{totalBalance}} = \frac{\text{sharesWithdrawn}}{\text{totalShares}}$$
+
+To express this as an assertion, we can declare that withdrawals must decrease the pool's balance proportionally.
+If someone withdraws 10% of shares, the pool balance should decrease accordingly.
+
+```solidity
+function assertionWithdrawalProportionality() external {
+
+    // Get all pending withdrawal transactions
+    PhEvm.CallInputs[] memory withdrawals = ph.getCallInputs(
+        address(hub),
+        IBunniHub.withdraw.selector
+    );
+
+    // For each withdrawal transaction:
+
+    // Get pool state before withdrawal
+    ph.forkPreCall(withdrawals[i].id);
+    uint256 totalSupplyBefore = hub.bunniTokenOfPool(poolId).totalSupply();
+    uint256 activeBalance0Before = hub.getPoolBalance(poolId, 0);
+
+    // Get pool state after withdrawal
+    ph.forkPostCall(withdrawals[i].id);
+    uint256 totalSupplyAfter = hub.bunniTokenOfPool(poolId).totalSupply();
+    uint256 activeBalance0After = hub.getPoolBalance(poolId, 0);
+
+    // This is the invariant - check that the token balance decrease
+    // is proportional to the shares burned
+    require(
+        actualBalance0Decrease <= expectedBalance0Decrease + tolerance0 &&
+        actualBalance0Decrease >= expectedBalance0Decrease - tolerance0,
+        "Token0 active balance decrease not proportional to shares burned"
+    );
+}
+```
+
+<Note>This code is truncated for simplicity; read on for [the full explanation on how the Bunni hack](/assertions-book/previous-hacks/bunni-xyz-rounding-error.mdx) could have been prevented with an assertion.</Note>
+
+A proportionality assertion that ensures balance decreases match the share burns would have prevented this $8.4M loss in September 2025.
+
+Now that we understand how invariants are selected and written as assertions, let's dive into how the network node decides to include or drop a transaction.
+
+## Network Enforcement of Assertions
+
+Now that we have our assertion and the target contract that triggers it, we have to let the network sidecar know the contract should be protected by the provided assertion. We call this **submitting** the assertion for enforcement.
+
+As seen in the diagram below, the dapp submits the assertions to the Credible Layer Smart Contracts. These smart contracts are the source of truth and supply the sidecar with the relevant assertion when a transaction interacts with a protected contract:
+
+![Submitting assertions for enforcement](/images/overview-step-2.png)
+
+### How Enforcement Works
+
+A network node running Phylax's sidecar system does not care _how_ a transaction violates the protocol's rule. All that matters is _whether_ the [assertion](/credible/glossary#assertion) returns true or false after the transaction. If the assertion returns false, the node drops the transaction before it can be included in a block.
+
+You can read the full technical flow in [How It Works](/credible/how-it-works).
+
+To illustrate it better, when a user opens a position on a yield protocol, the transaction touches multiple contracts:
+
+![A single transaction can interact with multiple contracts](/images/phylax-multi-contract-interaction.png)
+
+Each contract that has assertions is checked by the sidecar, which simulates the cumulative end states in the PhEVM:
+
+![Each contract with assertions is checked by the sidecar](/images/phylax-assertion-checking.png)
+
+### Assertion Validation
+
+Once the transaction is sent by the user, it is seen by the network node. The node then passes it to the sidecar to check if the transaction's final state would violate an [assertion](/credible/glossary#assertion) in a separate replica environment called the [PhEVM](/credible/glossary#phevm-phylax-evm). When completed, the sidecar returns the result to the node so it can include or drop the transaction. This validation process never exceeds the time to produce a block.
+
+In other words, the transaction will be included into the block only if every assertion across all touched contracts evaluates to true. If even one assertion fails, the network node will see this failed assertion and exclude it from finalization.
+
+Continue reading in technical detail in [How It Works](/credible/how-it-works).
+
+## Why Neutrality Matters
+
+*Neutrality is critical. It determines who controls the system. Who controls the system decides how the system is regulated.*
+
+As middleware, the Credible Layer extends network capabilities without introducing new trust assumptions. Protocols define security rules through existing governance channels, and networks enforce these rules through existing mechanisms.
+
+### Decentralization Preservation
+
+- Networks can remove the Credible Layer anytime and still execute their core functionality
+- dApps can remove (or add) assertions anytime
+- The system passes the "off-switch test"
+- By avoiding centralized control points, this architecture preserves decentralization for both dApps and networks
+
+### The Importance of Neutrality
+
+Policymakers are becoming increasingly aware of decentralization and see its value. Systems that quietly rely on centralized emergency controls for security risk falling on the wrong side of laws meant to capture decentralized-in-name-only projects.
+
+Non-neutral solutions ultimately create new centralized control points:
+- AI providers can change detection algorithms
+- SaaS companies can modify security policies
+
+Security solutions should optimally **not** add additional trust assumptions or risks, and they should **not** centralize the systems they serve.
+
+## Use Cases
+
+[Assertions](/credible/glossary#assertion) open up a wide range of use cases, some that aren't even possible in pure Solidity:
+
+1. **Parameter Protection**: Prevent unauthorized changes to critical protocol parameters such as owner and implementation addresses
+2. **Market Integrity**: Ensure market prices don't move beyond specified thresholds inside of a single transaction
+3. **Lending Protocol Safety**: Guarantee lending positions maintain the required collateralization ratios
+4. **Oracle Monitoring**: Verify oracle prices stay within specified ranges to detect price manipulation
+5. **Total Balance Invariants**: Ensure that the sum of all positions match the total balance of a protocol
+
+For concrete examples and implementations, explore the [Assertions Book](/assertions-book/assertions-book-intro).
+
+## In Conclusion
+
+By enforcing protocol invariants at the network level, Phylax shifts blockchain security away from post-incident damage control to precise and proactive exploit prevention. This architecture makes modeling risk of expected losses more manageable and objective.
+
+## Next Steps
+
+Ready to dive deeper?
+
+<CardGroup cols={2}>
+  <Card title="How It Works" icon="gears" href="/credible/how-it-works">
+    Technical deep dive into system architecture and transaction flow
+  </Card>
+  <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
+    Write and deploy your first assertion
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/credible/architecture">
+    Network-specific implementation details
+  </Card>
+  <Card title="FAQ" icon="circle-question" href="/credible/faq">
+    Common questions about the Credible Layer
+  </Card>
+</CardGroup>
