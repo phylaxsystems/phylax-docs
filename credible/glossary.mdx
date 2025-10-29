@@ -44,6 +44,16 @@ The web application interface for interacting with the Credible Layer. It allows
 ### Transparency Dashboard
 A tool that allows users to view and browse all assertions deployed by different protocols, providing visibility into their security posture.
 
+### Sidecar
+A software architecture pattern where a component runs alongside the main application without modifying it. The Credible Layer operates as a sidecar to the network's sequencer, intercepting and validating transactions during the block building process. This allows the Credible Layer to add assertion validation capabilities without requiring changes to the core network code.
+
+See the [Architecture documentation](/credible/architecture#abstract-overview) for implementation details.
+
+### Network Validator (Node)
+The network infrastructure component responsible for processing transactions, building blocks, and maintaining blockchain consensus. In L2 networks, this is typically the sequencer. The Credible Layer integrates with the network validator through a sidecar to validate transactions against assertions before block inclusion.
+
+Related terms: [Sequencer](/credible/glossary#sequencer), [Block Builder](/credible/glossary#block-builder)
+
 ## Assertion Components
 
 ### Trigger

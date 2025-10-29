@@ -12,10 +12,10 @@ Phylax's real-time security system detects and pre-emptively removes exploits be
 At a glance:
 
 - **[Invariants](/credible/glossary#protocol-invariants)** are mapped and defined by the DeFi protocol/dapp team
-- **Invariants** are converted into **[assertions](/credible/glossary#assertion)** so that the network node knows when to trigger and perform validation
-- The **Credible Layer Smart Contracts** track assertions and the target contracts they apply to. These smart contracts exist on any network that the sidecar is supported on
-- The **Node Sidecar** fetches data from the Credible Layer Smart Contract and runs checks against end-user transactions as they come in. This sidecar is operated by the network validator
-- The **network validator or node** includes or drops the transaction based on the result given by the sidecar
+- **Invariants** are converted into **[assertions](/credible/glossary#assertion)** so that the network node knows when to [trigger](/credible/glossary#trigger) and perform validation
+- The **Credible Layer Smart Contracts** track assertions and the target contracts they apply to. These smart contracts exist on any network that the [sidecar](/credible/glossary#sidecar) is supported on
+- The **Node [Sidecar](/credible/glossary#sidecar)** fetches data from the Credible Layer Smart Contract and runs checks against end-user transactions as they come in. This sidecar is operated by the network validator
+- The **[network validator or node](/credible/glossary#network-validator-node)** includes or drops the transaction based on the result given by the sidecar
 
 ## Mapping and Defining Invariant Rules
 
@@ -27,20 +27,34 @@ At a glance:
 
 Instead of exhaustively predicting every exploit path, you define the _states that must never occur_. If one of these states is violated, something fundamental has gone wrong.
 
+### Understanding Invariants vs. Assertions
+
+While these terms are often used together, there's an important distinction:
+
+**Invariants** are the _core security properties_ or rules you want to maintain. Think of them as the "what" – what condition must always be true. For example: "The total supply must equal the sum of all balances."
+
+**Assertions** are the _executable enforcement mechanism_ for those invariants. They are the "how" – how you check and enforce those rules at the network level. An assertion is a Solidity smart contract that:
+- Implements the invariant as executable code
+- Specifies _when_ to check it ([trigger](/credible/glossary#trigger) conditions)
+- Defines _what data_ to examine (pre/post transaction states)
+- Uses special capabilities ([cheatcodes](/credible/glossary#cheatcodes)) to access information not available in standard Solidity
+
+In short: **invariants define the rule, assertions enforce it**.
+
 ### Preparing Invariants for Network Enforcement
 
 Restated simply: an invariant is a rule whose falsification means a core assumption of your protocol has broken.
 
 Phylax's sidecar allows network nodes to automatically reject any transaction that would falsify such an invariant.
 However, to make that possible, the invariant must be _prepared for enforcement_.
-This means it must be translated into an executable form that the network node can evaluate in real time. This process turns a code invariant into an **assertion**.
+This means it must be translated into an executable form that the network node can evaluate in real time. This process turns a code invariant into an assertion..
 
 When preparing an invariant for enforcement, these key steps are required:
 
 - **Define the trigger context**: Specify _when_ the invariant should be triggered. For example, "Run this invariant every time a deposit happens."
 - **Provide required data as inputs**: Add any data such as asset prices, user balances, or total supply so that the network node can compare the values. For example, "Fetch the price of ETH before and after the transaction."
 
-When we add this additional information, we say that the invariant is prepared for enforcement, and thus it is now an **assertion**, not just an invariant.
+When we add this additional information, we say that the invariant is prepared for enforcement, and thus it is now an assertion, not just an invariant.
 
 ### Example Walkthrough Using a Previous Hack
 
