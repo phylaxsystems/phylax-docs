@@ -17,10 +17,9 @@
           {
             "group": "Getting Started",
             "pages": [
-              "credible/introduction",
+              "credible/credible-introduction",
               "credible/credible-layer-overview",
               "credible/how-it-works",
-              "credible/credible-introduction",
               "credible/credible-install",
               "credible/pcl-quickstart",
               "credible/dapp-guide",
