@@ -34,9 +34,19 @@
               },
               {
                 "group": "Assertions",
-                "pages": ["credible/assertion-patterns"]
+                "pages": [
+                  "credible/assertions-overview",
+                  "credible/cheatcodes-overview",
+                  "credible/assertion-patterns"
+                ]
               },
-              "credible/ownership-verification",
+              {
+                "group": "dApp",
+                "pages": [
+                  "credible/dapp-overview",
+                  "credible/ownership-verification"
+                ]
+              },
               "credible/faq",
               "credible/glossary"
             ]
@@ -61,7 +71,7 @@
           {
             "group": "Reference",
             "pages": [
-              "credible/cheatcodes",
+              "credible/cheatcodes-reference",
               "credible/pcl-reference-guide",
               "credible/credible-std-overview"
             ]

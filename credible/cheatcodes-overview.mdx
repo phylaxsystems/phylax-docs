@@ -1,0 +1,60 @@
+---
+title: 'What are Cheatcodes?'
+description: 'Understanding cheatcodes in the Phylax Credible Layer and why they exist'
+---
+
+## Introduction
+
+Cheatcodes are specialized testing and assertion utilities in the Phylax Credible Layer that extend beyond traditional EVM capabilities. Implemented as native code (Rust) rather than EVM bytecode, they provide developers with powerful tools for writing and testing assertions by offering deep inspection into transaction execution, storage changes, call traces, and blockchain state.
+
+## Main Capabilities
+
+Cheatcodes enable functionality that would be impossible or impractical with standard Solidity:
+
+- **Forking blockchain state**: Access the state of the blockchain before and after a transaction, enabling pre/post comparisons
+- **Callstack introspection**: Inspect call traces and execution flow in ways not possible with standard EVM tools
+- **State change tracking**: Monitor specific storage slots and track how they change during transaction execution
+- **Triggering assertions**: Define precise conditions for when assertions should execute (specific function calls, storage changes, or balance changes)
+
+## Why Cheatcodes Exist
+
+Standard Solidity doesn't provide access to transaction execution history, call traces, or the ability to compare pre and post-transaction states. Cheatcodes fill this gap by providing native functions that can:
+
+- Compare values before and after a transaction
+- Track how storage slots change during execution
+- Identify which functions were called and in what order
+- Access logs and events from the transaction
+
+This makes it possible to write assertions that enforce security properties that would otherwise be impossible to check.
+
+<Note>
+You may notice the terms "precompiles" and "cheatcodes" used interchangeably in some contexts. We use the term "cheatcodes" as it's more familiar to Solidity developers who are already using testing frameworks like Foundry or Hardhat. Both terms refer to native functions that extend the EVM's capabilities, but "cheatcodes" better reflects their role in the developer experience.
+</Note>
+
+## When to Use Cheatcodes
+
+Use cheatcodes when you need to:
+
+- **Compare state changes**: Check if values changed correctly (e.g., "balance decreased by exactly the withdrawal amount")
+- **Validate call patterns**: Ensure functions were called in the correct order or with expected parameters
+- **Monitor storage**: Track changes to specific storage slots that represent critical protocol state
+- **Optimize performance**: Use triggers to run assertions only when relevant state changes occur
+
+## Next Steps
+
+Ready to use cheatcodes in your assertions?
+
+<CardGroup cols={2}>
+  <Card title="Cheatcodes Reference" icon="book" href="/credible/cheatcodes-reference">
+    Complete API reference for all available cheatcodes
+  </Card>
+  <Card title="Assertion Guide" icon="code" href="/credible/pcl-assertion-guide">
+    Learn how to write assertions using cheatcodes
+  </Card>
+  <Card title="Use Case Mappings" icon="map" href="/credible/use-case-mappings/intro-use-case-mapping">
+    See practical examples of cheatcodes in action
+  </Card>
+  <Card title="Assertion Patterns" icon="puzzle-piece" href="/credible/assertion-patterns">
+    Common patterns for using cheatcodes effectively
+  </Card>
+</CardGroup>

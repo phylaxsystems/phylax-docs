@@ -1,90 +1,195 @@
 ---
-title: DApp Overview
-description: An overview of the Credible Layer dApp features and functionality
+title: 'Using the Credible Layer dApp'
+description: 'Step-by-step guide to authenticating, creating projects, and linking assertions in the Credible Layer dApp'
 ---
 
-The Credible Layer dApp provides a comprehensive interface for managing smart contract projects and their associated assertions. It serves as the primary platform for:
-- Creating and managing projects
-- Linking and managing assertions
-- Monitoring assertion status and insights
-- Exploring projects and their security measures
+<Note>
+New to the Credible Layer dApp? Start with the [dApp Overview](/credible/dapp-overview) to understand what the dApp is and what it can do.
+</Note>
 
-The dApp's explorer feature enables users to quickly assess a project's security posture by viewing its linked assertions before interacting with it.
-
-In this overview we'll walk through the process of authenticating with the dApp, creating a project and linking assertions to it.
+This guide walks you through the complete process of using the Credible Layer dApp, from authentication to linking assertions to your smart contracts.
 
 ## Prerequisites
 
-- You should have the Credible Layer CLI (`pcl`) installed. If you don't have it installed yet, you can follow the [pcl quickstart guide](/credible/pcl-quickstart) to get started.
-- You should be authenticated with the dApp. If you're not authenticated, you can follow the [authentication guide](#authentication) to get started.
+- The Credible Layer CLI (`pcl`) must be installed. If you don't have it installed, follow the [pcl quickstart guide](/credible/pcl-quickstart).
+- You must be authenticated with the dApp (see [Authentication](#authentication) below).
+- You should have smart contracts deployed that you want to protect with assertions.
 
-## Core Features
+## Authentication
 
-### Project Explorer
-The dApp's explorer feature enables users to search for and analyze projects and their associated assertions. To access the explorer and see details about projects:
-1. Click the "Explorer" tab in the navigation bar
-2. Browse all projects on the Credible Layer
-3. Search for specific projects by name or address
-4. View detailed information about linked assertions
+Before using the dApp, authenticate through the `pcl` CLI:
 
-![Explorer](/images/explorer_screenshot_dapp.png)
-
-### Project Management
-
-#### Creating a Project
-To create a new project:
-1. Navigate to the "Projects" tab
-2. Click "Create a project"
-3. Enter project details:
-   - Project Name (typically matching your smart contract/protocol)
-   - Project Description
-   - Target Chain
-4. Click "Continue to contract selection"
-5. Add one or more contract addresses
-    - Here it's important to note that only contracts where the `owner` matches the address of the account you're using to create the project will be permitted to be linked to the project. For more details see the [Ownership Verification](/credible/ownership-verification).
-    - Specifically this is done by calling the `owner()` function on the contract and comparing the result to the address of the account you're using to create the project.
-6. Review and publish the project
-
-<Note>
-    Only the owner of a contract can create a project for it. There will be additional verification methods in the future, but for now this is the only way.
-    When playing around and testing the demo, make sure to have an `owner()` function in your contract that returns the current owner.
-</Note>
-
-![Create Project](/images/create_project_dapp.gif)
-
-#### Linking Assertions
-To link assertions to your project:
-1. Store the assertion using the CLI:
-   ```bash
-   pcl store <assertion-name> <constructor-args>
-   ```
-2. Submit the assertion to your project:
-   ```bash
-   pcl submit -a '<assertion-name>(constructor-args)' -p <project-name>
-   ```
-3. In the dApp:
-   - Navigate to your project dashboard
-   - Go to "Ready for Submission" tab
-   - Click "Proceed to Review"
-   - Select target contract
-   - Review and deploy the assertion
-
-![Linking Assertion](/images/linking_assertion_dapp.gif)
-
-### Authentication
-Before using the dApp, you must authenticate through the `pcl` CLI:
 1. Run the authentication command:
    ```bash
    pcl auth login
    ```
-2. Follow the provided login link
-3. Connect your wallet
-4. Enter the login code from the CLI
+
+2. The CLI will provide a login link. Open it in your browser.
+
+3. Connect your wallet when prompted.
+
+4. Enter the login code displayed in the CLI.
+
+5. You're now authenticated and can use the dApp!
 
 ![Authentication Flow](/images/authenticate_dapp.gif)
 
-For more details about the `pcl` CLI, refer to the [pcl reference](/credible/pcl-reference-guide).
+<Note>
+Authentication links your wallet address with your CLI session, allowing you to manage projects that your wallet owns.
+</Note>
 
-Here's a full video that you can consult to follow along with the process entire process from authentication to activating the assertion:
+For more details about the `pcl` CLI commands, refer to the [pcl reference](/credible/pcl-reference-guide).
+
+## Exploring Projects
+
+To browse existing projects and their security measures:
+
+1. Click the "Explorer" tab in the navigation bar.
+
+2. Browse all projects on the Credible Layer.
+
+3. Search for specific projects by name or contract address.
+
+4. Click on any project to view:
+   - Project details and description
+   - Linked contract addresses
+   - Active assertions protecting the contracts
+   - Assertion implementation details
+
+![Explorer](/images/explorer_screenshot_dapp.png)
+
+This transparency allows you to verify security measures before interacting with any protocol.
+
+## Creating a Project
+
+To create a new project for your smart contracts:
+
+1. Navigate to the "Projects" tab.
+
+2. Click "Create a project".
+
+3. Enter project details:
+   - **Project Name**: Typically matches your smart contract or protocol name
+   - **Project Description**: Brief explanation of what your project does
+   - **Target Chain**: The blockchain where your contracts are deployed
+
+4. Click "Continue to contract selection".
+
+5. Add one or more contract addresses:
+   - Enter each contract address you want to protect
+   - Only contracts where you are the `owner` can be added
+   - The dApp verifies ownership by calling the `owner()` function on each contract
+
+6. Review your project details.
+
+7. Click "Publish" to create the project.
+
+![Create Project](/images/create_project_dapp.gif)
+
+<Note>
+Only the owner of a contract can create a project for it. Additional verification methods will be available in the future. For now, ensure your contract has an `owner()` function that returns the current owner address.
+
+For more details, see [Ownership Verification](/credible/ownership-verification).
+</Note>
+
+## Linking Assertions to Your Project
+
+Once your project is created, you can link assertions to protect your contracts. This is a two-step process: storing the assertion and submitting it through the dApp.
+
+### Step 1: Store and Submit via CLI
+
+First, use the `pcl` CLI to store and submit your assertion:
+
+1. Store the assertion bytecode:
+   ```bash
+   pcl store <assertion-name> <constructor-args>
+   ```
+
+   Example:
+   ```bash
+   pcl store MyAssertion 0x1234567890123456789012345678901234567890
+   ```
+
+2. Submit the assertion to your project:
+   ```bash
+   pcl submit -a '<assertion-name>(constructor-args)' -p <project-name>
+   ```
+
+   Example:
+   ```bash
+   pcl submit -a 'MyAssertion(0x1234567890123456789012345678901234567890)' -p my-protocol
+   ```
+
+### Step 2: Link via dApp
+
+After submitting via CLI, complete the linking process in the dApp:
+
+1. Navigate to your project dashboard.
+
+2. Click on the "Ready for Submission" tab.
+
+3. Find your assertion in the list and click "Proceed to Review".
+
+4. Select the target contract you want to protect with this assertion.
+
+5. Review the assertion details:
+   - Assertion name and parameters
+   - Target contract address
+   - Trigger conditions
+
+6. Click "Deploy" to link the assertion to your contract.
+
+7. Confirm the transaction in your wallet.
+
+![Linking Assertion](/images/linking_assertion_dapp.gif)
+
+<Note>
+Once linked, the assertion will begin protecting your contract. Transactions that violate the assertion will be automatically rejected by network validators running the Credible Layer.
+</Note>
+
+## Managing Your Assertions
+
+After linking assertions, you can manage them through your project dashboard:
+
+- **View Active Assertions**: See all assertions currently protecting your contracts
+- **Monitor Status**: Check assertion execution status and any triggered violations
+- **Update Assertions**: Submit new versions of assertions as your protocol evolves
+- **Deactivate Assertions**: Temporarily or permanently disable assertions if needed
+
+## Complete Walkthrough Video
+
+Here's a full video walkthrough of the entire process from authentication to activating assertions:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/MrDVLp5UDZ0?si=tdgQEJ3Tkps2LwJA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Troubleshooting
+
+### "Contract ownership verification failed"
+- Ensure your contract has an `owner()` function that returns an address
+- Verify you're connected with the wallet that owns the contract
+- Check that the contract address is correct
+
+### "Assertion already exists"
+- Each assertion can only be submitted once per project
+- Use a different assertion name or update the existing assertion
+
+### "Authentication expired"
+- Run `pcl auth login` again to refresh your session
+- Keep your CLI session active while using the dApp
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Write Assertions" icon="code" href="/credible/pcl-assertion-guide">
+    Learn how to write effective assertions
+  </Card>
+  <Card title="Test Assertions" icon="flask" href="/credible/testing-assertions">
+    Test your assertions before deployment
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/credible/pcl-reference-guide">
+    Complete CLI command reference
+  </Card>
+  <Card title="Ownership Verification" icon="shield-check" href="/credible/ownership-verification">
+    Understand ownership requirements
+  </Card>
+</CardGroup>

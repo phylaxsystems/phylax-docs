@@ -1,0 +1,85 @@
+---
+title: 'What are Assertions?'
+description: 'Understanding assertions in the Phylax Credible Layer'
+---
+
+An assertion is a function that checks if a transaction violates a rule. If the rule is violated, the transaction is dropped during block building and never enters a block.
+
+## How Assertions Work
+
+When a transaction is submitted to the network:
+
+- The system identifies which assertions apply to the contracts being interacted with
+- Assertions are configured with triggers that specify when they should execute (on specific function calls, storage changes, or balance changes)
+- The [PhEVM](/credible/glossary#phevm-phylax-evm) simulates the transaction and creates pre/post state snapshots
+- All relevant assertions execute against these states
+- If all assertions pass → transaction is included; if any fail → transaction is dropped
+
+## Example: Prevent Unauthorized Ownership Changes
+
+```solidity
+function checkOwnershipChange() external {
+    // Fork to state before transaction
+    ph.forkPreTx();
+    address ownerBefore = protocol.owner();
+
+    // Fork to state after transaction
+    ph.forkPostTx();
+    address ownerAfter = protocol.owner();
+
+    require(ownerBefore == ownerAfter, "Owner cannot change");
+}
+```
+
+When a transaction tries to change the owner, this assertion runs. If the owner changed, the transaction is dropped.
+
+## What They Can Do That Regular Solidity Can't
+
+**Compare before/after states**
+Regular Solidity only sees the current state during execution. Assertions can compare values before and after a transaction using `ph.forkPreTx()` and `ph.forkPostTx()`. You can also inspect state at any point during execution using `ph.forkPreCall()` and `ph.forkPostCall()` to check individual nested calls within the transaction.
+
+**Protect immutable contracts**
+You can add assertions to contracts without modifying them. No redeployment needed.
+
+**Check across multiple contracts**
+An assertion can read and validate state across multiple contracts in a single check, even if those contracts are in different protocols.
+
+**Run off-chain with higher gas limits**
+Assertions run off-chain with higher gas limits than typical on-chain operations, allowing for complex computations that would be too expensive in regular smart contracts.
+
+## Common Use Cases
+
+- Prevent unauthorized parameter changes (owner, implementation addresses)
+- Enforce proportionality rules (withdrawals match shares burned)
+- Validate collateralization ratios in lending protocols
+- Monitor oracle price deviations
+- Check balance invariants (total supply equals sum of balances)
+- Enforce compliance rules (KYC/AML)
+- Validate cross-contract dependencies
+
+## Hacks Assertions Would Have Prevented
+
+- **[Radiant Capital](/assertions-book/previous-hacks/hack1-radiant-capital)** ($58M) - Owner takeover via compromised multisig
+- **[Bybit](/assertions-book/previous-hacks/bybit-safe-ui)** ($1.4B) - Implementation change through compromised UI
+- **[Bunni](/assertions-book/previous-hacks/bunni-xyz-rounding-error)** ($8.4M) - Withdrawal proportionality rounding error
+- **[Euler Finance](/assertions-book/previous-hacks/euler-finance-donation-hack)** ($197M) - Missing health factor validation
+- **[Cream Finance](/assertions-book/previous-hacks/cream-finance-2)** ($130M) - Price manipulation through donations
+
+See more examples in the [Previous Hacks Index](/assertions-book/previous-hacks/prev-hacks-index).
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Writing Assertions" icon="code" href="/credible/pcl-assertion-guide">
+    Step-by-step guide to writing your first assertion
+  </Card>
+  <Card title="Cheatcodes" icon="wand-magic-sparkles" href="/credible/cheatcodes-overview">
+    Tools available for writing assertions
+  </Card>
+  <Card title="Assertion Patterns" icon="puzzle-piece" href="/credible/assertion-patterns">
+    Common patterns and best practices
+  </Card>
+  <Card title="Assertions Book" icon="book-open" href="/assertions-book/assertions-book-intro">
+    Real-world examples and implementations
+  </Card>
+</CardGroup>

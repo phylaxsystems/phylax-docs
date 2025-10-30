@@ -1,23 +1,10 @@
 ---
-title: Cheatcodes
-description: Overview of the cheatcodes made available for the Phylax Credible Layer
+title: 'Cheatcodes API Reference'
+description: 'Complete API reference for cheatcodes in the Phylax Credible Layer'
 ---
 
-## Introduction
-
-Cheatcodes are specialized testing and assertion utilities in the Phylax Credible Layer that extend beyond traditional EVM capabilities. Implemented as native code (Rust) rather than EVM bytecode, they provide developers with powerful tools for writing and testing assertions by offering deep inspection into transaction execution, storage changes, call traces, and blockchain state. Some of the main capabilities cheatcodes provide are:
-
-- Forking the state of the blockchain before and after a transaction
-- Callstack introspection in ways not possible with standard EVM tools
-- State change tracking for specific storage slots
-- Triggering assertions on specific events
-
 <Note>
-You may notice the terms "precompiles" and "cheatcodes" used interchangeably 
-in some contexts. We use the term "cheatcodes" as it's more familiar to Solidity developers who are 
-already using testing frameworks like Foundry or Hardhat. Both terms refer to native functions 
-that extend the EVM's capabilities, but "cheatcodes" better reflects their role in the developer 
-experience.
+New to cheatcodes? Start with [What are Cheatcodes?](/credible/cheatcodes-overview) to understand what they are and why they exist.
 </Note>
 
 ## State Management
@@ -65,13 +52,12 @@ function forkPostCall(uint256 id) external
 Loads a storage slot from an address.
 
 <Note>
-Using `forge inspect <ContractName> storage-layout` is an easy way to get the storage layout of a contract.
-This can be used to determine the storage slot of a specific variable to use in the cheatcode.
+Using `forge inspect <ContractName> storage-layout` is an easy way to get the storage layout of a contract. This can be used to determine the storage slot of a specific variable to use in the cheatcode.
 </Note>
 
 ```solidity
 function load(
-    address target, 
+    address target,
     bytes32 slot
 ) external view returns (bytes32 data)
 ```
@@ -112,7 +98,7 @@ struct CallInputs {
 }
 
 function getAllCallInputs(
-    address target, 
+    address target,
     bytes4 selector
 ) external view returns (CallInputs[] memory calls);
 ```
@@ -123,7 +109,7 @@ Gets call inputs for a given target and selector. Only includes calls made using
 
 ```solidity
 function getCallInputs(
-    address target, 
+    address target,
     bytes4 selector
 ) external view returns (CallInputs[] memory calls);
 ```
@@ -136,7 +122,7 @@ Gets static call inputs for a given target and selector. Only includes calls mad
 
 ```solidity
 function getStaticCallInputs(
-    address target, 
+    address target,
     bytes4 selector
 ) external view returns (CallInputs[] memory calls);
 ```
@@ -147,7 +133,7 @@ Gets delegate call inputs for a given target and selector. Only includes calls m
 
 ```solidity
 function getDelegateCallInputs(
-    address target, 
+    address target,
     bytes4 selector
 ) external view returns (CallInputs[] memory calls);
 ```
@@ -158,10 +144,12 @@ Gets call code inputs for a given target and selector. Only includes calls made 
 
 ```solidity
 function getCallCodeInputs(
-    address target, 
+    address target,
     bytes4 selector
 ) external view returns (CallInputs[] memory calls);
 ```
+
+### Avoiding Double-Counting with Call Inputs
 
 The specific call input cheatcodes (`getCallInputs`, `getStaticCallInputs`, `getDelegateCallInputs`, `getCallCodeInputs`) eliminate double-counting issues by allowing you to target only the specific call type you need. Use these instead of `getAllCallInputs()` when you want to avoid duplicate entries from proxy contracts.
 
@@ -195,7 +183,7 @@ Example:
 function foo() external {
     // Internal call - not traced, no CallInputs generated
     bar();
-   
+
     // External call via 'this' - traced, generates CallInputs
     this.bar();
 }
@@ -213,8 +201,7 @@ function bar() public {
 Returns state changes for a contract's storage slot within the current call stack.
 
 <Note>
-Using `forge inspect <ContractName> storage-layout` is an easy way to get the storage layout of a contract.
-This can be used to determine the storage slot of a specific variable to use in the cheatcode.
+Using `forge inspect <ContractName> storage-layout` is an easy way to get the storage layout of a contract. This can be used to determine the storage slot of a specific variable to use in the cheatcode.
 </Note>
 
 ```solidity
@@ -269,17 +256,14 @@ Similar helper functions exist for:
 - `getStateChangesBool`: Convert to boolean values
 - `getStateChangesBytes32`: Get raw bytes32 values
 
-Each of these functions follows the same pattern with basic, mapping, and 
-mapping-with-offset variants.
+Each of these functions follows the same pattern with basic, mapping, and mapping-with-offset variants.
 
 ## Triggers
 
-Triggers determine when your assertion functions will be executed. You can register 
-different types of triggers in your assertion's `triggers()` function.
+Triggers determine when your assertion functions will be executed. You can register different types of triggers in your assertion's `triggers()` function.
 
 <Note>
-Use triggers to ensure that assertions are only called when they are needed in order to save gas and resources.
-For example, instead of triggering an assertion on every call to a contract, you can trigger it only on specific function calls that are able to change the state of the specific value you are asserting on.
+Use triggers to ensure that assertions are only called when they are needed in order to save gas and resources. For example, instead of triggering an assertion on every call to a contract, you can trigger it only on specific function calls that are able to change the state of the specific value you are asserting on.
 </Note>
 
 ### Call Triggers
@@ -306,7 +290,7 @@ Example:
 function triggers() external view override {
     // Run assertion on ALL calls to the contract
     registerCallTrigger(this.checkAllCalls.selector);
-    
+
     // Run assertion only on transfer calls
     registerCallTrigger(
         this.checkTransfer.selector,
@@ -320,8 +304,7 @@ function triggers() external view override {
 Storage triggers execute your assertion when contract storage changes.
 
 <Note>
-Using `forge inspect <ContractName> storage-layout` is an easy way to get the storage layout of a contract.
-This can be used to determine the storage slot of a specific variable to use in the cheatcode.
+Using `forge inspect <ContractName> storage-layout` is an easy way to get the storage layout of a contract. This can be used to determine the storage slot of a specific variable to use in the cheatcode.
 </Note>
 
 ```solidity
@@ -344,7 +327,7 @@ Example:
 function triggers() external view override {
     // Run assertion on ANY storage change
     registerStorageChangeTrigger(this.checkAllStorage.selector);
-    
+
     // Run assertion when totalSupply slot changes
     registerStorageChangeTrigger(
         this.checkSupply.selector,
@@ -372,7 +355,7 @@ function triggers() external view override {
     // Multiple triggers for one assertion
     registerStorageChangeTrigger(this.mainInvariant.selector);
     registerCallTrigger(this.mainInvariant.selector);
-    
+
     // Different assertions for different events
     registerBalanceChangeTrigger(this.checkBalances.selector);
     registerCallTrigger(
@@ -394,8 +377,7 @@ function getAssertionAdopter() external view returns (address);
 
 This cheatcode removes the need to define an assertion adopter contract in the assertion contract constructor.
 
-The cheatcode is only available in the `triggers()` function and the assertion functions.
-It cannot be used in the constructor since assertion contracts have no state during deployment.
+The cheatcode is only available in the `triggers()` function and the assertion functions. It cannot be used in the constructor since assertion contracts have no state during deployment.
 
 ### `console.log`
 
@@ -412,12 +394,29 @@ import { console } from "credible-std/console.sol";
 function assertionExample() external {
     ph.forkPreTx();
     uint256 preBalance = token.balanceOf(user);
-    
+
     ph.forkPostTx();
     uint256 postBalance = token.balanceOf(user);
-    
+
     console.log("Checking user balance assertion");
-    
+
     require(postBalance >= preBalance, "Balance should not decrease");
 }
 ```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Assertion Guide" icon="code" href="/credible/pcl-assertion-guide">
+    Learn how to write assertions using cheatcodes
+  </Card>
+  <Card title="Use Case Mappings" icon="map" href="/credible/use-case-mappings/intro-use-case-mapping">
+    See practical examples of cheatcodes in action
+  </Card>
+  <Card title="Assertion Patterns" icon="puzzle-piece" href="/credible/assertion-patterns">
+    Common patterns for using cheatcodes effectively
+  </Card>
+  <Card title="Testing Assertions" icon="flask" href="/credible/testing-assertions">
+    Test your assertions locally
+  </Card>
+</CardGroup>

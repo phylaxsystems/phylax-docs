@@ -71,7 +71,7 @@ For detailed instructions on setting up your Credible Layer project structure, p
 Alternatively, you can quickly get started by cloning the Credible Layer starter repository:
 
 ```bash
-git clone --recurse-submodules https://github.com/phylaxsystems/credible-layer-starter 
+git clone --recurse-submodules https://github.com/phylaxsystems/credible-layer-starter
 cd credible-layer-starter
 ```
 
@@ -180,7 +180,7 @@ function triggers() external view override {
 - `registerCallTrigger` specifies the function selector of the assertion function to run and the function selector of the protected contract function that should trigger the assertion.
 - A trigger can only trigger one assertion function.
 - Use triggers to make sure that assertions are only called when they are needed in order to save gas and resources.
-- The Credible Layer supports different trigger types. See the "Triggers" section in the [cheatcodes documentation](/credible/cheatcodes) for more information.
+- The Credible Layer supports different trigger types. See the "Triggers" section in the [cheatcodes documentation](/credible/cheatcodes-reference) for more information.
 
 #### 4. Assertion Logic
 ```solidity
@@ -212,7 +212,7 @@ function assertionOwnershipChange() external {
   - `ph.forkPreTx()`: Creates a snapshot of the blockchain state before the transaction.
   - `ph.forkPostTx()`: Creates a snapshot of the blockchain state after the transaction.
 - The assertion reverts if the condition is not met. You can have several require checks in the same function to make sure no rules are violated.
-- The `ph` namespace gives access to the Credible Layer cheatcodes, which provide utility functions for assertions. For more information see the [cheatcodes documentation](/credible/cheatcodes).
+- The `ph` namespace gives access to the Credible Layer cheatcodes, which provide utility functions for assertions. For more information see the [cheatcodes documentation](/credible/cheatcodes-reference).
 - All assertion functions must be public or external to be callable by the Credible Layer.
 
 <Note>
@@ -449,6 +449,6 @@ By following the best practices outlined in this guide, you can create assertion
 ## What's Next?
 
 - Explore the assertion examples in the [Assertions Book](/assertions-book/assertions-book-intro)
-- Learn about the [Cheatcodes](/credible/cheatcodes)
+- Learn about the [Cheatcodes](/credible/cheatcodes-reference)
 - Follow the [PCL Quickstart](/credible/pcl-quickstart) to learn how to deploy your assertions
 - For a comprehensive list of terms and concepts used in PCL, see the [Glossary](/credible/glossary).
