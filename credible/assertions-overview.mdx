@@ -3,15 +3,15 @@ title: 'What are Assertions?'
 description: 'Understanding assertions in the Phylax Credible Layer'
 ---
 
-An assertion is a function that checks if a transaction violates a rule. If the rule is violated, the transaction is dropped during block building and never enters a block.
+An [assertion](/credible/glossary#assertion) is a function that checks if a transaction violates a rule. If the rule is violated, the transaction is dropped during block building and never enters a block.
 
 ## How Assertions Work
 
 When a transaction is submitted to the network:
 
 - The system identifies which assertions apply to the contracts being interacted with
-- Assertions are configured with triggers that specify when they should execute (on specific function calls, storage changes, or balance changes)
-- The [PhEVM](/credible/glossary#phevm-phylax-evm) simulates the transaction and creates pre/post state snapshots
+- Assertions are configured with [triggers](/credible/glossary#trigger) that specify when they should execute (on specific function calls, storage changes, or balance changes)
+- The [PhEVM](/credible/glossary#phevm-phylax-evm) simulates the transaction and creates [pre/post state](/credible/glossary#pre-statepost-state) snapshots
 - All relevant assertions execute against these states
 - If all assertions pass → transaction is included; if any fail → transaction is dropped
 
@@ -36,7 +36,7 @@ When a transaction tries to change the owner, this assertion runs. If the owner 
 ## What They Can Do That Regular Solidity Can't
 
 **Compare before/after states**
-Regular Solidity only sees the current state during execution. Assertions can compare values before and after a transaction using `ph.forkPreTx()` and `ph.forkPostTx()`. You can also inspect state at any point during execution using `ph.forkPreCall()` and `ph.forkPostCall()` to check individual nested calls within the transaction.
+Regular Solidity only sees the current state during execution. Assertions can compare values before and after a transaction using [cheatcodes](/credible/glossary#cheatcodes) like `ph.forkPreTx()` and `ph.forkPostTx()`. You can also inspect state at any point during execution using `ph.forkPreCall()` and `ph.forkPostCall()` to check individual nested calls within the transaction.
 
 **Protect immutable contracts**
 You can add assertions to contracts without modifying them. No redeployment needed.
@@ -45,7 +45,7 @@ You can add assertions to contracts without modifying them. No redeployment need
 An assertion can read and validate state across multiple contracts in a single check, even if those contracts are in different protocols.
 
 **Run off-chain with higher gas limits**
-Assertions run off-chain with higher gas limits than typical on-chain operations, allowing for complex computations that would be too expensive in regular smart contracts.
+Assertions run [off-chain](/credible/glossary#off-chain-execution) with higher gas limits than typical on-chain operations, allowing for complex computations that would be too expensive in regular smart contracts.
 
 ## Common Use Cases
 
