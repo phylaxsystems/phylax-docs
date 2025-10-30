@@ -18,40 +18,52 @@
             "group": "Getting Started",
             "pages": [
               "credible/credible-introduction",
+              "credible/credible-install",
+              "credible/pcl-quickstart"
+            ]
+          },
+          {
+            "group": "Credible Layer",
+            "pages": [
               "credible/credible-layer-overview",
               "credible/how-it-works",
-              "credible/credible-install",
-              "credible/pcl-quickstart",
-              "credible/faq"
+              "credible/neutrality",
+              {
+                "group": "Architecture",
+                "pages": ["credible/architecture"]
+              },
+              {
+                "group": "Assertions",
+                "pages": ["credible/assertion-patterns"]
+              },
+              "credible/ownership-verification",
+              "credible/faq",
+              "credible/glossary"
             ]
           },
           {
             "group": "Guides",
             "pages": [
               "credible/pcl-assertion-guide",
-              "credible/assertion-patterns",
-              "credible/testing-assertions",
               "credible/dapp-guide",
+              "credible/testing-assertions",
+              {
+                "group": "Advanced Testing",
+                "pages": [
+                  "credible/fuzz-testing",
+                  "credible/ci-cd-integration",
+                  "credible/backtesting"
+                ]
+              },
               "credible/generate-assertions-with-ai"
-            ]
-          },
-          {
-            "group": "Advanced Testing",
-            "pages": [
-              "credible/backtesting",
-              "credible/fuzz-testing",
-              "credible/ci-cd-integration"
             ]
           },
           {
             "group": "Reference",
             "pages": [
-              "credible/architecture",
               "credible/cheatcodes",
               "credible/pcl-reference-guide",
-              "credible/credible-std-overview",
-              "credible/ownership-verification",
-              "credible/glossary"
+              "credible/credible-std-overview"
             ]
           },
           {

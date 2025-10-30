@@ -11,11 +11,10 @@ Phylax's real-time security system detects and pre-emptively removes exploits be
 
 At a glance:
 
-- **[Invariants](/credible/glossary#protocol-invariants)** are mapped and defined by the DeFi protocol/dapp team
-- **Invariants** are converted into **[assertions](/credible/glossary#assertion)** so that the network node knows when to [trigger](/credible/glossary#trigger) and perform validation
-- The **Credible Layer Smart Contracts** track assertions and the target contracts they apply to. These smart contracts exist on any network that the [sidecar](/credible/glossary#sidecar) is supported on
-- The **Node [Sidecar](/credible/glossary#sidecar)** fetches data from the Credible Layer Smart Contract and runs checks against end-user transactions as they come in. This sidecar is operated by the network validator
-- The **[network validator or node](/credible/glossary#network-validator-node)** includes or drops the transaction based on the result given by the sidecar
+- **[Invariants](/credible/glossary#protocol-invariants)** (or other rules such as KYC/AML, etc.) are mapped and defined by the dApp team, then converted into **[assertions](/credible/glossary#assertion)**
+- The **Credible Layer smart contracts** act as a registry that tracks which assertions are linked to which contract addresses
+- The **network node** reads the registry and validates all transactions against the relevant assertions before they're added to blocks
+- Transactions are included in blocks only if all assertions pass; otherwise they're dropped
 
 ## Mapping and Defining Invariant Rules
 
@@ -27,34 +26,28 @@ At a glance:
 
 Instead of exhaustively predicting every exploit path, you define the _states that must never occur_. If one of these states is violated, something fundamental has gone wrong.
 
+**Beyond Invariants**
+
+While invariants are commonly used for security properties, [assertions](/credible/glossary#assertion) enable a broader range of use cases:
+- **Compliance Rules**: Enforce KYC/AML requirements by validating that transaction participants meet regulatory criteria
+- **Timelocks and Access Control**: Add time-based restrictions or multi-factor authentication requirements for sensitive functions like contract upgrades
+- **Business Logic Enforcement**: Ensure operational rules are followed, such as transaction limits or authorized contract interactions
+
+These use cases all share the same pattern: defining rules that must hold true, then enforcing them at the network level before transactions are finalized.
+
 ### Understanding Invariants vs. Assertions
 
 While these terms are often used together, there's an important distinction:
 
 **Invariants** are the _core security properties_ or rules you want to maintain. Think of them as the "what" – what condition must always be true. For example: "The total supply must equal the sum of all balances."
 
-**Assertions** are the _executable enforcement mechanism_ for those invariants. They are the "how" – how you check and enforce those rules at the network level. An assertion is a Solidity smart contract that:
+**Assertions** are _smart contracts that verify_ those invariants hold true. They are the "how" – how you check and enforce those rules at the network level. An assertion is a Solidity smart contract that:
 - Implements the invariant as executable code
 - Specifies _when_ to check it ([trigger](/credible/glossary#trigger) conditions)
 - Defines _what data_ to examine (pre/post transaction states)
 - Uses special capabilities ([cheatcodes](/credible/glossary#cheatcodes)) to access information not available in standard Solidity
 
 In short: **invariants define the rule, assertions enforce it**.
-
-### Preparing Invariants for Network Enforcement
-
-Restated simply: an invariant is a rule whose falsification means a core assumption of your protocol has broken.
-
-Phylax's sidecar allows network nodes to automatically reject any transaction that would falsify such an invariant.
-However, to make that possible, the invariant must be _prepared for enforcement_.
-This means it must be translated into an executable form that the network node can evaluate in real time. This process turns a code invariant into an assertion..
-
-When preparing an invariant for enforcement, these key steps are required:
-
-- **Define the trigger context**: Specify _when_ the invariant should be triggered. For example, "Run this invariant every time a deposit happens."
-- **Provide required data as inputs**: Add any data such as asset prices, user balances, or total supply so that the network node can compare the values. For example, "Fetch the price of ETH before and after the transaction."
-
-When we add this additional information, we say that the invariant is prepared for enforcement, and thus it is now an assertion, not just an invariant.
 
 ### Example Walkthrough Using a Previous Hack
 
@@ -137,30 +130,17 @@ Once the transaction is sent by the user, it is seen by the network node. The no
 
 In other words, the transaction will be included into the block only if every assertion across all touched contracts evaluates to true. If even one assertion fails, the network node will see this failed assertion and exclude it from finalization.
 
+While the core concept remains the same across all networks (validate transactions against assertions before finalization), the exact architecture depends on the underlying technology stack.
+For example, on OP Stack chains, validation is implemented as part of an external block builder that integrates via [Rollup-Boost](https://docs.optimism.io/builders/chain-operators/features/rollup-boost).
+On Ethereum mainnet, the integration works differently based on validator infrastructure. The key takeaway: the Credible Layer adapts to each network's architecture while maintaining the same security guarantees.
+
+For network-specific implementation details, see the [Architecture documentation](/credible/architecture).
+
 Continue reading in technical detail in [How It Works](/credible/how-it-works).
 
-## Why Neutrality Matters
-
-*Neutrality is critical. It determines who controls the system. Who controls the system decides how the system is regulated.*
-
-As middleware, the Credible Layer extends network capabilities without introducing new trust assumptions. Protocols define security rules through existing governance channels, and networks enforce these rules through existing mechanisms.
-
-### Decentralization Preservation
-
-- Networks can remove the Credible Layer anytime and still execute their core functionality
-- dApps can remove (or add) assertions anytime
-- The system passes the "off-switch test"
-- By avoiding centralized control points, this architecture preserves decentralization for both dApps and networks
-
-### The Importance of Neutrality
-
-Policymakers are becoming increasingly aware of decentralization and see its value. Systems that quietly rely on centralized emergency controls for security risk falling on the wrong side of laws meant to capture decentralized-in-name-only projects.
-
-Non-neutral solutions ultimately create new centralized control points:
-- AI providers can change detection algorithms
-- SaaS companies can modify security policies
-
-Security solutions should optimally **not** add additional trust assumptions or risks, and they should **not** centralize the systems they serve.
+<Note>
+The Credible Layer is designed as neutral middleware that preserves decentralization for both dApps and networks. Learn more about [why neutrality matters](/credible/neutrality).
+</Note>
 
 ## Use Cases
 
