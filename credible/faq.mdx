@@ -18,7 +18,7 @@ These rules are defined in Solidity, executed off-chain, and enforced on-chain. 
 
 **Learn More:**
 - [Credible Layer Overview](/credible/credible-layer-overview) - Non-technical introduction
-- [How It Works](/credible/how-it-works) - Technical deep dive
+- [Architecture](/credible/architecture-overview) - Technical deep dive
 
 ### Why do I need the Credible Layer when I can write rules in my contracts?
 There are several key advantages:
@@ -29,7 +29,7 @@ There are several key advantages:
 
 **Learn More:**
 - [Credible Layer Overview - Use Cases](/credible/credible-layer-overview#use-cases)
-- [How It Works - System Components](/credible/how-it-works#system-components)
+- [Architecture - System Components](/credible/architecture-overview#system-components)
 
 ### How does the Credible Layer differ from other security approaches?
 The Credible Layer offers several key advantages:
@@ -42,7 +42,7 @@ The Credible Layer offers several key advantages:
 
 **Learn More:**
 - [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
-- [How It Works - Assertion Validation](/credible/how-it-works#assertion-validation-process)
+- [Architecture - Assertion Validation](/credible/architecture-overview#assertion-validation-process)
 
 ### What's the difference between assertions and traditional audits?
 While audits provide point-in-time code reviews, the Credible Layer offers continuous protection via the sequencer actively validating every transaction that interacts with your contracts against your assertions.
@@ -89,7 +89,7 @@ Common examples include:
 
 **Learn More:**
 - [Writing Assertions Guide](/credible/pcl-assertion-guide)
-- [Assertion Patterns](/credible/assertion-patterns)
+- [Assertions Book](/assertions-book/assertions-book-intro)
 - [Glossary - Assertion](/credible/glossary#assertion)
 - [Assertions Book](/assertions-book/assertions-book-intro)
 
@@ -117,7 +117,7 @@ For a good explainer on invariants see [this article](https://blog.trailofbits.c
 **Learn More:**
 - [Credible Layer Overview - Why Use Invariants](/credible/credible-layer-overview#why-use-invariants)
 - [Glossary - Protocol Invariants](/credible/glossary#protocol-invariants)
-- [Assertion Patterns](/credible/assertion-patterns)
+- [Assertions Book](/assertions-book/assertions-book-intro)
 
 ### How do assertions work?
 
@@ -130,8 +130,8 @@ Although assertions are stored on-chain for transparency's sake, assertions are 
 5. Enforce protocol-wide invariants
 
 **Learn More:**
-- [How It Works - Assertion Validation Process](/credible/how-it-works#assertion-validation-process)
-- [How It Works - Transaction Flow](/credible/how-it-works#transaction-flow)
+- [Architecture - Assertion Validation Process](/credible/architecture-overview#assertion-validation-process)
+- [Architecture - Transaction Flow](/credible/architecture-overview#transaction-flow)
 - [Glossary - PhEVM](/credible/glossary#phevm-phylax-evm)
 
 ### What are cheatcodes and how do they help?
@@ -181,7 +181,7 @@ You will be able to see all assertions deployed by other protocols on the transp
 
 **Learn More:**
 - [Architecture](/credible/architecture)
-- [How It Works - Transaction Flow](/credible/how-it-works#transaction-flow)
+- [Architecture - Transaction Flow](/credible/architecture-overview#transaction-flow)
 - [Glossary - Sequencer](/credible/glossary#sequencer)
 
 ### How does the Credible Layer work with decentralized sequencers?
@@ -220,7 +220,7 @@ The Credible Layer simply lets dApps define assertions that can prevent certain 
 No. We have performed worst-case stress tests, using the most inefficient operations available (hashing), to execute assertions worth 1bn gas per block without slowing down the block time. This is because the Credible Layer heavily parallelizes execution and can fully utilize CPU cores compared to standard serial execution of transactions.
 
 **Learn More:**
-- [How It Works - PhEVM](/credible/how-it-works#phevm-phylax-evm)
+- [Architecture - PhEVM](/credible/architecture-overview#phevm-phylax-evm)
 - [Architecture](/credible/architecture)
 
 ### How do you extend the validation logic of the sequencer to the dApp?
@@ -259,7 +259,7 @@ The Credible Layer will still work with immutable contracts because the preventi
 
 **Learn More:**
 - [Architecture - Abstract Overview](/credible/architecture#abstract-overview)
-- [How It Works - High-Level Architecture](/credible/how-it-works#high-level-architecture)
+- [Architecture - High-Level Architecture](/credible/architecture-overview#how-the-credible-layer-works)
 
 ### What are the ramifications of writing rules for supposedly immutable contracts?
 
@@ -321,5 +321,5 @@ For detailed examples and testing patterns, see our [Testing Guide](/credible/te
 - [Fuzz Testing](/credible/fuzz-testing)
 - [CI/CD Integration](/credible/ci-cd-integration)
 - [Backtesting](/credible/backtesting)
-- [Assertion Patterns](/credible/assertion-patterns)
+- [Assertions Book](/assertions-book/assertions-book-intro)
 - [Quickstart Guide](/credible/pcl-quickstart)

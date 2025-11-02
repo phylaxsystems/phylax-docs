@@ -42,6 +42,26 @@ Use cheatcodes when you need to:
 New to assertions? Check out [What are Assertions?](/credible/assertions-overview) to understand how cheatcodes fit into the bigger picture of writing security rules.
 </Note>
 
+## State Forking Guidance
+
+Not all assertions require checking both pre- and post-state. Understanding when to use each makes assertions more efficient.
+
+**Default behavior:** If neither `ph.forkPreState()` nor `ph.forkPostState()` are called, assertions execute against post-transaction state by default.
+
+### When to Use Pre-State
+
+- Comparing values before and after a transaction
+- Building on top of specific state to verify invariants hold
+- Verifying that certain values remain constant
+
+### When to Skip Pre-State
+
+- Only final values matter
+- Checking conditions that only matter after execution
+- Pre-state is irrelevant to your invariant
+
+See the [Cheatcodes Reference](/credible/cheatcodes-reference) for complete API documentation.
+
 ## Next Steps
 
 Ready to use cheatcodes in your assertions?
@@ -56,7 +76,7 @@ Ready to use cheatcodes in your assertions?
   <Card title="Use Case Mappings" icon="map" href="/credible/use-case-mappings/intro-use-case-mapping">
     See practical examples of cheatcodes in action
   </Card>
-  <Card title="Assertion Patterns" icon="puzzle-piece" href="/credible/assertion-patterns">
-    Common patterns for using cheatcodes effectively
+  <Card title="Assertions Book" icon="book-open" href="/assertions-book/assertions-book-intro">
+    Real-world assertion examples and implementations
   </Card>
 </CardGroup>

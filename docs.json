@@ -20,8 +20,7 @@
               "credible/credible-introduction",
               "credible/credible-install",
               "credible/pcl-quickstart",
-              "credible/credible-layer-overview",
-              "credible/how-it-works"
+              "credible/credible-layer-overview"
             ]
           },
           {
@@ -38,7 +37,6 @@
               "credible/assertions-overview",
               "credible/cheatcodes-overview",
               "credible/triggers",
-              "credible/assertion-patterns",
               {
                 "group": "Testing",
                 "pages": [

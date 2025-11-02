@@ -1,6 +1,6 @@
 ---
-title: 'Assertions'
-description: 'Understanding assertions in the Phylax Credible Layer'
+title: 'Overview'
+description: 'Understanding Credible Layer assertions'
 ---
 
 An [assertion](/credible/glossary#assertion) is a function that checks if a transaction violates a rule. If the rule is violated, the transaction is dropped during block building and never enters a block.
@@ -57,6 +57,19 @@ Assertions run [off-chain](/credible/glossary#off-chain-execution) with higher g
 - Enforce compliance rules (KYC/AML)
 - Validate cross-contract dependencies
 
+## Constraints
+
+**Gas Limit**
+
+Assertion functions are limited to 100,000 gas per execution. If an assertion exceeds this limit, the transaction will be invalidated and dropped.
+
+Stay mindful of gas consumption:
+- Use [triggers](/credible/triggers) to run assertions only when needed
+- Be aware that some cheatcodes like `getCallInputs()` have variable gas costs due to unknown input lengths
+- Optimize your assertion logic to stay within the gas limit
+
+For gas optimization strategies, see the [Triggers](/credible/triggers) documentation.
+
 ## Hacks Assertions Would Have Prevented
 
 - **[Radiant Capital](/assertions-book/previous-hacks/hack1-radiant-capital)** ($58M) - Owner takeover via compromised multisig
@@ -76,8 +89,8 @@ See more examples in the [Previous Hacks Index](/assertions-book/previous-hacks/
   <Card title="Cheatcodes" icon="wand-magic-sparkles" href="/credible/cheatcodes-overview">
     Tools available for writing assertions
   </Card>
-  <Card title="Assertion Patterns" icon="puzzle-piece" href="/credible/assertion-patterns">
-    Common patterns and best practices
+  <Card title="Triggers" icon="bolt" href="/credible/triggers">
+    Learn about assertion triggers and optimization
   </Card>
   <Card title="Assertions Book" icon="book-open" href="/assertions-book/assertions-book-intro">
     Real-world examples and implementations
