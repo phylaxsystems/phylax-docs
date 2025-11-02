@@ -1,0 +1,95 @@
+---
+title: 'OP Stack'
+description: 'OP Stack specific implementation of the Credible Layer'
+---
+
+The OP Stack implementation uses a **Rollup-Boost Pattern** that connects external sidecar assertion validation components with the L2 sequencer through a bridge proxy.
+
+## Architecture Diagram
+
+```mermaid
+---
+title: OP Stack Implementation Architecture
+---
+flowchart TD
+
+classDef sequencer fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
+classDef credible fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+classDef rollupBoost fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+
+subgraph Sequencer[**Sequencer**]
+    SequencerCL[op-node]
+    SequencerEL[op-geth/op-reth]
+end
+
+subgraph CredibleLayer[**Credible Layer**]
+    AssertionEnforcerEL[op-reth]
+    AssertionEnforcerCLI[CLI]
+    AssertionEnforcerDapp[dApp]
+    AssertionDA[Assertion DA]
+    subgraph AssertionEnforcerBlockBuilder[Block Builder]
+        AssertionEnforcer
+    end
+end
+
+subgraph RollupBoost[**Rollup-Boost**]
+    RollupBoostProxy[Proxy]
+end
+
+SequencerEL --> |Fallback Blocks + Validation| RollupBoost
+
+AssertionDA --> |Serve Assertions| AssertionEnforcerBlockBuilder
+AssertionEnforcerCLI --> |Submit Assertions| AssertionEnforcerDapp
+AssertionEnforcerDapp --> |OAuth| AssertionEnforcerCLI
+AssertionEnforcerDapp --> |Submit Assertions| AssertionDA
+
+AssertionEnforcerEL <--> |Pulls State + Txs| SequencerEL
+AssertionEnforcerEL <--> |Provide Best Transactions| AssertionEnforcerBlockBuilder
+RollupBoost <--> |Request Credible Blocks| AssertionEnforcerBlockBuilder
+RollupBoost <--> |Request Credible Blocks| SequencerCL
+
+class SequencerCL,SequencerEL sequencer
+class AssertionEnforcerBlockBuilder,AssertionEnforcerEL,AssertionEnforcerCLI,AssertionEnforcerDapp,AssertionDA credible
+class RollupBoostProxy,AssertionEnforcer rollupBoost
+```
+
+## System Components
+
+### Sequencer
+- **op-node**: The main orchestrator node in the OP Stack, responsible for sequencing transactions and maintaining consensus with the execution layer.
+- **op-geth/op-reth**: The execution layer clients (Geth or Reth) that process and execute transactions, providing the EVM environment for the rollup.
+
+### Credible Layer (Sidecar)
+- **[Block Builder](/credible/glossary#block-builder)**: The component of the network that simulates transactions and runs assertions before transaction finalization to ensure they don't violate defined conditions.
+- **op-reth**: The execution layer client within the Credible Layer that processes transactions and maintains state.
+- **[pcl CLI](/credible/glossary#pcl-cli)**: Command-line interface for developers to write, test, and submit assertions to the system.
+- **[dApp](/credible/glossary#credible-dapp)**: The web application interface to register, manage, and view assertions and projects.
+- **[Assertion DA](/credible/glossary#assertion-da-data-availability)**: The Assertion Data Availability layer, which stores assertion bytecode and serves it to both end-users and the Assertion Enforcer for execution.
+
+### Rollup-Boost
+- **Proxy**: Acts as a bridge between the block builder and the sequencer, enabling integration without requiring changes to the sequencer code. It handles new block requests and fallback validation.
+
+## Component Interactions
+
+- The Credible Layer op-reth pulls state and transactions from the Sequencer op-geth/op-reth.
+- The Credible Layer op-reth provides best transactions to the Block Builder.
+- The Block Builder enforces assertions and produces credible blocks, which are requested by Rollup-Boost.
+- Rollup-Boost requests credible blocks from both the Block Builder and the Sequencer op-node.
+- The Assertion DA serves assertion bytecode to the Block Builder, ensuring up-to-date enforcement.
+- The pcl CLI and Credible dApp provide interfaces for assertion submission and management.
+
+## Key Technologies
+
+- **OP-Talos**: Implementation of [rbuilder](https://github.com/flashbots/rbuilder) as the Assertion Enforcer.
+- **Rollup-Boost**: Developed by Flashbots, integrates OP-Talos with the Sequencer without code changes to the Sequencer.
+
+## Integration Benefits
+
+The Rollup-Boost pattern provides several advantages for OP Stack networks:
+
+1. **Non-invasive**: No modifications required to the sequencer code
+2. **Modular**: Assertion validation runs as a separate, upgradable component
+3. **Performant**: Parallel assertion execution doesn't impact sequencer performance
+4. **Flexible**: Easy to enable/disable assertion enforcement
+
+For more details on the general architecture and other implementations, see the [Architecture Overview](/credible/architecture-overview).

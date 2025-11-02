@@ -19,36 +19,42 @@
             "pages": [
               "credible/credible-introduction",
               "credible/credible-install",
-              "credible/pcl-quickstart"
+              "credible/pcl-quickstart",
+              "credible/credible-layer-overview",
+              "credible/how-it-works"
             ]
           },
           {
-            "group": "Credible Layer",
+            "group": "Architecture",
             "pages": [
-              "credible/credible-layer-overview",
-              "credible/how-it-works",
-              "credible/neutrality",
+              "credible/architecture-overview",
+              "credible/architecture-op-stack",
+              "credible/neutrality"
+            ]
+          },
+          {
+            "group": "Assertions",
+            "pages": [
+              "credible/assertions-overview",
+              "credible/cheatcodes-overview",
+              "credible/triggers",
+              "credible/assertion-patterns",
               {
-                "group": "Architecture",
-                "pages": ["credible/architecture"]
-              },
-              {
-                "group": "Assertions",
+                "group": "Testing",
                 "pages": [
-                  "credible/assertions-overview",
-                  "credible/cheatcodes-overview",
-                  "credible/assertion-patterns"
+                  "credible/testing-assertions",
+                  "credible/fuzz-testing",
+                  "credible/backtesting",
+                  "credible/ci-cd-integration"
                 ]
-              },
-              {
-                "group": "dApp",
-                "pages": [
-                  "credible/dapp-overview",
-                  "credible/ownership-verification"
-                ]
-              },
-              "credible/faq",
-              "credible/glossary"
+              }
+            ]
+          },
+          {
+            "group": "dApp",
+            "pages": [
+              "credible/dapp-overview",
+              "credible/ownership-verification"
             ]
           },
           {
@@ -56,15 +62,6 @@
             "pages": [
               "credible/pcl-assertion-guide",
               "credible/dapp-guide",
-              "credible/testing-assertions",
-              {
-                "group": "Advanced Testing",
-                "pages": [
-                  "credible/fuzz-testing",
-                  "credible/ci-cd-integration",
-                  "credible/backtesting"
-                ]
-              },
               "credible/generate-assertions-with-ai"
             ]
           },
@@ -75,6 +72,10 @@
               "credible/pcl-reference-guide",
               "credible/credible-std-overview"
             ]
+          },
+          {
+            "group": "Resources",
+            "pages": ["credible/glossary", "credible/faq"]
           },
           {
             "group": "Use Case Mapping",
@@ -108,16 +109,17 @@
             "group": "Assertions",
             "pages": [
               {
+                "group": "Real World Protocols",
+                "pages": [
+                  "assertions-book/assertions/aave-v3-suite",
+                  "assertions-book/assertions/optimism-fma-suite"
+                ]
+              },
+              {
                 "group": "General Use Cases",
                 "pages": [
                   "assertions-book/assertions/use-cases-index",
-                  {
-                    "group": "Real World Protocols",
-                    "pages": [
-                      "assertions-book/assertions/aave-v3-suite",
-                      "assertions-book/assertions/optimism-fma-suite"
-                    ]
-                  },
+
                   {
                     "group": "Access Control & Administrative Changes",
                     "pages": [
@@ -182,7 +184,7 @@
                 ]
               },
               {
-                "group": "Previous Hacks Assertions",
+                "group": "Previous Hacks",
                 "pages": [
                   "assertions-book/previous-hacks/prev-hacks-index",
                   "assertions-book/previous-hacks/hack1-radiant-capital",

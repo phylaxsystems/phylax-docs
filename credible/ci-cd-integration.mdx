@@ -62,41 +62,105 @@ Use the `FOUNDRY_PROFILE: assertions` environment variable to ensure the correct
 
 ## Foundry Profile Configuration
 
-Foundry profiles allow you to configure different compilation and testing settings for different parts of your project. For assertions, you typically want a separate profile that focuses on the assertion-specific source code.
+Foundry profiles allow you to configure different compilation and testing settings for different parts of your project. For assertions, you typically want separate profiles for different types of tests to avoid running slow tests (like fuzz tests and backtests) every time you want to run quick unit tests locally.
 
 This configuration goes in your project's `foundry.toml` file, which you should be familiar with if you have used Foundry before.
+
+### Recommended Profile Structure
+
+Organize your tests into separate folders and create profiles for each test type:
+
+```
+assertions/
+├── src/           # Assertion source code
+└── test/
+    ├── unit/      # Fast unit tests
+    ├── fuzz/      # Fuzz tests (slower)
+    └── backtest/  # Backtesting tests (slowest)
+```
+
+### Example foundry.toml
 
 ```toml
 [profile.default]
 src = "src"
 out = "out"
 libs = ["lib"]
-solc_version = "0.8.29"
+solc = "0.8.29"
 optimizer = true
 optimizer_runs = 200
 
+# General assertions profile (runs all tests)
 [profile.assertions]
 src = "assertions/src"
+test = "assertions/test"
 out = "assertions/out"
 libs = ["lib"]
-solc_version = "0.8.29"
+solc = "0.8.29"
 optimizer = true
 optimizer_runs = 200
+
+# Unit tests only (fast, for local development)
+[profile.unit-assertions]
+src = "assertions/src"
+test = "assertions/test/unit"
+out = "assertions/out"
+libs = ["lib"]
+solc = "0.8.29"
+optimizer = true
+optimizer_runs = 200
+
+# Fuzz testing profile
+[profile.fuzz-assertions]
+src = "assertions/src"
+test = "assertions/test/fuzz"
+out = "assertions/out"
+libs = ["lib"]
+solc = "0.8.29"
+optimizer = true
+optimizer_runs = 10000
+
+# Backtesting profile (requires FFI)
+[profile.backtest-assertions]
+src = "assertions/src"
+test = "assertions/test/backtest"
+out = "assertions/out"
+libs = ["lib"]
+solc = "0.8.29"
+optimizer = true
+optimizer_runs = 200
+ffi = true  # Required for backtesting
+
+# Fuzz configuration (applies to all profiles)
+[fuzz]
+runs = 256
+max_test_rejects = 65536
 ```
 
-The `assertions` profile:
+### Profile Benefits
 
-- **Separate source directory** (`assertions/src`) - Keeps assertion code isolated
-- **Separate output directory** (`assertions/out`) - Prevents conflicts with main project artifacts
-- **Same compiler settings** - Ensures consistency with main project
+- **Unit tests (`unit-assertions`)** - Fast feedback during development
+- **Fuzz tests (`fuzz-assertions`)** - Run separately when testing edge cases
+- **Backtests (`backtest-assertions`)** - Run manually before deployment
+- **General (`assertions`)** - Runs all tests for comprehensive validation
 
-When using `pcl test` or setting `FOUNDRY_PROFILE=assertions`, Foundry uses this profile configuration instead of the default one.
+When using `pcl test` or setting `FOUNDRY_PROFILE=<profile>`, Foundry uses that profile's configuration instead of the default one.
 
-## Running Tests Locally with Profile
+## Running Tests Locally with Profiles
 
-You can set the `FOUNDRY_PROFILE` environment variable to `assertions` when running tests locally:
+You can set the `FOUNDRY_PROFILE` environment variable to use specific profiles:
 
 ```bash
+# Run only fast unit tests (recommended for local development)
+FOUNDRY_PROFILE=unit-assertions pcl test
+
+# Run fuzz tests
+FOUNDRY_PROFILE=fuzz-assertions pcl test
+
+# Run backtests (slowest, run before deployment)
+FOUNDRY_PROFILE=backtest-assertions pcl test --ffi
+
+# Run all assertion tests
 FOUNDRY_PROFILE=assertions pcl test
 ```
 
