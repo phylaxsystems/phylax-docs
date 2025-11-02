@@ -64,7 +64,7 @@ No. We are a permissionless protocol that enables hack definition and prevention
 
 **Learn More:**
 - [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
-- [Architecture](/credible/architecture)
+- [Architecture](/credible/architecture-overview)
 
 ---
 
@@ -180,7 +180,7 @@ You will be able to see all assertions deployed by other protocols on the transp
 3. Filters out transactions that violate assertions
 
 **Learn More:**
-- [Architecture](/credible/architecture)
+- [Architecture](/credible/architecture-overview)
 - [Architecture - Transaction Flow](/credible/architecture-overview#transaction-flow)
 - [Glossary - Sequencer](/credible/glossary#sequencer)
 
@@ -189,7 +189,7 @@ You will be able to see all assertions deployed by other protocols on the transp
 - **Credible sequencers** that mark blocks as safe by running invariants and posting attestations on-chain, ensuring safety without compromising performance
 
 **Learn More:**
-- [Architecture - Abstract Overview](/credible/architecture#abstract-overview)
+- [Architecture - Abstract Overview](/credible/architecture-overview#abstract-overview)
 
 ### How are forced included transactions handled for OP Stack Rollups?
 
@@ -205,7 +205,7 @@ The Credible Layer simply extends the sequencer's validation logic with dApp-def
 
 **Learn More:**
 - [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
-- [Architecture](/credible/architecture)
+- [Architecture](/credible/architecture-overview)
 
 ### Is this a form of censorship?
 
@@ -221,7 +221,7 @@ No. We have performed worst-case stress tests, using the most inefficient operat
 
 **Learn More:**
 - [Architecture - PhEVM](/credible/architecture-overview#phevm-phylax-evm)
-- [Architecture](/credible/architecture)
+- [Architecture](/credible/architecture-overview)
 
 ### How do you extend the validation logic of the sequencer to the dApp?
 
@@ -233,7 +233,7 @@ Our custom block builder enables the sequencer to check each transaction against
 This requires no changes to contracts as it is effectively middleware.
 
 **Learn More:**
-- [Architecture - OP Stack Implementation](/credible/architecture#op-stack-implementation)
+- [Architecture - OP Stack Implementation](/credible/architecture-op-stack)
 - [Glossary - Block Builder](/credible/glossary#block-builder)
 
 ### Can anyone write assertions for my contracts?
@@ -258,7 +258,7 @@ As mentioned above in [How do you extend the validation logic of the sequencer t
 The Credible Layer will still work with immutable contracts because the prevention happens at the sequencing step, which is where the L2 has ultimate power over transaction inclusion, whether or not they come from immutable contracts.
 
 **Learn More:**
-- [Architecture - Abstract Overview](/credible/architecture#abstract-overview)
+- [Architecture - Abstract Overview](/credible/architecture-overview#abstract-overview)
 - [Architecture - High-Level Architecture](/credible/architecture-overview#how-the-credible-layer-works)
 
 ### What are the ramifications of writing rules for supposedly immutable contracts?
