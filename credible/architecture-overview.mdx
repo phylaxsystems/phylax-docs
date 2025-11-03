@@ -40,64 +40,65 @@ The sidecar pattern allows the Credible Layer to:
 ---
 title: Credible Layer System Architecture
 ---
-flowchart TB
-    subgraph dev["dev tools"]
-        CLI["pcl"]
+flowchart LR
+    subgraph dev["Development Tools"]
+        direction TB
+        CLI["pcl CLI"]
         DAPP["Credible dApp"]
-    end
-
-    subgraph l2["L2 Network"]
-        SEQ["Sequencer"]
-        REGISTRY["Credible Layer Contracts"]
-    end
-
-    subgraph sidecar["Assertion Enforcer (Sidecar)"]
-        SPACER[" "]
-        BB["Block Builder"]
-        PhEVM["PhEVM"]
-        SPACER ~~~ BB
-        SPACER ~~~ PhEVM
     end
 
     subgraph storage["Storage"]
         DA["Assertion DA"]
     end
 
-    CLI -->|"Write Assertions"| DAPP
-    DAPP -->|"Store Assertions"| DA
-    DAPP -->|"Submit Assertions"| REGISTRY
+    subgraph network["Network"]
+        direction LR
+        NODE["Network Node"]
+        REGISTRY["Credible Layer<br/>Contracts"]
+        VALIDATOR["Network Validator"]
+    end
 
-    SEQ <-->|"Blocks"| BB
-    BB -->|"Execute Assertions"| PhEVM
-    BB <-->|"Fetch Assertions"| DA
-    BB -.->|"Check Registry"| REGISTRY
+    subgraph enforcer["Assertion Enforcer (Sidecar)"]
+        direction TB
+        SPACER_E[" "]
+        PhEVM["PhEVM"]
+    end
+
+    CLI -->|"Store"| DA
+    CLI -->|"Submit"| DAPP
+    DAPP -->|"Register"| REGISTRY
+
+    NODE -->|"Transaction"| PhEVM
+    PhEVM -->|"Valid/Invalid"| VALIDATOR
+    PhEVM -.->|"Fetch"| DA
+    PhEVM -.->|"Check"| REGISTRY
 
     classDef dev fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
-    classDef l2 fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
-    classDef sidecar fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
     classDef storage fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    classDef network fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
+    classDef sidecar fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
     classDef invisible fill:none,stroke:none
 
     class CLI,DAPP dev
-    class SEQ,REGISTRY l2
-    class BB,PhEVM sidecar
     class DA storage
-    class SPACER invisible
+    class NODE,REGISTRY,VALIDATOR network
+    class PhEVM sidecar
+    class SPACER_E invisible
 ```
 
 The diagram above shows the Credible Layer at the **system level**. It illustrates two main flows:
 
-**Development Flow**: Developers use the `pcl` to write and test assertions, then submit them via the Credible dApp. The dApp stores assertion bytecode in Assertion DA and submits the assertions to the on-chain Credible Layer contracts.
+**Development Flow**: Developers use the `pcl` CLI to write and test assertions. The CLI stores assertion bytecode directly in Assertion DA, then submits to the Credible dApp with the assertion ID. The dApp registers these assertions in the on-chain Credible Layer contracts.
 
-**Runtime Flow**: The Assertion Enforcer sidecar intercepts transactions from the Sequencer. The Block Builder fetches relevant assertions from Assertion DA, executes them via PhEVM, and only forwards valid transactions back to the Sequencer for block inclusion.
+**Runtime Flow**: The network node sends transactions to the Assertion Enforcer sidecar during block production. The Assertion Enforcer fetches relevant assertions from Assertion DA and executes them via PhEVM. Crucially, **assertion validation happens during block production**, which means the Assertion Enforcer has access to the final transaction ordering. The sidecar returns validation results (valid/invalid) to the network validator, which only includes valid transactions in blocks.
 
 ### How It Works
 
 1. **Assertion Registration**: Developers write and submit assertions through the CLI/dApp, which are stored in Assertion DA
-2. **Transaction Selection**: The block builder (Assertion Enforcer) picks transactions from the mempool
-3. **Assertion Validation**: Each transaction is simulated and validated against relevant assertions using PhEVM
-4. **Block Building**: Only transactions that pass all relevant assertions are included in the block
-5. **Security Enforcement**: Invalid transactions are dropped, preventing security violations before they reach the blockchain
+2. **Transaction Validation During Block Production**: The network sends transactions to the Assertion Enforcer during block production
+3. **Assertion Execution**: The Assertion Enforcer simulates each transaction and validates it against relevant assertions using PhEVM
+4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the network validator
+5. **Security Enforcement**: Only valid transactions are included in blocks, preventing security violations before they reach the blockchain
 
 ## Transaction Flow
 
@@ -119,27 +120,23 @@ flowchart LR
     USER["User"] -->|"Submits Transaction"| MP["Mempool"]
     MP --> SIDECAR["Assertion Enforcer<br/>(Sidecar)"]
 
-    SIDECAR -->|"Valid"| SEQ["Sequencer"]
-    SIDECAR -->|"Invalid"| DROP["❌ Dropped"]
-
-    SEQ --> BLOCK["Block"]
+    SIDECAR -->|"Valid"| BLOCK["Block"]
+    SIDECAR -->|"Invalid"| DROP["Dropped"]
 
     classDef user fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
     classDef mempool fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#fff
     classDef sidecar fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
-    classDef sequencer fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
     classDef valid fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
     classDef invalid fill:#d32f2f,stroke:#b71c1c,stroke-width:2px,color:#fff
 
     class USER user
     class MP mempool
     class SIDECAR sidecar
-    class SEQ sequencer
     class BLOCK valid
     class DROP invalid
 ```
 
-This diagram shows the **validation flow** for a single transaction. Users submit transactions to the mempool, where the Assertion Enforcer (sidecar) validates them. Valid transactions flow to the sequencer for block inclusion, while invalid transactions are dropped before reaching the blockchain.
+This diagram shows the **validation flow** for a single transaction. Users submit transactions to the mempool, where the Assertion Enforcer (sidecar) validates them. Valid transactions are included in blocks, while invalid transactions are dropped.
 
 ### Assertion Validation Process
 
