@@ -1,6 +1,6 @@
 ---
-title: 'Overview'
-description: 'Overview of the Phylax Credible Layer architecture'
+title: 'General Design'
+description: 'Deep dive into the Credible Layer architecture'
 ---
 
 # Introduction
@@ -16,7 +16,7 @@ Looking for a non-technical introduction? Start with the [Credible Layer Overvie
 The Credible Layer consists of four key components working together:
 
 1. **[Assertions](/credible/glossary#assertion)**: Security rules written in Solidity that define states that should never occur (e.g., "proxy implementation address shouldn't change", "price reported by oracle shouldn't deviate more than x% inside of a single transaction")
-2. **Protocols**: Protocols that define assertions for their contracts and link them on-chain
+2. **Protocols / dApps**: Define assertions for their contracts and link them on-chain
 3. **[Block Builders](/credible/glossary#block-builder)/[Sequencers](/credible/glossary#sequencer)**: The network infrastructure that validates every transaction against assertions before inclusion in a block, dropping any that would violate security rules
 4. **[Transparency Dashboard](/credible/glossary#transparency-dashboard)**: A platform where users can see which protocols are protected and how, creating a focal point for ecosystem security
 
@@ -34,102 +34,112 @@ The sidecar pattern allows the Credible Layer to:
 - **Scale separately** from the main network components
 - **Fail gracefully** without affecting L2 operations
 
-### Core Concept
+### System Architecture
 
 ```mermaid
 ---
-title: Credible Layer Abstract Architecture
+title: Credible Layer System Architecture
 ---
-flowchart TD
+flowchart TB
+    subgraph dev["dev tools"]
+        CLI["pcl"]
+        DAPP["Credible dApp"]
+    end
+
     subgraph l2["L2 Network"]
-        TX["Transaction"]
+        SEQ["Sequencer"]
+        REGISTRY["Credible Layer Contracts"]
+    end
+
+    subgraph sidecar["Assertion Enforcer (Sidecar)"]
+        SPACER[" "]
         BB["Block Builder"]
-        BC["Blockchain"]
-    end
-
-    subgraph cl["Credible Layer (Sidecar)"]
-        AS["Assertion DA"]
-        AV["Assertion Enforcer"]
         PhEVM["PhEVM"]
+        SPACER ~~~ BB
+        SPACER ~~~ PhEVM
     end
 
-    subgraph dev["Developer Tools"]
-        CLI["pcl CLI"]
-        dApp["Credible dApp"]
+    subgraph storage["Storage"]
+        DA["Assertion DA"]
     end
 
-    TX --> BB
-    BB --> AV
-    AV --> PhEVM
-    PhEVM --> AS
-    AS --> AV
-    AV --> |Valid| BB
-    AV --> |Invalid| TX
-    BB --> BC
+    CLI -->|"Write Assertions"| DAPP
+    DAPP -->|"Store Assertions"| DA
+    DAPP -->|"Submit Assertions"| REGISTRY
 
-    CLI --> dApp
-    dApp --> AS
+    SEQ <-->|"Blocks"| BB
+    BB -->|"Execute Assertions"| PhEVM
+    BB <-->|"Fetch Assertions"| DA
+    BB -.->|"Check Registry"| REGISTRY
 
-    classDef l2 fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
-    classDef cl fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
     classDef dev fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    classDef l2 fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
+    classDef sidecar fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+    classDef storage fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    classDef invisible fill:none,stroke:none
 
-    class TX,BB,BC l2
-    class AS,AV,PhEVM cl
-    class CLI,dApp dev
+    class CLI,DAPP dev
+    class SEQ,REGISTRY l2
+    class BB,PhEVM sidecar
+    class DA storage
+    class SPACER invisible
 ```
 
-The diagram above shows how all system components interact at a high level.
+The diagram above shows the Credible Layer at the **system level**. It illustrates two main flows:
+
+**Development Flow**: Developers use the `pcl` to write and test assertions, then submit them via the Credible dApp. The dApp stores assertion bytecode in Assertion DA and submits the assertions to the on-chain Credible Layer contracts.
+
+**Runtime Flow**: The Assertion Enforcer sidecar intercepts transactions from the Sequencer. The Block Builder fetches relevant assertions from Assertion DA, executes them via PhEVM, and only forwards valid transactions back to the Sequencer for block inclusion.
 
 ### How It Works
 
-1. **Assertion Registration**: Developers write and submit assertions that define security properties for their contracts
-2. **Transaction Interception**: During block building, transactions are intercepted before inclusion
-3. **Assertion Validation**: Each transaction is validated against relevant assertions using PhEVM
-4. **Block Inclusion**: Only transactions that pass all relevant assertions are included in blocks
-5. **Security Enforcement**: Invalid transactions are rejected, preventing security violations
+1. **Assertion Registration**: Developers write and submit assertions through the CLI/dApp, which are stored in Assertion DA
+2. **Transaction Selection**: The block builder (Assertion Enforcer) picks transactions from the mempool
+3. **Assertion Validation**: Each transaction is simulated and validated against relevant assertions using PhEVM
+4. **Block Building**: Only transactions that pass all relevant assertions are included in the block
+5. **Security Enforcement**: Invalid transactions are dropped, preventing security violations before they reach the blockchain
 
 ## Transaction Flow
 
 When a user submits a transaction, it goes through the following validation process:
 
 1. **Transaction Submission**: User submits a transaction to the network
-2. **Mempool Entry**: Transaction enters the mempool for processing
-3. **Transaction Validation**: The system performs basic transaction validation (signature, nonce, gas, etc.)
-4. **Assertion Validation**: The system validates the transaction against registered [Assertions](/credible/glossary#assertion) (detailed below)
-5. **Inclusion Decision**: Based on validation results, the transaction is either included in or rejected from the block
-6. **Block Finalization**: The validated block is finalized and added to the blockchain
+2. **Mempool Entry**: Transaction enters the mempool awaiting selection
+3. **Block Builder Selection**: The block builder picks transactions from the mempool and validates them
+4. **Assertion Validation**: Each transaction is simulated and validated against registered [Assertions](/credible/glossary#assertion)
+5. **Inclusion Decision**: Valid transactions are included in the block, invalid ones are dropped
 
-The diagram below shows how transactions flow through the system:
+The diagram below shows the **transaction validation process** during block building:
 
 ```mermaid
 ---
-title: General Transaction Flow
+title: Transaction Validation Flow
 ---
-flowchart TD
-    TX["Transaction Submission"] -->|"1"| MP["Mempool Entry"]
-    MP -->|"2"| TV["Transaction Validation"]
+flowchart LR
+    USER["User"] -->|"Submits Transaction"| MP["Mempool"]
+    MP --> SIDECAR["Assertion Enforcer<br/>(Sidecar)"]
 
-    TV -->|"3"| AV["Assertion Validation"]
+    SIDECAR -->|"Valid"| SEQ["Sequencer"]
+    SIDECAR -->|"Invalid"| DROP["❌ Dropped"]
 
-    AV -->|"4a"| INVALID["Transaction Invalid"]
-    AV -->|"4b"| VALID["Transaction Valid"]
+    SEQ --> BLOCK["Block"]
 
-    INVALID -->|"5a"| REJECT["Reject Transaction"]
-    VALID -->|"5b"| INCLUDE["Include in Block"]
-
-    INCLUDE -->|"6"| FINAL["Block Finalization"]
-
-    classDef step fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
-    classDef validation fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    classDef user fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    classDef mempool fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#fff
+    classDef sidecar fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+    classDef sequencer fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
     classDef valid fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
     classDef invalid fill:#d32f2f,stroke:#b71c1c,stroke-width:2px,color:#fff
 
-    class TX,MP,TV,FINAL step
-    class AV validation
-    class VALID,INCLUDE valid
-    class INVALID,REJECT invalid
+    class USER user
+    class MP mempool
+    class SIDECAR sidecar
+    class SEQ sequencer
+    class BLOCK valid
+    class DROP invalid
 ```
+
+This diagram shows the **validation flow** for a single transaction. Users submit transactions to the mempool, where the Assertion Enforcer (sidecar) validates them. Valid transactions flow to the sequencer for block inclusion, while invalid transactions are dropped before reaching the blockchain.
 
 ### Assertion Validation Process
 
@@ -137,15 +147,15 @@ The assertion validation step (step 4 above) is where the Credible Layer's secur
 
 1. **Identify Relevant Assertions**: The system identifies which assertions apply to the contracts the transaction interacts with
 2. **Fetch Assertion Bytecode**: The system retrieves [Assertion Bytecode](/credible/glossary#assertion-bytecode) from the [Assertion DA](/credible/glossary#assertion-da-data-availability)
-3. **Simulate Transaction**: The [PhEVM](/credible/glossary#phevm-phylax-evm) simulates the transaction execution and creates two state snapshots:
+3. **Simulate Transaction**: The transaction is simulated to create two state snapshots:
    - [Pre-transaction state](/credible/glossary#pre-statepost-state): The blockchain state before the transaction
    - [Post-transaction state](/credible/glossary#pre-statepost-state): The blockchain state after the transaction
-4. **Execute Assertions**: All relevant assertions are executed against these states
+4. **Execute Assertions**: The [PhEVM](/credible/glossary#phevm-phylax-evm) executes all relevant assertions against these states
 5. **Return Result**:
    - If any assertion reverts (invalid state), the transaction is flagged as invalid
    - If all assertions pass, the transaction is considered valid
 
-The diagram below shows the detailed assertion validation process:
+The diagram below shows the **assertion validation components and data flow**:
 
 ```mermaid
 ---
@@ -194,6 +204,8 @@ flowchart LR
     class RESULT result
 ```
 
+This diagram shows the **components involved** in assertion validation. The transaction is first simulated to generate state snapshots, then PhEVM executes assertion bytecode against those states to determine validity.
+
 **Ultimately**: If a transaction would result in a hack and the contract is protected by the Credible Layer, the transaction will be dropped. If the contract is not protected, the transaction will be included in the block.
 
 <Note>
@@ -202,7 +214,7 @@ flowchart LR
 
 ## System Components
 
-### Core Infrastructure
+### Component Details
 
 The Credible Layer consists of several key infrastructure components:
 

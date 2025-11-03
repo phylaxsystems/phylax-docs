@@ -78,6 +78,14 @@ class RollupBoostProxy,AssertionEnforcer rollupBoost
 - The Assertion DA serves assertion bytecode to the Block Builder, ensuring up-to-date enforcement.
 - The pcl CLI and Credible dApp provide interfaces for assertion submission and management.
 
+## Transaction Flow
+
+![Transaction Flow](../images/tx-flow-credible.png "OP Stack transaction flow with assertion execution detail")
+
+The diagram above illustrates transaction flow through the OP Stack implementation. The top section shows the complete deployment: users submit transactions that flow through OP-Talos (block builder) → Rollup-Boost → OP Stack Sequencer → Network. Malicious transactions are identified and removed before reaching the sequencer.
+
+The bottom section zooms into **assertion execution** - this process is consistent across all Credible Layer implementations, not just OP Stack. The transaction and State 1 (pre-state) flow into the EVM for simulation, producing State 2 (post-state). PhEVM then validates these states against registered assertions, returning valid/invalid.
+
 ## Key Technologies
 
 - **OP-Talos**: Implementation of [rbuilder](https://github.com/flashbots/rbuilder) as the Assertion Enforcer. rbuilder is Flashbots' open-source block builder, which we've adapted to include assertion validation logic for the OP Stack.
