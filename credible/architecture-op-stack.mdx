@@ -3,7 +3,7 @@ title: 'OP Stack'
 description: 'OP Stack specific implementation of the Credible Layer'
 ---
 
-The OP Stack implementation uses a **Rollup-Boost Pattern** that connects external sidecar assertion validation components with the L2 sequencer through a bridge proxy.
+The OP Stack implementation uses [Rollup-Boost](https://github.com/flashbots/rollup-boost) to connect an external sidecar assertion validation components with the L2 sequencer through a bridge proxy.
 
 ## Architecture Diagram
 
@@ -81,7 +81,7 @@ class RollupBoostProxy,AssertionEnforcer rollupBoost
 ## Key Technologies
 
 - **OP-Talos**: Implementation of [rbuilder](https://github.com/flashbots/rbuilder) as the Assertion Enforcer.
-- **Rollup-Boost**: Developed by Flashbots, integrates OP-Talos with the Sequencer without code changes to the Sequencer.
+- [**Rollup-Boost**](https://github.com/flashbots/rollup-boost): Developed by Flashbots, integrates OP-Talos with the Sequencer without code changes to the Sequencer.
 
 ## Integration Benefits
 
