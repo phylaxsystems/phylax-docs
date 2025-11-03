@@ -53,9 +53,8 @@ flowchart LR
 
     subgraph network["Network"]
         direction LR
-        NODE["Network Node"]
-        REGISTRY["Credible Layer<br/>Contracts"]
         VALIDATOR["Network Validator"]
+        REGISTRY["Credible Layer<br/>Contracts"]
     end
 
     subgraph enforcer["Assertion Enforcer (Sidecar)"]
@@ -68,7 +67,7 @@ flowchart LR
     CLI -->|"Submit"| DAPP
     DAPP -->|"Register"| REGISTRY
 
-    NODE -->|"Transaction"| PhEVM
+    VALIDATOR -->|"Transaction"| PhEVM
     PhEVM -->|"Valid/Invalid"| VALIDATOR
     PhEVM -.->|"Fetch"| DA
     PhEVM -.->|"Check"| REGISTRY
@@ -81,7 +80,7 @@ flowchart LR
 
     class CLI,DAPP dev
     class DA storage
-    class NODE,REGISTRY,VALIDATOR network
+    class VALIDATOR,REGISTRY network
     class PhEVM sidecar
     class SPACER_E invisible
 ```
@@ -90,7 +89,7 @@ The diagram above shows the Credible Layer at the **system level**. It illustrat
 
 **Development Flow**: Developers use the `pcl` CLI to write and test assertions. The CLI stores assertion bytecode directly in Assertion DA, then submits to the Credible dApp with the assertion ID. The dApp registers these assertions in the on-chain Credible Layer contracts.
 
-**Runtime Flow**: The network node sends transactions to the Assertion Enforcer sidecar during block production. The Assertion Enforcer fetches relevant assertions from Assertion DA and executes them via PhEVM. Crucially, **assertion validation happens during block production**, which means the Assertion Enforcer has access to the final transaction ordering. The sidecar returns validation results (valid/invalid) to the network validator, which only includes valid transactions in blocks.
+**Runtime Flow**: The network validator sends transactions to the Assertion Enforcer sidecar during block production. The Assertion Enforcer fetches relevant assertions from Assertion DA and executes them via PhEVM. Crucially, **assertion validation happens during block production**, which means the Assertion Enforcer has access to the final transaction ordering. The sidecar returns validation results (valid/invalid) back to the network validator, which only includes valid transactions in blocks.
 
 ### How It Works
 
