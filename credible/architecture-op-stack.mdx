@@ -62,7 +62,7 @@ class RollupBoostProxy,AssertionEnforcer rollupBoost
 ### Credible Layer (Sidecar)
 - **[Block Builder](/credible/glossary#block-builder)**: The component of the network that simulates transactions and runs assertions before transaction finalization to ensure they don't violate defined conditions.
 - **op-reth**: The execution layer client within the Credible Layer that processes transactions and maintains state.
-- **[pcl CLI](/credible/glossary#pcl-cli)**: Command-line interface for developers to write, test, and submit assertions to the system.
+- **[`pcl` CLI](/credible/glossary#pcl-cli)**: Command-line interface for developers to write, test, and submit assertions to the system.
 - **[dApp](/credible/glossary#credible-dapp)**: The web application interface to register, manage, and view assertions and projects.
 - **[Assertion DA](/credible/glossary#assertion-da-data-availability)**: The Assertion Data Availability layer, which stores assertion bytecode and serves it to both end-users and the Assertion Enforcer for execution.
 
@@ -80,12 +80,12 @@ class RollupBoostProxy,AssertionEnforcer rollupBoost
 
 ## Key Technologies
 
-- **OP-Talos**: Implementation of [rbuilder](https://github.com/flashbots/rbuilder) as the Assertion Enforcer.
-- [**Rollup-Boost**](https://github.com/flashbots/rollup-boost): Developed by Flashbots, integrates OP-Talos with the Sequencer without code changes to the Sequencer.
+- **OP-Talos**: Implementation of [rbuilder](https://github.com/flashbots/rbuilder) as the Assertion Enforcer. rbuilder is Flashbots' open-source block builder, which we've adapted to include assertion validation logic for the OP Stack.
+- [**Rollup-Boost**](https://github.com/flashbots/rollup-boost): Developed by Flashbots, Rollup-Boost is a proxy architecture that enables external block builders to integrate with rollup sequencers. It integrates OP-Talos with the Sequencer without requiring code changes to the Sequencer, allowing for modular and non-invasive assertion enforcement.
 
 ## Integration Benefits
 
-The Rollup-Boost pattern provides several advantages for OP Stack networks:
+This solution provides several advantages for OP Stack networks:
 
 1. **Non-invasive**: No modifications required to the sequencer code
 2. **Modular**: Assertion validation runs as a separate, upgradable component
