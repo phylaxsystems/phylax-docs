@@ -1,0 +1,174 @@
+---
+title: 'High-Level Overview'
+description: 'High-level overview of the Credible Layer system that explains how exploit prevention works, without requiring deep technical knowledge.'
+---
+
+## Introduction
+
+Phylax's real-time security system detects and pre-emptively removes exploits before losses can be realized.
+
+![System Overview](/images/overview-step-0.png)
+
+At a glance:
+
+- **[Invariants](/credible/glossary#protocol-invariants)** (or other rules such as KYC/AML, etc.) are mapped and defined by the dApp team, then converted into **[assertions](/credible/glossary#assertion)**
+- The **Credible Layer smart contracts** act as a registry that tracks which assertions are linked to which contract addresses
+- The **network node** reads the registry and validates all transactions against the relevant assertions before they're added to blocks
+- Transactions are included in blocks only if all assertions pass; otherwise they're dropped
+
+## Mapping and Defining Invariant Rules
+
+![Mapping and defining invariants](/images/overview-step-1.png)
+
+### Why Use Invariants?
+
+[Invariants](/credible/glossary#protocol-invariants) are statements about your contract that must remain true no matter how users interact with it. They express the essential conditions that keep your system secure and functional—the business logic that must always hold.
+
+Instead of exhaustively predicting every exploit path, you define the _states that must never occur_. If one of these states is violated, something fundamental has gone wrong.
+
+**Beyond Invariants**
+
+While invariants are commonly used for security properties, [assertions](/credible/glossary#assertion) enable a broader range of use cases:
+- **Compliance Rules**: Enforce KYC/AML requirements by validating that transaction participants meet regulatory criteria
+- **Timelocks and Access Control**: Add time-based restrictions or multi-factor authentication requirements for sensitive functions like contract upgrades
+- **Business Logic Enforcement**: Ensure operational rules are followed, such as transaction limits or authorized contract interactions
+
+These use cases all share the same pattern: defining rules that must hold true, then enforcing them at the network level before transactions are finalized.
+
+### Understanding Invariants vs. Assertions
+
+While these terms are often used together, there's an important distinction:
+
+**Invariants** are the _core security properties_ or rules you want to maintain. Think of them as the "what" – what condition must always be true. For example: "The total supply must equal the sum of all balances."
+
+**Assertions** are _smart contracts that verify_ those invariants hold true. They are the "how" – how you check and enforce those rules at the network level. An assertion is a Solidity smart contract that:
+- Implements the invariant as executable code
+- Specifies _when_ to check it ([trigger](/credible/glossary#trigger) conditions)
+- Defines _what data_ to examine (pre/post transaction states)
+- Uses special capabilities ([cheatcodes](/credible/glossary#cheatcodes)) to access information not available in standard Solidity
+
+In short: **invariants define the rule, assertions enforce it**.
+
+### Example Walkthrough Using a Previous Hack
+
+Here is a way to visualize the journey of creating invariants and converting them into assertions.
+In this example, Bunni's protocol must ensure that when users withdraw funds, the share of ownership is updated to match the amount removed from the pool.
+
+The invariant can be expressed in plain English as follows:
+
+> _"Pool balance decrease must match the percentage of shares being withdrawn"_
+
+And mathematically like this:
+
+$$\dfrac{\text{balanceDecrease}}{\text{totalBalance}} = \dfrac{\text{sharesWithdrawn}}{\text{totalShares}}$$
+
+To express this as an assertion, we can declare that withdrawals must decrease the pool's balance proportionally.
+If someone withdraws 10% of shares, the pool balance should decrease accordingly.
+
+```solidity
+function assertionWithdrawalProportionality() external {
+
+    // Get all pending withdrawal transactions
+    PhEvm.CallInputs[] memory withdrawals = ph.getCallInputs(
+        address(hub),
+        IBunniHub.withdraw.selector
+    );
+
+    // For each withdrawal transaction:
+
+    // Get pool state before withdrawal
+    ph.forkPreCall(withdrawals[i].id);
+    uint256 totalSupplyBefore = hub.bunniTokenOfPool(poolId).totalSupply();
+    uint256 activeBalance0Before = hub.getPoolBalance(poolId, 0);
+
+    // Get pool state after withdrawal
+    ph.forkPostCall(withdrawals[i].id);
+    uint256 totalSupplyAfter = hub.bunniTokenOfPool(poolId).totalSupply();
+    uint256 activeBalance0After = hub.getPoolBalance(poolId, 0);
+
+    // This is the invariant - check that the token balance decrease
+    // is proportional to the shares burned
+    require(
+        actualBalance0Decrease <= expectedBalance0Decrease + tolerance0 &&
+        actualBalance0Decrease >= expectedBalance0Decrease - tolerance0,
+        "Token0 active balance decrease not proportional to shares burned"
+    );
+}
+```
+
+<Note>This code is truncated for simplicity; read on for [the full explanation on how the Bunni hack](/assertions-book/previous-hacks/bunni-xyz-rounding-error.mdx) could have been prevented with an assertion.</Note>
+
+A proportionality assertion that ensures balance decreases match the share burns would have prevented this $8.4M loss in September 2025.
+
+Now that we understand how invariants are selected and written as assertions, let's dive into how the network node decides to include or drop a transaction.
+
+## Network Enforcement of Assertions
+
+Now that we have our assertion and the target contract that triggers it, we have to let the network sidecar know the contract should be protected by the provided assertion. We call this submitting the assertion for enforcement.
+
+As seen in the diagram below, the dapp submits the assertions to the Credible Layer Smart Contracts. These smart contracts are the source of truth and supply the sidecar with the relevant assertion when a transaction interacts with a protected contract:
+
+![Submitting assertions for enforcement](/images/overview-step-2.png)
+
+### How Enforcement Works
+
+A network node running Phylax's sidecar system does not care _how_ a transaction violates the protocol's rule. All that matters is _whether_ the [assertion](/credible/glossary#assertion) returns true or false after the transaction. If the assertion returns false, the node drops the transaction before it can be included in a block.
+
+You can read the full technical flow in [Architecture](/credible/architecture-overview).
+
+To illustrate it better, when a user opens a position on a yield protocol, the transaction touches multiple contracts:
+
+![A single transaction can interact with multiple contracts](/images/phylax-multi-contract-interaction.png)
+
+Each contract that has assertions is checked by the sidecar, which simulates the cumulative end states in the PhEVM:
+
+![Each contract with assertions is checked by the sidecar](/images/phylax-assertion-checking.png)
+
+### Assertion Validation
+
+Once the transaction is sent by the user, it is seen by the network node. The node then passes it to the sidecar to check if the transaction's final state would violate an [assertion](/credible/glossary#assertion) in a separate replica environment called the [PhEVM](/credible/glossary#phevm-phylax-evm). When completed, the sidecar returns the result to the node so it can include or drop the transaction. This validation process never exceeds the time to produce a block.
+
+In other words, the transaction will be included into the block only if every assertion across all touched contracts evaluates to true. If even one assertion fails, the network node will see this failed assertion and exclude it from finalization.
+
+While the core concept remains the same across all networks (validate transactions against assertions before finalization), the exact architecture depends on the underlying technology stack.
+For example, on OP Stack chains, validation is implemented as part of an external block builder that integrates via [Rollup-Boost](https://docs.optimism.io/builders/chain-operators/features/rollup-boost).
+The key takeaway: the Credible Layer adapts to each network's architecture while maintaining the same security guarantees.
+
+For network-specific implementation details, see the [Architecture documentation](/credible/architecture-overview).
+
+Continue reading in technical detail in [Architecture](/credible/architecture-overview).
+
+<Note>
+The Credible Layer is designed as neutral middleware that preserves decentralization for both dApps and networks. Learn more about [why neutrality matters](/credible/neutrality).
+</Note>
+
+## Use Cases
+
+[Assertions](/credible/glossary#assertion) open up a wide range of use cases, some that aren't even possible in pure Solidity:
+
+1. **Parameter Protection**: Prevent unauthorized changes to critical protocol parameters such as owner and implementation addresses
+2. **Market Integrity**: Ensure market prices don't move beyond specified thresholds inside of a single transaction
+3. **Lending Protocol Safety**: Guarantee lending positions maintain the required collateralization ratios
+4. **Oracle Monitoring**: Verify oracle prices stay within specified ranges to detect price manipulation
+5. **Total Balance Invariants**: Ensure that the sum of all positions match the total balance of a protocol
+
+For concrete examples and implementations, explore the [Assertions Book](/assertions-book/assertions-book-intro).
+
+## Next Steps
+
+Ready to dive deeper?
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="gears" href="/credible/architecture-overview">
+    Technical deep dive into system architecture and transaction flow
+  </Card>
+  <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
+    Write and deploy your first assertion
+  </Card>
+  <Card title="Assertions" icon="diagram-project" href="/credible/assertions-overview">
+      How assertions work and how to write them
+  </Card>
+  <Card title="FAQ" icon="circle-question" href="/credible/faq">
+    Common questions about the Credible Layer
+  </Card>
+</CardGroup>

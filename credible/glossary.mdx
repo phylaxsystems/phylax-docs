@@ -13,7 +13,7 @@ See the [Introduction](/credible/credible-introduction) for a comprehensive over
 ### Assertion
 A smart contract that verifies specific properties or behaviors of other smart contracts. Assertions are the fundamental building blocks of the Credible Layer, used to enforce security properties and invariants.
 
-Learn how to write assertions in the [Assertion Guide](/credible/pcl-assertion-guide).
+Learn more: [What are Assertions?](/credible/assertions-overview) | [Assertion Guide](/credible/pcl-assertion-guide)
 
 ### Protocol Invariants
 Critical conditions or properties that must always be maintained within a protocol, such as ensuring total assets ≥ total liabilities or maintaining specific ownership rules. These invariants can be:
@@ -44,6 +44,16 @@ The web application interface for interacting with the Credible Layer. It allows
 ### Transparency Dashboard
 A tool that allows users to view and browse all assertions deployed by different protocols, providing visibility into their security posture.
 
+### Sidecar
+A software architecture pattern where a component runs alongside the main application without modifying it. The Credible Layer operates as a sidecar to the network's sequencer, intercepting and validating transactions during the block building process. This allows the Credible Layer to add assertion validation capabilities without requiring changes to the core network code.
+
+See the [Architecture documentation](/credible/architecture-overview#abstract-overview) for implementation details.
+
+### Network Validator (Node)
+The network infrastructure component responsible for processing transactions, building blocks, and maintaining blockchain consensus. In L2 networks, this is typically the sequencer. The Credible Layer integrates with the network validator through a sidecar to validate transactions against assertions before block inclusion.
+
+Related terms: [Sequencer](/credible/glossary#sequencer), [Block Builder](/credible/glossary#block-builder)
+
 ## Assertion Components
 
 ### Trigger
@@ -52,17 +62,17 @@ A function that determines when an assertion should be executed. Triggers are re
 - Storage Triggers: Execute on storage changes
 - Balance Triggers: Execute on ETH balance changes
 
-See the [Cheatcodes Reference](/credible/cheatcodes) for detailed information about different trigger types.
+See the [Cheatcodes Reference](/credible/cheatcodes-reference) for detailed information about different trigger types.
 
 ### Pre-state/Post-state
 Snapshots of the blockchain state captured before and after a transaction. These states are used by assertions to verify changes and enforce properties. The ability to compare pre and post states enables assertions to detect and prevent transactions that would result in undesired state changes.
 
-See the [Cheatcodes Reference](/credible/cheatcodes) for information about `forkPreState` and `forkPostState`.
+See the [Cheatcodes Reference](/credible/cheatcodes-reference) for information about `forkPreState` and `forkPostState`.
 
 ### State Changes
 Modifications to contract storage that occur during transaction execution. These can be tracked and verified using the Credible Layer's state change tracking capabilities, allowing assertions to monitor and prevent unauthorized modifications.
 
-See the [Cheatcodes Reference](/credible/cheatcodes) for state tracking functions.
+See the [Cheatcodes Reference](/credible/cheatcodes-reference) for state tracking functions.
 
 ### Callstack
 The sequence of function calls that occur during a transaction's execution. PCL's ability to inspect state changes across the entire callstack is a powerful feature that enables assertions to:
@@ -71,7 +81,7 @@ The sequence of function calls that occur during a transaction's execution. PCL'
 - Detect unauthorized changes in deeply nested calls
 - Enforce invariants that span multiple contract boundaries
 
-See the [Cheatcodes Reference](/credible/cheatcodes) for callstack inspection capabilities.
+See the [Cheatcodes Reference](/credible/cheatcodes-reference) for callstack inspection capabilities.
 
 ### Assertion Bytecode
 The compiled form of an assertion contract that is stored in the Assertion DA and executed by the PCL network.
@@ -103,7 +113,7 @@ The Phylax smart contract library that provides the base contracts and utilities
 ### Cheatcodes
 Special precompiles (similar to Ethereum's native precompiles) that provide additional capabilities for state manipulation, forking, and assertion management in the PhEVM environment. These are accessed through the credible-std library.
 
-See the [Cheatcodes Reference](/credible/cheatcodes) for a complete list of available cheatcodes and their usage.
+See the [Cheatcodes Reference](/credible/cheatcodes-reference) for a complete list of available cheatcodes and their usage.
 
 ### Test Environment
 The PCL testing interface that extends Forge's testing capabilities with additional utilities specifically for testing assertions. It provides functions for adding assertions and validating transactions, making it easier to test assertion behavior in different scenarios.

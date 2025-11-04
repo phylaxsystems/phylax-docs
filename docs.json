@@ -20,25 +20,60 @@
               "credible/credible-introduction",
               "credible/credible-install",
               "credible/pcl-quickstart",
-              "credible/dapp-guide",
-              "credible/faq"
+              "credible/credible-layer-overview"
             ]
           },
           {
-            "group": "Credible Layer",
+            "group": "Architecture",
+            "pages": [
+              "credible/architecture-overview",
+              "credible/architecture-op-stack",
+              "credible/neutrality"
+            ]
+          },
+          {
+            "group": "Assertions",
+            "pages": [
+              "credible/assertions-overview",
+              "credible/cheatcodes-overview",
+              "credible/triggers",
+              {
+                "group": "Testing",
+                "pages": [
+                  "credible/testing-assertions",
+                  "credible/fuzz-testing",
+                  "credible/backtesting",
+                  "credible/ci-cd-integration"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "dApp",
+            "pages": [
+              "credible/dapp-overview",
+              "credible/ownership-verification"
+            ]
+          },
+          {
+            "group": "Guides",
             "pages": [
               "credible/pcl-assertion-guide",
-              "credible/testing-assertions",
-              "credible/cheatcodes",
-              "credible/architecture",
-              "credible/assertion-patterns",
-              "credible/advanced-testing-assertions",
-              "credible/ownership-verification",
-              "credible/pcl-reference-guide",
-              "credible/credible-std-overview",
-              "credible/glossary",
+              "credible/dapp-guide",
               "credible/generate-assertions-with-ai"
             ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "credible/cheatcodes-reference",
+              "credible/pcl-reference-guide",
+              "credible/credible-std-overview"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": ["credible/glossary", "credible/faq"]
           },
           {
             "group": "Use Case Mapping",
@@ -72,16 +107,17 @@
             "group": "Assertions",
             "pages": [
               {
+                "group": "Real World Protocols",
+                "pages": [
+                  "assertions-book/assertions/aave-v3-suite",
+                  "assertions-book/assertions/optimism-fma-suite"
+                ]
+              },
+              {
                 "group": "General Use Cases",
                 "pages": [
                   "assertions-book/assertions/use-cases-index",
-                  {
-                    "group": "Real World Protocols",
-                    "pages": [
-                      "assertions-book/assertions/aave-v3-suite",
-                      "assertions-book/assertions/optimism-fma-suite"
-                    ]
-                  },
+
                   {
                     "group": "Access Control & Administrative Changes",
                     "pages": [
@@ -146,7 +182,7 @@
                 ]
               },
               {
-                "group": "Previous Hacks Assertions",
+                "group": "Previous Hacks",
                 "pages": [
                   "assertions-book/previous-hacks/prev-hacks-index",
                   "assertions-book/previous-hacks/hack1-radiant-capital",

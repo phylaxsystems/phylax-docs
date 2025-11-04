@@ -1,0 +1,87 @@
+---
+title: 'Triggers'
+description: 'Understanding assertion triggers and how to use them effectively'
+---
+
+Triggers determine when assertions should execute. Using the right triggers ensures your assertions run only when necessary, saving gas and computational resources while maintaining security guarantees.
+
+## Why Use Triggers?
+
+It is important to use triggers to make sure that assertions are only called when they are needed in order to save gas and resources. For example, it is a waste to trigger an assertion on every call to a contract if the assertion is only checking a value that can only be changed by a specific function. In this case it would make sense to use a trigger that only triggers on calls to the specific function or updates to the specific storage slot of the value.
+
+## Trigger Types
+
+Different triggers provide different guarantees and should be chosen based on the specific invariant you're trying to enforce.
+
+### Storage Change Triggers
+
+Storage change triggers are ideal when you need to monitor specific storage slots for changes, regardless of what function caused the change. This is useful when:
+
+- You want to check if a specific value is changed by any transaction
+- You don't care which functions trigger the changes
+- You need to catch all modifications to a particular storage slot
+
+**Example:**
+```solidity
+function triggers() external view override {
+    // Register trigger for changes to the owner storage slot
+    registerStorageChangeTrigger(this.assertOwnerChange.selector, bytes32(uint256(0))); // Assuming owner in slot 0
+}
+```
+
+### Call Input Triggers
+
+Call input triggers are useful when you need to monitor specific function calls. This is ideal when:
+
+- You only want to run assertions when specific functions are called
+- You need to verify behavior of particular protocol operations
+- You want to check function parameters and their effects
+
+**Example:**
+```solidity
+function triggers() external view override {
+    // Register our assertion function to be called when transferOwnership is called
+    registerCallTrigger(this.assertionOwnershipChange.selector, Ownable.transferOwnership.selector);
+}
+```
+
+## Best Practices
+
+### Choose the Right Trigger
+
+Consider what state changes your assertion monitors:
+
+- **Use storage triggers** when monitoring specific storage slots
+- **Use call triggers** when monitoring specific function calls
+- Consider the trade-off between coverage and efficiency
+
+### Optimize for Performance
+
+- Be as specific as possible with your triggers
+- Avoid triggering on every transaction when a specific function/storage trigger suffices
+- Multiple assertions with specific triggers are often better than one assertion with a broad trigger
+
+### Coverage Considerations
+
+While triggers optimize performance, ensure they don't create gaps in your security coverage:
+
+- Document which scenarios trigger your assertions
+- Consider edge cases where state changes might occur through unexpected paths
+- Test with various transaction patterns to verify trigger behavior
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Assertions Overview" icon="shield" href="/credible/assertions-overview">
+    Learn about assertions and how they work
+  </Card>
+  <Card title="Cheatcodes Reference" icon="book" href="/credible/cheatcodes-reference">
+    Complete API reference for trigger registration
+  </Card>
+  <Card title="Assertions Book" icon="book-open" href="/assertions-book/assertions-book-intro">
+    Real-world assertion examples and implementations
+  </Card>
+  <Card title="Testing Assertions" icon="flask" href="/credible/testing-assertions">
+    How to test your assertions and triggers
+  </Card>
+</CardGroup>

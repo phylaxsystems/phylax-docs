@@ -1,289 +1,71 @@
 ---
 title: 'Introduction'
-description: 'What is the Phylax Credible Layer?'
+description: 'Get started with the Phylax Credible Layer'
 ---
-
-# The Phylax Credible Layer
 
 The Credible Layer is a network extension that enables apps to define security rules and prevents transactions from violating them.
 
-<Columns cols={2}>
-  <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
-    Get started with the Credible Layer in minutes.
-  </Card>
-  <Card title="Assertions Book" icon="book" href="/assertions-book/assertions-book-intro">
-    See concrete assertion examples and previous hacks.
-  </Card>
-</Columns>
-
-If you prefer visual learning over reading text, watch this introductory video for a comprehensive overview:
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/J7uPS1ruR04?si=GkQEASccP6BHoPGt" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
-## Key Benefits
+## Choose Your Path
+
+<CardGroup cols={2}>
+  <Card title="Credible Layer Overview" icon="compass" href="/credible/credible-layer-overview">
+    Non-technical introduction to how Phylax prevents exploits in real-time. Perfect for business leaders, investors, and anyone new to the Credible Layer.
+  </Card>
+  <Card title="Architecture" icon="gears" href="/credible/architecture-overview">
+    Technical deep dive into the system architecture, transaction flow, and assertion validation. For developers and technical decision makers.
+  </Card>
+  <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
+    Get started with the Credible Layer in minutes. Write and deploy your first assertion using the `pcl` CLI.
+  </Card>
+  <Card title="Assertions Book" icon="book" href="/assertions-book/assertions-book-intro">
+    Browse concrete assertion examples and learn how the Credible Layer would have prevented previous hacks.
+  </Card>
+</CardGroup>
+
+## Key Benefits of the Credible Layer
 
 ### For dApps
 
-- **Network-Native, Rule-Based Security**: Every transaction that violates your rules is removed by the network at the sequencer level. This deterministic approach means there are no false positives
-- **Easy to Use**: Written in Solidity, with foundry-like syntax, assertions are just like an in-contract require statement, but faster and more expressive. With no contract modifications or downtime during implementation
-- **Transparent Security**: All active assertions are public and verifiable. Users can inspect the exact rules protecting their funds, and developers can fork proven rule sets from similar protocols
+- **Network-Native, Rule-Based Security**: Every transaction that violates your rules is removed by the network at the sequencer level with zero false positives
+- **Easy to Use**: Written in Solidity with foundry-like syntax, assertions require no contract modifications or downtime during implementation
+- **Transparent Security**: All active assertions are public and verifiable by users and auditors
 
 ### For Networks
 
-- **No Lock-In**: Once integrated, the Credible Layer runs natively as part of your network infrastructure - no external services required, no ongoing vendor risk
-- **No throughput degradation**: Assertions are executed in parallel during sequencing. We tested a 30 megagas/s and we ran 1 gigagas/s of assertions.
-- **Attract Institutional Capital**: Reduce the probability of a hack and provide easily auditable security rules, enabling more risk-averse institutions to LP
+- **No Lock-In**: Runs natively as part of your network infrastructure with no external dependencies
+- **No Throughput Degradation**: Assertions execute in parallel during sequencing without impacting block times
+- **Attract Institutional Capital**: Reduce hack probability and provide auditable security rules for risk-averse institutions
 
-## How It Works
+### For Users
 
-The Credible Layer consists of four key components working together:
+- **Visible Protection**: See exactly which protocols are protected and by what rules through the Transparency Dashboard
+- **Provable Security**: Verify the specific security guarantees protecting your funds
+- **Confidence**: Deploy capital knowing malicious transactions are prevented before they can execute
 
-1. **Assertions**: Security rules written in Solidity that define states that should never occur (e.g., "implementation address shouldn't change", "price reported by oracle shouldn't deviate more than x% inside of a single transaction").
-2. **Protocols**: Protocols that define assertions for their contracts and link them on-chain.
-3. **Block Builders/Sequencers**: The network infrastructure that validates every transaction against assertions before inclusion in a block, dropping any that would violate security rules.
-4. **Transparency Dashboard**: A platform where users can see which protocols are protected and how, creating a focal point for ecosystem security.
+## Quick Links
 
-## User Flow
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/credible/credible-install">
+    Set up your development environment and install the pcl CLI tool.
+  </Card>
+  <Card title="FAQ" icon="circle-question" href="/credible/faq">
+    Find answers to common questions about the Credible Layer.
+  </Card>
+  <Card title="Credible Layer dApp" icon="browser" href="/credible/dapp-overview">
+    Learn about the Credible Layer dApp for managing assertions and exploring projects.
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/credible/architecture-overview">
+    Explore network-specific implementation details and system architecture.
+  </Card>
+</CardGroup>
 
-The protocol has three target users. They can use the Credible Layer in the following ways:
+## Community & Support
 
-1. **Protocol Teams**:
-    - Install the `pcl` CLI tool
-    - Write assertions in Solidity to protect their protocol
-    - Test assertions locally using `pcl test`
-    - Register assertions to contracts through the Credible Layer dApp
-    - Monitor security posture through the dashboard
-2. **End Users**:
-    - View which protocols have Credible Layer protection through the dashboard
-    - Verify the specific security rules protecting your funds
-    - Confidently deploy their capital, knowing that malicious transactions that would result in exploits are prevented
-3. **Network Operators**:
-    - Run a sidecar alongside your sequencer
-    - Configure integration with your infrastructure provider
-    - All transactions will automatically be validated against registered assertions
+Have questions or want to connect with the Phylax community?
 
-## Transaction Flow
-
-1. **Transaction Submission**: User submits a transaction to the network.
-2. **Mempool Entry**: Transaction enters the mempool for processing.
-3. **Transaction Validation**: The system performs basic transaction validation (signature, nonce, gas, etc.).
-4. **Assertion Validation**: The system validates the transaction against registered [Assertions](/credible/glossary#assertion):
-    - Identifies which assertions apply to the contracts the transaction interacts with
-    - Fetches [Assertion Bytecode](/credible/glossary#assertion-bytecode) from the [Assertion DA](/credible/glossary#assertion-da-data-availability)
-    - The [PhEVM](/credible/glossary#phevm-phylax-evm) simulates transaction execution and creates [pre-transaction state](/credible/glossary#pre-statepost-state) and [post-transaction state](/credible/glossary#pre-statepost-state) snapshots
-    - Executes all relevant assertions against these states
-    - Returns validation result:
-        - If any assertion reverts (invalid state), the transaction is flagged as invalid
-        - If all assertions pass, the transaction is considered valid
-5. **Inclusion Decision**: The validation system makes inclusion decisions:
-    - Invalid transactions are rejected and not included in the block
-    - Valid transactions are included in the block
-6. **Block Finalization**: The validated block is finalized and added to the blockchain.
-
-The diagram below shows how transactions flow through the system components:
-
-```mermaid
----
-title: General Transaction Flow
----
-flowchart TD
-    TX["Transaction Submission"] -->|"1"| MP["Mempool Entry"]
-    MP -->|"2"| TV["Transaction Validation"]
-
-    TV -->|"3"| AV["Assertion Validation"]
-
-    AV -->|"4a"| INVALID["Transaction Invalid"]
-    AV -->|"4b"| VALID["Transaction Valid"]
-
-    INVALID -->|"5a"| REJECT["Reject Transaction"]
-    VALID -->|"5b"| INCLUDE["Include in Block"]
-
-    INCLUDE -->|"6"| FINAL["Block Finalization"]
-
-    classDef step fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
-    classDef validation fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
-    classDef valid fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
-    classDef invalid fill:#d32f2f,stroke:#b71c1c,stroke-width:2px,color:#fff
-
-    class TX,MP,TV,FINAL step
-    class AV validation
-    class VALID,INCLUDE valid
-    class INVALID,REJECT invalid
-```
-
-### Assertion Validation Detail
-
-The diagram below shows what happens inside the Assertion Validation step:
-
-```mermaid
----
-title: Assertion Validation Detail
----
-flowchart LR
-    TX["Transaction"]
-    STATE1["Pre-Transaction State<br/>(State1)"]
-
-    subgraph simulation["EVM Simulation"]
-        EVM["Execute Transaction"]
-    end
-
-    STATE2["Post-Transaction State<br/>(State2)"]
-
-    subgraph validation["PhEVM Assertion Validation"]
-        PhEVM["Validate Against Assertions"]
-    end
-
-    ASSERTIONS["Registered Assertions"]
-    RESULT["Valid/Invalid"]
-
-    TX --> EVM
-    STATE1 --> EVM
-    EVM --> STATE2
-
-    TX -.-> PhEVM
-    STATE1 -.-> PhEVM
-    STATE2 -.-> PhEVM
-    ASSERTIONS --> PhEVM
-
-    PhEVM --> RESULT
-
-    classDef state fill:#e91e63,stroke:#880e4f,stroke-width:2px,color:#fff
-    classDef evm fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
-    classDef phevm fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
-    classDef assertions fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
-    classDef tx fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
-    classDef result fill:#ffa726,stroke:#e65100,stroke-width:2px,color:#fff
-
-    class STATE1,STATE2 state
-    class EVM evm
-    class PhEVM phevm
-    class ASSERTIONS assertions
-    class TX tx
-    class RESULT result
-```
-
-Ultimately, if a transaction would result in a hack, if the contract is protected by the Credible Layer, the transaction will be dropped. If the contract is not protected, the transaction will be included in the block.
-
-**Now you're probably thinking that forced inclusion transactions are not caught by the Credible Layer...
-Well, think again! We have found a way to handle this and are actively working on implementing it.**
-
-## System Components
-
-### Core Infrastructure
-
-- **Assertion Enforcer (Sidecar)**
-    - Custom block builder implementation that operates as a sidecar
-    - Integrates with the sequencer without requiring sequencer code modifications
-    - Orchestrates the validation process by:
-        - Identifying which assertions apply to incoming transactions
-        - Invoking PhEVM to execute the assertions against transaction states
-        - Making inclusion/exclusion decisions based on assertion results
-    - Builds blocks that exclude any transactions violating assertions
-    - Handles forced inclusion transactions with special mitigation pathways
-    - **PhEVM (Phylax EVM) - the execution arm of the sidecar**
-        - Executes assertion bytecode in an isolated off-chain environment
-        - Supports special [cheatcodes](/credible/cheatcodes) (precompiles) for efficient state access and comparison
-        - Can simulate both pre-transaction and post-transaction states
-        - Evaluates assertions in parallel to maximize throughput
-- **Assertion Data Availability (Assertion DA)**
-    - Compiles and stores assertion source code and bytecode securely
-    - Provides assertion code to block builders for enforcement
-    - Enables transparency by making assertions publicly available
-- **Credible Layer Protocol**
-    - Smart contract that manages the on-chain registry of assertions
-    - Maps assertions to protected contracts
-    - Handles assertion registration, updates, and deactivation
-    - Supports proof verification for mitigation triggers
-    - Maintains security parameters and protocol metadata
-
-```mermaid
----
-title: High Level System Architecture
----
-flowchart TD
-    subgraph l2["L2 Network"]
-        TX["Transaction"]
-        BB["Block Builder"]
-        BC["Blockchain"]
-    end
-
-    subgraph cl["Credible Layer (Sidecar)"]
-        AS["Assertion DA"]
-        AV["Assertion Enforcer"]
-        PhEVM["PhEVM"]
-    end
-
-    subgraph dev["Developer Tools"]
-        CLI["pcl CLI"]
-        dApp["Credible dApp"]
-    end
-
-    TX --> BB
-    BB --> AV
-    AV --> PhEVM
-    PhEVM --> AS
-    AS --> AV
-    AV --> |Valid| BB
-    AV --> |Invalid| TX
-    BB --> BC
-
-    CLI --> dApp
-    dApp --> AS
-
-    classDef l2 fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
-    classDef cl fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
-    classDef dev fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
-
-    class TX,BB,BC l2
-    class AS,AV,PhEVM cl
-    class CLI,dApp dev
-```
-
-The diagram above shows the high-level architecture and how all system components interact.
-
-## Regulatory Compliance and Neutrality
-
-*Neutrality is critical. It determines who controls the system. Who controls the system decides how the system is regulated.*
-
-As middleware, the Credible Layer extends network capabilities without introducing new trust assumptions. Protocols define security rules through existing governance channels, and networks enforce these rules through existing mechanisms.
-
-Networks can remove the Credible Layer anytime and still execute their core functionality. dApps can remove (or add) assertions anytime, and the system passes the off-switch test.
-
-By avoiding centralized control points, this architecture preserves decentralization for both dApps and networks.
-
-Policymakers are becoming increasingly aware of decentralization and see its value. Systems that quietly rely on centralized emergency controls for security risk falling on the wrong side of laws meant to capture decentralized-in-name-only projects.
-
-Non-neutral solutions ultimately create new centralized control points: AI providers can change detection algorithms, and SaaS companies can modify security policies.
-
-This matters because security solutions should optimally not add additional trust assumptions/risks, and they should not centralize the systems they serve.
-
-### Developer Tools
-
-- **Credible Layer dApp**: User interface for protocols to register and manage assertions
-    - **Transparency Dashboard:** The part of the dApp that shows every project's assertions and other security measures to end users. These users can use these proofs to eliminate the blind trust that most use to make allocation decisions today.
-- **`pcl` CLI**: Command-line tool for writing, testing, and deploying assertions
-- **`credible-std`**: Standard library exposing cheatcodes and testing functionality for writing and testing assertions
-
-![Credible Layer dApp](/images/credible-dapp-ui-project.png)
-*Screenshot of the Credible Layer dApp UI for a project*
-
-## Use Cases
-
-Assertions open up a wide range of use cases, some that aren't even possible in pure Solidity. Here are a few examples:
-
-1. **Parameter Protection**: Prevent unauthorized changes to critical protocol parameters such as owner and implementation addresses.
-2. **Market Integrity**: Ensure market prices don't move beyond specified thresholds inside of a single transaction.
-3. **Lending Protocol Safety**: Guarantee lending positions maintain the required collateralization ratios.
-4. **Oracle Monitoring**: Verify oracle prices stay within specified ranges to detect price manipulation.
-5. **Total Balance Invariants**: Ensure that the sum of all positions match the total balance of a protocol.
-
-Explore more use cases in the [Assertions Book](/assertions-book/assertions-book-intro).
-
-## Next Steps
-
-Ready to get started with the Phylax Credible Layer? Explore these resources:
-
-- [Installation Guide](/credible/credible-install) - Set up your development environment and install `pcl`
-- [Quickstart Guide](/credible/pcl-quickstart) - Write and deploy your first assertion using the Credible Layer
-- [Cheatcodes](/credible/cheatcodes) - Detailed reference for assertion functions and capabilities
-- [FAQ](/credible/faq) - Answers to common questions about the Credible Layer
+- Join our [Telegram](https://t.me/phylax_credible_layer)
+- Follow us on [X/Twitter](https://x.com/phylaxsystems)
+- Explore our [GitHub](https://github.com/phylaxsystems)
+- Visit the [Phylax Website](https://phylax.systems)

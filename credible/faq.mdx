@@ -3,9 +3,11 @@ title: 'Frequently Asked Questions (FAQ)'
 description: 'Common questions about the Phylax Credible Layer'
 ---
 
-Welcome to the Phylax Credible Layer FAQ! Here you'll find answers to common questions about the Credible Layer's 
-features, capabilities, and usage. If you can't find what you're looking for, please reach out in 
+Welcome to the Phylax Credible Layer FAQ! Here you'll find answers to common questions about the Credible Layer's
+features, capabilities, and usage. If you can't find what you're looking for, please reach out in
 our [Telegram](https://t.me/phylax_credible_layer).
+
+---
 
 ## General Questions
 
@@ -14,12 +16,20 @@ The Credible Layer is a network extension that enables apps to define security r
 
 These rules are defined in Solidity, executed off-chain, and enforced on-chain. Since these rules are verifiable, apps can turn implicit security assumptions into an explicit security posture using our transparency dashboard so that users can trust the apps they use.
 
+**Learn More:**
+- [Credible Layer Overview](/credible/credible-layer-overview) - Non-technical introduction
+- [Architecture](/credible/architecture-overview) - Technical deep dive
+
 ### Why do I need the Credible Layer when I can write rules in my contracts?
 There are several key advantages:
 
 1. **Off-chain Execution**: Rules that would be too expensive or impossible to express on-chain due to gas costs and limits can be implemented easily as assertions as they are run off-chain. Our current benchmarks show around 1000x efficiency gains.
 2. **Simpler Security Model**: By writing invariants that define a state to prevent instead of every edge case that would lead there, you simplify and strengthen your protocol. If you are confused about what an invariant is, read on 👇🏻
 3. **No Redeployment, downtime or APIs**: Add new security rules without modifying your existing contracts. You can even add rules to immutable contracts. To learn how this is possible read the [How do you extend the validation logic of the sequencer to the dApp?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-dapp) section below.
+
+**Learn More:**
+- [Credible Layer Overview - Use Cases](/credible/credible-layer-overview#use-cases)
+- [Architecture - System Components](/credible/architecture-overview#system-components)
 
 ### How does the Credible Layer differ from other security approaches?
 The Credible Layer offers several key advantages:
@@ -30,15 +40,33 @@ The Credible Layer offers several key advantages:
 4. **Transparent Enforcement**: Public, verifiable Solidity rules rather than opaque algorithms
 5. **Instant Deployment**: Add new protections without contract modifications, downtime, or governance votes
 
+**Learn More:**
+- [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
+- [Architecture - Assertion Validation](/credible/architecture-overview#assertion-validation-process)
+
 ### What's the difference between assertions and traditional audits?
-While audits provide point-in-time code reviews, the Credible Layer offers continuous protection via the sequencer actively validating every transaction that interacts with your contracts against your assertions. 
+While audits provide point-in-time code reviews, the Credible Layer offers continuous protection via the sequencer actively validating every transaction that interacts with your contracts against your assertions.
+
+**Learn More:**
+- [Writing Assertions Guide](/credible/pcl-assertion-guide)
+- [Assertions Book](/assertions-book/assertions-book-intro)
 
 ### What is the transparency dashboard?
 The transparency dashboard is a tool that allows anyone to view and browse all assertions deployed by different protocols.
 It is a useful tool for end users as they can verify the security guarantees of any protocol, while devs can use it to copy assertions from protocols with similar contracts.
 
+**Learn More:**
+- [dApp Guide](/credible/dapp-guide)
+- [Glossary - Transparency Dashboard](/credible/glossary#transparency-dashboard)
+
 ### Is the Credible Layer a SaaS protocol?
-No. We are a permissionless protocol that enables hack definition and prevention. No APIs for dApps. No points of failure. No additional trust assumptions. 
+No. We are a permissionless protocol that enables hack definition and prevention. No APIs for dApps. No points of failure. No additional trust assumptions.
+
+**Learn More:**
+- [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
+- [Architecture](/credible/architecture-overview)
+
+---
 
 ## Technical Details
 
@@ -58,6 +86,12 @@ Common examples include:
 - Significant price movements
 - Violation of core protocol invariants
 - Complex cross-contract validations
+
+**Learn More:**
+- [Writing Assertions Guide](/credible/pcl-assertion-guide)
+- [Assertions Book](/assertions-book/assertions-book-intro)
+- [Glossary - Assertion](/credible/glossary#assertion)
+- [Assertions Book](/assertions-book/assertions-book-intro)
 
 ### What are invariants and why are they important?
 
@@ -80,6 +114,11 @@ While invariants define what should always be true, assertions give you the prac
 
 For a good explainer on invariants see [this article](https://blog.trailofbits.com/2025/02/12/the-call-for-invariant-driven-development/)
 
+**Learn More:**
+- [Credible Layer Overview - Why Use Invariants](/credible/credible-layer-overview#why-use-invariants)
+- [Glossary - Protocol Invariants](/credible/glossary#protocol-invariants)
+- [Assertions Book](/assertions-book/assertions-book-intro)
+
 ### How do assertions work?
 
 Although assertions are stored on-chain for transparency's sake, assertions are run off-chain through the PhEVM (Phylax EVM) by the sequencer for performance reasons and can:
@@ -90,13 +129,23 @@ Although assertions are stored on-chain for transparency's sake, assertions are 
 4. Analyze transaction patterns
 5. Enforce protocol-wide invariants
 
+**Learn More:**
+- [Architecture - Assertion Validation Process](/credible/architecture-overview#assertion-validation-process)
+- [Architecture - Transaction Flow](/credible/architecture-overview#transaction-flow)
+- [Glossary - PhEVM](/credible/glossary#phevm-phylax-evm)
+
 ### What are cheatcodes and how do they help?
 
-Cheatcodes are special functions provided by the PhEVM that give assertions powerful capabilities 
+Cheatcodes are special functions provided by the PhEVM that give assertions powerful capabilities
 beyond standard Solidity.
 
-For detailed documentation and examples of all available cheatcodes, see our 
-[Cheatcodes Reference Guide](/credible/cheatcodes).
+For detailed documentation and examples of all available cheatcodes, see our
+[Cheatcodes Reference Guide](/credible/cheatcodes-reference).
+
+**Learn More:**
+- [Cheatcodes Reference](/credible/cheatcodes-reference)
+- [credible-std Overview](/credible/credible-std-overview)
+- [Glossary - Cheatcodes](/credible/glossary#cheatcodes)
 
 ### How do I edit assertions?
 
@@ -107,11 +156,21 @@ Editing an assertion is straightforward:
 2. Deploy new assertion and point it to the contract you're protecting
 3. Enable new assertion
 
+**Learn More:**
+- [dApp Guide](/credible/dapp-guide)
+- [CLI Reference Guide](/credible/pcl-reference-guide)
+
 ### Can I copy assertions from other protocols?
-Yes, you can copy and adapt assertions from other protocols and use them to protect your own protocol. 
-You should make sure that the assertions are compatible with your protocol. 
+Yes, you can copy and adapt assertions from other protocols and use them to protect your own protocol.
+You should make sure that the assertions are compatible with your protocol.
 It will make the most sense to copy assertions for standard libraries and interfaces.
 You will be able to see all assertions deployed by other protocols on the transparency dashboard.
+
+**Learn More:**
+- [Assertions Book](/assertions-book/assertions-book-intro)
+- [dApp Guide - Transparency Dashboard](/credible/dapp-guide)
+
+---
 
 ## Implementation and Adoption
 
@@ -120,58 +179,104 @@ You will be able to see all assertions deployed by other protocols on the transp
 2. Allows valid transactions to proceed
 3. Filters out transactions that violate assertions
 
+**Learn More:**
+- [Architecture](/credible/architecture-overview)
+- [Architecture - Transaction Flow](/credible/architecture-overview#transaction-flow)
+- [Glossary - Sequencer](/credible/glossary#sequencer)
+
 ### How does the Credible Layer work with decentralized sequencers?
 - **Enshrine assertions** as part of state transition function or fork-choice rule, making them integral to the protocol.
 - **Credible sequencers** that mark blocks as safe by running invariants and posting attestations on-chain, ensuring safety without compromising performance
+
+**Learn More:**
+- [Architecture - Abstract Overview](/credible/architecture-overview#abstract-overview)
 
 ### How are forced included transactions handled for OP Stack Rollups?
 
 The solution is currently in development. Ask us about it!
 
+**Learn More:**
+- [Glossary - Forced Inclusion Transactions](/credible/glossary#forced-inclusion-transactions)
+
 ### Does the Credible Layer introduce new trust assumptions or centralization points?
 
-No. For single-sequencer L2s, users/dApps already trust the sequencer with transaction inclusion, because, in theory, a sequencer can censor transactions arbitrarily when it receives them at the RPC layer. 
+No. For single-sequencer L2s, users/dApps already trust the sequencer with transaction inclusion, because, in theory, a sequencer can censor transactions arbitrarily when it receives them at the RPC layer.
 The Credible Layer simply extends the sequencer's validation logic with dApp-defined rules, expressed as Assertions (EVM bytecode).
+
+**Learn More:**
+- [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
+- [Architecture](/credible/architecture-overview)
 
 ### Is this a form of censorship?
 
 The Credible Layer simply lets dApps define assertions that can prevent certain states regardless of the contract code. These assertions should be thought of as an addition to the dApps' core contracts. It would be censorship if a 3rd party (anyone other than the dApp) could write assertions for a dApp's contracts. This is not how the Credible Layer works, and hence this is not censorship. Read more about this in [Can anyone write assertions for my contracts?](#can-anyone-write-assertions-for-my-contracts?) below.
 
+**Learn More:**
+- [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
+- [Ownership Verification](/credible/ownership-verification)
+
 ### Does the Credible Layer slow down the network?
 
 No. We have performed worst-case stress tests, using the most inefficient operations available (hashing), to execute assertions worth 1bn gas per block without slowing down the block time. This is because the Credible Layer heavily parallelizes execution and can fully utilize CPU cores compared to standard serial execution of transactions.
 
+**Learn More:**
+- [Architecture - PhEVM](/credible/architecture-overview#phevm-phylax-evm)
+- [Architecture](/credible/architecture-overview)
+
 ### How do you extend the validation logic of the sequencer to the dApp?
 
-For OP stack chains, Flashbots introduced a piece of software that enables a sequencer to have an external block-builder that implements custom block-building logic, without changing the sequencer itself. This is also what powers Flashblocks. 
+For OP stack chains, Flashbots introduced a piece of software that enables a sequencer to have an external block-builder that implements custom block-building logic, without changing the sequencer itself. This is also what powers Flashblocks.
 
-For other chains, the exact implementation varries but generally follows the following architecture: 
+For other chains, the exact implementation varries but generally follows the following architecture:
 
 Our custom block builder enables the sequencer to check each transaction against assertions defined by the dApp.
-This requires no changes to contracts as it is effectively middleware. 
+This requires no changes to contracts as it is effectively middleware.
+
+**Learn More:**
+- [Architecture - OP Stack Implementation](/credible/architecture-op-stack)
+- [Glossary - Block Builder](/credible/glossary#block-builder)
 
 ### Can anyone write assertions for my contracts?
 
-Anyone can write the assertions, but only the owner of the contract that the assertions protect can “activate” them. 
-This way, we ensure that no malicious third party reduces functionality by writing assertions for your contract. 
+Anyone can write the assertions, but only the owner of the contract that the assertions protect can "activate" them.
+This way, we ensure that no malicious third party reduces functionality by writing assertions for your contract.
+
+**Learn More:**
+- [Ownership Verification](/credible/ownership-verification)
+- [dApp Guide](/credible/dapp-guide)
 
 ### My protocol doesn't support the owner interface, can I still use the Credible Layer?
 
 We are working on more authentication techniques to service dApps with non-traditional ownership architectures. Reach out!
+
+**Learn More:**
+- [Ownership Verification](/credible/ownership-verification)
 
 ### How can you write rules for immutable contracts?
 
 As mentioned above in [How do you extend the validation logic of the sequencer to the dApp?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-dapp), the Credible Layer is functionally middleware as it enables the sequencer to remove transactions that would break the dApp's rules.
 The Credible Layer will still work with immutable contracts because the prevention happens at the sequencing step, which is where the L2 has ultimate power over transaction inclusion, whether or not they come from immutable contracts.
 
+**Learn More:**
+- [Architecture - Abstract Overview](/credible/architecture-overview#abstract-overview)
+- [Architecture - High-Level Architecture](/credible/architecture-overview#how-the-credible-layer-works)
+
 ### What are the ramifications of writing rules for supposedly immutable contracts?
 
-Short answer: We don't know. 
+Short answer: We don't know.
 
 But here is what we think: If there *is* an owner it communicates that the protocol wants to have some power over the contracts.
-That is why we only allow only the owners of contracts to write assertions. 
+That is why we only allow only the owners of contracts to write assertions.
 
 We will use timelocks on protocols with immutable contracts as many of the users may be using that protocol because it is immutable and would not want to use it any longer if there is anything resembling censorship, even if it is defined and executed by the dApp itself.
+
+**Learn More:**
+- [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
+- [Ownership Verification](/credible/ownership-verification)
+
+---
+
+## Practical Questions
 
 ### What are some example use cases for assertions?
 1. **DeFi Protection**
@@ -190,6 +295,11 @@ We will use timelocks on protocols with immutable contracts as many of the users
    - Validate bridge transactions
    - Enforce protocol dependencies
 
+**Learn More:**
+- [Credible Layer Overview - Use Cases](/credible/credible-layer-overview#use-cases)
+- [Assertions Book](/assertions-book/assertions-book-intro)
+- [Previous Hacks Examples](/assertions-book/previous-hacks/prev-hacks-index)
+
 ### How do I test my assertions?
 
 Testing assertions is similar to standard Forge testing, with additional Credible Layer-specific features:
@@ -205,3 +315,11 @@ Testing assertions is similar to standard Forge testing, with additional Credibl
    - Verify assertion behavior across different scenarios
 
 For detailed examples and testing patterns, see our [Testing Guide](/credible/testing-assertions).
+
+**Learn More:**
+- [Testing Assertions](/credible/testing-assertions)
+- [Fuzz Testing](/credible/fuzz-testing)
+- [CI/CD Integration](/credible/ci-cd-integration)
+- [Backtesting](/credible/backtesting)
+- [Assertions Book](/assertions-book/assertions-book-intro)
+- [Quickstart Guide](/credible/pcl-quickstart)
