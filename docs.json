@@ -200,7 +200,8 @@
                   "assertions-book/previous-hacks/abracadabra-hack-3",
                   "assertions-book/previous-hacks/vicuna-finance-hack",
                   "assertions-book/previous-hacks/bunni-xyz-rounding-error",
-                  "assertions-book/previous-hacks/uxlink-multisig-hack"
+                  "assertions-book/previous-hacks/uxlink-multisig-hack",
+                  "assertions-book/previous-hacks/balancer-v2-stable-rate-exploit"
                 ]
               }
             ]
