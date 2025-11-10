@@ -2,6 +2,12 @@
 
 This repository contains the official documentation for Phylax's products.
 
+## Requirements
+
+- Install `mise`
+- Install node, pnpm via `mise install`
+- Install `mintlify CLI` via `pnpm install`
+
 ## Documentation Structure
 
 ### Credible Layer (`/credible`)
