@@ -6,7 +6,7 @@ This repository contains the official documentation for Phylax's products.
 
 - Install `mise`
 - Install node, pnpm via `mise install`
-- Install `mintlify CLI` via `pnpm install`
+- Install `mintlify CLI` via `pnpm add -g mint`
 
 ## Documentation Structure
 
