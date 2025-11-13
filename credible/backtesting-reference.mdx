@@ -242,17 +242,28 @@ struct BacktestingResults {
 
 **Interpreting Results:**
 
-Check `results.assertionFailures == 0` to ensure no protocol violations were detected. If this value is non-zero, you either have a false positive or the assertion correctly identified an undesired state.
+The `assertionFailures` field indicates how many transactions triggered assertion reverts. Since backtesting runs against historical transactions, non-zero values most commonly indicate false positives in your assertion logic rather than actual exploits.
 
 ```solidity
-// Check for protocol violations
-assert(results.assertionFailures == 0, "Found protocol violations!");
+// Check results
+if (results.assertionFailures > 0) {
+    console.log("Assertion failures detected:", results.assertionFailures);
+    console.log("Review assertion logic for false positives or gas issues");
+}
 
 // Log detailed results
 console.log("Total transactions:", results.totalTransactions);
 console.log("Successful validations:", results.successfulValidations);
 console.log("Failed validations:", results.failedValidations);
 ```
+
+**Common Causes of Assertion Failures:**
+- **False positives:** Assertion logic incorrectly flags legitimate protocol behavior (most common)
+- **Gas limit exceeded:** Assertion ran out of gas (300k limit) during complex operations
+- **Assertion bugs:** Logic errors in the assertion code
+- **Known exploits:** If testing against historical exploit blocks, failures may be expected
+
+See the [Understanding Results](/credible/backtesting#understanding-results) section in the Backtesting Guide for detailed information on all result categories.
 
 ## Example Configurations
 
