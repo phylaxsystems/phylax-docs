@@ -5,24 +5,22 @@ description: Test assertions against historical blockchain transactions
 
 Backtesting runs your assertions against actual historical transactions from a specified block range. This helps ensure your assertions work correctly with real transaction patterns and don't trigger false positives on legitimate protocol operations.
 
-## RPC Call Requirements
-
-Backtesting makes RPC calls in two phases:
-
-1. **Transaction Fetching**: 1 RPC call per block using `eth_getBlockByNumber`
-2. **Transaction Validation**: 1 RPC call per transaction that triggers the assertion (via `vm.createSelectFork`)
-
-**Example for 100 blocks:**
-- If 100 blocks contain 50 transactions that trigger your assertion:
-  - Fetching phase: 100 RPC calls
-  - Validation phase: 50 RPC calls
-  - **Total: 150 RPC calls**
-
-The tool processes blocks in parallel batches (default: 20 blocks per batch, 10 concurrent requests) to optimize performance while respecting RPC rate limits.
-
 <Note>
-For larger block ranges (>1,000 blocks), consider using paid RPC providers to avoid rate limiting issues.
+If you're looking for the reference documentation on all configuration parameters, see the [Backtesting Reference](/credible/backtesting-reference).
 </Note>
+
+## How It Works
+
+Backtesting operates in two phases:
+
+1. **Transaction Fetching**: Identifies all transactions to the target contract in the block range
+2. **Transaction Validation**: Replays each transaction with your assertion enabled
+
+The tool fetches transactions using one of two methods:
+- **trace_filter API** (recommended): Single RPC call for the entire block range, detects internal calls
+- **Block scanning**: One RPC call per block, detects only direct calls
+
+For validation, the tool forks the EVM at each transaction to the target contract and replays it against the specified assertion.
 
 ## Example
 
@@ -36,15 +34,19 @@ import {MyAssertion} from "../assertions/src/MyAssertion.a.sol";
 
 contract MyBacktestingTest is CredibleTestWithBacktesting {
     function testHistoricalTransactions() public {
-        // Execute backtesting with one function call
-        BacktestingTypes.BacktestingResults memory results = executeBacktest({
-            targetContract: 0x5fd84259d66Cd46123540766Be93DFE6D43130D7, // USDC on Optimism Sepolia
-            endBlock: 31336940, // Latest block to test
-            blockRange: 20, // Number of blocks to test (start at `latest block - blockRange`)
-            assertionCreationCode: type(MyAssertion).creationCode, // Bytecode for assertion contract
-            assertionSelector: MyAssertion.assertionInvariant.selector, // Function selector to trigger
-            rpcUrl: "https://sepolia.optimism.io" // RPC URL endpoint
-        });
+        BacktestingTypes.BacktestingResults memory results = executeBacktest(
+            BacktestingTypes.BacktestingConfig({
+                targetContract: 0x5fd84259d66Cd46123540766Be93DFE6D43130D7, // USDC on Optimism Sepolia
+                endBlock: 31336940, // Latest block to test
+                blockRange: 20, // Number of blocks to test
+                assertionCreationCode: type(MyAssertion).creationCode,
+                assertionSelector: MyAssertion.assertionInvariant.selector,
+                rpcUrl: "https://sepolia.optimism.io",
+                detailedBlocks: false,
+                useTraceFilter: true,
+                forkByTxHash: false
+            })
+        );
 
         // Check results
         assert(results.assertionFailures == 0, "Found protocol violations!");
@@ -52,69 +54,174 @@ contract MyBacktestingTest is CredibleTestWithBacktesting {
 }
 ```
 
-Unlike regular tests, backtesting extends `CredibleTest`, so you need to inherit from `CredibleTestWithBacktesting` instead of `CredibleTest`. From here it's straightforward to write tests that run against historical transactions. The `executeBacktest` function returns a `BacktestingTypes.BacktestingResults` struct that contains the results of the backtest.
+Backtesting tests inherit from `CredibleTestWithBacktesting` instead of `CredibleTest`. The `executeBacktest` function returns results in a `BacktestingTypes.BacktestingResults` struct.
 
 <Tip>
-Consider excluding the backtesting from your CI/CD pipeline as it can take a long time to run. Backtesting should be run manually on demand to increase confidence in your assertions before a deployment.
+Consider excluding backtesting from your CI/CD pipeline as it can take time to run. Run backtesting manually on demand to increase confidence in your assertions before deployment.
 </Tip>
 
-## Running Backtesting Tests
+## Common Configurations
 
-You can specify the RPC URL either as an environment variable or as a parameter:
+### Large Block Ranges (100+ blocks)
+
+```solidity
+BacktestingTypes.BacktestingConfig({
+    targetContract: TARGET_CONTRACT,
+    endBlock: LATEST_BLOCK,
+    blockRange: 100,
+    assertionCreationCode: type(MyAssertion).creationCode,
+    assertionSelector: MyAssertion.assertionInvariant.selector,
+    rpcUrl: vm.envString("MAINNET_RPC_URL"),
+    detailedBlocks: false,
+    useTraceFilter: true,   // Fast fetching
+    forkByTxHash: false     // Fast validation
+})
+```
+
+Expected runtime: ~20 seconds for 100 blocks with 28 transactions
+
+### Debugging Failures
+
+```solidity
+BacktestingTypes.BacktestingConfig({
+    targetContract: TARGET_CONTRACT,
+    endBlock: FAILING_BLOCK,
+    blockRange: 5,  // Small range around failure
+    assertionCreationCode: type(MyAssertion).creationCode,
+    assertionSelector: MyAssertion.assertionInvariant.selector,
+    rpcUrl: vm.envString("MAINNET_RPC_URL"),
+    detailedBlocks: false,
+    useTraceFilter: true,
+    forkByTxHash: true      // Exact state for debugging
+})
+```
+
+Use this when investigating why a specific transaction failed. The `forkByTxHash: true` setting replays all prior transactions to get the exact state just before execution.
+This is disabled by default, since it uses significantly more RPC calls and hence is slower. It is recommended to use this setting when debugging failures for concentrated block intervals.
+
+### Quick Tests (< 20 blocks)
+
+```solidity
+BacktestingTypes.BacktestingConfig({
+    targetContract: TARGET_CONTRACT,
+    endBlock: RECENT_BLOCK,
+    blockRange: 10,
+    assertionCreationCode: type(MyAssertion).creationCode,
+    assertionSelector: MyAssertion.assertionInvariant.selector,
+    rpcUrl: vm.envString("MAINNET_RPC_URL"),
+    detailedBlocks: false,
+    useTraceFilter: false,  // Simple method sufficient
+    forkByTxHash: false
+})
+```
+
+For small ranges, the simpler block scanning method is adequate.
+
+### Testing Against a Specific Transaction
+
+When you want to test your assertion against a specific known transaction (such as a historical exploit), set `blockRange: 1` with the block number containing that transaction:
+
+```solidity
+BacktestingTypes.BacktestingConfig({
+    targetContract: BALANCER_V2_VAULT,
+    endBlock: 23717632,     // Block containing the exploit transaction
+    blockRange: 1,          // Only test this single block
+    assertionCreationCode: type(BatchSwapDeltaAssertion).creationCode,
+    assertionSelector: BatchSwapDeltaAssertion.assertionBatchSwapRateManipulation.selector,
+    rpcUrl: vm.envString("MAINNET_RPC_URL"),
+    detailedBlocks: false,
+    useTraceFilter: true,
+    forkByTxHash: true
+})
+```
+
+This is particularly useful for:
+- Validating that your assertion catches known exploits
+- Testing edge cases found in production
+- Verifying assertion behavior on specific problematic transactions
+
+<Tip>
+See the [Balancer V2 Rate Manipulation Exploit](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit) for a real-world example of using backtesting to verify an assertion catches a historical exploit transaction.
+</Tip>
+
+## Understanding Results
+
+When backtesting completes, transactions are categorized into different result types to help you quickly identify issues:
+
+### Result Categories
+
+**PASS** - Assertion passed successfully
+- Transaction replayed and assertion validated without errors
+- **Recommended Action:** None - everything is working as expected
+
+**NEEDS_REVIEW** - Transaction requires review
+- Transaction either called a function not monitored by your assertion, or failed to replay in the test environment
+- Common causes:
+  - **Function mismatch:** Assertion monitors `batch()` but transaction called `call()`
+  - **State dependencies:** Transaction depends on earlier transactions in the same block
+  - **Context requirements:** Transaction requires specific block state that isn't present when forking at block level
+- **Recommended Action:**
+  - If many transactions show this status, enable `forkByTxHash: true` to fork at exact transaction state
+  - Review to ensure your assertion is triggering on the correct function
+- **Note:** These are NOT assertion violations - they're informational and indicate transactions that either aren't relevant to your assertion or fail before the assertion is executed due to wrong configuration of the backtest
+
+**ASSERTION_FAIL** - Assertion reverted
+- Your assertion reverted when validating this transaction
+- **Most Common Causes:**
+  - **False positive:** Your assertion logic incorrectly flags legitimate protocol behavior (most common)
+  - **Gas limit exceeded:** Assertion ran out of gas (300k limit)
+  - **Assertion bug:** Logic error in your assertion code
+  - **Known exploit:** If testing against a historical exploit block, this is expected behavior
+- **Recommended Action:**
+  - Check if the transaction is a known exploit - if so, this confirms your assertion works correctly
+  - Review your assertion logic to ensure it properly handles this transaction pattern
+  - Check if the assertion is running out of gas and needs optimization
+  - Verify the transaction on a block explorer to understand what it does
+
+**UNKNOWN_ERROR** - Unexpected failure
+- An error occurred that doesn't fit other categories
+- May indicate RPC issues, assertion bugs, or unexpected contract behavior
+- **Recommended Action:** Check the error message and retry; if persistent, [file a bug report](https://github.com/phylaxsystems/credible-std/issues).
+
+### Reading the Summary
+
+At the end of each backtest run, you'll see a summary like:
+
+```text
+==========================================
+           BACKTESTING SUMMARY
+==========================================
+Block Range: 23697580 - 23697590
+Total Transactions: 15
+Processed Transactions: 15
+Successful Validations: 10
+Failed Validations: 5
+
+=== ERROR BREAKDOWN ===
+Protocol Violations (Assertion Failures): 1
+Needs Review (Selector Mismatch or Prestate Issues): 4
+
+Success Rate: 66%
+================================
+```
+
+## Running Tests
 
 ```bash
 # Set RPC URL environment variable
-export RPC_URL="https://sepolia.optimism.io"
+export RPC_URL="YOUR_RPC_URL"
 
 # Run backtesting tests
 pcl test --ffi --match-test testHistoricalTransactions
-
-# With RPC URL in the command
-pcl test --ffi --match-test testHistoricalTransactions --rpc-url https://sepolia.optimism.io
 ```
 
 <Note>
-Backtesting requires the `--ffi` flag to enable foreign function interface for RPC calls. It can take quite some time to fetch old transactions and run the tests, so start out with small block ranges until you are confident everything is set up properly and then expand to larger ranges.
+The `--ffi` flag is required to enable foreign function interface for RPC calls.
 </Note>
-
-## API Reference
-
-```solidity
-function executeBacktest(
-    address targetContract,             // Contract to test assertions against
-    uint256 endBlock,                   // Latest block to test (works backwards)
-    uint256 blockRange,                 // Number of blocks to test
-    bytes memory assertionCreationCode, // Bytecode for assertion contract
-    bytes4 assertionSelector,           // Function selector to trigger
-    string memory rpcUrl                // RPC URL endpoint (use if rpcUrl is not set in the environment)
-) public returns (BacktestingTypes.BacktestingResults memory results)
-```
-
-### BacktestingResults
-
-The `BacktestingResults` struct contains the results of the backtest:
-
-```solidity
-/// @notice Enhanced backtesting results with detailed categorization
-struct BacktestingResults {
-    uint256 totalTransactions;      // Total number of transactions for the defined contract in the block range
-    uint256 processedTransactions;  // Number of transactions checked against the assertion (excluding skipped)
-    uint256 successfulValidations;  // Transactions that did not revert the assertion
-    uint256 failedValidations;      // Transactions that reverted the assertion
-    uint256 assertionFailures;      // Real protocol violations
-    uint256 unknownErrors;          // Unexpected failures (e.g. RPC errors, transaction failures etc.)
-}
-```
-
-You can use these results to check for various outcomes and most importantly ensure that no assertions are reverting.
-
-<Tip>
-Start with a small block range to test your assertion logic, then expand to larger ranges once you're confident in the results.
-</Tip>
 
 ## Foundry Configuration
 
-Backtesting requires FFI (Foreign Function Interface) to be enabled in your Foundry profile. You can add a dedicated profile for backtesting:
+Enable FFI in your Foundry profile:
 
 ```toml
 [profile.backtest-assertions]
@@ -125,22 +232,25 @@ libs = ["lib"]
 solc = "0.8.29"
 optimizer = true
 optimizer_runs = 200
-ffi = true  # Required for backtesting
+ffi = true # To avoid setting --ffi in the test command
 ```
 
 <Tip>
-See [CI/CD Integration](/credible/ci-cd-integration#foundry-profile-configuration) for complete Foundry profile configuration including unit tests, fuzz tests, and backtesting profiles.
+See [CI/CD Integration](/credible/ci-cd-integration#foundry-profile-configuration) for complete Foundry profile configuration.
 </Tip>
 
 ## Best Practices
 
-1. **Start small** - Test with 10-20 blocks first, then scale up
-2. **Use paid RPC providers** - For larger ranges to avoid rate limits
-3. **Check assertion failures** - `results.assertionFailures` should be 0
-4. **Run before deployment** - Catch false positives on real transactions
-5. **Manual testing** - Don't include in CI/CD to avoid long runs
+1. **Start small** - Test with 10-20 blocks first to verify your setup
+2. **Use trace_filter** - Set `useTraceFilter: true` if your RPC provider supports it
+3. **Keep forkByTxHash false** - Enable if assertions are reverting and might be affected by txs earlier in a block
+4. **Use paid RPC providers** - For block ranges over 1,000
+5. **Check assertion failures** - Ensure `results.assertionFailures == 0`
+6. **Run before deployment** - Catch false positives on real transactions
+7. **Run manually** - Exclude from CI/CD to avoid long test runs
 
 **Learn More:**
+- [Backtesting Reference](/credible/backtesting-reference) - Complete configuration details
 - [Testing Assertions](/credible/testing-assertions) - Basic testing guide
 - [Fuzz Testing](/credible/fuzz-testing) - Test with random inputs
-- [Backtesting Examples](https://github.com/phylaxsystems/credible-std/tree/master/test/backtesting)
+- [Balancer V2 Rate Manipulation Exploit](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit)
