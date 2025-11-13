@@ -144,6 +144,69 @@ This is particularly useful for:
 See the [Balancer V2 Rate Manipulation Exploit](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit) for a real-world example of using backtesting to verify an assertion catches a historical exploit transaction.
 </Tip>
 
+## Understanding Results
+
+When backtesting completes, transactions are categorized into different result types to help you quickly identify issues:
+
+### Result Categories
+
+**PASS** - Assertion passed successfully
+- Transaction replayed and assertion validated without errors
+- **Recommended Action:** None - everything is working as expected
+
+**NEEDS_REVIEW** - Transaction requires review
+- Transaction either called a function not monitored by your assertion, or failed to replay in the test environment
+- Common causes:
+  - **Function mismatch:** Assertion monitors `batch()` but transaction called `call()`
+  - **State dependencies:** Transaction depends on earlier transactions in the same block
+  - **Context requirements:** Transaction requires specific block state that isn't present when forking at block level
+- **Recommended Action:**
+  - If many transactions show this status, enable `forkByTxHash: true` to fork at exact transaction state
+  - Review to ensure your assertion is triggering on the correct function
+- **Note:** These are NOT assertion violations - they're informational and indicate transactions that either aren't relevant to your assertion or fail before the assertion is executed due to wrong configuration of the backtest
+
+**ASSERTION_FAIL** - Assertion reverted
+- Your assertion reverted when validating this transaction
+- **Most Common Causes:**
+  - **False positive:** Your assertion logic incorrectly flags legitimate protocol behavior (most common)
+  - **Gas limit exceeded:** Assertion ran out of gas (300k limit)
+  - **Assertion bug:** Logic error in your assertion code
+  - **Known exploit:** If testing against a historical exploit block, this is expected behavior
+- **Recommended Action:**
+  - Check if the transaction is a known exploit - if so, this confirms your assertion works correctly
+  - Review your assertion logic to ensure it properly handles this transaction pattern
+  - Check if the assertion is running out of gas and needs optimization
+  - Verify the transaction on a block explorer to understand what it does
+
+**UNKNOWN_ERROR** - Unexpected failure
+- An error occurred that doesn't fit other categories
+- May indicate RPC issues, assertion bugs, or unexpected contract behavior
+- **Recommended Action:** Check the error message and retry; if persistent, [file a bug report](https://github.com/phylaxsystems/credible-std/issues).
+
+### Reading the Summary
+
+At the end of each backtest run, you'll see a summary like:
+
+```text
+==========================================
+           BACKTESTING SUMMARY
+==========================================
+Block Range: 23697580 - 23697590
+Total Transactions: 15
+Processed Transactions: 15
+Successful Validations: 10
+Needs Review: 4
+Failed Validations: 1
+
+=== ERROR BREAKDOWN ===
+Protocol Violations (Assertion Failures): 1
+Transactions Needing Review: 4
+
+Success Rate: 66%
+!!! PROTOCOL VIOLATIONS DETECTED: 1
+==========================================
+```
+
 ## Running Tests
 
 ```bash
