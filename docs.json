@@ -59,6 +59,7 @@
             "group": "Guides",
             "pages": [
               "credible/pcl-assertion-guide",
+              "credible/cli-overview",
               "credible/dapp-guide",
               "credible/generate-assertions-with-ai"
             ]
@@ -68,7 +69,7 @@
             "pages": [
               "credible/cheatcodes-reference",
               "credible/backtesting-reference",
-              "credible/pcl-reference-guide",
+              "credible/cli-reference",
               "credible/credible-std-overview"
             ]
           },
