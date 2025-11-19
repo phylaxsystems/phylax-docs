@@ -28,7 +28,7 @@ The Credible Layer is a **sidecar security infrastructure** that validates every
 
 ### Sidecar Architecture
 
-The sidecar pattern allows the Credible Layer to:
+The sidecar design allows the Credible Layer to:
 - **Operate independently** from the main L2 infrastructure
 - **Validate transactions** without modifying core L2 code
 - **Scale separately** from the main network components
@@ -255,7 +255,7 @@ Smart contracts that manage the on-chain assertion registry:
 
 User interface for protocols to register and manage [assertions](/credible/glossary#assertion):
 
-- **[Transparency Dashboard](/credible/glossary#transparency-dashboard)**: Shows every project's assertions and security measures to end users, eliminating blind trust in allocation decisions
+- **[Transparency Dashboard](/credible/glossary#transparency-dashboard)**: Provides visibility into project security measures
 - OAuth-based authentication for assertion submission
 - Project and assertion management interface
 
@@ -283,11 +283,11 @@ Standard library exposing [cheatcodes](/credible/glossary#cheatcodes) and testin
 
 See the [`credible-std` reference](/credible/credible-std-overview) for details.
 
-## Implementation Approaches
+## Network Integrations
 
-The Credible Layer can be implemented on different networks using various architectural patterns. The core concepts remain the same, but implementation details vary by network architecture.
+The Credible Layer can be implemented on different networks using various architectures. The core concepts remain the same, but implementation details vary by network architecture.
 
-### Rollup-Boost Pattern
+### Rollup-Boost Architecture
 - Block builder that integrates assertion enforcement directly
 - Uses external sidecar components to integrate with the L2 sequencer
 - Minimal changes to L2 node code
@@ -297,42 +297,6 @@ The core concept remains the same across all implementations: the Credible Layer
 
 For specific implementation details, see:
 - [OP Stack Implementation](/credible/architecture-op-stack)
-
-## User Flows
-
-The Credible Layer serves three primary user groups:
-
-### Protocol Teams
-
-1. Install the `pcl` CLI tool
-2. Write assertions in Solidity to protect their protocol
-3. Test assertions locally using `pcl test`
-4. Register assertions to contracts through the Credible Layer dApp
-5. Monitor security posture through the dashboard
-
-### End Users
-
-1. View which protocols have Credible Layer protection through the dashboard
-2. Verify the specific security rules protecting their funds
-3. Confidently deploy capital, knowing malicious transactions that would result in exploits are prevented
-
-### Network Operators
-
-1. Run the Assertion Enforcer sidecar alongside your sequencer
-2. Configure integration with your infrastructure (see network-specific implementations)
-3. All transactions will automatically be validated against registered assertions
-
-## Network-Specific Implementations
-
-The Credible Layer can be implemented on different networks using various architectural patterns. The core concepts remain the same, but implementation details vary by network architecture.
-
-For detailed network-specific implementation information:
-- [OP Stack Implementation](/credible/architecture-op-stack)
-- Future network integrations (coming soon)
-
-# Stage 2 Architecture
-
-Stage 2 will be dedicated to solving forced inclusion in L2 networks. We have a solution in development to address this, and more information will be provided as the design and implementation mature.
 
 ---
 
