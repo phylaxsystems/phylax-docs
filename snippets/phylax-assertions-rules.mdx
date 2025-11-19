@@ -148,6 +148,12 @@ contract ProtocolAssertion is Assertion {
 
 - `ph.getAssertionAdopter()` - Get the contract being protected
 
+#### Console Logs
+
+- `import { console } from "credible-std/console.sol";` - Import the console library
+- `console.log(string memory message)` - Log a string to the console
+- You can use a string concatenation library like `Strings.toString` to log complex values
+
 ### Constructor Usage
 
 - **Prefer `ph.getAssertionAdopter()` over constructors** for getting the protected contract address
@@ -447,6 +453,9 @@ function testAssertionPasses() public {
 - Avoid expensive operations in loops
 - Use early returns for basic checks
 - Monitor gas usage with `pcl test`
+- Be aware that the logs show the evm gas usage and the assertion gas usage, but they are not the same.
+- Assertion gas limit is 300k.
+- If assertion gas limit is exceeded, the assertion will revert with OutOfGas error.
 
 ### Call Input Double-Counting
 
@@ -501,7 +510,7 @@ require(condition, "Specific invariant violation description");
 
 ### Gas Optimization
 
-- Assertions have 100k gas limit per assertion function - aim to stay under this limit
+- Assertions have 300k gas limit per assertion function
 - Check basic invariants first (fail fast)
 - Use early returns for simple checks
 - Avoid expensive operations in loops
@@ -536,19 +545,7 @@ The same goes for the tests, make it clear which scenario a given test covers.
 
 ### Console Logging
 
-```solidity
-import {console} from "forge-std/console.sol";
-import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
-
-function assertionFunction() external {
-    // Use string concatenation since console.log only accepts strings
-    console.log(string.concat("Pre-state value: ", Strings.toString(someValue)));
-    ph.forkPreTx();
-
-    ph.forkPostTx();
-    console.log(string.concat("Post-state value: ", Strings.toString(someValue)));
-}
-```
+Use `console.log` to log debug information to the console during testing with `pcl test`.
 
 ### Gas Monitoring
 
@@ -562,6 +559,7 @@ function assertionFunction() external {
 - Use console.log for debugging
 - Test with minimal examples
 - Verify function selectors match expected signatures
+- Write a test that doesn't use `cl.assertion` to mimic test behavior to verify if a problem is caused by the protocol function or the assertion function. Currently there is no good way to know if a revert happens because of the protocol function or the assertion function.
 
 ## Integration Guidelines
 
