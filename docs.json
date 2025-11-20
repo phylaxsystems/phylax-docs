@@ -28,6 +28,7 @@
             "pages": [
               "credible/architecture-overview",
               "credible/architecture-op-stack",
+              "credible/assertion-da",
               "credible/neutrality"
             ]
           },

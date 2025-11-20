@@ -29,6 +29,8 @@ A specialized EVM implementation that includes additional capabilities for asser
 ### Assertion DA (Data Availability)
 The data availability layer responsible for storing assertion code and metadata. This ensures that assertions are accessible and verifiable by anyone.
 
+Learn more: [Assertion Data Availability](/credible/assertion-da)
+
 ### Block Builder
 The component of the network that simulates transactions and runs assertions before transaction finalization to ensure they don't violate defined conditions.
 
@@ -87,6 +89,11 @@ See the [Cheatcodes Reference](/credible/cheatcodes-reference) for callstack ins
 The compiled form of an assertion contract that is stored in the Assertion DA and executed by the PCL network.
 
 See the [CLI Reference Guide](/credible/pcl-reference-guide) for build and store commands.
+
+### Assertion ID
+A unique identifier for an assertion, computed as the Keccak256 hash of the assertion's EVM bytecode. The assertion ID is used to reference assertions in the Credible Layer protocol and retrieve assertion bytecode from the Assertion DA.
+
+Learn more: [Assertion Data Availability](/credible/assertion-da#assertion-id)
 
 ### Assertion Adopter
 The contract that is being monitored by an assertion. This is the contract whose behavior the assertion is designed to verify.

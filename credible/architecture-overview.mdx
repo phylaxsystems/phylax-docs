@@ -87,7 +87,7 @@ flowchart LR
 
 The diagram above shows the Credible Layer at the **system level**. It illustrates two main flows:
 
-**Development Flow**: Developers use the `pcl` CLI to write and test assertions. The CLI stores assertion bytecode directly in Assertion DA, then submits to the Credible dApp with the assertion ID. The dApp registers these assertions in the on-chain Credible Layer contracts.
+**Development Flow**: Developers use the `pcl` to develop and test assertions. The `pcl` stores assertion bytecode directly in [Assertion DA](/credible/assertion-da), then submits to the Credible dApp with the assertion ID. The dApp registers these assertions in the on-chain Credible Layer contracts.
 
 **Runtime Flow**: The network validator sends transactions to the Assertion Enforcer sidecar during block production. The Assertion Enforcer fetches relevant assertions from Assertion DA and executes them via PhEVM. Crucially, **assertion validation happens during block production**, which means the Assertion Enforcer has access to the final transaction ordering. The sidecar returns validation results (valid/invalid) back to the network validator, which only includes valid transactions in blocks.
 
@@ -239,6 +239,8 @@ The execution arm of the Assertion Enforcer:
 - Compiles and stores assertion source code and bytecode securely
 - Provides assertion code to block builders for enforcement
 - Enables transparency by making assertions publicly available to users and auditors
+
+Learn more: [Assertion Data Availability](/credible/assertion-da)
 
 #### Credible Layer Protocol
 
