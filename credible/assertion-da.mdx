@@ -12,18 +12,28 @@ Assertion DA serves two primary functions:
 1. **Persistent Storage**: Maintains EVM bytecode of assertions in an accessible location
 2. **Integrity Verification**: Validates that on-chain assertion IDs match the Keccak256 hash of the actual assertion bytecode
 
-## Assertion ID
+## Key Concepts
+
+Before diving into how Assertion DA works, it's important to understand two key concepts: the Assertion ID and the DA Prover Signature.
+
+### Assertion ID
 
 The assertion ID is deterministically derived from the assertion bytecode:
 
 ```
-Assertion ID = Keccak256(Assertion_EVM_Bytecode)
+Assertion ID = Keccak256(Deployable_Assertion_EVM_Bytecode)
 ```
+
+Where `Deployable_Assertion_EVM_Bytecode` is the flattened smart contract code and the constructor arguments.
 
 This ensures:
 - Each unique assertion has a unique identifier
 - Assertion integrity can be verified by recomputing the hash
-- Invalid bytecode will fail execution deterministically, so no validation is needed at submission time
+- Incompatible bytecode will fail execution deterministically, so no validation is needed at submission time
+
+### Assertion DA Prover Signature
+
+The Assertion DA prover signature is generated and returned by Assertion DA as part of storing the assertion. This proof is used during on-chain registration of the assertion to guarantee that the assertion bytecode is available on Assertion DA.
 
 ## Current Implementation
 
@@ -33,9 +43,9 @@ The current implementation uses a centralized server operated by Phylax Systems:
 - **Access**: Publicly accessible for transparency and verification
 - **Integration**: Works with [`pcl`](/credible/glossary#pcl-cli) and the [Credible dApp](/credible/glossary#credible-dapp). See the [Architecture Overview](/credible/architecture-overview) for details.
 
-<Note>
-The Assertion DA is currently centralized. Decentralization is planned for future releases.
-</Note>
+<Warning>
+The Assertion DA is currently centralized. This means that if Assertion DA is unavailable, the Assertion Executor will eventually be unable to operate successfully. Decentralization is planned for H1 2026.
+</Warning>
 
 ## How It Works
 
@@ -48,15 +58,15 @@ pcl store MyAssertion
 ```
 
 `pcl` does the following:
-1. Compiles your assertion contract to EVM bytecode
-2. Uploads both bytecode and source code to Assertion DA
-3. Returns the assertion ID (Keccak256 hash of the bytecode)
+1. Compiles assertion contracts to EVM bytecode
+2. Uploads flattened source code and compiler options to Assertion DA
+3. Returns the assertion ID (Keccak256 hash of the bytecode) and DA prover signature
 
 Only the contract owner (the address returned by the contract's `owner()` function) can register, modify, or deactivate assertions for their contract. This is enforced on-chain by the Credible Layer smart contracts, which verify ownership before allowing any assertion management operations. During the early phase of the project, there is also a manual whitelist in place. Ownership verification will be expanded and improved in future versions to support additional ownership patterns and multisig integration. See [Ownership Verification](/credible/ownership-verification) for details.
 
 ### Retrieving Assertions
 
-Assertion Enforcers fetch assertions from the Assertion DA during transaction validation:
+Assertion Enforcers fetch assertions from Assertion DA during transaction validation:
 
 1. **Identify Relevant Assertions**: The system identifies which assertions apply to contracts in the transaction by querying the on-chain [Credible Layer Protocol](/credible/architecture-overview#credible-layer-protocol) registry
 2. **Fetch Bytecode**: Assertion Enforcers query Assertion DA using the assertion ID
@@ -71,7 +81,7 @@ The complete flow from assertion development to enforcement involves multiple st
 
 1. **Development**: Write and test assertions locally using `pcl`
 2. **Storage**: Store assertion bytecode in Assertion DA using `pcl store`, which returns the assertion ID
-3. **Registration**: Submit the assertion ID to the [Credible dApp](/credible/glossary#credible-dapp), which registers it in the on-chain Credible Layer smart contracts
+3. **Registration**: Deploy the assertion contract on-chain and submit the assertion ID to the provided project in the [Credible dApp](/credible/glossary#credible-dapp)
 4. **Linking**: Link the assertion to specific contract addresses that should be protected
 5. **Enforcement**: Assertion Enforcers fetch assertions from Assertion DA and execute them during block production
 
@@ -89,7 +99,7 @@ For a detailed view of how these components interact, see the [System Architectu
 
 The protocol intentionally omits bytecode validation because:
 - [PhEVM](/credible/glossary#phevm-phylax-evm) execution is deterministic
-- Invalid bytecode will consistently fail execution
+- Incompatible bytecode will consistently fail execution
 - This allows Assertion Enforcers to safely discard invalid assertions without verification overhead
 
 ## Security Considerations
@@ -101,22 +111,6 @@ The protocol intentionally omits bytecode validation because:
 **Transparency**: All assertions are publicly accessible, enabling users and auditors to verify security measures.
 
 **Incentive Alignment**: Invalid assertions only harm the developer who submitted them, as they will fail execution deterministically.
-
-## Technical Requirements
-
-### For Assertion Enforcers
-
-- Must maintain connection to Assertion DA
-- Must implement caching layer for active assertions
-- Must verify `Keccak256(bytecode) == AssertionID`
-- Must handle DA unavailability gracefully
-
-### For Developers
-
-- Use `pcl store` to upload assertions to Assertion DA
-- Assertion ID is automatically computed and returned
-- Source code is stored alongside bytecode for transparency
-- Assertion ID is used to submit assertions to the [Credible dApp](/credible/glossary#credible-dapp)
 
 ## Next Steps
 
