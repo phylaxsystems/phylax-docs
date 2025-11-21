@@ -42,20 +42,15 @@ Assertion:
 
 ```solidity
 contract ReadLogsAssertion is Assertion {
-    Protocol public protocol;
-
-    constructor(Protocol protocol_) {
-        protocol = protocol_;
-    }
+    mapping(address => int256) public balanceChanges;
+    address[] changedAddresses;
 
     function triggers() public view override {
         registerCallTrigger(this.assertionReadLogs.selector);
     }
 
-    mapping(address => int256) public balanceChanges;
-    address[] changedAddresses;
-
     function assertionReadLogs() public {
+        Protocol protocol = Protocol(ph.getAssertionAdopter());
         PhEvm.Log[] memory logs = ph.getLogs();
 
         for (uint256 i = 0; i < logs.length; i++) {
@@ -77,9 +72,9 @@ contract ReadLogsAssertion is Assertion {
         uint256 absDiff;
 
         for (uint256 i = 0; i < changedAddresses.length; i++) {
-            ph.forkPreState();
+            ph.forkPreTx();
             preBalance = protocol.balances(changedAddresses[i]);
-            ph.forkPostState();
+            ph.forkPostTx();
 
             if (balanceChanges[changedAddresses[i]] > 0) {
                 absDiff = uint256(balanceChanges[changedAddresses[i]]);
@@ -101,7 +96,7 @@ contract ReadLogsAssertion is Assertion {
     - Decode parameters using `abi.decode()` to reconstruct event arguments
 
 - **State verification:**
-    - Use `forkPreState()` and `forkPostState()` to compare states
+    - Use `forkPreTx()` and `forkPostTx()` to compare states
     - Validate state changes match expected behavior based on inputs
 
 - **State tracking considerations:**
