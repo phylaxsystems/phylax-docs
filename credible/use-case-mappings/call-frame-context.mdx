@@ -52,7 +52,7 @@ contract CallFrameContextAssertion is Assertion {
         // Get all transfer calls within the batchTransfer transaction
         PhEvm.CallInputs[] memory transferCalls = ph.getCallInputs(
             address(protocol),
-            Protocol.transfer.selector
+            protocol.transfer.selector
         );
 
         // Validate each transfer call individually
