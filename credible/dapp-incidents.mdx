@@ -1,0 +1,80 @@
+---
+title: 'Incidents'
+description: 'View incidents prevented by the Credible Layer'
+---
+
+Incidents show when transactions were blocked because they violated assertions protecting contracts. An **Incident Removal Event** occurs when a transaction that interacted with an assertion-protected contract was removed by the [Enforcer](/credible/glossary#assertion-enforcer) because it caused an assertion to fail.
+
+## Incidents View
+
+Access incidents from the **Incidents** tab in the dApp navigation bar. This shows a limited view of all incidents across all networks:
+
+- **Network**: Which network the incident occurred on
+- **Timestamp**: When the transaction was discarded
+- **Transaction Hash**: Hash of the removed transaction
+
+<Note>
+The Incidents tab is publicly accessible. Anyone can view this limited incident information.
+</Note>
+
+## Project Dashboard Incidents
+
+As a project owner, you can view detailed incidents for your projects in the project dashboard. See [Projects](/credible/dapp-projects) for information about accessing your project dashboard.
+
+View incidents in the **Recent Incidents** container on the project dashboard. Click on an incident to see:
+
+- **Transaction Object**: The full decoded transaction that was blocked (viewable as JSON)
+- **Assertion Group**: Which assertion group was involved
+- **Assertion Function**: The specific assertion function that was invalidated
+- **Transaction Hash**: The hash of the removed transaction
+
+<Note>
+Only project owners can view detailed incidents for their projects. Non-owners viewing a project see **events** (when contracts and assertions were added or removed), not incidents.
+</Note>
+
+### Real-Time Alerts
+
+When viewing your project dashboard as an authenticated project owner, incidents update in real time:
+
+- **Auto-Updating UI**: Components listing incidents automatically prepend newly received incidents to the list
+- **Toast Notifications**: A notification appears in the upper right corner stating "an incident for this project was received"
+- **Live Updates**: Real-time updates only occur when viewing that specific project as its authenticated manager
+
+**External Alerts**
+
+You can also set up external alerts via webhooks:
+
+- **Slack Integration**: Configure Slack webhooks to receive incident notifications in your Slack channels
+- **PagerDuty Integration**: Configure PagerDuty webhooks to receive incident notifications
+
+<Note>
+Detailed setup instructions for Slack and PagerDuty integrations will be available in a dedicated documentation page.
+</Note>
+
+## Use Cases
+
+- Monitor when assertions prevent violations for your projects
+- Understand attack patterns and attempted exploits targeting your protocol
+- Add or refine assertions based on incident data
+
+<Warning>
+Incident viewing is read-only. You cannot modify or delete incident records.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="dApp Overview" icon="info" href="/credible/dapp-overview">
+    Learn more about the dApp
+  </Card>
+  <Card title="Transparency Dashboard" icon="search" href="/credible/dapp-transparency-dashboard">
+    Browse projects and assertions
+  </Card>
+  <Card title="Writing Assertions" icon="code" href="/credible/pcl-assertion-guide">
+    Learn how to write effective assertions
+  </Card>
+  <Card title="Architecture" icon="gears" href="/credible/architecture-overview">
+    Understand how assertion validation works
+  </Card>
+</CardGroup>
+

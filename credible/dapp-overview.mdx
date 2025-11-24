@@ -1,62 +1,55 @@
 ---
 title: 'dApp Overview'
-description: 'Overview of the Credible Layer dApp features and capabilities'
+description: 'Overview of the Credible Layer dApp and its role in the Credible Layer stack'
 ---
 
-The Credible Layer dApp provides a comprehensive interface for managing smart contract projects and their associated assertions. It serves as the primary platform for developers and users to interact with the Credible Layer security infrastructure.
+The Credible Layer dApp is the interface for managing assertions and monitoring incidents. Protocol teams use it to create projects, link contracts, and associate assertions with their contracts. Users, investors, and researchers use it to review which assertions protect specific protocols.
 
-## Core Features
+When you create a project and link assertions through the dApp, those assertions are registered on-chain. Network validators use this registry to validate every transaction against your assertions before including them in blocks.
 
-### Project Explorer
+## Core Components
 
-The dApp's explorer feature enables anyone to search for and analyze projects and their associated assertions, creating transparency about which protocols are protected and how.
+### Transparency Dashboard
 
-**Key capabilities:**
-- Browse all projects on the Credible Layer
-- Search for specific projects by name or address
-- View detailed information about linked assertions for each project
-- Assess a project's security posture before interacting with it
+The [Transparency Dashboard](/credible/dapp-transparency-dashboard) provides public visibility into all projects and their assertions. Browse, search, and review which protocols are protected and how.
 
-![Explorer](/images/explorer_screenshot_dapp.png)
+### Projects
 
-This transparency allows users to make informed decisions about where to deploy capital, knowing exactly which security measures protect their funds.
+The [Projects](/credible/dapp-projects) interface enables protocol teams to create and manage projects, link contract addresses, and associate assertions with their contracts.
 
-### Project Management
+### Incidents
 
-For protocol teams, the dApp provides tools to create and manage projects:
+The [Incidents](/credible/dapp-incidents) page tracks assertion violations that were prevented, showing when transactions were blocked and which assertions caught them.
 
-**Creating Projects:**
-- Define project details (name, description, target chain)
-- Link contract addresses to your project
-- Ownership verification ensures only contract owners can manage projects
+## Authentication
 
-**Managing Assertions:**
-- Submit assertions for review
-- Link assertions to specific contracts
-- Monitor assertion status and activity
-- Update or deactivate assertions as needed
+To use project management features, you need to authenticate through [`pcl`](/credible/cli-reference#auth). The dApp uses OAuth-based authentication integrated with `pcl`, ensuring secure access through wallet connection.
 
-### Authentication
+<Note>
+Authentication is required to create and manage projects. See the [dApp Guide](/credible/dapp-guide#authentication) for step-by-step authentication instructions.
+</Note>
 
-The dApp uses OAuth-based authentication integrated with the `pcl` CLI, ensuring secure access to project management features. Authentication is handled through wallet connection, maintaining alignment with Web3 security practices.
+## Key Features
 
-## Why Use the dApp?
+- **Public Transparency**: All projects and assertions are publicly visible
+- **Unified Management**: Manage all assertions for your protocol from one interface
+- **Incident Monitoring**: Track when assertions prevent violations
+- **Verifiable Security**: Users can verify protection before interacting with protocols
 
-**Transparency:** Every project's security measures are publicly visible, eliminating blind trust in allocation decisions.
-
-**Centralized Management:** Single interface to manage all assertions across your protocol.
-
-**User Confidence:** End users can verify protection before using a protocol, building trust through verifiable security.
-
-**Community Security:** Public assertion visibility allows community review and improvement suggestions.
-
-## Next Steps
-
-Ready to start using the dApp?
+## Getting Started
 
 <CardGroup cols={2}>
+  <Card title="Transparency Dashboard" icon="search" href="/credible/dapp-transparency-dashboard">
+    Browse and search all projects and assertions
+  </Card>
+  <Card title="Projects" icon="folder" href="/credible/dapp-projects">
+    Create and manage your protocol projects
+  </Card>
   <Card title="dApp Guide" icon="rocket" href="/credible/dapp-guide">
     Step-by-step guide to using the dApp
+  </Card>
+  <Card title="Incidents" icon="warning" href="/credible/dapp-incidents">
+    Track assertion violations that were prevented
   </Card>
   <Card title="Quickstart" icon="play" href="/credible/pcl-quickstart">
     Get started with pcl
