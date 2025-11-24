@@ -32,6 +32,25 @@ View incidents in the **Recent Incidents** container on the project dashboard. C
 Only project owners can view detailed incidents for their projects. Non-owners viewing a project see **events** (when contracts and assertions were added or removed), not incidents.
 </Note>
 
+### Real-Time Alerts
+
+When viewing your project dashboard as an authenticated project owner, incidents update in real time:
+
+- **Auto-Updating UI**: Components listing incidents automatically prepend newly received incidents to the list
+- **Toast Notifications**: A notification appears in the upper right corner stating "an incident for this project was received"
+- **Live Updates**: Real-time updates only occur when viewing that specific project as its authenticated manager
+
+**External Alerts**
+
+You can also set up external alerts via webhooks:
+
+- **Slack Integration**: Configure Slack webhooks to receive incident notifications in your Slack channels
+- **PagerDuty Integration**: Configure PagerDuty webhooks to receive incident notifications
+
+<Note>
+Detailed setup instructions for Slack and PagerDuty integrations will be available in a dedicated documentation page.
+</Note>
+
 ## Use Cases
 
 - Monitor when assertions prevent violations for your projects
