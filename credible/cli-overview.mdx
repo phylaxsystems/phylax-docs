@@ -93,10 +93,10 @@ The complete assertion lifecycle from development to deployment:
 3. **Build** your contracts using `pcl build` (optional, useful for checking compilation errors; `store` will build automatically if needed)
 
 <Note>
-When updating an existing assertion contract, modify your code, test with `pcl test`, then store and submit the updated version and activate in the dApp.
+When updating an existing assertion contract, modify your code, test with `pcl test`, then store and submit the updated version and deploy in the dApp.
 </Note>
 
-### Authenticate → Store → Submit → Activate
+### Authenticate → Store → Submit → Deploy
 
 Once your assertion contract is [tested and ready](/credible/testing-assertions):
 
@@ -119,7 +119,7 @@ Once your assertion contract is [tested and ready](/credible/testing-assertions)
    To submit multiple assertion contracts, use interactive mode (`pcl submit` without options) to select which stored assertion contracts to submit and which project to submit them to.
    </Note>
 
-4. **Activate**: Complete the activation process in the dApp by linking the assertion contract to your protocol's contract. This makes the assertion live on-chain and begins protecting your contract. See the [dApp Guide](/credible/dapp-guide#linking-assertions-to-your-project) for details.
+4. **Deploy**: Complete the deployment process in the dApp by linking the assertion contract to your protocol's contract. After the timelock period, the assertion will be enforced and begin protecting your contract. See the [dApp Guide](/credible/dapp-guide#linking-assertions-to-your-project) for details.
 
 ### Constructor Arguments
 
@@ -127,10 +127,6 @@ If your assertion contract has constructor arguments, you need to provide them w
 
 - **When storing**: `pcl store MyAssertionContract <arg0> <arg1>`
 - **When submitting**: `pcl submit -a 'MyAssertionContract(arg0,arg1)' -p my-project`
-
-<Note>
-If you're using [`ph.getAssertionAdopter()`](/credible/cheatcodes-reference#getassertionadopter) in your assertion contract and aren't adding any additional contract state variables, you don't need to provide constructor arguments.
-</Note>
 
 ## Troubleshooting
 
