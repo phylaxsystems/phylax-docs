@@ -36,7 +36,7 @@ Commands:
   help    Print this message or the help of the given subcommand(s)
 
 Options:
-  -u, --auth-url <AUTH_URL>  Base URL for authentication service [env: PCL_AUTH_URL=] [default: https://dapp.phylax.systems]
+  -u, --auth-url <AUTH_URL>  Base URL for authentication service [env: PCL_AUTH_URL=] [default: https://dapp.internal.phylax.systems]
   -h, --help                 Print help
 ```
 
@@ -110,7 +110,7 @@ Arguments:
 
 Options:
   -u, --da-url <DA_URL>   URL of the assertion-DA server [env: PCL_DA_URL=]
-                          [default: https://da.phylax.systems]
+                          [default: https://da.internal.phylax.systems]
       --root <ROOT>       Root directory of the project
   -h, --help              Print help (see more with '--help')
 ```
@@ -142,7 +142,7 @@ Arguments:
   [CONSTRUCTOR_ARGS]...  Constructor arguments for the assertion
 
 Options:
-  -u, --api-url <API Endpoint>   Base URL for the Credible Layer dApp API [env: PCL_API_URL=] [default: https://dapp.phylax.systems/api/v1]
+  -u, --api-url <API Endpoint>   Base URL for the Credible Layer dApp API [env: PCL_API_URL=] [default: https://dapp.internal.phylax.systems/api/v1]
   -p, --project-name <PROJECT>   Optional project name to skip interactive selection
   -a, --assertion <ASSERTION>    Assertion in format 'Name(arg1,arg2)'. Use multiple -a flags for multiple assertions.
   -h, --help                     Print help (see more with '--help')
@@ -201,7 +201,7 @@ Delete the current configuration file.
 
 ### `PCL_AUTH_URL`
 
-Base URL for authentication service. Default: `https://dapp.phylax.systems`
+Base URL for authentication service. Default: `https://dapp.internal.phylax.systems`
 
 ```bash
 export PCL_AUTH_URL=https://custom-auth-url.com
@@ -210,7 +210,7 @@ pcl auth login
 
 ### `PCL_DA_URL`
 
-URL of the [Assertion DA](/credible/glossary#assertion-da-data-availability) server. Default: `https://da.phylax.systems`
+URL of the [Assertion DA](/credible/glossary#assertion-da-data-availability) server. Default: `https://da.internal.phylax.systems`
 
 ```bash
 export PCL_DA_URL=https://custom-da-url.com
@@ -219,7 +219,7 @@ pcl store MyAssertion
 
 ### `PCL_API_URL`
 
-Base URL for the [Credible Layer dApp](/credible/glossary#credible-dapp) API. Default: `https://dapp.phylax.systems/api/v1`
+Base URL for the [Credible Layer dApp](/credible/glossary#credible-dapp) API. Default: `https://dapp.internal.phylax.systems/api/v1`
 
 ```bash
 export PCL_API_URL=https://custom-api-url.com/api/v1
