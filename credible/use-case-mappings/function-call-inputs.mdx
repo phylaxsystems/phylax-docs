@@ -14,8 +14,8 @@ description: Capture and verify function input parameters to validate that the r
 ### Required Cheatcodes
 
 - `getCallInputs(address aa, bytes4 signature)`
-- `forkPreState()`
-- `forkPostState()`
+- `forkPreTx()`
+- `forkPostTx()`
 
 ### Example Implementation
 
@@ -40,20 +40,16 @@ Assertion:
 
 ```solidity
 contract FunctionCallInputsAssertion is Assertion {
-    Protocol public protocol;
     mapping(address => int256) public balanceChanges;
     address[] changedAddresses;
-
-    constructor(Protocol protocol_) {
-        protocol = protocol_;
-    }
 
     function triggers() public view override {
         registerCallTrigger(this.assertionFunctionCallInputs.selector);
     }
 
     function assertionFunctionCallInputs() public {
-        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(protocol), protocol.transfer.selector);
+        Protocol protocol = Protocol(ph.getAssertionAdopter());
+        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(protocol), Protocol.transfer.selector);
 
         for (uint256 i = 0; i < callInputs.length; i++) {
             address from = callInputs[i].caller;
@@ -75,9 +71,9 @@ contract FunctionCallInputsAssertion is Assertion {
         uint256 absDiff;
 
         for (uint256 i = 0; i < changedAddresses.length; i++) {
-            ph.forkPreState();
+            ph.forkPreTx();
             preBalance = protocol.balances(changedAddresses[i]);
-            ph.forkPostState();
+            ph.forkPostTx();
 
             if (balanceChanges[changedAddresses[i]] > 0) {
                 absDiff = uint256(balanceChanges[changedAddresses[i]]);
@@ -98,7 +94,7 @@ contract FunctionCallInputsAssertion is Assertion {
     - Decode parameters using `abi.decode()` to reconstruct function arguments
 
 - **State verification:**
-    - Use `forkPreState()` and `forkPostState()` to compare states
+    - Use `forkPreTx()` and `forkPostTx()` to compare states
     - Validate state changes match expected behavior based on inputs
 
 - **State tracking considerations:**

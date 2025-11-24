@@ -69,7 +69,7 @@ See the [Cheatcodes Reference](/credible/cheatcodes-reference) for detailed info
 ### Pre-state/Post-state
 Snapshots of the blockchain state captured before and after a transaction. These states are used by assertions to verify changes and enforce properties. The ability to compare pre and post states enables assertions to detect and prevent transactions that would result in undesired state changes.
 
-See the [Cheatcodes Reference](/credible/cheatcodes-reference) for information about `forkPreState` and `forkPostState`.
+See the [Cheatcodes Reference](/credible/cheatcodes-reference) for information about `forkPreTx`, `forkPostTx`, `forkPreCall`, and `forkPostCall`.
 
 ### State Changes
 Modifications to contract storage that occur during transaction execution. These can be tracked and verified using the Credible Layer's state change tracking capabilities, allowing assertions to monitor and prevent unauthorized modifications.

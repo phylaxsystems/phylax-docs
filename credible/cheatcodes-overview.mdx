@@ -46,7 +46,7 @@ New to assertions? Check out [What are Assertions?](/credible/assertions-overvie
 
 Not all assertions require checking both pre- and post-state. Understanding when to use each makes assertions more efficient.
 
-**Default behavior:** If neither `ph.forkPreState()` nor `ph.forkPostState()` are called, assertions execute against post-transaction state by default.
+**Default behavior:** If neither `ph.forkPreTx()` nor `ph.forkPostTx()` are called, assertions execute against post-transaction state by default.
 
 ### When to Use Pre-State
 

@@ -34,17 +34,12 @@ Assertion:
 
 ```solidity
 contract StorageLookupAssertion is Assertion {
-    Protocol public protocol;
-
-    constructor(Protocol protocol_) {
-        protocol = protocol_;
-    }
-
     function triggers() public view override {
         registerCallTrigger(this.assertionStorageLookup.selector);
     }
 
     function assertionStorageLookup() public {
+        Protocol protocol = Protocol(ph.getAssertionAdopter());
         // Define a whitelist of allowed owner addresses
         address[] memory whitelist = new address[](2);
         whitelist[0] = address(0x1);

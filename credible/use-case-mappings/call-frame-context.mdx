@@ -1,0 +1,119 @@
+---
+title: Call Frame Context
+description: Gain fine-grained context about a call frame in order to improve the precision of assertions by allowing to access pre and post call frame states.
+---
+
+## Status
+
+- [x] Supported
+- [ ] Partially Supported
+- [ ] Not Supported Yet
+
+## Implementation Details
+
+### Required Cheatcodes
+
+- `getCallInputs(address aa, bytes4 signature)` - Gets call inputs with unique IDs
+- `forkPreCall(uint256 id)` - Forks to state at the start of a specific call
+- `forkPostCall(uint256 id)` - Forks to state after a specific call execution
+
+### Example Implementation
+
+Protocol:
+
+```solidity
+contract Protocol {
+    mapping(address => uint256) public balances;
+    uint256 public totalSupply;
+
+    function transfer(address to, uint256 amount) public {
+        balances[msg.sender] -= amount;
+        balances[to] += amount;
+    }
+
+    function batchTransfer(address[] calldata recipients, uint256[] calldata amounts) public {
+        for (uint256 i = 0; i < recipients.length; i++) {
+            transfer(recipients[i], amounts[i]);
+        }
+    }
+}
+```
+
+Assertion:
+
+```solidity
+contract CallFrameContextAssertion is Assertion {
+    function triggers() public view override {
+        registerCallTrigger(this.assertCallFrameContext.selector, Protocol.batchTransfer.selector);
+    }
+
+    function assertCallFrameContext() public {
+        Protocol protocol = Protocol(ph.getAssertionAdopter());
+        // Get all transfer calls within the batchTransfer transaction
+        PhEvm.CallInputs[] memory transferCalls = ph.getCallInputs(
+            address(protocol),
+            protocol.transfer.selector
+        );
+
+        // Validate each transfer call individually
+        for (uint256 i = 0; i < transferCalls.length; i++) {
+            // Fork to state before this specific call
+            ph.forkPreCall(transferCalls[i].id);
+            address from = transferCalls[i].caller;
+            (address to, uint256 amount) = abi.decode(transferCalls[i].input, (address, uint256));
+            uint256 preFromBalance = protocol.balances(from);
+            uint256 preToBalance = protocol.balances(to);
+
+            // Fork to state after this specific call
+            ph.forkPostCall(transferCalls[i].id);
+            uint256 postFromBalance = protocol.balances(from);
+            uint256 postToBalance = protocol.balances(to);
+
+            // Verify the transfer was executed correctly for this call frame
+            require(
+                postFromBalance == preFromBalance - amount,
+                "From balance mismatch in call frame"
+            );
+            require(
+                postToBalance == preToBalance + amount,
+                "To balance mismatch in call frame"
+            );
+        }
+    }
+}
+```
+
+### Implementation Notes
+
+- **Call frame isolation:**
+    - Use `getCallInputs()` to retrieve all calls with their unique IDs
+    - Each call has an `id` field that can be used with `forkPreCall()` and `forkPostCall()`
+    - This allows validation at the individual function call level, not just transaction level
+
+- **Benefits over transaction-level assertions:**
+    - Provides more precise state validation at the individual function call level
+    - Allows validation of intermediate states within a transaction
+    - Makes complex, multi-function transactions easier to validate
+    - Can catch issues that would be masked by transaction-level checks
+
+- **When to use call frame context vs transaction context:**
+    - Use `forkPreCall()`/`forkPostCall()` when you need to validate individual calls within a transaction
+    - Use `forkPreTx()`/`forkPostTx()` when you only need to compare overall transaction state
+    - Call frame context is especially useful for batch operations, multi-step protocols, or when validating intermediate states
+
+## Example Use Cases
+
+- **Batch operations:** Validate each individual operation within a batch transaction
+- **Multi-step protocols:** Check state at each step of a complex transaction
+- **Oracle price updates:** Verify each price update doesn't exceed deviation limits (see [Intra-TX Oracle Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation))
+- **Rate provider validation:** Check rate changes before and after swaps (see [Balancer V2 Stable Rate Exploit](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit))
+
+## Known Limitations
+
+- **Recursive function calls:** Recursive calls will compound state changes similar to transaction-level execution. Users should ensure no recursive function calls are possible if precise call frame tracking is required.
+
+## Related Use Cases
+
+- [Function Call Inputs](/credible/use-case-mappings/function-call-inputs) - Similar but validates at transaction level
+- [State Changes](/credible/use-case-mappings/state-changes) - Track state changes across a transaction
+
