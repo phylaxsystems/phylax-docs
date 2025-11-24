@@ -52,6 +52,9 @@
             "group": "dApp",
             "pages": [
               "credible/dapp-overview",
+              "credible/dapp-transparency-dashboard",
+              "credible/dapp-projects",
+              "credible/dapp-incidents",
               "credible/ownership-verification"
             ]
           },

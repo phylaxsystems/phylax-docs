@@ -1,0 +1,96 @@
+---
+title: 'Projects'
+description: 'Create and manage projects in the Credible Layer dApp'
+---
+
+Projects are the organizational unit in the Credible Layer dApp. Each project represents a protocol or set of smart contracts that you want to protect with assertions.
+
+## What are Projects?
+
+A project groups together:
+- One or more smart contract addresses
+- Assertions that protect those contracts
+- Project metadata (name, description, target chain)
+
+Projects enable you to manage all your protocol's assertions from a single interface.
+
+## Creating a Project
+
+To create a new project:
+
+1. Navigate to the "Projects" tab in the dApp navigation bar
+2. Click "Create a project"
+3. Enter project details:
+   - **Project Name**: Typically matches your protocol or contract name
+   - **Project Description**: Brief explanation of what your project does
+   - **Target Chain**: The blockchain where your contracts are deployed
+4. Click "Continue to contract selection"
+5. Add contract addresses:
+   - Enter each contract address you want to protect
+   - Only contracts where you are the `owner` can be added
+   - The dApp verifies ownership by calling the `owner()` function
+6. Review your project details
+7. Click "Publish" to create the project
+
+![Create Project](/images/create_project_dapp.gif)
+
+<Note>
+Only the owner of a contract can create a project for it. Ensure your contract implements an `owner()` function that returns the current owner address. See [Ownership Verification](/credible/ownership-verification) for details.
+
+For contracts without the `owner()` interface, a Manual Verification Request process is available.
+</Note>
+
+## Managing Projects
+
+Once created, you can manage your project through the project dashboard:
+
+### View Project Details
+- See all linked contract addresses
+- View project metadata
+- Check project status
+- See all submitted assertions
+
+### Add or Remove Contracts
+- Add new contract addresses to your project
+- Remove contracts that are no longer active
+- Update contract information
+
+### Link Assertions
+- Submit assertions to your project via the CLI
+- Link assertions to specific contracts through the dApp
+- View all active assertions protecting your contracts
+
+For detailed instructions on linking assertions, see the [dApp Guide](/credible/dapp-guide#linking-assertions-to-your-project).
+
+### Transfer Projects
+
+You can transfer projects and contracts (including their associated assertions) to other wallets. This allows you to transfer project ownership while maintaining all linked assertions and contracts.
+
+## Project Dashboard
+
+The project dashboard provides a unified view of your project's security:
+
+- **Active Assertions**: See all assertions currently protecting your contracts
+- **Assertion Activation**: Activate or deactivate assertions for your project
+- **Ready for Submission**: Assertions submitted via `pcl` that need to be linked
+- **Assertion Status**: Monitor execution status and any triggered violations
+- **Recent Incidents**: View detailed incidents for your project (see [Incidents](/credible/dapp-incidents#project-dashboard-incidents))
+- **Project Settings**: Update project details and manage contracts
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="dApp Guide" icon="rocket" href="/credible/dapp-guide">
+    Step-by-step guide to using the dApp
+  </Card>
+  <Card title="Writing Assertions" icon="code" href="/credible/pcl-assertion-guide">
+    Learn how to write assertions for your contracts
+  </Card>
+  <Card title="Ownership Verification" icon="shield-check" href="/credible/ownership-verification">
+    Understand ownership requirements
+  </Card>
+  <Card title="pcl Reference" icon="terminal" href="/credible/pcl-reference-guide">
+    `pcl` command reference
+  </Card>
+</CardGroup>
+
