@@ -29,7 +29,7 @@ Where `Deployable_Assertion_EVM_Bytecode` is the flattened smart contract code a
 This ensures:
 - Each unique assertion has a unique identifier
 - Assertion integrity can be verified by recomputing the hash
-- Incompatible bytecode will fail execution deterministically, so no validation is needed at submission time
+- Not compilable bytecode will fail execution deterministically, so no validation is needed at submission time
 
 ### Assertion DA Prover Signature
 
@@ -66,12 +66,13 @@ Only the contract owner (the address returned by the contract's `owner()` functi
 
 ### Retrieving Assertions
 
-Assertion Enforcers fetch assertions from Assertion DA during transaction validation:
+Assertion Enforcers fetch assertions from Assertion DA upon on-chain registration:
 
-1. **Identify Relevant Assertions**: The system identifies which assertions apply to contracts in the transaction by querying the on-chain [Credible Layer Protocol](/credible/architecture-overview#credible-layer-protocol) registry
-2. **Fetch Bytecode**: Assertion Enforcers query Assertion DA using the assertion ID
-3. **Verify Integrity**: Verify that `Keccak256(bytecode) == AssertionID`
-4. **Cache for Validation**: Store assertion bytecode locally for transaction validation
+1. **On-Chain Registration Event**: When an assertion is registered on-chain, the `addAssertion` event is emitted
+2. **Fetch Bytecode**: Assertion Enforcers detect the event and fetch the assertion bytecode from Assertion DA using the assertion ID
+3. **Cache Internally**: Store assertion bytecode in internal cache for future use
+
+During transaction validation, Assertion Enforcers use the cached bytecode directly—no fetching occurs on the hot path. This ensures high-performance validation without network latency.
 
 See the [Architecture Overview](/credible/architecture-overview#assertion-validation-process) for details on how assertions are executed during validation.
 
@@ -81,9 +82,9 @@ The complete flow from assertion development to enforcement involves multiple st
 
 1. **Development**: Write and test assertions locally using `pcl`
 2. **Storage**: Store assertion bytecode in Assertion DA using `pcl store`, which returns the assertion ID
-3. **Registration**: Deploy the assertion contract on-chain and submit the assertion ID to the provided project in the [Credible dApp](/credible/glossary#credible-dapp)
+3. **Deployment**: Submit the assertion ID and DA prover signature to the provided project in the [Credible dApp](/credible/glossary#credible-dapp)
 4. **Linking**: Link the assertion to specific contract addresses that should be protected
-5. **Enforcement**: Assertion Enforcers fetch assertions from Assertion DA and execute them during block production
+5. **Enforcement**: After a timelock period, Assertion Enforcers fetch assertions from Assertion DA and execute them during block production
 
 For a detailed view of how these components interact, see the [System Architecture](/credible/architecture-overview#system-architecture) section in the Architecture Overview.
 
@@ -94,12 +95,13 @@ For a detailed view of how these components interact, see the [System Architectu
 - **Cost Efficiency**: EVM bytecode can be large; on-chain storage would be prohibitively expensive
 - **Performance**: Faster retrieval and caching for high-frequency validation
 - **Flexibility**: Enables future improvements without base layer changes
+- **Additional Metadata**: Supports metadata that wouldn't be feasible on-chain, such as instant source code verification for transparency and auditing
 
 ### Why No On-Chain Bytecode Validation?
 
 The protocol intentionally omits bytecode validation because:
 - [PhEVM](/credible/glossary#phevm-phylax-evm) execution is deterministic
-- Incompatible bytecode will consistently fail execution
+- Not compilable bytecode will consistently fail execution
 - This allows Assertion Enforcers to safely discard invalid assertions without verification overhead
 
 ## Security Considerations
