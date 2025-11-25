@@ -1,0 +1,162 @@
+---
+title: 'Using pcl'
+description: 'Learn how to use `pcl` as part of the assertion development workflow'
+---
+
+## Introduction
+
+[`pcl`](https://github.com/phylaxsystems/credible-sdk/tree/main/crates/pcl) is the command-line tool for building, testing, storing, and submitting [assertions](/credible/glossary#assertion) to the Credible Layer. It allows developers to authenticate with the [Credible Layer dApp](/credible/glossary#credible-dapp), test assertions locally, build contracts, store [assertion bytecode](/credible/glossary#assertion-bytecode) in [Assertion DA](/credible/glossary#assertion-da-data-availability), and submit assertions to projects.
+
+`pcl` provides commands for:
+
+- **Testing**: [Run tests](/credible/testing-assertions) for your assertions locally
+- **Building**: Compile assertion contracts
+- **Authentication**: Authenticate with the Credible Layer dApp using your wallet
+- **Storing**: Submit assertion bytecode and source code to Assertion DA
+- **Submitting**: Register assertions with the Credible Layer dApp
+- **Configuration**: Manage CLI settings and configuration
+
+`pcl` serves as the primary tool for the development workflow, working alongside the Credible Layer dApp to manage assertions throughout their lifecycle.
+
+**Learn More:**
+- [Quick Start Guide](/credible/pcl-quickstart) - Get started with your first assertion
+- [pcl Reference](/credible/cli-reference) - Complete command reference
+
+## Getting Started
+
+### Installation
+
+Install the `pcl` command line interface by following the [Installation Guide](/credible/credible-install).
+
+### Project Structure
+
+The `pcl` command expects the following directory structure:
+
+```text
+root-dir/
+  assertions/
+    src/      # Assertion source files (.a.sol)
+    test/     # Test files (.t.sol)
+```
+
+<Note>
+`pcl` currently only works with this directory structure. Ensure your project follows this layout.
+</Note>
+
+You will most likely have a `src` directory on the same level as the `assertions` directory, where you develop your protocol smart contracts and a `test` directory where you develop your tests, so a typical project structure might look like this:
+
+```text
+my-protocol/
+  assertions/
+    src/              # Assertion source files (.a.sol)
+    test/             # Test files (.t.sol)
+  src/
+    MyProtocol.sol    # Protocol smart contracts
+  test/
+    MyProtocol.t.sol  # Protocol tests
+```
+
+### Create a Project
+
+Use the [Credible Layer dApp](/credible/glossary#credible-dapp) to create a project and link your contracts.
+
+## Authentication & Configuration
+
+### How Authentication Works
+
+`pcl` uses OAuth-based authentication:
+
+1. Run `pcl auth login`
+2. A URL and authentication code are displayed
+3. Visit the URL in your browser
+4. Connect your wallet and approve the authentication
+5. `pcl` automatically detects successful authentication
+
+### Configuration
+
+Configuration is stored in `~/.pcl/config.toml` and includes:
+
+- Authentication token (persists across sessions)
+- Pending assertions for submission (assertions that have been stored but not yet submitted)
+- User address (the address of the wallet that is authenticated)
+
+You can view your configuration with `pcl config show` or delete it with `pcl config delete`.
+
+## Assertion Lifecycle
+
+The complete assertion lifecycle from development to deployment:
+
+### Development & Testing
+
+1. **Write** your assertion contract in Solidity (`.a.sol` files). See the [Assertion Guide](/credible/pcl-assertion-guide) to learn how to write assertions.
+2. **Test** locally using `pcl test` to verify your assertion logic (`.t.sol` files). See the [Testing Assertions guide](/credible/testing-assertions) for details.
+3. **Build** your contracts using `pcl build` (optional, useful for checking compilation errors; `store` will build automatically if needed)
+
+<Note>
+When updating an existing assertion contract, modify your code, test with `pcl test`, then store and submit the updated version and deploy in the dApp.
+</Note>
+
+### Authenticate → Store → Submit → Deploy
+
+Once your assertion contract is [tested and ready](/credible/testing-assertions):
+
+1. **Authenticate**: Ensure you're authenticated with `pcl auth login` (required before storing or submitting)
+   ```bash
+   pcl auth login
+   ```
+
+2. **Store**: Upload assertion bytecode and source code to Assertion DA
+   ```bash
+   pcl store MyAssertionContract 0xADDRESS_OF_SMART_CONTRACT
+   ```
+
+3. **Submit**: Register the assertion contract with your project in the dApp
+   ```bash
+   pcl submit -a 'MyAssertionContract(0xADDRESS_OF_SMART_CONTRACT)' -p my-project
+   ```
+
+   <Note>
+   To submit multiple assertion contracts, use interactive mode (`pcl submit` without options) to select which stored assertion contracts to submit and which project to submit them to.
+   </Note>
+
+4. **Deploy**: Complete the deployment process in the dApp by linking the assertion contract to your protocol's contract. After the timelock period, the assertion will be enforced and begin protecting your contract. See the [dApp Guide](/credible/dapp-guide#linking-assertions-to-your-project) for details.
+
+### Constructor Arguments
+
+If your assertion contract has constructor arguments, you need to provide them when both storing and submitting:
+
+- **When storing**: `pcl store MyAssertionContract <arg0> <arg1>`
+- **When submitting**: `pcl submit -a 'MyAssertionContract(arg0,arg1)' -p my-project`
+
+## Troubleshooting
+
+### Authentication Issues
+
+- **Error: Not authenticated**: Run `pcl auth login` to authenticate
+- **Error: Authentication expired**: Run `pcl auth login` to refresh your authentication
+- **Browser doesn't open**: Manually visit the URL displayed in the terminal
+
+### Submission Issues
+
+- **Error: Failed to submit**: Ensure you're authenticated and have network connectivity
+- **Error: Project not found**: Create a project in the Credible Layer dApp first
+- **Error: Assertion not found**: Ensure the assertion name is correct and exists in your project
+- **Constructor arguments mismatch**: If the assertion takes constructor arguments, make sure to provide them when submitting the assertion in the same format as when storing
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="pcl Reference" icon="book" href="/credible/cli-reference">
+    Complete command reference with all options and parameters
+  </Card>
+  <Card title="Quick Start Guide" icon="rocket" href="/credible/pcl-quickstart">
+    Step-by-step tutorial for your first assertion
+  </Card>
+  <Card title="dApp Guide" icon="browser" href="/credible/dapp-guide">
+    Learn how to use the dApp to manage projects and assertions
+  </Card>
+  <Card title="Installation" icon="download" href="/credible/credible-install">
+    Install pcl
+  </Card>
+</CardGroup>
+
