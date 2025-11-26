@@ -238,7 +238,7 @@ This requires no changes to contracts as it is effectively middleware.
 
 ### Can anyone write assertions for my contracts?
 
-Anyone can write the assertions, but only the owner of the contract that the assertions protect can "activate" them.
+Anyone can write the assertions, but only the owner of the contract that the assertions protect can deploy them.
 This way, we ensure that no malicious third party reduces functionality by writing assertions for your contract.
 
 **Learn More:**
@@ -254,7 +254,7 @@ We are working on more authentication techniques to service dApps with non-tradi
 
 ### How can you write rules for immutable contracts?
 
-As mentioned above in [How do you extend the validation logic of the sequencer to the dApp?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-dapp), the Credible Layer is functionally middleware as it enables the sequencer to remove transactions that would break the dApp's rules.
+As mentioned above in [How do you extend the validation logic of the sequencer to the dApp?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-dapp), the Credible Layer is functionally middleware as it enables the sequencer to drop transactions that would break the dApp's rules.
 The Credible Layer will still work with immutable contracts because the prevention happens at the sequencing step, which is where the L2 has ultimate power over transaction inclusion, whether or not they come from immutable contracts.
 
 **Learn More:**
@@ -273,6 +273,28 @@ We will use timelocks on protocols with immutable contracts as many of the users
 **Learn More:**
 - [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
 - [Ownership Verification](/credible/ownership-verification)
+
+### What's the difference between Staging and Production environments?
+
+When deploying assertions, you can choose between two environments:
+
+- **Staging**: A mirrored chain environment used for testing assertions without affecting production. Assertions run on staging to observe behavior, but transactions are not dropped if they break assertion rules. This allows protocol teams to test assertions safely before deploying to production. After the timelock period, assertions become "staged".
+
+- **Production**: The real chain environment where assertions actively prevent hacks. In production, transactions that violate assertions are dropped before they can execute, protecting protocols from exploits. After the timelock period, assertions become "enforced".
+
+Both environments require a timelock period before assertions become active. During the timelock, assertions are marked for enforcement (production) or marked for staging (staging environment).
+
+**Learn More:**
+- [Glossary - Staging](/credible/glossary#staging)
+- [Glossary - Production](/credible/glossary#production)
+- [Glossary - Timelock](/credible/glossary#timelock)
+
+### How long is the timelock period?
+
+The timelock period exists for two reasons: (1) to provide latency for the enforcer to index on-chain state and prepare for enforcement, and (2) to give users time to expect changes to protocol behavior. The exact duration may vary, but the timelock ensures that assertions don't become active immediately after deployment, giving all parties time to prepare.
+
+**Learn More:**
+- [Glossary - Timelock](/credible/glossary#timelock)
 
 ---
 

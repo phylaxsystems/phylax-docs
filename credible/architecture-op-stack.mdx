@@ -63,7 +63,7 @@ class RollupBoostProxy,AssertionEnforcer rollupBoost
 - **[Block Builder](/credible/glossary#block-builder)**: The component of the network that simulates transactions and runs assertions before transaction finalization to ensure they don't violate defined conditions.
 - **op-reth**: The execution layer client within the Credible Layer that processes transactions and maintains state.
 - **[`pcl` CLI](/credible/glossary#pcl-cli)**: Command-line interface for developers to write, test, and submit assertions to the system.
-- **[dApp](/credible/glossary#credible-dapp)**: The web application interface to register, manage, and view assertions and projects.
+- **[dApp](/credible/glossary#credible-dapp)**: The web application interface to deploy, manage, and view assertions and projects.
 - **[Assertion DA](/credible/glossary#assertion-da-data-availability)**: The Assertion Data Availability layer, which stores assertion bytecode and serves it to both end-users and the Assertion Enforcer for execution.
 
 ### Rollup-Boost
@@ -84,7 +84,7 @@ class RollupBoostProxy,AssertionEnforcer rollupBoost
 
 The diagram above illustrates transaction flow through the OP Stack implementation. The top section shows the complete deployment: users submit transactions that flow through OP-Talos (block builder) → Rollup-Boost → OP Stack Sequencer → Network. Malicious transactions are identified and removed before reaching the sequencer.
 
-The bottom section zooms into **assertion execution** - this process is consistent across all Credible Layer implementations, not just OP Stack. The transaction and State 1 (pre-state) flow into the EVM for simulation, producing State 2 (post-state). PhEVM then validates these states against registered assertions, returning valid/invalid.
+The bottom section zooms into **assertion execution** - this process is consistent across all Credible Layer implementations, not just OP Stack. The transaction and State 1 (pre-state) flow into the EVM for simulation, producing State 2 (post-state). PhEVM then validates these states against deployed assertions, returning valid/invalid.
 
 ## Key Technologies
 

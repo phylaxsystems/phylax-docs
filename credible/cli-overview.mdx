@@ -13,7 +13,7 @@ description: 'Learn how to use `pcl` as part of the assertion development workfl
 - **Building**: Compile assertion contracts
 - **Authentication**: Authenticate with the Credible Layer dApp using your wallet
 - **Storing**: Submit assertion bytecode and source code to Assertion DA
-- **Submitting**: Register assertions with the Credible Layer dApp
+- **Submitting**: Submit assertions to projects in the Credible Layer dApp
 - **Configuration**: Manage CLI settings and configuration
 
 `pcl` serves as the primary tool for the development workflow, working alongside the Credible Layer dApp to manage assertions throughout their lifecycle.
@@ -110,7 +110,7 @@ Once your assertion contract is [tested and ready](/credible/testing-assertions)
    pcl store MyAssertionContract 0xADDRESS_OF_SMART_CONTRACT
    ```
 
-3. **Submit**: Register the assertion contract with your project in the dApp
+3. **Submit**: Submit the assertion contract to your project in the dApp
    ```bash
    pcl submit -a 'MyAssertionContract(0xADDRESS_OF_SMART_CONTRACT)' -p my-project
    ```
@@ -119,7 +119,7 @@ Once your assertion contract is [tested and ready](/credible/testing-assertions)
    To submit multiple assertion contracts, use interactive mode (`pcl submit` without options) to select which stored assertion contracts to submit and which project to submit them to.
    </Note>
 
-4. **Deploy**: Complete the deployment process in the dApp by linking the assertion contract to your protocol's contract. After the timelock period, the assertion will be enforced and begin protecting your contract. See the [dApp Guide](/credible/dapp-guide#linking-assertions-to-your-project) for details.
+4. **Deploy**: Complete the deployment process in the dApp by reviewing the assertion, linking it to your protocol's contract, and choosing Staging or Production environment.
 
 ### Constructor Arguments
 

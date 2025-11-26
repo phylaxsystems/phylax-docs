@@ -41,7 +41,7 @@ The network component responsible for building blocks and validating transaction
 The entity responsible for enforcing assertions and vouching for not including any transactions that would invalidate them. Usually a block builder or sequencer.
 
 ### Credible dApp
-The web application interface for interacting with the Credible Layer. It allows dApp developers and end-users to register, manage, and view assertions and projects.
+The web application interface for interacting with the Credible Layer. It allows dApp developers and end-users to deploy, manage, and view assertions and projects.
 
 ### Transparency Dashboard
 A tool that allows users to view and browse all assertions deployed by different protocols, providing visibility into their security posture.
@@ -67,7 +67,7 @@ A function that determines when an assertion should be executed. Triggers are re
 See the [Cheatcodes Reference](/credible/cheatcodes-reference) for detailed information about different trigger types.
 
 ### Pre-state/Post-state
-Snapshots of the blockchain state captured before and after a transaction. These states are used by assertions to verify changes and enforce properties. The ability to compare pre and post states enables assertions to detect and prevent transactions that would result in undesired state changes.
+Snapshots of the blockchain state captured before and after a transaction. These states are used by assertions to verify changes and enforce properties. The ability to compare pre and post states enables assertions to detect and prevent invalidating transactions that would result in undesired state changes.
 
 See the [Cheatcodes Reference](/credible/cheatcodes-reference) for information about `forkPreTx`, `forkPostTx`, `forkPreCall`, and `forkPostCall`.
 
@@ -96,7 +96,7 @@ A unique identifier for an assertion, computed as the Keccak256 hash of the asse
 Learn more: [Assertion Data Availability](/credible/assertion-da#assertion-id)
 
 ### Assertion DA Prover Signature
-A signature generated and returned by the Assertion DA as part of storing an assertion. This proof is used during on-chain registration of the assertion to guarantee that the assertion bytecode is available on the Assertion DA.
+A signature generated and returned by the Assertion DA as part of storing an assertion. This proof is used during deployment of the assertion to guarantee that the assertion bytecode is available on the Assertion DA.
 
 Learn more: [Assertion Data Availability](/credible/assertion-da#assertion-da-prover-signature)
 
@@ -142,3 +142,49 @@ Special transactions that must be included in blocks regardless of validation, s
 
 ### Verifiability
 The transparent and public nature of all assertions deployed on PCL. Since assertions are stored in the Assertion DA and are publicly accessible, any user or auditor can inspect and verify the security mechanisms in place for a protocol. This transparency enables community-driven security reviews and builds trust by making security measures fully auditable.
+
+## Prevention
+
+### Revert
+What happens at the EVM/Solidity level when an assertion function detects that a transaction violates the rules defined in the assertion. When an assertion reverts, it signals that the transaction would result in an undesired state. The sidecar detects this revert and notifies the sequencer that the transaction should be dropped.
+
+### Drop
+The technical term for when a sequencer or block builder excludes a transaction from block inclusion. After the sidecar detects that an assertion has reverted, it notifies the sequencer, which then drops the invalid transaction before it can be included in a block.
+
+### Prevent
+The overarching term used to describe what the combination of assertions, sidecar, and sequencer accomplishes when an invalidating transaction is detected. The system prevents malicious transactions from executing by detecting violations, dropping invalid transactions, and protecting protocols from exploits.
+
+## Assertion Lifecycle
+
+### Store
+The process of uploading assertion bytecode and source code to [Assertion DA](/credible/glossary#assertion-da-data-availability) using `pcl store`. This makes the assertion available for retrieval by the network but does not yet associate it with a project.
+
+### Submit
+The process of submitting an assertion contract to a project in the Credible Layer dApp using `pcl submit`. After storing, assertions must be submitted to a project before they can be deployed.
+
+### Deployment
+The process of reviewing an assertion, linking it to a contract, and signing the transaction to deploy it on-chain. Deployment includes choosing whether to deploy to Staging or Production environment. The deployment transaction must succeed for the assertion to be deployed on-chain.
+
+### Staging
+A mirrored chain environment used for testing assertions without affecting production. Assertions run on staging to observe behavior, but transactions are not dropped if they break assertion rules. This allows protocol teams to test assertions safely before deploying to production.
+
+### Production
+The real chain environment where assertions actively prevent hacks. In production, transactions that violate assertions are dropped before they can execute, protecting protocols from exploits.
+
+### Timelock
+A period between assertion deployment and enforcement (production) or staging (staging environment). The timelock exists for two reasons: (1) to provide latency for the enforcer to index on-chain state and prepare for enforcement, and (2) to give users time to expect changes to protocol behavior. During the timelock period, assertions are marked for enforcement or staging but not yet active.
+
+### Marked for Enforcement
+The state of an assertion deployed to production during the timelock period. The assertion is deployed but not yet actively preventing hacks. After the timelock expires, the assertion becomes enforced.
+
+### Marked for Staging
+The state of an assertion deployed to staging during the timelock period. The assertion is deployed but not yet running on the staging environment. After the timelock expires, the assertion becomes staged.
+
+### Enforced
+The state of an assertion in production after the timelock period has expired. An enforced assertion is actively preventing hacks by causing invalidating transactions to be dropped. This term is only used for production assertions.
+
+### Staged
+The state of an assertion in staging after the timelock period has expired. A staged assertion is running on the mirrored chain environment, allowing protocol teams to observe how it behaves without transactions being dropped if they violate the assertion.
+
+### Removal
+The process of removing an assertion from active enforcement or staging. Removal requires a timelock period before the assertion stops being enforced or staged, giving users time to expect the change.

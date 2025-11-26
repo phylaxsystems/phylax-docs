@@ -14,14 +14,14 @@ This guide will walk you through the process of creating, testing, and submittin
 5. Create a project
 6. Store your assertion
 7. Submit your assertion to the Credible Layer
-8. Activate your assertion
+8. Deploy your assertion
 9. Verify that the assertion is working
 
 ## Prerequisites
 
 Before you begin, make sure you have:
 
-- `pcl` CLI installed (see the [Installation Guide](/credible/credible-install))
+- `pcl` installed (see the [Installation Guide](/credible/credible-install))
 - Solidity compiler [installed](https://docs.soliditylang.org/en/latest/installing-solidity.html)
 - Foundry installed (see the [Foundry Installation Guide](https://book.getfoundry.sh/getting-started/installation))
 - A browser wallet for authentication (MetaMask or similar)
@@ -144,17 +144,21 @@ pcl submit -a 'OwnableAssertion' -p <project_name>
 
 Note, that `<project_name>` is the name of the project you created in the dApp, capitalized in the same way as you did when creating the project.
 
-## 8. Activating Your Assertion
+## 8. Deploying Your Assertion
 
-Last step is to go to the dApp and activate the assertion. Go back to the url that you opened with the `pcl auth login` command and navigate to the project that the assertions was added to. 
+Last step is to go to the dApp and deploy the assertion. Go back to the url that you opened with the `pcl auth login` command and navigate to the project that the assertion was added to. 
 
-You'll notice that there's one assertion ready for submission, go ahead and proceed to review and activate it.
+You'll notice that there's one assertion ready for deployment. Go ahead and proceed to review and deploy it. During the review process, you'll choose whether to deploy to **Staging** (for testing) or **Production** (for active protection).
+
+<Note>
+After deployment, your assertion enters a timelock period. During this period, it is marked for enforcement (production) or marked for staging (staging environment). After the timelock expires, the assertion becomes enforced (production) or staged (staging), actively protecting your contract. See the [Glossary](/credible/glossary#timelock) for details about timelocks.
+</Note>
 
 For a more detailed overview of how to use the dApp, see the [dApp Guide](/credible/dapp-guide).
 
 ## 9. Verify That The Assertion Is Working
 
-Now that your assertion is activated, let's verify that it's working as expected. We'll do this by attempting to change the ownership of the contract, which should trigger our assertion and prevent the change.
+Now that your assertion is deployed and enforced (after the timelock period), let's verify that it's working as expected. We'll do this by attempting to change the ownership of the contract, which should trigger our assertion and prevent the change.
 
 First, let's check the current owner of the Ownable contract. Replace `ADDRESS_OF_OWNABLE_CONTRACT` with the address of your deployed Ownable contract and `RPC_URL` with your network's RPC URL:
 
@@ -164,13 +168,13 @@ cast call <ADDRESS_OF_OWNABLE_CONTRACT> "owner()" --rpc-url <RPC_URL>
 
 This command should return the initial owner address that was set when we deployed the contract.
 
-Next, let's attempt to transfer ownership to a new address. Make sure you replace `NEW_OWNER_ADDRESS` with an address that is not the initial owner and `PRIVATE_KEY_OF_THE_OWNER` with the private key of the owner of the contract. This transaction should trigger the assertion and revert:
+Next, let's attempt to transfer ownership to a new address. Make sure you replace `NEW_OWNER_ADDRESS` with an address that is not the initial owner and `PRIVATE_KEY_OF_THE_OWNER` with the private key of the owner of the contract. This transaction should cause the assertion to revert, which will result in the transaction being dropped:
 
 ```bash
-cast send <ADDRESS_OF_OWNABLE_CONTRACT> "transferOwnership(address)" <NEW_OWNER_ADDRESS> --rpc-url <RPC_URL> --private-key <PRIVATE_KEY_OF_THE_OWNER> --timeout 20
+cast send <ADDRESS_OF_OWNABLE_CONTRACT> "transferOwnership(address)" <NEW_OWNER_ADDRESS> --rpc-url <RPC_URL> --private-key <PRIVATE_KEY_OF_THE_OWNER>
 ```
 
-The transaction should timeout after about 20 seconds which means that the assertion reverted the transaction:
+The transaction should timeout, which means that the assertion reverted and the transaction was dropped:
 
 ```bash
 Error: transaction was not confirmed within the timeout
@@ -186,7 +190,7 @@ The owner should still be the original address, confirming that our assertion su
 
 ## Conclusion
 
-Congratulations! You've successfully created, tested, activated and verified your first assertion using the Credible Layer CLI. You can now go ahead and start implementing assertions in your own projects.
+Congratulations! You've successfully created, tested, deployed, and verified your first assertion using `pcl`. You can now go ahead and start implementing assertions in your own projects.
 
 ### Next Steps
 

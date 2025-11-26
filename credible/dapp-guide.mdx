@@ -122,11 +122,11 @@ First, use the `pcl` CLI to store and submit your assertion:
 
 ### Step 2: Link via dApp
 
-After submitting via CLI, complete the linking process in the dApp:
+After submitting via `pcl`, complete the linking process in the dApp:
 
-1. Navigate to your project dashboard.
+1. Navigate to your project.
 
-2. Click on the "Ready for Submission" tab.
+2. Click on the "Deployment" tab.
 
 3. Find your assertion in the list and click "Proceed to Review".
 
@@ -137,14 +137,16 @@ After submitting via CLI, complete the linking process in the dApp:
    - Target contract address
    - Trigger conditions
 
-6. Click "Deploy" to link the assertion to your contract.
+6. Choose whether to deploy to **Staging** (for testing) or **Production** (for active protection).
 
-7. Confirm the transaction in your wallet.
+7. Click "Deploy" to link the assertion to your contract and sign the transaction.
+
+8. Confirm the transaction in your wallet.
 
 ![Linking Assertion](/images/linking_assertion_dapp.gif)
 
 <Note>
-Once linked, the assertion will begin protecting your contract. Transactions that violate the assertion will be automatically rejected by network validators running the Credible Layer.
+Linking the assertion and signing the transaction completes the [deployment](/credible/glossary#deployment) process. After deployment, your assertion enters a [timelock](/credible/glossary#timelock) period. During this period, it is [marked for enforcement](/credible/glossary#marked-for-enforcement) ([production](/credible/glossary#production)) or [marked for staging](/credible/glossary#marked-for-staging) ([staging](/credible/glossary#staging) environment). After the timelock expires, the assertion becomes [enforced](/credible/glossary#enforced) (production) or [staged](/credible/glossary#staged) (staging), actively protecting your contract.
 </Note>
 
 ## Managing Your Assertions
@@ -154,7 +156,7 @@ After linking assertions, you can manage them through your project dashboard:
 - **View Active Assertions**: See all assertions currently protecting your contracts
 - **Monitor Status**: Check assertion execution status and any triggered violations
 - **Update Assertions**: Submit new versions of assertions as your protocol evolves
-- **Deactivate Assertions**: Temporarily or permanently disable assertions if needed
+- **Remove Assertions**: Remove assertions if needed
 
 ## Complete Walkthrough Video
 
