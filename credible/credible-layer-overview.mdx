@@ -104,9 +104,9 @@ Now that we understand how invariants are selected and written as assertions, le
 
 ## Network Enforcement of Assertions
 
-Now that we have our assertion and the target contract that triggers it, we have to let the network sidecar know the contract should be protected by the provided assertion. We call this submitting the assertion for enforcement.
+Now that we have our assertion and the target contract that triggers it, we have to let the network sidecar know the contract should be protected by the provided assertion. This involves submitting the assertion to your project, then deploying it by linking it to your contract and choosing Staging or Production environment.
 
-As seen in the diagram below, the dapp submits the assertions to the Credible Layer Smart Contracts. These smart contracts are the source of truth and supply the sidecar with the relevant assertion when a transaction interacts with a protected contract:
+As seen in the diagram below, the dApp submits assertions to the Credible Layer Smart Contracts, which then deploy them on-chain. These smart contracts are the source of truth and supply the sidecar with the relevant assertion when a transaction interacts with a protected contract:
 
 ![Submitting assertions for enforcement](/images/overview-step-2.png)
 

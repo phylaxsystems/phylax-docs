@@ -33,7 +33,7 @@ This ensures:
 
 ### Assertion DA Prover Signature
 
-The Assertion DA prover signature is generated and returned by Assertion DA as part of storing the assertion. This proof is used during on-chain registration of the assertion to guarantee that the assertion bytecode is available on Assertion DA.
+The Assertion DA prover signature is generated and returned by Assertion DA as part of storing the assertion. This proof is used during deployment of the assertion to guarantee that the assertion bytecode is available on Assertion DA.
 
 ## Current Implementation
 
@@ -62,13 +62,13 @@ pcl store MyAssertion
 2. Uploads flattened source code and compiler options to Assertion DA
 3. Returns the assertion ID (Keccak256 hash of the bytecode) and DA prover signature
 
-Only the contract owner (the address returned by the contract's `owner()` function) can register, modify, or deactivate assertions for their contract. This is enforced on-chain by the Credible Layer smart contracts, which verify ownership before allowing any assertion management operations. During the early phase of the project, there is also a manual whitelist in place. Ownership verification will be expanded and improved in future versions to support additional ownership patterns and multisig integration. See [Ownership Verification](/credible/ownership-verification) for details.
+Only the contract owner (the address returned by the contract's `owner()` function) can deploy, modify, or remove assertions for their contract. This is enforced on-chain by the Credible Layer smart contracts, which verify ownership before allowing any assertion management operations. During the early phase of the project, there is also a manual whitelist in place. Ownership verification will be expanded and improved in future versions to support additional ownership patterns and multisig integration. See [Ownership Verification](/credible/ownership-verification) for details.
 
 ### Retrieving Assertions
 
-Assertion Enforcers fetch assertions from Assertion DA upon on-chain registration:
+Assertion Enforcers fetch assertions from Assertion DA upon on-chain deployment:
 
-1. **On-Chain Registration Event**: When an assertion is registered on-chain, the `addAssertion` event is emitted
+1. **On-Chain Deployment Event**: When an assertion is deployed on-chain, the `addAssertion` event is emitted
 2. **Fetch Bytecode**: Assertion Enforcers detect the event and fetch the assertion bytecode from Assertion DA using the assertion ID
 3. **Cache Internally**: Store assertion bytecode in internal cache for future use
 
@@ -82,9 +82,10 @@ The complete flow from assertion development to enforcement involves multiple st
 
 1. **Development**: Write and test assertions locally using `pcl`
 2. **Storage**: Store assertion bytecode in Assertion DA using `pcl store`, which returns the assertion ID
-3. **Deployment**: Submit the assertion ID and DA prover signature to the provided project in the [Credible dApp](/credible/glossary#credible-dapp)
-4. **Linking**: Link the assertion to specific contract addresses that should be protected
-5. **Enforcement**: After a timelock period, Assertion Enforcers fetch assertions from Assertion DA and execute them during block production
+3. **Submission**: Submit the assertion ID to your project in the [Credible dApp](/credible/glossary#credible-dapp) using `pcl submit`
+4. **Deployment**: Review the assertion, link it to specific contract addresses, choose Staging or Production environment, and sign the transaction to deploy it on-chain
+5. **Marked for Enforcement/Staging**: During the timelock period, the assertion is marked for enforcement (production) or marked for staging (staging environment)
+6. **Enforced/Staged**: After the timelock expires, Assertion Enforcers fetch assertions from Assertion DA and execute them during block production. Assertions become enforced or staged
 
 For a detailed view of how these components interact, see the [System Architecture](/credible/architecture-overview#system-architecture) section in the Architecture Overview.
 
@@ -120,7 +121,7 @@ The protocol intentionally omits bytecode validation because:
   <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
     Learn how to store and submit assertions
   </Card>
-  <Card title="CLI Reference" icon="terminal" href="/credible/pcl-reference-guide">
+  <Card title="CLI Reference" icon="terminal" href="/credible/cli-reference">
     Complete reference for pcl commands
   </Card>
   <Card title="Architecture Overview" icon="diagram-project" href="/credible/architecture-overview">

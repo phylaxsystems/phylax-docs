@@ -24,7 +24,7 @@ The Credible Layer consists of four key components working together:
 
 ## Abstract Overview
 
-The Credible Layer is a **sidecar security infrastructure** that validates every transaction against developer-defined security rules (assertions) before they are included in blocks. As a sidecar, it runs alongside the L2 network's main components, intercepting transactions during the block building process and ensuring they don't violate any registered security properties.
+The Credible Layer is a **sidecar security infrastructure** that validates every transaction against developer-defined security rules (assertions) before they are included in blocks. As a sidecar, it runs alongside the L2 network's main components, intercepting transactions during the block building process and ensuring they don't violate any deployed security properties.
 
 ### Sidecar Architecture
 
@@ -65,7 +65,7 @@ flowchart LR
 
     CLI -->|"Store"| DA
     CLI -->|"Submit"| DAPP
-    DAPP -->|"Register"| REGISTRY
+    DAPP -->|"Deploy"| REGISTRY
 
     VALIDATOR -->|"Transaction"| PhEVM
     PhEVM -->|"Valid/Invalid"| VALIDATOR
@@ -87,13 +87,13 @@ flowchart LR
 
 The diagram above shows the Credible Layer at the **system level**. It illustrates two main flows:
 
-**Development Flow**: Developers use the `pcl` to develop and test assertions. The `pcl` stores assertion bytecode directly in [Assertion DA](/credible/assertion-da), then submits to the Credible dApp with the assertion ID. The dApp registers these assertions in the on-chain Credible Layer contracts.
+**Development Flow**: Developers use the `pcl` to develop and test assertions. The `pcl` stores assertion bytecode directly in [Assertion DA](/credible/assertion-da), then submits to the Credible dApp with the assertion ID. The dApp deploys these assertions in the on-chain Credible Layer contracts.
 
 **Runtime Flow**: The network validator sends transactions to the Assertion Enforcer sidecar during block production. The Assertion Enforcer fetches relevant assertions from Assertion DA and executes them via PhEVM. Crucially, **assertion validation happens during block production**, which means the Assertion Enforcer has access to the final transaction ordering. The sidecar returns validation results (valid/invalid) back to the network validator, which only includes valid transactions in blocks.
 
 ### How It Works
 
-1. **Assertion Registration**: Developers write and submit assertions through the CLI/dApp, which are stored in Assertion DA
+1. **Assertion Deployment**: Developers write and submit assertions through the `pcl` and dApp, which are stored in Assertion DA and then deployed on-chain
 2. **Transaction Validation During Block Production**: The network sends transactions to the Assertion Enforcer during block production
 3. **Assertion Execution**: The Assertion Enforcer simulates each transaction and validates it against relevant assertions using PhEVM
 4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the network validator
@@ -106,7 +106,7 @@ When a user submits a transaction, it goes through the following validation proc
 1. **Transaction Submission**: User submits a transaction to the network
 2. **Mempool Entry**: Transaction enters the mempool awaiting selection
 3. **Block Builder Selection**: The block builder picks transactions from the mempool and validates them
-4. **Assertion Validation**: Each transaction is simulated and validated against registered [Assertions](/credible/glossary#assertion)
+4. **Assertion Validation**: Each transaction is simulated and validated against deployed [Assertions](/credible/glossary#assertion)
 5. **Inclusion Decision**: Valid transactions are included in the block, invalid ones are dropped
 
 The diagram below shows the **transaction validation process** during block building:
@@ -171,7 +171,7 @@ flowchart LR
         PhEVM["Validate Against Assertions"]
     end
 
-    ASSERTIONS["Registered Assertions"]
+    ASSERTIONS["Deployed Assertions"]
     RESULT["Valid/Invalid"]
 
     TX --> EVM
@@ -247,7 +247,7 @@ Learn more: [Assertion Data Availability](/credible/assertion-da)
 Smart contracts that manage the on-chain assertion registry:
 
 - Maps assertions to protected contracts
-- Handles assertion registration, updates, and deactivation
+- Handles assertion deployments, updates, and removals
 - Supports proof verification for mitigation triggers
 - Maintains security parameters and protocol metadata
 
@@ -255,7 +255,7 @@ Smart contracts that manage the on-chain assertion registry:
 
 #### Credible Layer dApp
 
-User interface for protocols to register and manage [assertions](/credible/glossary#assertion):
+User interface for protocols to deploy and manage [assertions](/credible/glossary#assertion):
 
 - **[Transparency Dashboard](/credible/glossary#transparency-dashboard)**: Provides visibility into project security measures
 - OAuth-based authentication for assertion submission
