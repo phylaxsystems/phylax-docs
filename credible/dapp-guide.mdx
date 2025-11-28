@@ -17,14 +17,14 @@ This guide walks you through the complete process of using the Credible Layer dA
 
 ## Authentication
 
-Before using the dApp, authenticate through the `pcl` CLI:
+Before using the dApp, authenticate through the `pcl`:
 
 1. Run the authentication command:
-   ```bash
-   pcl auth login
-   ```
+```bash
+pcl auth login
+```
 
-2. The CLI will provide a login link. Open it in your browser.
+2. The `pcl` will provide a login link. Open it in your browser.
 
 3. Connect your wallet when prompted.
 
@@ -32,7 +32,9 @@ Before using the dApp, authenticate through the `pcl` CLI:
 
 5. You're now authenticated and can use the dApp!
 
-![Authentication Flow](/images/authenticate_dapp.gif)
+<Frame caption="Authentication with `pcl auth login`">
+  <img src="/images/pcl_auth_login.webp" alt="Authentication with `pcl auth login`" />
+</Frame>
 
 <Note>
 Authentication links your wallet address with your CLI session, allowing you to manage projects that your wallet owns.
@@ -44,7 +46,7 @@ For more details about `pcl` commands, refer to [Using pcl](/credible/cli-overvi
 
 To browse existing projects and their security measures:
 
-1. Click the "Explorer" tab in the navigation bar.
+1. Click the "Transparency" tab in the navigation bar.
 
 2. Browse all projects on the Credible Layer.
 
@@ -56,7 +58,9 @@ To browse existing projects and their security measures:
    - Active assertions protecting the contracts
    - Assertion implementation details
 
-![Explorer](/images/explorer_screenshot_dapp.png)
+<Frame caption="Transparency Dashboard">
+  <img src="/images/explorer_screenshot_dapp.png" alt="Explorer" />
+</Frame>
 
 This transparency allows you to verify security measures before interacting with any protocol.
 
@@ -64,27 +68,29 @@ This transparency allows you to verify security measures before interacting with
 
 To create a new project for your smart contracts:
 
-1. Navigate to the "Projects" tab.
+1. Navigate to the "Projects" tab or click "Create a Project" in the top right corner of the dApp
 
-2. Click "Create a project".
+2. Click "Create a project"
 
 3. Enter project details:
    - **Project Name**: Typically matches your smart contract or protocol name
    - **Project Description**: Brief explanation of what your project does
    - **Target Chain**: The blockchain where your contracts are deployed
 
-4. Click "Continue to contract selection".
+4. Click "Continue to contract selection"
 
 5. Add one or more contract addresses:
    - Enter each contract address you want to protect
    - Only contracts where you are the `owner` can be added
    - The dApp verifies ownership by calling the `owner()` function on each contract
 
-6. Review your project details.
+6. Review your project details
 
-7. Click "Publish" to create the project.
+7. Click "Save and publish" to create the project
 
-![Create Project](/images/create_project_dapp.gif)
+<Frame caption="Creating a Project in the dApp">
+  <img src="/images/create_project_dapp.webp" alt="Creating a Project" />
+</Frame>
 
 <Note>
 Only the owner of a contract can create a project for it. Additional verification methods will be available in the future. For now, ensure your contract has an `owner()` function that returns the current owner address.
@@ -120,38 +126,40 @@ First, use the `pcl` CLI to store and submit your assertion:
    pcl submit -a 'MyAssertion(0x1234567890123456789012345678901234567890)' -p my-protocol
    ```
 
-### Step 2: Link via dApp
+### Step 2: Deploy via dApp
 
-After submitting via `pcl`, complete the linking process in the dApp:
+After submitting via `pcl`, complete the deployment process in the dApp:
 
-1. Navigate to your project.
+1. Navigate to your project
 
-2. Click on the "Deployment" tab.
+2. Click on the "Deployment" tab
 
-3. Find your assertion in the list and click "Proceed to Review".
+3. Find your assertion in the list and click "Proceed to Review"
 
-4. Select the target contract you want to protect with this assertion.
+4. Select the target contract you want to protect with this assertion
 
 5. Review the assertion details:
    - Assertion name and parameters
    - Target contract address
    - Trigger conditions
 
-6. Choose whether to deploy to **Staging** (for testing) or **Production** (for active protection).
+6. Choose whether to deploy to **Staging** (for testing) or **Production** (for active protection)
 
-7. Click "Deploy" to link the assertion to your contract and sign the transaction.
+7. Click "Deploy" to link the assertion to your contract and sign the transaction
 
-8. Confirm the transaction in your wallet.
+8. Confirm the transaction in your wallet
 
-![Linking Assertion](/images/linking_assertion_dapp.gif)
+<Frame caption="Deploying Assertion in the dApp">
+  <img src="/images/deploy_assertion_trimmed.webp" alt="Deploying Assertion" />
+</Frame>
 
 <Note>
-Linking the assertion and signing the transaction completes the [deployment](/credible/glossary#deployment) process. After deployment, your assertion enters a [timelock](/credible/glossary#timelock) period. During this period, it is [marked for enforcement](/credible/glossary#marked-for-enforcement) ([production](/credible/glossary#production)) or [marked for staging](/credible/glossary#marked-for-staging) ([staging](/credible/glossary#staging) environment). After the timelock expires, the assertion becomes [enforced](/credible/glossary#enforced) (production) or [staged](/credible/glossary#staged) (staging), actively protecting your contract.
+Deploying the assertion and signing the transaction completes the [deployment](/credible/glossary#deployment) process. After deployment, your assertion enters a [timelock](/credible/glossary#timelock) period. During this period, it is [marked for enforcement](/credible/glossary#marked-for-enforcement) ([production](/credible/glossary#production)) or [marked for staging](/credible/glossary#marked-for-staging) ([staging](/credible/glossary#staging) environment). After the timelock expires, the assertion becomes [enforced](/credible/glossary#enforced) (production) or [staged](/credible/glossary#staged) (staging), actively protecting your contract.
 </Note>
 
 ## Managing Your Assertions
 
-After linking assertions, you can manage them through your project dashboard:
+After deploying assertions, you can manage them through your project dashboard:
 
 - **View Active Assertions**: See all assertions currently protecting your contracts
 - **Monitor Status**: Check assertion execution status and any triggered violations
