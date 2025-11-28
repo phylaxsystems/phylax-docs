@@ -3,7 +3,7 @@ title: 'Incidents'
 description: 'View incidents prevented by the Credible Layer'
 ---
 
-Incidents show when transactions were dropped because they violated assertions protecting contracts. An **Incident Removal Event** occurs when a transaction that interacted with an assertion-protected contract was dropped by the [Enforcer](/credible/glossary#assertion-enforcer) because it caused an assertion to revert.
+Incidents show when transactions were dropped because they violated assertions protecting contracts. This happens when a transaction that interacted with an assertion-protected contract was dropped by the [Enforcer](/credible/glossary#assertion-enforcer) because it caused an assertion to revert.
 
 ## Incidents View
 
@@ -13,6 +13,10 @@ Access incidents from the **Incidents** tab in the dApp navigation bar. This sho
 - **Timestamp**: When the transaction was dropped
 - **Transaction Hash**: Hash of the dropped transaction
 
+<Frame caption="Incidents View">
+  <img src="/images/incidents_view.png" alt="Incidents View" />
+</Frame>
+
 <Note>
 The Incidents tab is publicly accessible. Anyone can view this limited incident information.
 </Note>
@@ -21,12 +25,18 @@ The Incidents tab is publicly accessible. Anyone can view this limited incident 
 
 As a project owner, you can view detailed incidents for your projects in the project dashboard. See [Projects](/credible/dapp-projects) for information about accessing your project dashboard.
 
+<Frame caption="Incident in Project Dashboard Assertion View">
+  <img src="/images/incident_assertion_project.png" alt="Incident in Project Assertion Dashboard" />
+</Frame>
+
 View incidents in the **Recent Incidents** container on the project dashboard. Click on an incident to see:
 
 - **Transaction Object**: The full decoded transaction that was dropped (viewable as JSON)
-- **Assertion Group**: Which assertion group was involved
-- **Assertion Function**: The specific assertion function that was invalidated
 - **Transaction Hash**: The hash of the dropped transaction
+
+<Frame caption="Detailed Incident View">
+  <img src="/images/detailed_incidents_view.png" alt="Detailed Incident View" />
+</Frame>
 
 <Note>
 Only project owners can view detailed incidents for their projects. Non-owners viewing a project see **events** (when contracts and assertions were added or removed), not incidents.

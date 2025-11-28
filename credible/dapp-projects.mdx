@@ -24,15 +24,17 @@ To create a new project:
    - **Project Name**: Typically matches your protocol or contract name
    - **Project Description**: Brief explanation of what your project does
    - **Target Chain**: The blockchain where your contracts are deployed
-4. Click "Continue to contract selection"
+4. Click "Continue"
 5. Add contract addresses:
    - Enter each contract address you want to protect
    - Only contracts where you are the `owner` can be added
    - The dApp verifies ownership by calling the `owner()` function
 6. Review your project details
-7. Click "Publish" to create the project
+7. Click "Save and publish" to create the project
 
-![Create Project](/images/create_project_dapp.gif)
+<Frame caption="Creating a Project in the dApp">
+  <img src="/images/create_project_dapp.webp" alt="Creating a Project" />
+</Frame>
 
 <Note>
 Only the owner of a contract can create a project for it. Ensure your contract implements an `owner()` function that returns the current owner address. See [Ownership Verification](/credible/ownership-verification) for details.
@@ -45,26 +47,44 @@ For contracts without the `owner()` interface, a Manual Verification Request pro
 Once created, you can manage your project through the project dashboard:
 
 ### View Project Details
-- See all linked contract addresses
+- See all contract addresses in the project
 - View project metadata
-- Check project status
-- See all submitted assertions
+- See all assertions
+- See all events (timeline for the project)
+- See all [incidents](/credible/dapp-incidents)
 
 ### Add or Remove Contracts
 - Add new contract addresses to your project
 - Remove contracts that are no longer active
 - Update contract information
 
-### Link Assertions
-- Submit assertions to your project via the CLI
+### Deploy Assertions
+- Submit assertions to your project via `pcl`
 - Link assertions to specific contracts through the dApp
 - View all active assertions protecting your contracts
 
-For detailed instructions on linking assertions, see the [dApp Guide](/credible/dapp-guide#linking-assertions-to-your-project).
+<Frame caption="Deploying an Assertion">
+  <img src="/images/deploy_assertion_trimmed.webp" alt="Deploy Assertions" />
+</Frame>
 
-### Transfer Projects
+For detailed instructions on deploying assertions, see the [dApp Guide](/credible/dapp-guide#linking-assertions-to-your-project).
 
+### Project Settings
+
+In the project settings tab, you can:
+
+**Update Project Details:**
+Here you can update the project name, description, and delete the project.
+
+**Transfer Project Ownership:**
 You can transfer projects and contracts (including their associated assertions) to other wallets. This allows you to transfer project ownership while maintaining all linked assertions and contracts.
+
+**Integrations:**
+Setup integrations to receive notifications when incidents occur. For now you can setup Slack.
+
+<Frame caption="Project Settings">
+  <img src="/images/project_settings.png" alt="Project Settings" />
+</Frame>
 
 ## Project Dashboard
 
@@ -76,6 +96,10 @@ The project dashboard provides a unified view of your project's security:
 - **Assertion Status**: Monitor execution status and any triggered violations. Status shows whether assertions are marked for enforcement/staging or enforced/staged
 - **Recent Incidents**: View detailed incidents for your project (see [Incidents](/credible/dapp-incidents#project-dashboard-incidents))
 - **Project Settings**: Update project details and manage contracts
+
+<Frame caption="Projct dashboard view for the project owner">
+  <img src="/images/project_dashboard_with_incident.png" alt="Project Dashboard with Incident" />
+</Frame>
 
 ## Next Steps
 
