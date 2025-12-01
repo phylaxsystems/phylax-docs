@@ -79,7 +79,11 @@
           },
           {
             "group": "Resources",
-            "pages": ["credible/glossary", "credible/faq"]
+            "pages": [
+              "credible/glossary",
+              "credible/faq",
+              "credible/troubleshooting"
+            ]
           }
         ]
       },

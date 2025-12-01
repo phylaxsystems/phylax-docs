@@ -61,7 +61,7 @@ Assertions run [off-chain](/credible/glossary#off-chain-execution) with higher g
 
 **Gas Limit**
 
-Assertion functions are limited to 100,000 gas per execution. If an assertion exceeds this limit, the transaction will be invalidated and dropped.
+Assertion functions are limited to 300,000 gas per execution. If an assertion exceeds this limit, the transaction will be invalidated and dropped.
 
 Stay mindful of gas consumption:
 - Use [triggers](/credible/triggers) to run assertions only when needed
@@ -77,6 +77,7 @@ For gas optimization strategies, see the [Triggers](/credible/triggers) document
 - **[Bunni](/assertions-book/previous-hacks/bunni-xyz-rounding-error)** ($8.4M) - Withdrawal proportionality rounding error
 - **[Euler Finance](/assertions-book/previous-hacks/euler-finance-donation-hack)** ($197M) - Missing health factor validation
 - **[Cream Finance](/assertions-book/previous-hacks/cream-finance-2)** ($130M) - Price manipulation through donations
+- **[Balancer](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit)** ($120M) - Rounding error accumulation
 
 See more examples in the [Previous Hacks Index](/assertions-book/previous-hacks/prev-hacks-index).
 
