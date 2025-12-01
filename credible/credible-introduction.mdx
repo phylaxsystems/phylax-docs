@@ -1,65 +1,50 @@
 ---
 title: 'Introduction'
-description: 'Get started with the Phylax Credible Layer'
+description: 'Block exploits before they execute by linking security rules to your smart contracts on-chain.'
 ---
 
-The Credible Layer is a network extension that enables apps to define security rules and prevents transactions from violating them.
+## What is the Credible Layer?
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/J7uPS1ruR04?si=GkQEASccP6BHoPGt" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+The Credible Layer is security infrastructure that enables developers to link security rules to their smart contracts on-chain. Then, the network validates every transaction that interacts with their smart contracts against their security rules, dropping any invalidating transaction.
 
-## Choose Your Path
+## How It Works
+
+<Steps>
+  <Step title="Define rules in Solidity">
+    Write assertions—security rules that define states your protocol should never reach. No contract modifications required.
+  </Step>
+  <Step title="Network validates every transaction">
+    The network checks each transaction against your assertions before inclusion in a block.
+  </Step>
+  <Step title="Invalid transactions are dropped">
+    Transactions that violate your rules are dropped by the network and never execute.
+  </Step>
+</Steps>
+
+## I Want To...
 
 <CardGroup cols={2}>
-  <Card title="Credible Layer Overview" icon="compass" href="/credible/credible-layer-overview">
-    Non-technical introduction to how Phylax prevents exploits in real-time. Perfect for business leaders, investors, and anyone new to the Credible Layer.
+  <Card title="Start Building" icon="rocket" href="/credible/pcl-quickstart">
+    Write and deploy your first assertion. Get from zero to protected in minutes.
   </Card>
-  <Card title="Architecture" icon="gears" href="/credible/architecture-overview">
-    Technical deep dive into the system architecture, transaction flow, and assertion validation. For developers and technical decision makers.
+  <Card title="Understand at a High Level" icon="compass" href="/credible/credible-layer-overview">
+    Non-technical overview of how the Credible Layer prevents exploits.
   </Card>
-  <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
-    Get started with the Credible Layer in minutes. Write and deploy your first assertion using the `pcl` CLI.
+  <Card title="Evaluate the Architecture" icon="gears" href="/credible/architecture-overview">
+    Technical deep dive into system design, transaction flow, and integration requirements.
   </Card>
-  <Card title="Assertions Book" icon="book" href="/assertions-book/assertions-book-intro">
-    Browse concrete assertion examples and learn how the Credible Layer would have prevented previous hacks.
+  <Card title="Browse Examples" icon="book" href="/assertions-book/assertions-book-intro">
+    Explore assertion patterns and see how real-world hacks could have been prevented.
   </Card>
 </CardGroup>
 
-## Key Benefits of the Credible Layer
+## Key Benefits
 
-### For dApps
-
-- **Network-Native, Rule-Based Security**: Every transaction that violates your rules is dropped by the network at the sequencer level
-- **Easy to Use**: Written in Solidity with foundry-like syntax, assertions require no contract modifications or downtime during implementation
-- **Transparent Security**: All active assertions are public and verifiable by users and auditors
-
-### For Networks
-
-- **No Lock-In**: Runs natively as part of your network infrastructure with no external dependencies
-- **No Throughput Degradation**: Assertions execute in parallel during sequencing without impacting block times
-- **Attract Institutional Capital**: Reduce hack probability and provide auditable security rules for risk-averse institutions
-
-### For Users
-
-- **Visible Protection**: See exactly which protocols are protected and by what rules through the Transparency Dashboard
-- **Provable Security**: Verify the specific security guarantees protecting your funds
-- **Confidence**: Deploy capital knowing malicious transactions are prevented before they can execute
-
-## Quick Links
-
-<CardGroup cols={2}>
-  <Card title="Installation" icon="download" href="/credible/credible-install">
-    Set up your development environment and install pcl.
-  </Card>
-  <Card title="FAQ" icon="circle-question" href="/credible/faq">
-    Find answers to common questions about the Credible Layer.
-  </Card>
-  <Card title="Credible Layer dApp" icon="browser" href="/credible/dapp-overview">
-    Learn about the Credible Layer dApp for managing assertions and exploring projects.
-  </Card>
-  <Card title="Architecture" icon="diagram-project" href="/credible/architecture-overview">
-    Explore network-specific implementation details and system architecture.
-  </Card>
-</CardGroup>
+- **Pre-execution prevention** — Exploits are blocked before they execute, not detected after
+- **No contract changes** — Add protection to any contract, including immutable ones
+- **Transparent & verifiable** — All rules are public Solidity, auditable by anyone
+- **No external dependencies** — Runs natively within the network, no SaaS or APIs
+- **Zero false positives** — Binary enforcement based on your rules, no AI guessing
 
 ## Community & Support
 
@@ -69,3 +54,17 @@ Have questions or want to connect with the Phylax community?
 - Follow us on [X/Twitter](https://x.com/phylaxsystems)
 - Explore our [GitHub](https://github.com/phylaxsystems)
 - Visit the [Phylax Website](https://phylax.systems)
+
+## Learn More
+
+For the visual learners, here's a video introduction to the Credible Layer:
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/J7uPS1ruR04?si=GkQEASccP6BHoPGt"
+  title="YouTube video player"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerPolicy="strict-origin-when-cross-origin"
+  allowFullScreen
+></iframe>
