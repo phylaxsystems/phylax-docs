@@ -37,15 +37,12 @@ The Assertion DA prover signature is generated and returned by Assertion DA as p
 
 ## Current Implementation
 
-The current implementation uses a centralized server operated by Phylax Systems:
+The current implementation is operated by Phylax Systems with a highly available infrastructure:
 
 - **Storage**: Off-chain server stores assertion bytecode and source code
 - **Access**: Publicly accessible for transparency and verification
 - **Integration**: Works with [`pcl`](/credible/glossary#pcl-cli) and the [Credible dApp](/credible/glossary#credible-dapp). See the [Architecture Overview](/credible/architecture-overview) for details.
-
-<Warning>
-The Assertion DA is currently centralized. This means that if Assertion DA is unavailable, the Assertion Executor will eventually be unable to operate successfully. Decentralization is planned for H1 2026.
-</Warning>
+- **Roadmap**: Decentralization planned for 2026
 
 ## How It Works
 
@@ -107,7 +104,7 @@ The protocol intentionally omits bytecode validation because:
 
 ## Security Considerations
 
-**Availability**: Critical for system liveness. If Assertion DA fails, Assertion Enforcers cannot validate transactions.
+**Availability**: The highly available infrastructure ensures consistent uptime. Assertion Enforcers cache assertion bytecode locally, so existing enforced assertions continue operating even during potential downtime. Only new assertion deployments require Assertion DA connectivity.
 
 **Integrity**: The Keccak256 hash verification ensures assertions haven't been modified. Each assertion ID uniquely corresponds to its bytecode.
 
