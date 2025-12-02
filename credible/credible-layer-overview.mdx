@@ -9,150 +9,159 @@ Phylax's real-time security system detects and pre-emptively removes exploits be
 
 ![System Overview](/images/overview-step-0.png)
 
+<Info>
+**The Credible Layer** is a network extension that lets protocols define security rules and enforces them at the network level. Transactions that would violate these rules are dropped *before* they can execute, preventing exploits rather than detecting them after the damage is done.
+</Info>
+
 At a glance:
 
-- **[Invariants](/credible/glossary#protocol-invariants)** (or other rules such as KYC/AML, etc.) are mapped and defined by the dApp team, then converted into **[assertions](/credible/glossary#assertion)**
-- The **Credible Layer smart contracts** act as a registry that tracks which assertions are linked to which contract addresses
-- The **network node** reads the registry and validates all transactions against the relevant assertions before they're added to blocks
-- Transactions are included in blocks only if all assertions pass; otherwise they're dropped
+- **Security rules** are defined by the protocol team and deployed as on-chain [assertions](/credible/glossary#assertion)
+- **The network** validates every transaction against relevant assertions before adding them to blocks
+- **Invalid transactions** are [dropped](/credible/glossary#drop). If an assertion fails, the transaction never executes
 
-## Mapping and Defining Invariant Rules
+<Check>
+**Easy to adopt**
+- Written in Solidity with familiar Forge patterns
+- No contract modifications or downtime required
+- Works with immutable contracts
+- All rules are publicly verifiable on the [transparency dashboard](/credible/glossary#transparency-dashboard)
+- Implementation effort is comparable to writing Forge invariant tests
+</Check>
+
+## Use Cases
+
+Assertions enable a wide range of security and compliance use cases:
+
+<CardGroup cols={2}>
+  <Card title="Parameter Protection" icon="shield-halved">
+    Prevent unauthorized changes to critical protocol parameters such as owner and implementation addresses
+  </Card>
+  <Card title="Market Integrity" icon="chart-line">
+    Ensure market prices don't move beyond specified thresholds inside of a single transaction
+  </Card>
+  <Card title="Lending Protocol Safety" icon="building-columns">
+    Guarantee lending positions maintain the required collateralization ratios
+  </Card>
+  <Card title="Oracle Monitoring" icon="satellite-dish">
+    Verify oracle prices stay within specified ranges to detect price manipulation
+  </Card>
+  <Card title="Balance Invariants" icon="scale-balanced">
+    Ensure that the sum of all positions match the total balance of a protocol
+  </Card>
+  <Card title="Compliance Rules" icon="clipboard-check">
+    Enforce KYC/AML requirements by validating that transaction participants meet regulatory criteria
+  </Card>
+</CardGroup>
+
+For concrete examples and implementations, explore the [Assertions Book](/assertions-book/assertions-book-intro).
+
+## How It Works
+
+### Defining Security Rules
 
 ![Mapping and defining invariants](/images/overview-step-1.png)
 
-### Why Use Invariants?
-
-[Invariants](/credible/glossary#protocol-invariants) are statements about your contract that must remain true no matter how users interact with it. They express the essential conditions that keep your system secure and functional—the business logic that must always hold.
+Security rules (technically called [invariants](/credible/glossary#protocol-invariants)) are statements about your contract that must remain true no matter how users interact with it. They express the essential conditions that keep your system secure and functional.
 
 Instead of exhaustively predicting every exploit path, you define the _states that must never occur_. If one of these states is violated, something fundamental has gone wrong.
 
-**Beyond Invariants**
+These rules are then implemented as [assertions](/credible/glossary#assertion), which are Solidity smart contracts that verify the rules hold true. For a deeper understanding of how assertions work, see the [Assertions Overview](/credible/assertions-overview).
 
-While invariants are commonly used for security properties, [assertions](/credible/glossary#assertion) enable a broader range of use cases:
-- **Compliance Rules**: Enforce KYC/AML requirements by validating that transaction participants meet regulatory criteria
+**Beyond Security Rules**
+
+While invariants are the most common use case, assertions also enable:
 - **Timelocks and Access Control**: Add time-based restrictions or multi-factor authentication requirements for sensitive functions like contract upgrades
 - **Business Logic Enforcement**: Ensure operational rules are followed, such as transaction limits or authorized contract interactions
 
-These use cases all share the same pattern: defining rules that must hold true, then enforcing them at the network level before transactions are finalized.
+### Real-World Example: Balancer V2
 
-### Understanding Invariants vs. Assertions
+In November 2025, an attacker exploited Balancer V2 stable pools through a complex rounding error attack, causing over $120M in losses. Through 84 crafted swap operations, pool rates changed by 20x in a single transaction.
 
-While these terms are often used together, there's an important distinction:
+**The key insight:** While the root cause was complex (involving rounding errors and specific balance configurations), the security rule violation was simple:
 
-**Invariants** are the _core security properties_ or rules you want to maintain. Think of them as the "what" – what condition must always be true. For example: "The total supply must equal the sum of all balances."
+> _"Pool rates should not change drastically within a single transaction"_
 
-**Assertions** are _smart contracts that verify_ those invariants hold true. They are the "how" – how you check and enforce those rules at the network level. An assertion is a Solidity smart contract that:
-- Implements the invariant as executable code
-- Specifies _when_ to check it ([trigger](/credible/glossary#trigger) conditions)
-- Defines _what data_ to examine (pre/post transaction states)
-- Uses special capabilities ([cheatcodes](/credible/glossary#cheatcodes)) to access information not available in standard Solidity
+A simple assertion checking that pool rates don't change by more than 3x would have detected and prevented this attack, regardless of the specific exploit mechanism used.
 
-In short: **invariants define the rule, assertions enforce it**.
-
-### Example Walkthrough Using a Previous Hack
-
-Here is a way to visualize the journey of creating invariants and converting them into assertions.
-In this example, Bunni's protocol must ensure that when users withdraw funds, the share of ownership is updated to match the amount removed from the pool.
-
-The invariant can be expressed in plain English as follows:
-
-> _"Pool balance decrease must match the percentage of shares being withdrawn"_
-
-And mathematically like this:
-
-$$\dfrac{\text{balanceDecrease}}{\text{totalBalance}} = \dfrac{\text{sharesWithdrawn}}{\text{totalShares}}$$
-
-To express this as an assertion, we can declare that withdrawals must decrease the pool's balance proportionally.
-If someone withdraws 10% of shares, the pool balance should decrease accordingly.
+<Accordion title="View the assertion code">
 
 ```solidity
-function assertionWithdrawalProportionality() external {
+contract BatchSwapDeltaAssertion is Assertion {
+    uint256 constant MAX_RATE_CHANGE_MULTIPLIER = 3e18; // 3.0x
 
-    // Get all pending withdrawal transactions
-    PhEvm.CallInputs[] memory withdrawals = ph.getCallInputs(
-        address(hub),
-        IBunniHub.withdraw.selector
-    );
+    function assertionBatchSwapRateManipulation() external {
+        address vault = ph.getAssertionAdopter();
+        PhEvm.CallInputs[] memory batchSwapCalls = ph.getAllCallInputs(
+            vault,
+            IVault.batchSwap.selector
+        );
 
-    // For each withdrawal transaction:
+        for (uint256 i = 0; i < batchSwapCalls.length; i++) {
+            // Get affected pools from swap parameters
+            bytes32[] memory uniquePoolIds = _getUniquePoolIds(swaps);
 
-    // Get pool state before withdrawal
-    ph.forkPreCall(withdrawals[i].id);
-    uint256 totalSupplyBefore = hub.bunniTokenOfPool(poolId).totalSupply();
-    uint256 activeBalance0Before = hub.getPoolBalance(poolId, 0);
+            for (uint256 j = 0; j < uniquePoolIds.length; j++) {
+                (address poolAddress, ) = IVault(vault).getPool(uniquePoolIds[j]);
 
-    // Get pool state after withdrawal
-    ph.forkPostCall(withdrawals[i].id);
-    uint256 totalSupplyAfter = hub.bunniTokenOfPool(poolId).totalSupply();
-    uint256 activeBalance0After = hub.getPoolBalance(poolId, 0);
+                // Check rate before and after the swap
+                ph.forkPreCall(callInput.id);
+                uint256 preRate = IRateProvider(poolAddress).getRate();
 
-    // This is the invariant - check that the token balance decrease
-    // is proportional to the shares burned
-    require(
-        actualBalance0Decrease <= expectedBalance0Decrease + tolerance0 &&
-        actualBalance0Decrease >= expectedBalance0Decrease - tolerance0,
-        "Token0 active balance decrease not proportional to shares burned"
-    );
+                ph.forkPostCall(callInput.id);
+                uint256 postRate = IRateProvider(poolAddress).getRate();
+
+                // Revert if rate changed by more than 3x
+                require(
+                    (postRate * 1e18) / preRate <= MAX_RATE_CHANGE_MULTIPLIER,
+                    "BatchSwap: Extreme pool rate manipulation detected"
+                );
+            }
+        }
+    }
 }
 ```
 
-<Note>This code is truncated for simplicity; read on for [the full explanation on how the Bunni hack](/assertions-book/previous-hacks/bunni-xyz-rounding-error.mdx) could have been prevented with an assertion.</Note>
+</Accordion>
 
-A proportionality assertion that ensures balance decreases match the share burns would have prevented this $8.4M loss in September 2025.
+This demonstrates the power of assertions: by focusing on *what should never happen* rather than *how it might happen*, you protect against both known and unknown attack vectors.
 
-Now that we understand how invariants are selected and written as assertions, let's dive into how the network node decides to include or drop a transaction.
+Read the [full Balancer V2 exploit analysis](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit) to see how this assertion was tested against the actual exploit transaction.
 
-## Network Enforcement of Assertions
+### Network Enforcement
 
-Now that we have our assertion and the target contract that triggers it, we have to let the network sidecar know the contract should be protected by the provided assertion. This involves submitting the assertion to your project, then deploying it by linking it to your contract and choosing Staging or Production environment.
-
-As seen in the diagram below, the dApp submits assertions to the Credible Layer Smart Contracts, which then deploy them on-chain. These smart contracts are the source of truth and supply the sidecar with the relevant assertion when a transaction interacts with a protected contract:
+Once assertions are defined, they need to be deployed to protect your contracts. This involves submitting the assertion to your project, then linking it to your contract address.
 
 ![Submitting assertions for enforcement](/images/overview-step-2.png)
 
-### How Enforcement Works
+The dApp submits assertions to the Credible Layer smart contracts, which deploy them on-chain. These contracts are the source of truth and supply the network with the relevant assertions when a transaction interacts with a protected contract.
 
-A network node running Phylax's sidecar system does not care _how_ a transaction violates the protocol's rule. All that matters is _whether_ the [assertion](/credible/glossary#assertion) returns true or false after the transaction. If the assertion returns false, the node drops the transaction before it can be included in a block.
+#### How Enforcement Works
 
-You can read the full technical flow in [Architecture](/credible/architecture-overview).
+A network node running the Credible Layer [sidecar](/credible/glossary#sidecar) does not care _how_ a transaction violates the protocol's rule. All that matters is _whether_ the assertion passes or fails. If the assertion fails, the node drops the transaction before it can be included in a block.
 
-To illustrate it better, when a user opens a position on a yield protocol, the transaction touches multiple contracts:
+When a user opens a position on a yield protocol, the transaction may touch multiple contracts:
 
 ![A single transaction can interact with multiple contracts](/images/phylax-multi-contract-interaction.png)
 
-Each contract that has assertions is checked by the sidecar, which simulates the cumulative end states in the PhEVM:
+Each contract that has assertions is checked by the sidecar, which simulates the cumulative end states:
 
 ![Each contract with assertions is checked by the sidecar](/images/phylax-assertion-checking.png)
 
-### Assertion Validation
+#### Validation Process
 
-Once the transaction is sent by the user, it is seen by the network node. The node then passes it to the sidecar to check if the transaction's final state would violate an [assertion](/credible/glossary#assertion) in a separate replica environment called the [PhEVM](/credible/glossary#phevm-phylax-evm). When completed, the sidecar returns the result to the node so it can include or drop the transaction. This validation process never exceeds the time to produce a block.
+1. User submits a transaction to the network
+2. The network node passes it to the sidecar for validation
+3. The sidecar simulates the transaction and checks all relevant assertions
+4. If all assertions pass, the transaction is included in the block
+5. If any assertion fails, the transaction is dropped
 
-In other words, the transaction will be included into the block only if every assertion across all touched contracts evaluates to true. If even one assertion fails, the network node will see this failed assertion and exclude it from finalization.
+This validation process never exceeds the time to produce a block. The Credible Layer adapts to each network's architecture while maintaining the same security guarantees.
 
-While the core concept remains the same across all networks (validate transactions against assertions before finalization), the exact architecture depends on the underlying technology stack.
-For example, on OP Stack chains, validation is implemented as part of an external block builder that integrates via [Rollup-Boost](https://docs.optimism.io/builders/chain-operators/features/rollup-boost).
-The key takeaway: the Credible Layer adapts to each network's architecture while maintaining the same security guarantees.
-
-For network-specific implementation details, see the [Architecture documentation](/credible/architecture-overview).
-
-Continue reading in technical detail in [Architecture](/credible/architecture-overview).
+For the full technical flow, see [Architecture](/credible/architecture-overview).
 
 <Note>
 The Credible Layer is designed as neutral middleware that preserves decentralization for both dApps and networks. Learn more about [why neutrality matters](/credible/neutrality).
 </Note>
-
-## Use Cases
-
-[Assertions](/credible/glossary#assertion) open up a wide range of use cases, some that aren't even possible in pure Solidity:
-
-1. **Parameter Protection**: Prevent unauthorized changes to critical protocol parameters such as owner and implementation addresses
-2. **Market Integrity**: Ensure market prices don't move beyond specified thresholds inside of a single transaction
-3. **Lending Protocol Safety**: Guarantee lending positions maintain the required collateralization ratios
-4. **Oracle Monitoring**: Verify oracle prices stay within specified ranges to detect price manipulation
-5. **Total Balance Invariants**: Ensure that the sum of all positions match the total balance of a protocol
-
-For concrete examples and implementations, explore the [Assertions Book](/assertions-book/assertions-book-intro).
 
 ## Next Steps
 
