@@ -36,6 +36,7 @@
             "group": "Assertions",
             "pages": [
               "credible/assertions-overview",
+              "credible/development-effort",
               "credible/cheatcodes-overview",
               "credible/triggers",
               {
