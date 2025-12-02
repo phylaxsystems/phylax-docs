@@ -148,6 +148,12 @@ contract ProtocolAssertion is Assertion {
 
 - `ph.getAssertionAdopter()` - Get the contract being protected
 
+#### Storage Access
+
+- `ph.load(address, bytes32)` - Read storage from an address at a specific slot
+- **Note**: Use `ph.load()` not `vm.load()` - the `vm` cheatcode is not available in assertions
+- Useful for reading internal state variables that aren't exposed as public functions
+
 #### Console Logs
 
 - `import { console } from "credible-std/console.sol";` - Import the console library
@@ -407,9 +413,50 @@ function testAssertionPasses() public {
 ```
 
 - **One `cl.assertion()` can only trigger one assertion function per test**
+- Each `cl.assertion()` call registers the assertion to run on the very next transaction only
 - Create separate test functions for each assertion function that can be triggered
 - Test each assertion function in isolation to ensure proper coverage
 - Use different test scenarios for different assertion functions
+- If you need to test multiple calls in one test, re-register the assertion before each call:
+
+```solidity
+function testMultipleOperations() public {
+    // First assertion
+    cl.assertion({...});
+    protocol.operation1();
+    
+    // Re-register for second operation
+    cl.assertion({...});
+    protocol.operation2();
+}
+```
+
+#### Inline Function Calls Consuming `vm.prank()`
+
+**CRITICAL**: When you pass a function call as a parameter to another function, that inner call executes FIRST and consumes the `vm.prank()`.
+
+```solidity
+// ❌ WRONG - getBalance() executes first, consuming the prank
+vm.prank(user);
+protocol.withdraw(protocol.getBalance(user));
+// Error: test contract (not user) tries to call withdraw
+
+// ✅ CORRECT - Store result before prank
+uint256 balance = protocol.getBalance(user);
+vm.prank(user);
+protocol.withdraw(balance);
+```
+
+**Why This Happens:**
+- Solidity evaluates function parameters before executing the outer function
+- `vm.prank()` only affects the NEXT external call
+- The inner function call (e.g., `protocol.getBalance()`) is that "next call"
+- By the time the outer function executes, the prank is already consumed
+
+**Rule of Thumb:**
+- Never inline view/pure function calls as parameters after `vm.prank()`
+- Always store view function results in variables BEFORE calling `vm.prank()`
+- This also applies to `cl.assertion()` - store any needed values first
 
 ### Testing Commands
 
@@ -437,6 +484,32 @@ function testAssertionPasses() public {
   - `vm.warp()` for manipulating timestamps
   - `vm.mockCall()` for mocking external calls
   - Use these tools to create comprehensive test scenarios
+
+#### Avoid Helper Functions That Hide `vm.prank()`
+
+Helper functions that internally call `vm.prank()` make it unclear when assertions actually execute and can accidentally consume the assertion trigger.
+
+```solidity
+// ❌ WRONG - Helper abstracts vm.prank
+function updateState(uint256 value) internal {
+    vm.prank(protocol.admin());
+    protocol.updateState(value);
+}
+
+// In test - unclear what's happening
+cl.assertion({...});
+updateState(newValue); // Unclear when assertion executes
+
+// ✅ CORRECT - Explicit vm.prank in test
+cl.assertion({...});
+vm.prank(protocol.admin());
+protocol.updateState(newValue); // Crystal clear
+```
+
+**Rationale:**
+- Explicit `vm.prank()` makes it obvious who is calling what
+- No confusion about whether the assertion runs on the right transaction
+- Tests are self-documenting and easier to debug
 
 ### Testing with Mock Protocols
 

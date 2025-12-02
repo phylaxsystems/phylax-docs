@@ -1,0 +1,399 @@
+---
+title: 'Troubleshooting'
+description: 'Common errors and solutions when writing and testing assertions'
+---
+
+This guide helps you diagnose and fix common errors when writing and testing assertions. If you encounter an error, check the quick reference table below or browse the detailed sections.
+
+## Quick Reference
+
+| Error | Likely Cause | Quick Fix |
+|-------|--------------|-----------|
+| "Expected 1 assertion to be executed, but 0 were executed" | Transaction reverts or setup after `cl.assertion()` | Check trigger function, move setup before `cl.assertion()` |
+| OutOfGas error | Assertion exceeds 300k gas limit | Optimize loops, add early returns, fail fast |
+| `vm.load()` not available | Wrong cheatcode | Use `ph.load()` instead |
+| Function selector errors | Wrong selector or trigger not registered | Use `Protocol.functionName.selector`, check `triggers()` |
+| Call input double-counting | Using `getAllCallInputs()` | Use specific call type function |
+| Test contract address in error | Inline function call consumed `vm.prank()` | Store view function results before `vm.prank()` |
+| Cheatcode fails in constructor | Cheatcodes not available in constructors | Move logic to assertion function |
+
+## Assertion Not Executing
+
+### "Expected 1 assertion to be executed, but 0 were executed"
+
+This error means your assertion never ran on the target transaction. This can occur in production, testing, or backtesting.
+
+**Common Causes:**
+
+**In production or backtesting:**
+- The transaction that triggers the assertion fails or reverts before the assertion runs
+- The function selector in the trigger doesn't match the function being called
+
+**In testing:**
+- **Wrong function called** - A call to a function other than the target function exists between `cl.assertion()` and the target function call
+- **Assertion (`cl.assertion()`) placed incorrectly** - Not immediately before the target function call
+- **Trigger function call fails or reverts** - The transaction may fail for various reasons. Write a test without `cl.assertion()` to isolate the issue.
+
+**Production Behavior:**
+- If an assertion reverts, the transaction is dropped and not included in the block
+- If the assertion never executes (trigger doesn't match), the transaction proceeds normally without assertion validation
+
+**Solution (Testing):**
+
+Move all setup code before `cl.assertion()`. The `cl.assertion()` call registers the assertion to run on the very next transaction, similar to `vm.prank()`.
+
+```solidity
+// ✅ CORRECT
+function testAssertion() public {
+    // All setup first
+    token.mint(user, amount);
+    vm.prank(user);
+    token.approve(address(protocol), amount);
+    
+    // Register assertion last
+    cl.assertion({
+        adopter: address(protocol),
+        createData: type(MyAssertion).creationCode,
+        fnSelector: MyAssertion.assertionFunction.selector
+    });
+    
+    // Target transaction immediately after
+    vm.prank(user);
+    protocol.targetFunction();
+}
+```
+
+```solidity
+// ❌ WRONG
+function testAssertion() public {
+    cl.assertion({...});
+    
+    // Setup after cl.assertion() - assertion runs here instead!
+    token.mint(user, amount);
+    
+    vm.prank(user);
+    protocol.targetFunction(); // Assertion already consumed
+}
+```
+
+**Debugging:**
+
+- Verify the function selector in the trigger matches the function being called
+- In testing, write a test without `cl.assertion()` to check if the protocol function reverts
+- Use `pcl test -vvv` to see detailed execution traces
+
+### Internal Calls Not Triggering Assertions
+
+**Problem:** Assertion doesn't trigger when a protocol uses internal function calls.
+
+**Cause:** Internal calls are a Solidity language feature, not actual EVM calls. They are not traced and won't trigger call-based assertions.
+
+**Example:**
+
+```solidity
+contract Protocol {
+    function publicFunction() external {
+        _internalFunction(); // Won't trigger assertions
+    }
+    
+    function _internalFunction() internal {
+        // Internal logic
+    }
+}
+```
+
+**Solution:** Register triggers on the external entry points, not internal functions. Only external calls (including `this.functionName()`) generate `CallInputs` and can trigger assertions.
+
+## Assertion Code Issues
+
+These errors occur when the assertion executes but fails due to issues in the assertion code.
+
+### Gas Limit Exceeded
+
+Assertions have a **300k gas limit** per assertion function. If exceeded, you'll see an `OutOfGas` error.
+
+**Symptoms:**
+
+- `OutOfGas` error when running tests
+- "Unknown Revert Reason" with gas cost near 300k in backtesting results
+- Assertion fails consistently on complex transactions
+
+**Common Causes:**
+
+- Expensive operations in loops
+- Parsing too many events
+- Multiple storage reads without caching
+- Complex calculations without early returns
+
+**Solutions:**
+
+Optimize the assertion logic:
+
+1. **Fail fast** - Check simple conditions first before expensive operations
+2. **Optimize loops** - Limit iterations, cache values outside loops
+3. **Share storage reads** - Read once, extract multiple values
+4. **Split complex assertions** - Consider splitting into multiple assertion functions
+
+**Debugging:**
+
+Use `pcl test -vvv` to see detailed gas usage per operation.
+
+### Storage Access Errors
+
+**Error:** `vm.load()` is not available in assertions
+
+**Solution:** Use `ph.load()` instead:
+
+```solidity
+// ❌ WRONG
+bytes32 data = vm.load(address, slot);
+
+// ✅ CORRECT
+bytes32 data = ph.load(address, slot);
+```
+
+The Phylax helper `ph` provides storage access, not the standard Forge `vm` cheatcode.
+
+### Constructor Limitations
+
+**Problem:** Cheatcodes fail or return unexpected values in assertion constructors.
+
+**Causes:**
+- Cheatcodes (`ph.*`) are not available in constructors
+- Constructor runs against empty state and cannot read from other contracts
+- `ph.getAssertionAdopter()` is only available in assertion functions
+
+**Solution:** Move logic that requires cheatcodes to the assertion function:
+
+```solidity
+// ❌ WRONG
+constructor() {
+    adopter = ph.getAssertionAdopter(); // Won't work
+}
+
+// ✅ CORRECT
+function assertionFunction() external {
+    address adopter = ph.getAssertionAdopter();
+    // Use adopter here
+}
+```
+
+### Function Selector Errors
+
+**Problem:** Wrong function selector in trigger registration causes the assertion to not trigger or trigger on the wrong function.
+
+**Solution:** Use the actual function selector from the interface:
+
+```solidity
+// ❌ WRONG
+registerCallTrigger(this.assertionFunction.selector, bytes4(0x12345678));
+
+// ✅ CORRECT
+registerCallTrigger(
+    this.assertionFunction.selector,
+    Protocol.targetFunction.selector
+);
+```
+
+**How to Verify:**
+
+- Check that the selector matches the function signature
+- Use `Protocol.functionName.selector` for type safety
+- Ensure the trigger is registered in the `triggers()` function
+- Each assertion function needs its own trigger registration
+
+### Call Input Double-Counting
+
+**Problem:** Using `getAllCallInputs()` may include duplicate calls from proxy contracts.
+
+**Solution:** Use specific call type functions:
+
+```solidity
+// ❌ WRONG - May include duplicates
+PhEvm.CallInputs[] memory calls = ph.getAllCallInputs(target, selector);
+
+// ✅ CORRECT - Use specific call type
+PhEvm.CallInputs[] memory calls = ph.getCallInputs(target, selector);
+```
+
+**Available Functions:**
+
+- `ph.getCallInputs()` - CALL opcode inputs
+- `ph.getStaticCallInputs()` - STATICCALL inputs
+- `ph.getDelegateCallInputs()` - DELEGATECALL inputs
+- `ph.getCallCodeInputs()` - CALLCODE inputs
+- `ph.getAllCallInputs()` - All call types (may include duplicates from proxy contracts)
+
+## Test-Specific Issues
+
+These issues only occur during testing, not in production.
+
+### Inline Function Calls Consuming `vm.prank()`
+
+When you pass a function call as a parameter, that inner call executes first and consumes the `vm.prank()`.
+
+**Problem:**
+
+```solidity
+// ❌ WRONG - getBalance() executes first, consuming the prank
+vm.prank(user);
+protocol.withdraw(protocol.getBalance(user));
+// Error: test contract (not user) tries to call withdraw
+```
+
+**Solution:**
+
+Store view function results before calling `vm.prank()`:
+
+```solidity
+// ✅ CORRECT - Store result first
+uint256 balance = protocol.getBalance(user);
+vm.prank(user);
+protocol.withdraw(balance);
+```
+
+**Why This Happens:**
+
+- Solidity evaluates function parameters before executing the outer function
+- `vm.prank()` only affects the next external call
+- The inner function call is that "next call"
+- By the time the outer function executes, the prank is already consumed
+
+**Debugging Tip:**
+
+Run tests with `-vvv` to see call traces. Look for unexpected addresses in error messages (test contract address where user expected).
+
+### Can't Distinguish Protocol vs Assertion Revert
+
+**Problem:** When a test reverts, it's not clear whether the protocol function or the assertion caused it.
+
+**Solution:** Write a test without `cl.assertion()` to isolate the issue:
+
+```solidity
+// Test protocol function behavior without assertion
+function testProtocolFunctionIsolation() public {
+    // Setup
+    setupState();
+    
+    // Call protocol function directly (no assertion)
+    vm.prank(user);
+    protocol.targetFunction();
+    
+    // If this passes, the issue is in the assertion
+    // If this fails, the issue is in the protocol function
+}
+```
+
+## pcl Command Issues
+
+### Build and Test Failures
+
+**Common Causes:**
+
+- Missing `FOUNDRY_PROFILE=assertions` environment variable (see [Foundry Profile Configuration](/credible/ci-cd-integration#foundry-profile-configuration))
+- Incorrect `foundry.toml` configuration
+- Missing dependencies or remappings
+
+**Solution:**
+
+Always set `FOUNDRY_PROFILE=assertions` before running pcl commands:
+
+```bash
+# ✅ CORRECT
+FOUNDRY_PROFILE=assertions pcl build
+FOUNDRY_PROFILE=assertions pcl test
+
+# ❌ WRONG
+pcl test  # May use wrong profile
+```
+
+**Debugging Commands:**
+
+```bash
+# Run specific test for debugging
+FOUNDRY_PROFILE=assertions pcl test --match-test testFunctionName -vvv
+
+# Run specific test file
+FOUNDRY_PROFILE=assertions pcl test path/to/test/file.t.sol
+
+# Run specific test contract
+FOUNDRY_PROFILE=assertions pcl test --match-contract ContractName
+```
+
+**Additional Checks:**
+
+- Check `foundry.toml` has assertions profile configured
+- Verify `remappings.txt` includes `credible-std/=lib/credible-std/src/`
+
+## Backtesting Errors
+
+For backtesting-specific errors, see the [Backtesting Guide](/credible/backtesting#understanding-results).
+
+**Common Backtesting Issues:**
+
+- **ASSERTION_FAIL** - Assertion reverted (may be false positive, [gas limit exceeded](#gas-limit-exceeded), or known exploit)
+- **UNKNOWN_ERROR** - Unexpected failure (check error message, may be RPC issue)
+- **NEEDS_REVIEW** - Transaction called a function not monitored by your assertion, or failed to replay
+
+## Debugging
+
+### Using Verbose Output
+
+Use `pcl test -vvv` to get detailed information:
+
+- **Call traces** - See which functions executed and in what order
+- **Gas usage** - Identify expensive operations causing gas limit issues
+- **Error messages** - Get detailed revert reasons and stack traces
+- **State changes** - Track storage modifications
+
+**What to Look For:**
+
+- Unexpected function calls between `cl.assertion()` and target function
+- Gas consumption hitting the 300k limit
+- Wrong addresses in call traces (indicates `vm.prank()` issues)
+- Revert locations to identify assertion vs protocol failures
+
+### Console Logging
+
+Add `console.log()` statements to your assertion functions for debugging. Note that `console.log()` only accepts a single string argument, so use string concatenation for values:
+
+```solidity
+import { console } from "credible-std/console.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+
+function assertionFunction() external {
+    uint256 preBalance = uint256(ph.forkPreTx().load(token, balanceSlot));
+    uint256 postBalance = uint256(ph.forkPostTx().load(token, balanceSlot));
+    
+    console.log(string.concat("Pre: ", Strings.toString(preBalance)));
+    console.log(string.concat("Post: ", Strings.toString(postBalance)));
+    
+    require(postBalance >= preBalance, "Balance decreased");
+}
+```
+
+Console logs only appear when running `pcl test`, not in production.
+
+## Getting Help
+
+If you've tried the solutions above and still can't resolve your issue:
+
+1. **Check the error message** - Look for specific error details in verbose output
+2. **Isolate the problem** - Test protocol function without assertion to identify root cause
+3. **Gather information:**
+   - Error message and stack trace
+   - Test code that reproduces the issue
+   - Gas usage (if gas-related)
+   - Verbose output (`-vvv`)
+
+**Support Channels:**
+
+- [GitHub Issues](https://github.com/phylaxsystems/credible-std/issues) - Report bugs or ask questions
+- [Telegram](https://t.me/phylax_credible_layer) - Community support
+
+**Related Documentation:**
+
+- [Writing Assertions Guide](/credible/pcl-assertion-guide) - Learn assertion patterns
+- [Testing Assertions](/credible/testing-assertions) - Testing best practices
+- [pcl Reference](/credible/cli-reference) - Command-line tool documentation
+- [Cheatcodes Reference](/credible/cheatcodes-reference) - Available Phylax cheatcodes

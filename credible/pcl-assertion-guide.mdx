@@ -131,7 +131,7 @@ This results in actual hack prevention, not just mitigation.
 
 ### Gas Consumption
 
-Assertion functions are limited to a maximum execution of 100,000 gas. If an assertion function exceeds this gas limit, the transaction will be invalidated and dropped.
+Assertion functions are limited to a maximum of 300,000 gas. If an assertion function exceeds this gas limit, the transaction will be invalidated and dropped.
 Please be aware that the gas consumption of certain cheatcodes, such as `getCallInputs`, can be variable, due to unknown lengths of the call inputs.
 We are actively working to improve this as soon as possible. Staying mindful of gas consumption is in general a good practice.
 See the [Assertions overview](/credible/assertions-overview#constraints) for more details on gas limits and optimization strategies.
@@ -450,5 +450,6 @@ By following the best practices outlined in this guide, you can create assertion
 
 - Explore the assertion examples in the [Assertions Book](/assertions-book/assertions-book-intro)
 - Learn about the [Cheatcodes](/credible/cheatcodes-reference)
-- Follow the [PCL Quickstart](/credible/pcl-quickstart) to learn how to deploy your assertions
-- For a comprehensive list of terms and concepts used in PCL, see the [Glossary](/credible/glossary).
+- Follow the [Quickstart](/credible/pcl-quickstart) to learn how to deploy your assertions
+- If you encounter issues, check the [Troubleshooting Guide](/credible/troubleshooting)
+- For a comprehensive list of terms and concepts, see the [Glossary](/credible/glossary).
