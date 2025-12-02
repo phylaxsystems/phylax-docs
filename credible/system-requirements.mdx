@@ -1,0 +1,44 @@
+---
+title: 'System Requirements'
+description: 'Hardware and infrastructure requirements for running the Credible Layer sidecar in production and development environments.'
+---
+
+The Credible Layer operates as a [sidecar](/credible/glossary#sidecar) alongside the network sequencer. This page outlines the system requirements for running the sidecar.
+
+## Production Requirements
+
+For production usage on a real network, run the sidecar with at least the following specifications:
+
+| Component | Requirement |
+|-----------|-------------|
+| **CPU** | 32 physical cores, AMD Zen 3 performance equivalent or higher |
+| **RAM** | 128 GB recommended |
+| **Storage** | 512 GB+ recommended |
+| **Network** | 10 Gbps minimum between sequencer and sidecar |
+
+### CPU
+
+The sidecar requires significant compute for assertion execution. Use 32 physical cores with AMD Zen 3 performance equivalent or higher.
+
+### Memory
+
+Allocate 128 GB RAM minimum. RAM allocation should be enough to store the entire chain state (not full blocks, just state) in memory.
+
+### Storage
+
+Use 512 GB+ of fast local (not networked) PCIe NVMe SSDs to keep I/O latency low. Budget for sustained IOPS and 2x storage capacity to maintain fast SSD reads.
+
+### Networking
+
+Keep round-trip time (RTT) to the sequencer sub-millisecond by colocating in the same availability zone or cluster. Co-scheduling on the same Kubernetes node/pod is ideal.
+
+**Key requirements:**
+- 10 Gbps minimum bandwidth between sequencer and sidecar
+- VPC-peer the sequencer and sidecar; avoid routing over the public internet
+- Stable, low-jitter egress to your DA RPC (HTTP) and indexer RPC (WebSocket) endpoints
+- Prefer private endpoints or allowlisted static egress IPs
+
+## Local Development
+
+For local testing, unless you are benchmarking performance, the sidecar is lightweight and has no hard hardware requirements.
+
