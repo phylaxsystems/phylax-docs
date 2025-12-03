@@ -1,0 +1,56 @@
+---
+title: 'PhEVM'
+description: 'The Phylax EVM - a specialized execution environment for assertion validation'
+---
+
+PhEVM (Phylax EVM) is a specialized EVM implementation that executes [assertion](/credible/glossary#assertion) bytecode during transaction validation. It extends the standard EVM with additional capabilities for state inspection and comparison.
+
+## Purpose
+
+PhEVM serves as the execution engine within the [Assertion Enforcer](/credible/assertion-enforcer). When a transaction needs validation, the Assertion Enforcer invokes PhEVM to run all relevant assertions against the transaction's state changes.
+
+See the [system architecture diagram](/credible/architecture-overview#system-architecture) for how PhEVM fits into the overall Credible Layer architecture.
+
+## Key Capabilities
+
+### State Access
+
+PhEVM can access blockchain state at multiple points during transaction execution:
+
+- **Pre-transaction state**: The blockchain state before the transaction executes
+- **Post-transaction state**: The blockchain state after the transaction executes
+- **Pre-call state**: State before a specific internal call within the transaction
+- **Post-call state**: State after a specific internal call within the transaction
+
+This enables assertions to compare values across different execution points, something impossible with standard Solidity.
+
+### Cheatcodes
+
+PhEVM implements special precompiles called [cheatcodes](/credible/glossary#cheatcodes) that provide capabilities beyond standard EVM operations:
+
+- **State forking**: `forkPreTx()`, `forkPostTx()`, `forkPreCall()`, `forkPostCall()`
+- **Call introspection**: Access to call inputs, call traces, and execution context
+- **State change tracking**: Monitor storage slot modifications during execution
+- **Log access**: Retrieve transaction logs for validation
+
+These cheatcodes are exposed through the [`credible-std`](/credible/credible-std-overview) library and documented in the [Cheatcodes Reference](/credible/cheatcodes-reference).
+
+### Off-Chain Execution
+
+PhEVM runs entirely off-chain as part of the [Assertion Enforcer](/credible/assertion-enforcer) sidecar. This provides several advantages:
+
+- **Higher gas limits**: Assertions can perform complex computations that would be prohibitively expensive on-chain
+- **No on-chain overhead**: Validation doesn't consume block gas or affect transaction costs
+- **Parallel execution**: Multiple assertions can be validated simultaneously
+
+## How It Works
+
+When the Assertion Enforcer receives a transaction for validation:
+
+1. **State Preparation**: PhEVM receives the pre-transaction and post-transaction state snapshots
+2. **Assertion Loading**: Relevant assertion bytecode is loaded from cache (fetched from [Assertion DA](/credible/assertion-da) during deployment)
+3. **Execution**: PhEVM executes each assertion function against the prepared states
+4. **Result**: If any assertion reverts, the transaction is flagged as invalid
+
+For the complete validation flow, see [Assertion Enforcer](/credible/assertion-enforcer).
+

@@ -26,10 +26,17 @@ Critical conditions or properties that must always be maintained within a protoc
 ### PhEVM (Phylax EVM)
 A specialized EVM implementation that includes additional capabilities for assertion verification and state manipulation.
 
+Learn more: [PhEVM](/credible/phevm)
+
 ### Assertion DA (Data Availability)
 The data availability layer responsible for storing assertion code and metadata. This ensures that assertions are accessible and verifiable by anyone.
 
 Learn more: [Assertion Data Availability](/credible/assertion-da)
+
+### State Oracle
+The core on-chain contract that coordinates protocol admins and network operators. It maintains the mapping between protected contracts and their assertions, enforces timelock periods, and manages assertion windows.
+
+Learn more: [Credible Layer Contracts](/credible/credible-layer-contracts)
 
 ### Block Builder
 The component of the network that simulates transactions and runs assertions before transaction finalization to ensure they don't violate defined conditions.
@@ -38,7 +45,9 @@ The component of the network that simulates transactions and runs assertions bef
 The network component responsible for building blocks and validating transactions against assertions before including them in the blockchain.
 
 ### Assertion Enforcer
-The entity responsible for enforcing assertions and vouching for not including any transactions that would invalidate them. Usually a block builder or sequencer.
+The sidecar component responsible for validating transactions against assertions during block production. It orchestrates the validation process by identifying relevant assertions, invoking PhEVM to execute them, and making inclusion/exclusion decisions.
+
+Learn more: [Assertion Enforcer](/credible/assertion-enforcer)
 
 ### Credible dApp
 The web application interface for interacting with the Credible Layer. It allows dApp developers and end-users to deploy, manage, and view assertions and projects.
@@ -131,6 +140,11 @@ See the [Cheatcodes Reference](/credible/cheatcodes-reference) for a complete li
 The PCL testing interface that extends Forge's testing capabilities with additional utilities specifically for testing assertions. It provides functions for adding assertions and validating transactions, making it easier to test assertion behavior in different scenarios.
 
 Learn more about testing assertions in the [Testing Guide](/credible/testing-assertions).
+
+### Backtesting
+A testing method that runs assertions against historical blockchain transactions from a specified block range. Backtesting helps ensure assertions work correctly with real transactions and don't trigger false positives on legitimate protocol operations. It is a useful tool for testing assertions before deployment.
+
+Learn more: [Backtesting](/credible/backtesting)
 
 ## Security Features
 

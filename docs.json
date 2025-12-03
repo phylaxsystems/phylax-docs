@@ -27,6 +27,9 @@
             "group": "Architecture",
             "pages": [
               "credible/architecture-overview",
+              "credible/assertion-enforcer",
+              "credible/phevm",
+              "credible/credible-layer-contracts",
               "credible/architecture-op-stack",
               "credible/assertion-da",
               "credible/neutrality"
