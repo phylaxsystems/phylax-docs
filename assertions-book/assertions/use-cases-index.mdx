@@ -5,14 +5,6 @@ description: Complete catalog of assertion patterns organized by use case catego
 
 This section contains assertion patterns organized by use case categories.
 
-## Comprehensive Protocol Suites
-
-This is a collection of assertion suites for full protocols. These are deep dive use cases based on deployed and used protocols and a great starting point for understanding how to write assertions for your own protocols.
-
-- [**Aave V3 Suite**](/assertions-book/assertions/aave-v3-suite): A comprehensive collection of assertions for the Aave V3 lending protocol, demonstrating real-world application of assertion patterns.
-
-- [**Optimism FMA Suite**](/assertions-book/assertions/optimism-fma-suite): Assertions based on Optimism's Failure Mode Analysis framework, covering cross-chain message passing and bridge security.
-
 ## Access Control & Administrative Changes
 
 - [**Implementation Address Change**](/assertions-book/assertions/ass01-impl-addr-change): Protects against unauthorized changes to proxy implementation addresses, preventing attackers from replacing contract logic with malicious code.
@@ -61,15 +53,16 @@ This is a collection of assertion suites for full protocols. These are deep dive
 
 - [**Panic State Validation**](/assertions-book/assertions/ass17-panic-state-validation): Validates critical protocol state variables during panic or emergency modes, ensuring fallback mechanisms work correctly when normal operations are suspended.
 
-## Data Integrity & Message Verification
-
-- [**Farcaster Protocol Integrity**](/assertions-book/assertions/ass22-farcaster-protocol-integrity): Ensures the integrity of cross-chain messages in the Farcaster protocol, preventing unauthorized or malformed message processing.
 
 ## Fund Protection
 
 - [**ERC20 Drain**](/assertions-book/assertions/ass20-erc20-drain): Prevents excessive token outflows in a single transaction, mitigating the impact of potential exploits by limiting how quickly funds can be drained.
 
 - [**Ether Drain**](/assertions-book/assertions/ass21-ether-drain): Monitors and limits ETH outflows from contracts, protecting against unauthorized withdrawals that could deplete protocol reserves.
+
+## Data Integrity & Message Verification
+
+- [**Farcaster Protocol Integrity**](/assertions-book/assertions/ass22-farcaster-protocol-integrity): Ensures the integrity of cross-chain messages in the Farcaster protocol, preventing unauthorized or malformed message processing.
 
 ---
 
