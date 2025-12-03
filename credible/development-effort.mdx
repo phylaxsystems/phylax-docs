@@ -1,0 +1,58 @@
+---
+title: 'Development Effort'
+description: 'Understanding the effort required to develop assertions'
+---
+
+<Check>
+**Summary**
+- Comparable to writing Forge invariant tests when invariants are defined
+- Written in Solidity with familiar patterns
+- Few additional [cheatcodes](/credible/cheatcodes-overview) to learn
+- Main variable: whether invariants are already defined
+</Check>
+
+## Effort Factors
+
+Development effort depends on whether invariants are already defined for your protocol.
+
+### Invariants Defined
+
+When invariants exist, writing assertions is similar to writing Forge invariant tests:
+
+- **Workflow**: Write Solidity, test with `pcl test`(fork of `forge`), deploy via the [dApp](/credible/dapp-guide)
+- **Learning curve**: A small set of [cheatcodes](/credible/cheatcodes-overview) for state comparison (`ph.forkPreTx()`, `ph.forkPostTx()`, etc.)
+- **Familiarity**: Developers who write Forge tests can write assertions
+
+### Invariants Not Defined
+
+You can write assertions without pre-defined invariants, but having them makes the process easier, more structured, and lowers the risk of overlooking attack vectors.
+
+Defining invariants involves identifying:
+
+- States that should never occur
+- Relationships that must always hold (e.g., total supply = sum of balances)
+
+Some teams do this internally; others engage security researchers or auditors. For guidance, see [Intro to Invariants ↗](https://jstcz.eth.link/blog/2025/08/13/intro-to-invariants/).
+
+## Testing Assertions
+
+Testing assertions can take longer than writing them. However, assertion tests reuse existing protocol test infrastructure. Existing Forge test setups carry over with minimal to no additional effort.
+
+See [Testing Assertions](/credible/testing-assertions) for patterns and best practices.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/credible/pcl-quickstart">
+    Write and deploy your first assertion
+  </Card>
+  <Card title="Assertion Guide" icon="code" href="/credible/pcl-assertion-guide">
+    Step-by-step guide to writing assertions
+  </Card>
+  <Card title="Cheatcodes" icon="wand-magic-sparkles" href="/credible/cheatcodes-overview">
+    Learn the additional tools available
+  </Card>
+  <Card title="Testing" icon="flask-vial" href="/credible/testing-assertions">
+    Test your assertions locally
+  </Card>
+</CardGroup>
