@@ -1,0 +1,121 @@
+---
+title: 'Assertion Enforcer'
+description: 'The sidecar component that orchestrates assertion validation during block production'
+---
+
+The Assertion Enforcer is a sidecar component that validates transactions against [assertions](/credible/glossary#assertion) during block production. It operates alongside the network's [sequencer](/credible/glossary#sequencer) or [block builder](/credible/glossary#block-builder), intercepting transactions and determining which should be included in blocks.
+
+## Role in the System
+
+The Assertion Enforcer sits between the mempool and block production:
+
+1. Receives transactions from the network validator
+2. Identifies which assertions apply to each transaction
+3. Invokes [PhEVM](/credible/phevm) to execute assertions against transaction states
+4. Returns validation results (valid/invalid) to the network
+5. Only valid transactions are included in blocks
+
+## Sidecar Architecture
+
+As a [sidecar](/credible/glossary#sidecar), the Assertion Enforcer:
+
+- **Operates independently** from the main L2 infrastructure
+- **Integrates without code changes** to the sequencer
+- **Scales separately** from the main network components
+- **Fails gracefully** without affecting L2 operations
+
+This design allows networks to adopt the Credible Layer without modifying their core infrastructure.
+
+## Validation Process
+
+When a transaction arrives for validation, the Assertion Enforcer orchestrates the following process:
+
+```mermaid
+---
+title: Assertion Validation Detail
+---
+flowchart LR
+    TX["Transaction"]
+    STATE1["Pre-Transaction State<br/>(State1)"]
+
+    subgraph simulation["EVM Simulation"]
+        EVM["Execute Transaction"]
+    end
+
+    STATE2["Post-Transaction State<br/>(State2)"]
+
+    subgraph validation["PhEVM Assertion Validation"]
+        PhEVM["Validate Against Assertions"]
+    end
+
+    ASSERTIONS["Deployed Assertions"]
+    RESULT["Valid/Invalid"]
+
+    TX --> EVM
+    STATE1 --> EVM
+    EVM --> STATE2
+
+    TX -.-> PhEVM
+    STATE1 -.-> PhEVM
+    STATE2 -.-> PhEVM
+    ASSERTIONS --> PhEVM
+
+    PhEVM --> RESULT
+
+    classDef state fill:#e91e63,stroke:#880e4f,stroke-width:2px,color:#fff
+    classDef evm fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
+    classDef phevm fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    classDef assertions fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    classDef tx fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+    classDef result fill:#ffa726,stroke:#e65100,stroke-width:2px,color:#fff
+
+    class STATE1,STATE2 state
+    class EVM evm
+    class PhEVM phevm
+    class ASSERTIONS assertions
+    class TX tx
+    class RESULT result
+```
+
+### Step-by-Step
+
+1. **Identify Relevant Assertions**: The Assertion Enforcer queries the [on-chain registry](/credible/credible-layer-contracts) to find which assertions apply to the contracts the transaction interacts with
+
+2. **Fetch Assertion Bytecode**: Assertion bytecode is retrieved from internal cache (populated from [Assertion DA](/credible/assertion-da) when assertions are deployed)
+
+3. **Simulate Transaction**: The transaction is executed against pre-transaction state to produce the post-transaction state
+
+4. **Execute Assertions**: [PhEVM](/credible/phevm) runs all relevant assertions with access to:
+   - The transaction itself
+   - Pre-transaction state (State1)
+   - Post-transaction state (State2)
+
+5. **Return Result**:
+   - If any assertion reverts → transaction is invalid
+   - If all assertions pass → transaction is valid
+
+## Block Building Integration
+
+The Assertion Enforcer integrates with block builders to ensure only valid transactions enter blocks:
+
+- Transactions that would violate assertions are dropped before block inclusion
+- The network validator receives clear valid/invalid signals
+- Block production continues normally with validated transactions
+
+## Forced Inclusion Transactions
+
+Forced inclusion transactions (such as L1→L2 deposits) require special handling since they must be included regardless of assertion results. The Credible Layer has mitigation pathways for these scenarios.
+
+<Note>
+We have developed a solution for forced inclusion transactions and are actively implementing it. Ask us about it!
+</Note>
+
+## Assertion Caching
+
+To ensure high-performance validation, the Assertion Enforcer maintains an internal cache of assertion bytecode:
+
+- **On deployment**: When an assertion is deployed on-chain, the Assertion Enforcer detects the event and fetches bytecode from [Assertion DA](/credible/assertion-da)
+- **During validation**: Assertions are loaded from cache. No network requests occur on the hot path.
+
+This caching strategy ensures validation latency doesn't impact block production times.
+

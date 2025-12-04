@@ -1,38 +1,28 @@
 ---
 title: 'General Design'
-description: 'Deep dive into the Credible Layer architecture'
+description: 'How the Credible Layer components work together to enforce security rules'
 ---
 
-# Introduction
-
-This page provides a comprehensive overview of the architecture of the Credible Layer. It details the primary system components, their roles, and how they interact to enforce security rules for smart contracts.
+This page provides an overview of the Credible Layer architecture, how the components fit together and interact to enforce security rules for smart contracts.
 
 <Note>
 Looking for a non-technical introduction? Start with the [Credible Layer Overview](/credible/credible-layer-overview).
 </Note>
 
-# System Overview
+## System Overview
 
-The Credible Layer consists of four key components working together:
+The Credible Layer consists of four core components:
 
-1. **[Assertions](/credible/glossary#assertion)**: Security rules written in Solidity that define states that should never occur (e.g., "proxy implementation address shouldn't change", "price reported by oracle shouldn't deviate more than x% inside of a single transaction")
-2. **Protocols / dApps**: Define assertions for their contracts and link them on-chain
-3. **[Block Builders](/credible/glossary#block-builder)/[Sequencers](/credible/glossary#sequencer)**: The network infrastructure that validates every transaction against assertions before inclusion in a block, dropping any that would violate security rules
-4. **[Transparency Dashboard](/credible/glossary#transparency-dashboard)**: A platform where users can see which protocols are protected and how, creating a focal point for ecosystem security
+1. **[Assertions](/credible/assertions-overview)**: Security rules written in Solidity that define states that should never occur
+2. **[Assertion Enforcer](/credible/assertion-enforcer)**: Sidecar that validates transactions against assertions during block production
+3. **[Credible Layer Contracts](/credible/credible-layer-contracts)**: On-chain registry that maps assertions to protected contracts
+4. **[Assertion DA](/credible/assertion-da)**: Storage layer for assertion bytecode and source code
 
-# How the Credible Layer Works
+## How the Credible Layer Works
 
-## Abstract Overview
+The Credible Layer is a **sidecar security infrastructure** that validates transactions against developer-defined security rules (assertions) before they are included in blocks. As a sidecar, it runs alongside the L2 network's main components, intercepting transactions during block building and ensuring they don't violate any deployed security rules.
 
-The Credible Layer is a **sidecar security infrastructure** that validates every transaction against developer-defined security rules (assertions) before they are included in blocks. As a sidecar, it runs alongside the L2 network's main components, intercepting transactions during the block building process and ensuring they don't violate any deployed security properties.
-
-### Sidecar Architecture
-
-The sidecar design allows the Credible Layer to:
-- **Operate independently** from the main L2 infrastructure
-- **Validate transactions** without modifying core L2 code
-- **Scale separately** from the main network components
-- **Fail gracefully** without affecting L2 operations
+The Assertion Enforcer is operated by the network's sequencer. Networks that integrate the Credible Layer run this sidecar as part of their sequencer infrastructure. This means you're not adding new trust assumptions: if you trust the network to include your transactions, you can trust it to enforce your assertions.
 
 ### System Architecture
 
@@ -85,16 +75,16 @@ flowchart LR
     class SPACER_E invisible
 ```
 
-The diagram above shows the Credible Layer at the **system level**. It illustrates two main flows:
+The diagram shows two main flows:
 
-**Development Flow**: Developers use the `pcl` to develop and test assertions. The `pcl` stores assertion bytecode directly in [Assertion DA](/credible/assertion-da), then submits to the Credible dApp with the assertion ID. The dApp deploys these assertions in the on-chain Credible Layer contracts.
+**Development Flow**: Developers use [`pcl`](/credible/cli-overview) to develop and test assertions. The CLI stores assertion bytecode in [Assertion DA](/credible/assertion-da), then submits to the [Credible dApp](/credible/dapp-overview). The dApp deploys assertions to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts).
 
-**Runtime Flow**: The network validator sends transactions to the Assertion Enforcer sidecar during block production. The Assertion Enforcer fetches relevant assertions from Assertion DA and executes them via PhEVM. Crucially, **assertion validation happens during block production**, which means the Assertion Enforcer has access to the final transaction ordering. The sidecar returns validation results (valid/invalid) back to the network validator, which only includes valid transactions in blocks.
+**Runtime Flow**: The network validator sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer fetches relevant assertions and executes them via [PhEVM](/credible/phevm). Valid transactions are included in blocks; invalid transactions are dropped.
 
 ### How It Works
 
-1. **Assertion Deployment**: Developers write and submit assertions through the `pcl` and dApp, which are stored in Assertion DA and then deployed on-chain
-2. **Transaction Validation During Block Production**: The network sends transactions to the Assertion Enforcer during block production
+1. **Assertion Deployment**: Developers write and submit assertions through `pcl` and the dApp, which are stored in Assertion DA and deployed on-chain
+2. **Transaction Validation**: The network sends transactions to the Assertion Enforcer during block production
 3. **Assertion Execution**: The Assertion Enforcer simulates each transaction and validates it against relevant assertions using PhEVM
 4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the network validator
 5. **Security Enforcement**: Only valid transactions are included in blocks, preventing security violations before they reach the blockchain
@@ -102,14 +92,6 @@ The diagram above shows the Credible Layer at the **system level**. It illustrat
 ## Transaction Flow
 
 When a user submits a transaction, it goes through the following validation process:
-
-1. **Transaction Submission**: User submits a transaction to the network
-2. **Mempool Entry**: Transaction enters the mempool awaiting selection
-3. **Block Builder Selection**: The block builder picks transactions from the mempool and validates them
-4. **Assertion Validation**: Each transaction is simulated and validated against deployed [Assertions](/credible/glossary#assertion)
-5. **Inclusion Decision**: Valid transactions are included in the block, invalid ones are dropped
-
-The diagram below shows the **transaction validation process** during block building:
 
 ```mermaid
 ---
@@ -135,167 +117,45 @@ flowchart LR
     class DROP invalid
 ```
 
-This diagram shows the **validation flow** for a single transaction. Users submit transactions to the mempool, where the Assertion Enforcer (sidecar) validates them. Valid transactions are included in blocks, while invalid transactions are dropped.
-
-### Assertion Validation Process
-
-The assertion validation step (step 4 above) is where the Credible Layer's security enforcement happens. Here's what occurs during this critical phase:
-
-1. **Identify Relevant Assertions**: The system identifies which assertions apply to the contracts the transaction interacts with
-2. **Fetch Assertion Bytecode**: The system retrieves [Assertion Bytecode](/credible/glossary#assertion-bytecode) from the [Assertion DA](/credible/glossary#assertion-da-data-availability)
-3. **Simulate Transaction**: The transaction is simulated to create two state snapshots:
-   - [Pre-transaction state](/credible/glossary#pre-statepost-state): The blockchain state before the transaction
-   - [Post-transaction state](/credible/glossary#pre-statepost-state): The blockchain state after the transaction
-4. **Execute Assertions**: The [PhEVM](/credible/glossary#phevm-phylax-evm) executes all relevant assertions against these states
-5. **Return Result**:
-   - If any assertion reverts (invalid state), the transaction is flagged as invalid
-   - If all assertions pass, the transaction is considered valid
-
-The diagram below shows the **assertion validation components and data flow**:
-
-```mermaid
----
-title: Assertion Validation Detail
----
-flowchart LR
-    TX["Transaction"]
-    STATE1["Pre-Transaction State<br/>(State1)"]
-
-    subgraph simulation["EVM Simulation"]
-        EVM["Execute Transaction"]
-    end
-
-    STATE2["Post-Transaction State<br/>(State2)"]
-
-    subgraph validation["PhEVM Assertion Validation"]
-        PhEVM["Validate Against Assertions"]
-    end
-
-    ASSERTIONS["Deployed Assertions"]
-    RESULT["Valid/Invalid"]
-
-    TX --> EVM
-    STATE1 --> EVM
-    EVM --> STATE2
-
-    TX -.-> PhEVM
-    STATE1 -.-> PhEVM
-    STATE2 -.-> PhEVM
-    ASSERTIONS --> PhEVM
-
-    PhEVM --> RESULT
-
-    classDef state fill:#e91e63,stroke:#880e4f,stroke-width:2px,color:#fff
-    classDef evm fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
-    classDef phevm fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
-    classDef assertions fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
-    classDef tx fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
-    classDef result fill:#ffa726,stroke:#e65100,stroke-width:2px,color:#fff
-
-    class STATE1,STATE2 state
-    class EVM evm
-    class PhEVM phevm
-    class ASSERTIONS assertions
-    class TX tx
-    class RESULT result
-```
-
-This diagram shows the **components involved** in assertion validation. The transaction is first simulated to generate state snapshots, then PhEVM executes assertion bytecode against those states to determine validity.
-
-**Ultimately**: If a transaction would result in a hack and the contract is protected by the Credible Layer, the transaction will be dropped. If the contract is not protected, the transaction will be included in the block.
+1. **Transaction Submission**: User submits a transaction to the network
+2. **Mempool Entry**: Transaction enters the mempool awaiting selection
+3. **Block Builder Selection**: The block builder picks transactions from the mempool
+4. **Assertion Validation**: Each transaction is validated against deployed assertions
+5. **Inclusion Decision**: Valid transactions are included in the block, invalid ones are dropped
 
 <Note>
-**Forced Inclusion Transactions**: You might be wondering how the Credible Layer handles forced inclusion transactions. We have found a solution and are actively working on implementing it. Ask us about it!
+The Assertion Enforcer is integrated with the block builder. During block production, the block builder invokes the Assertion Enforcer to validate transactions before including them.
 </Note>
+
+For details on the assertion validation process, see [Assertion Enforcer](/credible/assertion-enforcer#validation-process).
 
 ## System Components
 
-### Component Details
+### Assertion Enforcer
 
-The Credible Layer consists of several key infrastructure components:
+The [Assertion Enforcer](/credible/assertion-enforcer) is a sidecar that orchestrates transaction validation. It identifies which assertions apply to incoming transactions, invokes PhEVM to execute them, and makes inclusion/exclusion decisions based on the results.
 
-#### Assertion Enforcer (Sidecar)
+### PhEVM (Phylax EVM)
 
-- Custom [block builder](/credible/glossary#block-builder) implementation that operates as a sidecar to the [sequencer](/credible/glossary#sequencer)
-- Integrates with the sequencer without requiring sequencer code modifications
-- Orchestrates the validation process by:
-  - Identifying which assertions apply to incoming transactions
-  - Invoking [PhEVM](/credible/glossary#phevm-phylax-evm) to execute the assertions against transaction states
-  - Making inclusion/exclusion decisions based on assertion results
-- Builds blocks that exclude any transactions violating assertions
-- Handles [forced inclusion transactions](/credible/glossary#forced-inclusion-transactions) with special mitigation pathways
+[PhEVM](/credible/phevm) is the execution engine that runs assertion bytecode. It extends the standard EVM with [cheatcodes](/credible/glossary#cheatcodes) for state inspection, enabling assertions to compare pre-transaction and post-transaction states.
 
-#### PhEVM (Phylax EVM)
+### Assertion DA
 
-The execution arm of the Assertion Enforcer:
+[Assertion Data Availability](/credible/assertion-da) stores assertion bytecode and source code, making them accessible to Assertion Enforcers and providing transparency for users and auditors.
 
-- Executes assertion bytecode in an isolated off-chain environment
-- Supports special [cheatcodes](/credible/cheatcodes-reference) (precompiles) for efficient state access and comparison
-- Can simulate both pre-transaction and post-transaction states
-- Evaluates assertions in parallel to maximize throughput (we've benchmarked 1 gigagas/s of assertions against 30 megagas/s transaction throughput)
+### Credible Layer Contracts
 
-#### Assertion Data Availability (Assertion DA)
-
-- Compiles and stores assertion source code and bytecode securely
-- Provides assertion code to block builders for enforcement
-- Enables transparency by making assertions publicly available to users and auditors
-
-Learn more: [Assertion Data Availability](/credible/assertion-da)
-
-#### Credible Layer Protocol
-
-Smart contracts that manage the on-chain assertion registry:
-
-- Maps assertions to protected contracts
-- Handles assertion deployments, updates, and removals
-- Supports proof verification for mitigation triggers
-- Maintains security parameters and protocol metadata
+The [Credible Layer Contracts](/credible/credible-layer-contracts) are on-chain smart contracts that manage the assertion registry. The State Oracle coordinates protocol admins with network operators and serves as the source of truth for which assertions protect which contracts.
 
 ### Developer Tools
 
-#### Credible Layer dApp
-
-User interface for protocols to deploy and manage [assertions](/credible/glossary#assertion):
-
-- **[Transparency Dashboard](/credible/glossary#transparency-dashboard)**: Provides visibility into project security measures
-- OAuth-based authentication for assertion submission
-- Project and assertion management interface
-
-![Credible Layer dApp](/images/credible-dapp-ui-project.png)
-*Screenshot of the Credible Layer dApp UI for a project*
-
-#### `pcl`
-
-Command-line tool for writing, testing, and deploying assertions:
-
-- Write assertions in Solidity
-- Test assertions locally with `pcl test`
-- Deploy assertions to the Credible Layer
-- Manage assertion lifecycle
-
-Learn more in [Using pcl](/credible/cli-overview) and [pcl Reference](/credible/cli-reference).
-
-#### `credible-std`
-
-Standard library exposing [cheatcodes](/credible/glossary#cheatcodes) and testing functionality:
-
-- Provides access to [PhEVM](/credible/glossary#phevm-phylax-evm) cheatcodes for assertion development
-- Testing utilities for local assertion validation
-- Helper functions for common assertion patterns
-
-See the [`credible-std` reference](/credible/credible-std-overview) for details.
+- **[Credible dApp](/credible/dapp-overview)**: Web interface for deploying, managing, and viewing assertions
+- **[`pcl`](/credible/cli-overview)**: Command-line tool for writing, testing, and deploying assertions
+- **[`credible-std`](/credible/credible-std-overview)**: Standard library exposing cheatcodes and testing utilities
 
 ## Network Integrations
 
-The Credible Layer can be implemented on different networks using various architectures. The core concepts remain the same, but implementation details vary by network architecture.
-
-### Rollup-Boost Architecture
-- Block builder that integrates assertion enforcement directly
-- Uses external sidecar components to integrate with the L2 sequencer
-- Minimal changes to L2 node code
-- Suitable for modular L2 architectures
-
-The core concept remains the same across all implementations: the Credible Layer acts as a **sidecar system** that operates alongside the main L2 infrastructure, providing security validation without interfering with core L2 operations.
+The Credible Layer can be implemented on different networks. The core concepts remain the same, but implementation details vary by network architecture.
 
 For specific implementation details, see:
 - [OP Stack Implementation](/credible/architecture-op-stack)
@@ -305,8 +165,6 @@ For specific implementation details, see:
 For concrete assertion examples and real-world use cases, explore the [Assertions Book](/assertions-book/assertions-book-intro).
 
 ## Next Steps
-
-Ready to start building with the Credible Layer?
 
 <CardGroup cols={2}>
   <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
