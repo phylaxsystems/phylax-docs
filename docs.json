@@ -68,6 +68,7 @@
             "group": "Guides",
             "pages": [
               "credible/pcl-assertion-guide",
+              "credible/invariant-to-assertion",
               "credible/cli-overview",
               "credible/dapp-guide",
               "credible/generate-assertions-with-ai"

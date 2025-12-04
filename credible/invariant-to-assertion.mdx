@@ -1,0 +1,376 @@
+---
+title: 'From Invariant to Assertion'
+description: 'A guide to writing assertions from protocol invariants'
+---
+
+This guide walks you through the process of turning a protocol invariant into a working assertion. By the end, you'll understand how to identify invariants, handle exceptions, and write assertion code that protects your protocol.
+
+**Prerequisites**: Familiarity with Solidity, the [Assertions Overview](/credible/assertions-overview), and the [Assertion Guide](/credible/pcl-assertion-guide).
+
+**What you'll build**: An assertion that protects vault share prices in Euler's Vault Kit.
+
+## The Example: Euler Vault Share Price
+
+Throughout this guide, we'll use a real example: protecting vault share prices in [Euler's Ethereum Vault Connector (EVC)](https://github.com/euler-xyz/ethereum-vault-connector). This example demonstrates the full journey from protocol specification to working assertion.
+
+The invariant we'll implement:
+
+> "A vault's share price should not decrease unless bad debt socialization occurs."
+
+This protects depositors from economic attacks, protocol bugs, and malicious vault implementations while allowing legitimate protocol operations.
+
+## Step 1: Find and Define the Invariant
+
+### Where Do Invariants Come From?
+
+Invariants typically come from:
+
+- **Protocol specifications and whitepapers**: The authoritative source for how the protocol should behave
+- **Security audits**: Often document critical properties that must hold
+- **Your own analysis**: Asking "what should never happen?"
+
+For our example, the Euler Vault Kit specification defines how vaults should behave. A fundamental property of any vault is that share prices should be stable or increasing over time as yield accrues.
+
+### Define the Invariant
+
+Start by asking: **What should never happen?**
+
+For a vault, a decreasing share price means depositors are losing value. In pseudo-Solidity:
+
+```solidity
+// What we want to enforce
+require(sharePriceAfter >= sharePriceBefore, "Share price decreased");
+```
+
+This is our starting invariant. But before we implement it, we need to check for legitimate exceptions.
+
+## Step 2: Identify Exceptions
+
+Not every invariant violation is an attack. Protocol specifications often document legitimate scenarios where an invariant might not hold.
+
+### Bad Debt Socialization
+
+The Euler Vault Kit whitepaper describes a scenario called "bad debt socialization":
+
+> When an account in violation has had all of its collateral seized during a liquidation but still has a non-zero liability, this liability is called bad debt and is cancelled, socialising the loss to all current depositors in the vault.
+
+This is an intentional design decision to avoid bank-run scenarios. When bad debt is socialized, the share price decreases, but this is expected behavior, not an attack.
+
+The whitepaper also specifies how this is signaled:
+
+> To allow off-chain users to accurately track total borrows and internal balances using event logs, bad debt socialisation emits Repay and Withdraw logs, where the repay appears to come from the liquidator and the withdraw appears to come from address(0).
+
+### Refine the Invariant
+
+Now we can refine our invariant to account for this exception:
+
+```solidity
+// Refined invariant
+require(
+    sharePriceAfter >= sharePriceBefore || badDebtSocialized,
+    "Share price decreased without bad debt socialization"
+);
+```
+
+In plain English: "Share price cannot decrease unless bad debt socialization occurs."
+
+<Tip>
+Always check protocol specifications for documented exceptions before implementing an invariant. What looks like an attack might be intentional behavior.
+</Tip>
+
+## Step 3: Determine Where to Enforce
+
+Before writing code, decide where to check the invariant. You have two options:
+
+1. **At each vault individually**: Check share price on every vault contract
+2. **At a central entry point**: Check share price at the contract that routes calls to vaults
+
+For Euler, the EVC (Ethereum Vault Connector) is the central entry point for all vault interactions. Users don't call vaults directly; they go through the EVC's `batch()`, `call()`, and `controlCollateral()` functions.
+
+**Why check at the EVC?**
+
+- Single assertion covers all vaults
+- Catches attacks regardless of which vault is targeted
+- Simpler to maintain than per-vault assertions
+
+This is a common pattern: find the chokepoint where all relevant transactions flow, and enforce your invariant there.
+
+## Step 4: Choose Your Triggers
+
+Now we need to specify when our assertion should run. Looking at the EVC interface, three functions can lead to vault interactions:
+
+- `batch()`: Execute multiple operations atomically
+- `call()`: Execute a single operation on a target contract
+- `controlCollateral()`: Manage collateral positions
+
+We register a trigger for each:
+
+```solidity
+function triggers() external view override {
+    registerCallTrigger(this.assertionBatchSharePriceInvariant.selector, IEVC.batch.selector);
+    registerCallTrigger(this.assertionCallSharePriceInvariant.selector, IEVC.call.selector);
+    registerCallTrigger(this.assertionControlCollateralSharePriceInvariant.selector, IEVC.controlCollateral.selector);
+}
+```
+
+Each trigger maps an EVC function to an assertion function that will validate the invariant. See [Triggers](/credible/triggers) for more information.
+
+## Step 5: Write the Assertion Logic
+
+Now we implement the assertion. We'll break this into three parts:
+
+### Part A: Get the Vault Address
+
+For each entry point, we need to extract which vault is being interacted with. Here's how we do it for `call()`:
+
+```solidity
+function assertionCallSharePriceInvariant() external {
+    IEVC evc = IEVC(ph.getAssertionAdopter());
+    
+    // Get all calls to the EVC's call() function
+    PhEvm.CallInputs[] memory calls = ph.getCallInputs(address(evc), IEVC.call.selector);
+    
+    for (uint256 i = 0; i < calls.length; i++) {
+        // Decode to get the target vault address
+        (address targetContract,,,) = abi.decode(calls[i].input, (address, address, uint256, bytes));
+        
+        // Validate share price for this vault
+        validateVaultSharePriceInvariant(targetContract);
+    }
+}
+```
+
+Cheatcodes used:
+- [`ph.getAssertionAdopter()`](/credible/cheatcodes-reference#getassertionadopter): Get the contract address this assertion is protecting
+- [`ph.getCallInputs()`](/credible/cheatcodes-reference#getcallinputs): Get all calls to a specific function
+
+### Part B: Compare Pre and Post Share Price
+
+The core logic compares share prices before and after the transaction:
+
+```solidity
+function validateVaultSharePriceInvariant(address vault) internal {
+    // Skip non-contract addresses
+    if (vault.code.length == 0) return;
+    
+    // Get share price BEFORE transaction
+    ph.forkPreTx();
+    uint256 preSharePrice = getSharePrice(vault);
+    
+    // Get share price AFTER transaction
+    ph.forkPostTx();
+    uint256 postSharePrice = getSharePrice(vault);
+    
+    // Check the invariant
+    if (postSharePrice < preSharePrice) {
+        bool hasLegitimateBadDebt = checkForBadDebtSocialization(vault);
+        
+        require(
+            hasLegitimateBadDebt,
+            "Share price decreased without bad debt socialization"
+        );
+    }
+}
+
+function getSharePrice(address vault) internal view returns (uint256) {
+    uint256 totalAssets = IERC4626(vault).totalAssets();
+    uint256 totalSupply = IERC4626(vault).totalSupply();
+    
+    if (totalSupply > 0) {
+        return (totalAssets * 1e18) / totalSupply;
+    }
+    return 0;
+}
+```
+
+Cheatcodes used:
+- [`ph.forkPreTx()`](/credible/cheatcodes-reference#forkpretx): Switch to blockchain state before the transaction
+- [`ph.forkPostTx()`](/credible/cheatcodes-reference#forkposttx): Switch to blockchain state after the transaction
+
+### Part C: Detect Bad Debt Socialization
+
+Finally, we check if a share price decrease is due to legitimate bad debt socialization:
+
+```solidity
+function checkForBadDebtSocialization(address vault) internal returns (bool) {
+    PhEvm.Log[] memory logs = ph.getLogs();
+    
+    bool hasDebtSocializedEvent = false;
+    bool hasRepayFromLiquidator = false;
+    bool hasWithdrawFromZero = false;
+    
+    for (uint256 i = 0; i < logs.length; i++) {
+        if (logs[i].emitter != vault) continue;
+        
+        // Check for DebtSocialized event (added after whitepaper)
+        if (logs[i].topics[0] == keccak256("DebtSocialized(address,uint256)")) {
+            hasDebtSocializedEvent = true;
+        }
+        
+        // Check for Repay event from liquidator (per whitepaper spec)
+        if (logs[i].topics[0] == keccak256("Repay(address,uint256)")) {
+            address account = address(uint160(uint256(logs[i].topics[1])));
+            if (account != address(0)) {
+                hasRepayFromLiquidator = true;
+            }
+        }
+        
+        // Check for Withdraw from address(0) (per whitepaper spec)
+        if (logs[i].topics[0] == keccak256("Withdraw(address,address,address,uint256,uint256)")) {
+            address sender = address(uint160(uint256(logs[i].topics[1])));
+            if (sender == address(0)) {
+                hasWithdrawFromZero = true;
+            }
+        }
+    }
+    
+    // Bad debt detected via new event OR legacy pattern from whitepaper
+    return hasDebtSocializedEvent || (hasRepayFromLiquidator && hasWithdrawFromZero);
+}
+```
+
+Cheatcodes used:
+- [`ph.getLogs()`](/credible/cheatcodes-reference#getlogs): Retrieve all logs emitted during the transaction
+
+<Note>
+We check for both the `DebtSocialized` event (added after the whitepaper was written) and the original Repay + Withdraw pattern documented in the spec. This defensive approach ensures we catch bad debt socialization even if there's an edge case where the new event isn't emitted.
+</Note>
+
+View the [complete assertion contract](https://github.com/czepluch/ethereum-vault-connector/blob/master/assertions/src/VaultSharePriceAssertion.a.sol) to see how all these pieces fit together.
+
+## Step 6: Test Your Assertion
+
+Before deploying, you should thoroughly test your assertion. Here are the three most common test cases for this invariant:
+
+1. **Normal operation**: Share price increases or stays the same (should pass)
+2. **Attack scenario**: Share price decreases without bad debt (should fail)
+3. **Legitimate exception**: Share price decreases with bad debt socialization (should pass)
+
+Here are concrete test examples using the `call()` entry point. Tests use [`cl.assertion()`](/credible/testing-assertions#credible-layer-testing-interface) to register the assertion before executing the transaction.
+
+### Test 1: Normal Operation (Should Pass)
+
+```solidity
+function testVaultSharePriceAssertion_SingleCall_Passes() public {
+    // Setup vault with initial state
+    token1.mint(address(vault1), 1000e18);
+    vault1.setTotalAssets(1000e18);
+    vault1.mint(1000e18, user1); // Share price = 1.0
+
+    // Register assertion
+    cl.assertion({
+        adopter: address(evc),
+        createData: type(VaultSharePriceAssertion).creationCode,
+        fnSelector: VaultSharePriceAssertion.assertionCallSharePriceInvariant.selector
+    });
+
+    // Execute call that increases share price
+    vm.prank(user1);
+    evc.call(
+        address(vault1),
+        user1,
+        0,
+        abi.encodeWithSelector(MockERC4626Vault.increaseSharePrice.selector, 100e18)
+    );
+
+    // Assertion passes - share price increased
+}
+```
+
+### Test 2: Attack Detection (Should Fail)
+
+```solidity
+function testVaultSharePriceAssertion_SingleCall_Fails() public {
+    // Setup vault with initial state
+    token1.mint(address(vault1), 1000e18);
+    vault1.setTotalAssets(1000e18);
+    vault1.mint(1000e18, user1);
+
+    // Register assertion
+    cl.assertion({
+        adopter: address(evc),
+        createData: type(VaultSharePriceAssertion).creationCode,
+        fnSelector: VaultSharePriceAssertion.assertionCallSharePriceInvariant.selector
+    });
+
+    // Execute call that decreases share price WITHOUT bad debt
+    vm.prank(user1);
+    vm.expectRevert("VaultSharePriceAssertion: Share price decreased without bad debt socialization");
+    evc.call(
+        address(vault1),
+        user1,
+        0,
+        abi.encodeWithSelector(MockERC4626Vault.decreaseSharePrice.selector, 100e18)
+    );
+}
+```
+
+### Test 3: Legitimate Exception (Should Pass)
+
+```solidity
+function testVaultSharePriceAssertion_SharePriceDecreaseWithBadDebt_Passes() public {
+    // Setup vault with initial state
+    token1.mint(address(vault1), 1000e18);
+    vault1.setTotalAssets(1000e18);
+    vault1.mint(1000e18, user1);
+
+    // Register assertion
+    cl.assertion({
+        adopter: address(evc),
+        createData: type(VaultSharePriceAssertion).creationCode,
+        fnSelector: VaultSharePriceAssertion.assertionCallSharePriceInvariant.selector
+    });
+
+    // Execute call that decreases share price WITH bad debt socialization events
+    vm.prank(user1);
+    evc.call(
+        address(vault1),
+        user1,
+        0,
+        abi.encodeWithSelector(MockERC4626Vault.decreaseSharePriceWithBadDebt.selector, 100e18)
+    );
+
+    // Assertion passes - bad debt socialization detected
+}
+```
+
+<Tip>
+These are basic sanity checks. For production assertions, test edge cases like zero total supply, non-ERC4626 contracts, and zero addresses. Your assertion should handle these gracefully without reverting unexpectedly.
+</Tip>
+
+See the [full test file](https://github.com/czepluch/ethereum-vault-connector/blob/master/assertions/test/unit/VaultSharePriceAssertion.t.sol) for the complete test suite covering all entry points and edge cases.
+
+For thorough testing guidance including fuzz testing and backtesting against historical transactions, see [Testing Assertions](/credible/testing-assertions), [Fuzz Testing](/credible/fuzz-testing), and [Backtesting](/credible/backtesting).
+
+## Recap
+
+You've learned the process of turning an invariant into an assertion:
+
+1. **Find the invariant**: Check protocol specs, whitepapers, and audits
+2. **Identify exceptions**: Not every violation is an attack
+3. **Determine where to enforce**: Find the chokepoint where transactions flow
+4. **Choose triggers**: Specify which functions should invoke your assertion
+5. **Write the logic**: Use cheatcodes to compare pre/post state and handle exceptions
+6. **Test thoroughly**: Verify normal operations pass and attacks are caught
+
+<Info>
+The complete example from this guide is available in our fork of the [EVC repository](https://github.com/czepluch/ethereum-vault-connector/tree/master/assertions).
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Assertions Book" icon="book" href="/assertions-book/assertions-book-intro">
+    More real-world assertion examples
+  </Card>
+  <Card title="Cheatcodes Reference" icon="code" href="/credible/cheatcodes-reference">
+    Complete reference for assertion cheatcodes
+  </Card>
+  <Card title="Testing Assertions" icon="flask" href="/credible/testing-assertions">
+    How to test your assertions
+  </Card>
+  <Card title="Triggers" icon="bolt" href="/credible/triggers">
+    Learn about trigger types and optimization
+  </Card>
+</CardGroup>
+
