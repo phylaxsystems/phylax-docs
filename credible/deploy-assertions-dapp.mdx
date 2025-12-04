@@ -1,0 +1,160 @@
+---
+title: 'Deploy Assertions with the dApp'
+description: 'Create projects and deploy assertions to protect your contracts'
+---
+
+This guide walks you through creating a project in the Credible Layer dApp and deploying assertions to protect your smart contracts.
+
+**Prerequisites**:
+- [pcl installed](/credible/credible-install)
+- Smart contracts deployed on a supported chain
+- An assertion [written](/credible/write-first-assertion) and [tested](/credible/testing-assertions)
+
+**What you'll accomplish**: Create a project, link your contracts, and deploy assertions to production.
+
+<Note>
+New to the dApp? See the [dApp Overview](/credible/dapp-overview) to understand its features.
+</Note>
+
+## Step 1: Authenticate
+
+Authenticate through `pcl`:
+
+```bash
+pcl auth login
+```
+
+1. A login link appears in your terminal
+2. Open it in your browser
+3. Connect your wallet
+4. Enter the login code from the CLI
+
+<Frame caption="Authentication with pcl auth login">
+  <img src="/images/pcl_auth_login.webp" alt="Authentication with pcl auth login" />
+</Frame>
+
+<Note>
+Authentication links your wallet address with your `pcl` session, allowing you to manage projects that your wallet owns.
+</Note>
+
+## Step 2: Create a Project
+
+1. Navigate to the "Projects" tab or click "Create a Project"
+
+2. Enter project details:
+   - **Project Name**: Your protocol name
+   - **Project Description**: What your project does
+   - **Target Chain**: Where your contracts are deployed
+
+3. Click "Continue to contract selection"
+
+4. Add contract addresses:
+   - Enter each contract you want to protect
+   - Only contracts where you are the `owner` can be added
+   - The dApp verifies ownership by calling `owner()` on each contract
+
+5. Review and click "Save and publish"
+
+<Frame caption="Creating a Project in the dApp">
+  <img src="/images/create_project_dapp.webp" alt="Creating a Project" />
+</Frame>
+
+<Note>
+Only the contract owner can create a project for it. See [Ownership Verification](/credible/ownership-verification) for details on verification methods.
+</Note>
+
+## Step 3: Store and Submit Your Assertion
+
+Use `pcl` to upload and submit your assertion:
+
+```bash
+# Store the bytecode
+pcl store MyAssertion 0xYOUR_CONTRACT_ADDRESS
+
+# Submit to your project
+pcl submit -a 'MyAssertion(0xYOUR_CONTRACT_ADDRESS)' -p my-project
+```
+
+See [Store and Submit Assertions](/credible/store-submit-assertions) for detailed instructions.
+
+## Step 4: Deploy the Assertion
+
+After submitting via `pcl`, complete deployment in the dApp:
+
+1. Navigate to your project
+
+2. Click the "Deployment" tab
+
+3. Find your assertion and click "Proceed to Review"
+
+4. Select the target contract to protect
+
+5. Review assertion details:
+   - Assertion name and parameters
+   - Target contract address
+   - Trigger conditions
+
+6. Choose environment:
+   - **Staging**: For testing (assertions run but don't block transactions)
+   - **Production**: For active protection (assertions block violating transactions)
+
+7. Click "Deploy" and sign the transaction
+
+<Frame caption="Deploying Assertion in the dApp">
+  <img src="/images/deploy_assertion_trimmed.webp" alt="Deploying Assertion" />
+</Frame>
+
+<Note>
+After deployment, your assertion enters a [timelock](/credible/glossary#timelock) period. Once the timelock expires, the assertion becomes actively enforced.
+</Note>
+
+## Step 5: Monitor Your Assertions
+
+After deployment, manage assertions through your project dashboard:
+
+- **View Active Assertions**: See all assertions protecting your contracts
+- **Monitor Status**: Check assertion execution and triggered violations
+- **View Incidents**: View incidents that were prevented by assertions
+- **Update Assertions**: Submit new versions as your protocol evolves
+- **Remove Assertions**: Deactivate assertions when needed
+
+## Troubleshooting
+
+| Error | Solution |
+|-------|----------|
+| "Contract ownership verification failed" | Ensure your contract has `owner()` and you're connected with the owner wallet |
+| "Assertion already exists" | Use a different name or update the existing assertion |
+| "Authentication expired" | Run `pcl auth login` to refresh |
+
+## Recap
+
+You've deployed an assertion to protect your protocol:
+
+1. **Authenticate**: Connect your wallet via `pcl auth login`
+2. **Create project**: Set up your project and link contracts
+3. **Store and submit**: Upload assertion via `pcl`
+4. **Deploy**: Complete deployment in dApp and sign transaction
+5. **Monitor**: Track assertion status in your dashboard
+
+## Video Walkthrough
+
+Full walkthrough from authentication to deployment:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/MrDVLp5UDZ0?si=tdgQEJ3Tkps2LwJA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Write Assertions" icon="code" href="/credible/write-first-assertion">
+    Learn how to write effective assertions
+  </Card>
+  <Card title="Test Assertions" icon="flask" href="/credible/testing-assertions">
+    Test your assertions before deployment
+  </Card>
+  <Card title="Incidents" icon="warning" href="/credible/dapp-incidents">
+    Monitor prevented violations
+  </Card>
+  <Card title="Ownership Verification" icon="shield-check" href="/credible/ownership-verification">
+    Understand ownership requirements
+  </Card>
+</CardGroup>

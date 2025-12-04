@@ -1,0 +1,162 @@
+---
+title: 'Accelerate Development with AI'
+description: 'Use AI assistants to generate assertion templates'
+---
+
+import phylaxAssertionsRules from "/snippets/phylax-assertions-rules.mdx";
+
+This guide shows you how to use AI coding assistants to accelerate assertion development. AI can generate high-quality assertion templates that follow Phylax best practices.
+
+**Prerequisites**:
+- [pcl installed](/credible/credible-install)
+- `credible-std` added: `forge install credible-std=https://github.com/phylaxsystems/credible-std/`
+- Well-defined protocol invariants
+- An AI coding assistant (Cursor, Claude Code, Gemini Code, Codex, etc.)
+
+**What you'll learn**: How to prompt AI tools to generate assertions and tests for your protocol.
+
+<Warning>
+AI-generated assertions require careful review and testing. Always [test thoroughly](/credible/testing-assertions) before deployment. AI accelerates development but doesn't replace manual verification.
+</Warning>
+
+## Step 1: Set Up AI Context
+
+Add the Phylax documentation to your AI assistant's context:
+
+**For Cursor**: Settings → Indexing & Docs → add `https://docs.phylax.systems`
+
+Add the rules file to your AI assistant's context/rules file.
+
+<phylaxAssertionsRules />
+
+## Step 2: Define Your Invariants
+
+Before prompting AI, document your protocol's invariants clearly:
+
+- Focus on security-critical invariants
+- Avoid invariants already enforced by `require` statements
+- Target properties that span multiple functions or calls
+- Use simple, clear language
+
+<Tip>
+Reference [Aave's invariants](https://github.com/aave-dao/aave-v3-origin/blob/main/tests/invariants/specs/InvariantsSpec.t.sol) for examples of clear invariant documentation.
+</Tip>
+
+Good candidates for assertions:
+- State changes in the callstack
+- Price manipulation
+- Cross-function state inconsistencies
+- Properties that can't be checked with simple `require` in your contracts
+
+## Step 3: Craft Your Prompt
+
+Use this template:
+
+```
+Create Phylax assertions to protect the protocol in this repository.
+
+The invariants that should be protected are defined in: [reference your invariants document]
+
+If invariant tests are available, check them for additional context.
+
+The user-facing contracts that can trigger assertions are: [list contracts]
+
+The most critical logic is in: [list contracts]
+
+The rules for writing assertions are in: [reference your rules file]
+
+The Phylax documentation to follow is: [reference documentation]
+
+Share your implementation plan before making code changes.
+
+Ask any clarifying questions to ensure alignment.
+```
+
+## Step 4: Generate Assertions
+
+### Example: Origin Protocol
+
+Using [Origin Protocol's contracts](https://github.com/OriginProtocol/origin-dollar) with their [invariant documentation](https://github.com/OriginProtocol/origin-dollar/blob/master/contracts/contracts/token/README-token-logic.md#account-invariants):
+
+```
+Create Phylax assertions for the Origin Protocol in this repository.
+
+The invariants the assertions should implement are in: @README-token-logic
+
+Follow the rules for writing assertions in @phylax-assertions (rules file)
+
+You can consult the Phylax documentation for context: @phylax-docs (documentation)
+
+Share your implementation plan before making code changes.
+
+Ask any clarifying questions to ensure alignment.
+```
+
+<Info>
+The AI will implement assertions in a new `assertions` folder at the repository root.
+</Info>
+
+## Step 5: Review Generated Code
+
+AI-generated assertions are typically good quality but require review:
+
+- Verify the logic matches your invariants
+- Check for efficient data retrieval and minimal gas usage
+- Ensure they follow Phylax best practices
+- Ask the AI for an overview of what each assertion covers
+
+If corrections are needed, provide specific instructions. Add protocol-specific guidance to your rules file for better results.
+
+## Step 6: Generate Tests
+
+Prompt the AI to create tests:
+
+```
+Based on the assertions in @assertions/src, generate test cases for each assertion function.
+
+Test both positive and negative scenarios following the patterns in @phylax-assertions.
+
+Share your implementation plan before making code changes.
+
+Ask any clarifying questions to ensure alignment.
+```
+
+The AI will create tests in `assertions/test`. Review them carefully:
+
+- Verify scenarios are realistic
+- Ensure tests aren't just `assert(true)`
+- Use failures to identify assertion bugs
+- Ask the AI to fix issues you discover
+
+## Recap
+
+You've learned to accelerate assertion development with AI:
+
+1. **Set up context**: Add docs and rules to your AI assistant
+2. **Define invariants**: Document what properties to protect
+3. **Craft prompts**: Use structured templates for consistent results
+4. **Generate**: Let AI create assertion templates
+5. **Review**: Verify logic and efficiency
+6. **Test**: Generate and review test suites
+
+## Next Steps
+
+<Info>
+Join the [Phylax Telegram](https://t.me/phylax_systems) to share improvements to the rules file.
+</Info>
+
+<CardGroup cols={2}>
+  <Card title="Write Your First Assertion" icon="code" href="/credible/write-first-assertion">
+    Manual assertion development
+  </Card>
+  <Card title="Testing Assertions" icon="flask" href="/credible/testing-assertions">
+    Core testing workflow
+  </Card>
+  <Card title="Fuzz Testing" icon="shuffle" href="/credible/fuzz-testing">
+    Random input testing
+  </Card>
+  <Card title="Backtesting" icon="clock-rotate-left" href="/credible/backtesting">
+    Historical transaction testing
+  </Card>
+</CardGroup>
+

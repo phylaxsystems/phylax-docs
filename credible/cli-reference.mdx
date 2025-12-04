@@ -4,7 +4,7 @@ description: 'Reference documentation for all `pcl` commands, options, and param
 ---
 
 <Note>
-New to `pcl`? Start with [Using pcl](/credible/cli-overview) to understand how to use it in your workflow.
+New to `pcl`? Start with [Store and Submit Assertions](/credible/store-submit-assertions) to understand the workflow.
 </Note>
 
 ## Global Options
@@ -128,6 +128,10 @@ pcl store MyAssertion 0xADDRESS_OF_SMART_CONTRACT
 pcl store MyAssertion 0xADDRESS arg1 arg2
 ```
 
+<Tip>
+Constructor arguments must be provided in the same order as defined in your assertion contract. When submitting later, use the exact same arguments.
+</Tip>
+
 ### `submit`
 
 Submit [assertions](/credible/glossary#assertion) to the [Credible Layer dApp](/credible/glossary#credible-dapp).
@@ -239,7 +243,7 @@ You can view the configuration with `pcl config show` or delete it with `pcl con
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Using pcl" icon="compass" href="/credible/cli-overview">
+  <Card title="Store and Submit" icon="upload" href="/credible/store-submit-assertions">
     Learn how to use pcl in your workflow
   </Card>
   <Card title="Quick Start Guide" icon="rocket" href="/credible/pcl-quickstart">
@@ -248,8 +252,8 @@ You can view the configuration with `pcl config show` or delete it with `pcl con
   <Card title="Installation" icon="download" href="/credible/credible-install">
     Install pcl
   </Card>
-  <Card title="dApp Guide" icon="browser" href="/credible/dapp-guide">
-    Learn how to use the dApp to manage projects
+  <Card title="Deploy with dApp" icon="browser" href="/credible/deploy-assertions-dapp">
+    Deploy assertions to protect your contracts
   </Card>
 </CardGroup>
 
