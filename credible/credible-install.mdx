@@ -22,12 +22,16 @@ This will install the `pcl` binary.
 
 Another convenient way to install `pcl` is using Cargo. It does require a couple of pre-requisites though:
 
-- **Rust Nightly** (version 1.80 or later)
+- **Rust Stable** (version 1.81 or later) or **Rust Nightly** (version 1.80 or later)
 - **Git**
 
 ```bash
 cargo +nightly install --git https://github.com/phylaxsystems/credible-sdk --locked pcl
 ```
+
+<Note>
+If above fails, try updating Rust with `rustup update` and try again.
+</Note>
 
 This will install the `pcl` binary in your Cargo installation directory (typically `~/.cargo/bin` on Unix-like systems). Make sure this directory is in your PATH.
 
@@ -36,7 +40,7 @@ This will install the `pcl` binary in your Cargo installation directory (typical
 This option is recommended if you want more control over the build process or prefer to build from source.
 
 Prerequisites:
-- **Rust Nightly** (version 1.80 or later)
+- **Rust Stable** (version 1.81 or later) or **Rust Nightly** (version 1.80 or later)
 - **Git**
 
 1. Clone the repository:
@@ -49,6 +53,10 @@ Prerequisites:
    ```bash
    cargo build --release --bin pcl
    ```
+
+<Note>
+If above fails, try updating Rust with `rustup update` and try again.
+</Note>
 
 3. The compiled binary will be available in the `target/release` directory.
 
