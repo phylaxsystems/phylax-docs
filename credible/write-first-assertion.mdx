@@ -1,0 +1,272 @@
+---
+title: 'Write Your First Assertion'
+description: 'Build a complete assertion that protects ownership changes'
+---
+
+This guide walks you through writing your first assertion from scratch. By the end, you'll have a working assertion that prevents unauthorized ownership transfers.
+
+**Prerequisites**: Familiarity with Solidity, the [Assertions Overview](/credible/assertions-overview), and [`pcl` installed](/credible/credible-install).
+
+**What you'll build**: An assertion that blocks any transaction attempting to change a contract's owner.
+
+## The Example Contract
+
+We'll protect a simple ownership contract:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+contract Ownable {
+    address private _owner;
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+    constructor() {
+        _owner = address(0xdead);
+        emit OwnershipTransferred(address(0), _owner);
+    }
+
+    modifier onlyOwner() {
+        require(_owner == msg.sender, "Ownable: caller is not the owner");
+        _;
+    }
+
+    function owner() public view returns (address) {
+        return _owner;
+    }
+
+    function transferOwnership(address newOwner) public onlyOwner {
+        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        emit OwnershipTransferred(_owner, newOwner);
+        _owner = newOwner;
+    }
+}
+```
+
+Our assertion will verify that the owner remains unchanged after each transaction. This protects against attacks like the 2024 Radiant Capital hack where attackers gained multisig access and changed the protocol owner, resulting in $50M losses.
+
+## Step 1: Set Up Your Project
+
+Clone the starter repository:
+
+```bash
+git clone --recurse-submodules https://github.com/phylaxsystems/credible-layer-starter
+cd credible-layer-starter
+```
+
+<Note>
+The starter repository includes the complete ownership assertion example from this guide. You can follow along or explore the finished code directly.
+</Note>
+
+This includes the necessary structure:
+
+```text
+my-protocol/
+  assertions/
+    src/      # Assertion source files (.a.sol)
+    test/     # Test files (.t.sol)
+  src/        # Protocol contracts
+```
+
+For manual setup, see the [Quickstart Guide](/credible/pcl-quickstart).
+
+## Step 2: Write the Assertion
+
+Create `assertions/src/OwnableAssertion.a.sol`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import {Assertion} from "credible-std/Assertion.sol";
+import {Ownable} from "../../src/Ownable.sol";
+
+contract OwnableAssertion is Assertion {
+    function triggers() external view override {
+        registerCallTrigger(this.assertionOwnershipChange.selector, Ownable.transferOwnership.selector);
+    }
+
+    function assertionOwnershipChange() external {
+        Ownable ownable = Ownable(ph.getAssertionAdopter());
+
+        ph.forkPreTx();
+        address preOwner = ownable.owner();
+
+        ph.forkPostTx();
+        address postOwner = ownable.owner();
+
+        require(postOwner == preOwner, "Ownership has changed");
+    }
+}
+```
+
+### How It Works
+
+This assertion compares the owner before and after the transaction. If the owner changed, the `require` fails, the assertion reverts, and the transaction is dropped from the block.
+
+In general: **if an assertion reverts, the transaction is blocked.** This prevents attacks entirely rather than just detecting them.
+
+### Key Components
+
+**Imports and inheritance:**
+
+```solidity
+import {Assertion} from "credible-std/Assertion.sol";
+contract OwnableAssertion is Assertion {
+```
+
+The `Assertion` base class provides [cheatcodes](/credible/glossary#cheatcodes) via the `ph` namespace.
+
+**Triggers:**
+
+```solidity
+function triggers() external view override {
+    registerCallTrigger(this.assertionOwnershipChange.selector, Ownable.transferOwnership.selector);
+}
+```
+
+Triggers define when assertions run. Here, `assertionOwnershipChange` runs whenever `transferOwnership` is called.
+
+Key points about triggers:
+- Each assertion function must be registered via its selector
+- You can define multiple assertion functions in one contract
+- Each trigger maps to exactly one assertion function
+- Use triggers to run assertions only when needed (saves gas)
+
+See [Triggers](/credible/triggers) for more trigger types and optimization.
+
+**Assertion logic:**
+
+```solidity
+function assertionOwnershipChange() external {
+    Ownable ownable = Ownable(ph.getAssertionAdopter());
+
+    ph.forkPreTx();
+    address preOwner = ownable.owner();
+
+    ph.forkPostTx();
+    address postOwner = ownable.owner();
+
+    require(postOwner == preOwner, "Ownership has changed");
+}
+```
+
+- `ph.getAssertionAdopter()`: Returns the protected contract's address
+- `ph.forkPreTx()`: Switches to state before the transaction
+- `ph.forkPostTx()`: Switches to state after the transaction
+- The `require` blocks the transaction if ownership changed
+
+### Best Practices
+
+1. **Single responsibility**: Each assertion should verify one property
+2. **Use triggers efficiently**: Only run assertions when relevant functions are called
+3. **Return early**: Check simple conditions before complex logic
+4. **Use `forkPreCall`/`forkPostCall`**: For checking state around specific nested calls within a transaction, not just the overall transaction
+
+## Step 3: Test the Assertion
+
+Create `assertions/test/OwnableAssertion.t.sol`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import {OwnableAssertion} from "../src/OwnableAssertion.a.sol";
+import {Ownable} from "../../src/Ownable.sol";
+import {CredibleTest} from "credible-std/CredibleTest.sol";
+import {Test} from "forge-std/Test.sol";
+
+contract TestOwnableAssertion is CredibleTest, Test {
+    Ownable public assertionAdopter;
+    address public initialOwner = address(0xf00);
+    address public newOwner = address(0xdeadbeef);
+
+    function setUp() public {
+        assertionAdopter = new Ownable(initialOwner);
+        vm.deal(initialOwner, 1 ether);
+    }
+
+    function test_assertionOwnershipChanged() public {
+        assertEq(assertionAdopter.owner(), initialOwner);
+
+        cl.assertion({
+            adopter: address(assertionAdopter),
+            createData: type(OwnableAssertion).creationCode,
+            fnSelector: OwnableAssertion.assertionOwnershipChange.selector
+        });
+
+        vm.prank(initialOwner);
+        vm.expectRevert("Ownership has changed");
+        assertionAdopter.transferOwnership(newOwner);
+
+        assertEq(assertionAdopter.owner(), initialOwner);
+    }
+
+    function test_assertionOwnershipNotChanged() public {
+        cl.assertion({
+            adopter: address(assertionAdopter),
+            createData: type(OwnableAssertion).creationCode,
+            fnSelector: OwnableAssertion.assertionOwnershipChange.selector
+        });
+
+        vm.prank(initialOwner);
+        assertionAdopter.transferOwnership(initialOwner);
+    }
+}
+```
+
+### Key Testing Concepts
+
+- [`cl.assertion()`](/credible/testing-assertions#credible-layer-testing-interface): Registers the assertion to run on the next transaction
+- `vm.expectRevert()`: Verifies the assertion blocks the transaction
+- Test both cases: invalid (ownership changes) and valid (no change)
+
+For more details on testing assertions, see [Testing Assertions](/credible/testing-assertions).
+
+Run the tests:
+
+```bash
+pcl test
+```
+
+## Recap
+
+You've built a complete assertion:
+
+1. **Set up**: Clone the starter repo with correct structure
+2. **Write**: Create assertion with triggers and validation logic
+3. **Test**: Verify it blocks attacks and allows normal operations
+
+## Video Walkthrough
+
+For a visual walkthrough of assertion development:
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/9sOn9yvn6I8?si=Td4-QenV8hbhVc4G"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerpolicy="strict-origin-when-cross-origin"
+  allowfullscreen
+></iframe>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Store and Submit" icon="upload" href="/credible/store-submit-assertions">
+    Upload your assertion for deployment
+  </Card>
+  <Card title="From Invariant to Assertion" icon="lightbulb" href="/credible/invariant-to-assertion">
+    Learn to write complex real-world assertions
+  </Card>
+  <Card title="Cheatcodes Reference" icon="code" href="/credible/cheatcodes-reference">
+    All available assertion cheatcodes
+  </Card>
+  <Card title="Assertions Book" icon="book" href="/assertions-book/assertions-book-intro">
+    More assertion examples
+  </Card>
+</CardGroup>
+

@@ -77,7 +77,7 @@ flowchart LR
 
 The diagram shows two main flows:
 
-**Development Flow**: Developers use [`pcl`](/credible/cli-overview) to develop and test assertions. The CLI stores assertion bytecode in [Assertion DA](/credible/assertion-da), then submits to the [Credible dApp](/credible/dapp-overview). The dApp deploys assertions to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts).
+**Development Flow**: Developers use [`pcl`](/credible/store-submit-assertions) to develop and test assertions. `pcl` stores assertion code in [Assertion DA](/credible/assertion-da), then submits to the [Credible dApp](/credible/dapp-overview). The dApp deploys assertions to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts).
 
 **Runtime Flow**: The network validator sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer fetches relevant assertions and executes them via [PhEVM](/credible/phevm). Valid transactions are included in blocks; invalid transactions are dropped.
 
@@ -150,7 +150,7 @@ The [Credible Layer Contracts](/credible/credible-layer-contracts) are on-chain 
 ### Developer Tools
 
 - **[Credible dApp](/credible/dapp-overview)**: Web interface for deploying, managing, and viewing assertions
-- **[`pcl`](/credible/cli-overview)**: Command-line tool for writing, testing, and deploying assertions
+- **[`pcl`](/credible/store-submit-assertions)**: Command-line tool for writing, testing, and deploying assertions
 - **[`credible-std`](/credible/credible-std-overview)**: Standard library exposing cheatcodes and testing utilities
 
 ## Network Integrations
@@ -173,7 +173,7 @@ For concrete assertion examples and real-world use cases, explore the [Assertion
   <Card title="Installation" icon="download" href="/credible/credible-install">
     Set up your development environment
   </Card>
-  <Card title="Assertion Guide" icon="code" href="/credible/pcl-assertion-guide">
+  <Card title="Assertion Guide" icon="code" href="/credible/write-first-assertion">
     Comprehensive guide to writing assertions
   </Card>
   <Card title="Cheatcodes Reference" icon="book" href="/credible/cheatcodes-reference">

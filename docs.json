@@ -67,11 +67,12 @@
           {
             "group": "Guides",
             "pages": [
-              "credible/pcl-assertion-guide",
+              "credible/write-first-assertion",
+              "credible/store-submit-assertions",
+              "credible/deploy-assertions-dapp",
+              "credible/accelerate-with-ai"
               "credible/invariant-to-assertion",
-              "credible/cli-overview",
-              "credible/dapp-guide",
-              "credible/generate-assertions-with-ai"
+
             ]
           },
           {
