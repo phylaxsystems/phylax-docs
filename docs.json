@@ -47,6 +47,7 @@
                 "group": "Testing",
                 "pages": [
                   "credible/testing-assertions",
+                  "credible/execution-model",
                   "credible/fuzz-testing",
                   "credible/backtesting",
                   "credible/ci-cd-integration"

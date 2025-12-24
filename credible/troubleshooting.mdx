@@ -110,7 +110,7 @@ These errors occur when the assertion executes but fails due to issues in the as
 
 ### Gas Limit Exceeded
 
-Assertions have a **300k gas limit** per assertion function. If exceeded, you'll see an `OutOfGas` error.
+Assertions have a **300k gas limit** per assertion function. If exceeded, the assertion reverts with `OutOfGas` - causing the transaction to be dropped even if there's no actual violation.
 
 **Symptoms:**
 
@@ -124,15 +124,14 @@ Assertions have a **300k gas limit** per assertion function. If exceeded, you'll
 - Parsing too many events
 - Multiple storage reads without caching
 - Complex calculations without early returns
+- Happy path runs the most code - When no violation occurs, the assertion runs all checks and iterations without early exit
 
 **Solutions:**
 
-Optimize the assertion logic:
-
 1. **Fail fast** - Check simple conditions first before expensive operations
 2. **Optimize loops** - Limit iterations, cache values outside loops
-3. **Share storage reads** - Read once, extract multiple values
-4. **Split complex assertions** - Consider splitting into multiple assertion functions
+3. **Cache storage reads** - Read once, reuse the value
+4. **Split complex assertions** - Break into multiple assertion functions with specific triggers
 
 **Debugging:**
 

@@ -317,6 +317,40 @@ function assertionIntraTxOracleDeviation() external {
 
 ## Testing Patterns
 
+### Testing vs. Production Execution
+
+Understanding the difference between testing and production is critical for writing effective tests.
+
+**Production (On-Chain):**
+- Transactions that fail assertions are dropped (never enter the blockchain)
+- The `triggers()` function determines which assertions run based on function calls, storage changes, or balance changes
+- All matching assertions for all interacted contracts execute
+- Users don't see reverts - invalid transactions simply aren't included
+
+**Testing (`cl.assertion()`):**
+- Transactions that fail assertions revert (catchable with `vm.expectRevert()`)
+- You specify which assertion function runs via `fnSelector`, but triggers still determine if it runs
+- Only the specified assertion runs, only on the next external call
+- Reverts simulate the production behavior of dropped transactions
+- When an assertion passes, state changes persist for the rest of the test
+
+**Key Mental Model:**
+
+`cl.assertion()` works like `vm.prank()` - it affects only the immediately following external call, then the registration is consumed.
+
+```solidity
+// Testing: You specify which assertion function to run
+// But the call must still match a registered trigger for that assertion
+cl.assertion({
+    adopter: address(protocol),
+    createData: type(MyAssertion).creationCode,
+    fnSelector: MyAssertion.assertDeposit.selector
+});
+protocol.deposit(100);  // Must match a trigger registered for assertDeposit
+```
+
+You must test each assertion function separately by specifying its selector and calling a function that matches its registered trigger.
+
 ### Test Structure
 
 ```solidity
@@ -521,6 +555,28 @@ protocol.updateState(newValue); // Crystal clear
 
 ## Common Pitfalls and Anti-Patterns
 
+### "Expected 1 assertion to be executed, but 0 were executed"
+
+This error means the assertion never ran on the target transaction. Common causes:
+
+1. **External call between `cl.assertion()` and target call** - Any external call after `cl.assertion()` consumes the assertion registration, even setup calls like `token.mint()` or `token.approve()`.
+
+2. **Target transaction reverts before assertion runs** - The protocol function itself fails. Debug by removing `cl.assertion()` and testing the protocol function in isolation.
+
+3. **Wrong adopter address** - The `adopter` parameter doesn't match the contract being called.
+
+```solidity
+// ❌ WRONG - token.approve() consumes the assertion
+cl.assertion({...});
+token.approve(address(protocol), amount);  // Assertion runs here!
+protocol.deposit(amount);  // No assertion runs here
+
+// ✅ CORRECT - All setup before cl.assertion()
+token.approve(address(protocol), amount);
+cl.assertion({...});
+protocol.deposit(amount);  // Assertion runs here
+```
+
 ### Gas Limit Issues
 
 - Avoid expensive operations in loops
@@ -560,10 +616,39 @@ require(condition);
 require(condition, "Specific invariant violation description");
 ```
 
-### State Persistence Issues
+### State Persistence in Tests
 
-- Use `cl.assertion()` for testing
-- State changes from non-reverting transactions are persisted
+When an assertion **passes** (doesn't revert), the transaction's state changes persist for the rest of the test:
+
+```solidity
+function testStatePersistence() public {
+    // First operation with assertion
+    cl.assertion({
+        adopter: address(protocol),
+        createData: type(MyAssertion).creationCode,
+        fnSelector: MyAssertion.assertDeposit.selector
+    });
+    vm.prank(user);
+    protocol.deposit(100);
+    
+    // State persists - deposit is reflected
+    assertEq(protocol.balance(user), 100);
+    
+    // Can register another assertion for the next operation
+    cl.assertion({
+        adopter: address(protocol),
+        createData: type(MyAssertion).creationCode,
+        fnSelector: MyAssertion.assertWithdraw.selector
+    });
+    vm.prank(user);
+    protocol.withdraw(50);
+    
+    // Both operations' effects are visible
+    assertEq(protocol.balance(user), 50);
+}
+```
+
+When an assertion **fails** (reverts), the transaction is rolled back as with any Solidity revert.
 
 ## Best Practices
 

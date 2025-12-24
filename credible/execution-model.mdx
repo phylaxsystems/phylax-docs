@@ -1,0 +1,175 @@
+---
+title: 'Testing vs. Production'
+description: 'How assertion execution differs between testing and on-chain environments'
+---
+
+In production, the Credible Layer **drops** transactions that fail assertions - they never enter the blockchain. This means there's no on-chain trace of what the attacker tried or which vulnerability was targeted.
+
+In testing, failed assertions cause **reverts**. This lets you use `vm.expectRevert()` to verify your assertion catches violations and returns the expected error message.
+
+Understanding this difference is important for writing effective tests and interpreting their results.
+
+## Quick Comparison
+
+| Aspect | Testing | Production |
+|--------|---------|------------|
+| **When assertion fails** | Transaction reverts | Transaction dropped (never enters block) |
+| **Which assertion runs** | Specified by `fnSelector` | All matching assertions |
+| **Scope** | Next external call only | All transactions to protected contracts |
+
+## Production: Transactions Are Dropped
+
+In production, the [Assertion Enforcer](/credible/assertion-enforcer) validates transactions during block building:
+
+```mermaid
+flowchart LR
+    TX[Transaction] --> AE[Assertion Enforcer]
+    AE --> |Identify triggers| MATCH{Triggers<br/>match?}
+    MATCH --> |Yes| RUN[Run assertions]
+    MATCH --> |No| INCLUDE[Include in block]
+    RUN --> |All pass| INCLUDE
+    RUN --> |Any fails| DROP[Drop transaction]
+    
+    style DROP fill:#e74c3c,color:#fff
+    style INCLUDE fill:#27ae60,color:#fff
+```
+
+Key behaviors:
+- Triggers are evaluated to determine which assertions run
+- All matching assertions for all interacted contracts execute
+- Failed transactions are dropped - they never enter the blockchain
+- Users don't see reverts; the transaction simply doesn't get included
+
+## Testing: Transactions Revert
+
+In testing, `cl.assertion()` registers an assertion to run on the next external call:
+
+```mermaid
+flowchart LR
+    CL["cl.assertion()"] --> |Register| NEXT[Next external call]
+    NEXT --> RUN[Run specified<br/>assertion function]
+    RUN --> |Passes| PERSIST[State persisted]
+    RUN --> |Fails| REVERT[Transaction reverts]
+    
+    style REVERT fill:#e74c3c,color:#fff
+    style PERSIST fill:#27ae60,color:#fff
+```
+
+Key behaviors:
+- You specify the assertion function via `fnSelector`, but triggers still determine if it runs
+- Only the specified assertion runs, not all assertions for the contract
+- Only the next external call is validated, then the registration is consumed
+- Reverts simulate drops - use `vm.expectRevert()` to test failure cases
+
+## The `cl.assertion()` Mental Model
+
+`cl.assertion()` works like `vm.prank()` - it only affects the immediately following external call.
+
+```solidity
+// ✅ CORRECT: cl.assertion() immediately before target call
+function testCorrectOrder() public {
+    // Setup first
+    token.mint(user, 1000);
+    
+    // Register assertion
+    cl.assertion({
+        adopter: address(protocol),
+        createData: type(MyAssertion).creationCode,
+        fnSelector: MyAssertion.assertionFunction.selector
+    });
+    
+    // Target call - assertion runs here
+    vm.prank(user);
+    protocol.deposit(100);
+}
+```
+
+```solidity
+// ❌ WRONG: External call between cl.assertion() and target
+function testWrongOrder() public {
+    cl.assertion({...});
+    
+    // This call consumes the assertion registration!
+    token.mint(user, 1000);
+    
+    // Assertion already consumed - won't run here
+    vm.prank(user);
+    protocol.deposit(100);
+}
+// Results in: "Expected 1 assertion to be executed, but 0 were executed"
+```
+
+### State Persistence
+
+When an assertion passes, state changes persist for the rest of the test. You can assert on updated values and register subsequent assertions.
+
+```solidity
+function testStatePersistence() public {
+    // First operation
+    cl.assertion({...});
+    protocol.deposit(100);
+    
+    // State from deposit persists - we can check it
+    assertEq(protocol.balance(user), 100);
+    
+    // Register new assertion for next operation
+    cl.assertion({...});
+    protocol.withdraw(50);
+    
+    // Both operations' effects visible
+    assertEq(protocol.balance(user), 50);
+}
+```
+
+## Common Pitfalls
+
+### "Expected 1 assertion to be executed, but 0 were executed"
+
+This error means the assertion didn't run. Common causes:
+
+1. External call between `cl.assertion()` and target - the intervening call consumed the assertion registration
+2. Called function doesn't match a registered trigger - see below
+3. Target transaction reverts before assertion runs - the protocol function itself fails
+
+### Trigger Mismatch
+
+The `fnSelector` parameter specifies which assertion function to run, but triggers are still evaluated. The assertion only runs if the next external call matches a registered trigger for that assertion function.
+
+```solidity
+// In assertion contract
+function triggers() external view override {
+    registerCallTrigger(this.assertDeposit.selector, Protocol.deposit.selector);
+    registerCallTrigger(this.assertWithdraw.selector, Protocol.withdraw.selector);
+}
+```
+
+```solidity
+// ✅ CORRECT: deposit() matches the trigger for assertDeposit
+cl.assertion({fnSelector: MyAssertion.assertDeposit.selector});
+protocol.deposit(100);
+
+// ❌ WRONG: withdraw() has no trigger registered for assertDeposit
+cl.assertion({fnSelector: MyAssertion.assertDeposit.selector});
+protocol.withdraw(50);
+// Results in: "Expected 1 assertion to be executed, but 0 were executed"
+```
+
+To verify triggers work correctly with real transactions, use [backtesting](/credible/backtesting).
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Testing Assertions" icon="flask" href="/credible/testing-assertions">
+    Testing patterns
+  </Card>
+  <Card title="Triggers" icon="bolt" href="/credible/triggers">
+    Production trigger behavior
+  </Card>
+  <Card title="Backtesting" icon="clock-rotate-left" href="/credible/backtesting">
+    Test with real transactions
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/credible/troubleshooting">
+    Common errors
+  </Card>
+</CardGroup>
+
