@@ -185,7 +185,7 @@ You can see examples of mock protocols in the [Assertion Examples](https://githu
 
 ## Gas Limits
 
-Assertions have a 300k gas limit per assertion function. This limit exists to ensure assertion validation doesn't slow down block production.
+Assertion functions have a gas limit of 300k. This limit exists to ensure assertion validation doesn't slow down block production.
 
 If an assertion exceeds this limit, it reverts with `OutOfGas`. In production, this causes the transaction to be dropped - even if there's no actual violation. Since Assertion gas usage can fluctuate with the transaction they are validating, a sophisticated attacker could potentially craft a transaction that intentionally makes the Assertion execution to be over the gas limit. In that case, if we didn't drop the invalidating transaction, the attacker would be able to use the gas limit to get around the system and forcefully include an invalidating transaction.
 
