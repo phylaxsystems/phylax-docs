@@ -75,6 +75,10 @@ contract TestOwnableAssertion is CredibleTest, Test {
 }
 ```
 
+<Note>
+Testing uses reverts to simulate production behavior where transactions are dropped. See [Testing vs. Production](/credible/execution-model) for details.
+</Note>
+
 Key concepts:
 - Use `cl.assertion()` to register assertions that will be run on the next transaction
 - Only one assertion function can be registered at a time, which allows you to test assertion functions in isolation
@@ -178,6 +182,30 @@ When testing assertions, it can be difficult to trigger the conditions that woul
 3. Verify that the assertion correctly catches the invalid state
 
 You can see examples of mock protocols in the [Assertion Examples](https://github.com/phylaxsystems/assertion-examples/tree/main/src) repository.
+
+## Gas Limits
+
+Assertion functions have a gas limit of 300k. This limit exists to ensure assertion validation doesn't slow down block production.
+
+If an assertion exceeds this limit, it reverts with `OutOfGas`. In production, this causes the transaction to be dropped - even if there's no actual violation. Since Assertion gas usage can fluctuate with the transaction they are validating, a sophisticated attacker could potentially craft a transaction that intentionally makes the Assertion execution to be over the gas limit. In that case, if we didn't drop the invalidating transaction, the attacker would be able to use the gas limit to get around the system and forcefully include an invalidating transaction.
+
+This makes gas limit issues critical to catch during testing.
+
+### The Happy Path Problem
+
+Counterintuitively, the happy path is usually the most expensive. When no violation is detected:
+- All checks run to completion
+- Loops iterate through all items
+- No early returns short-circuit execution
+
+Failure cases often exit early when a violation is found, using less gas.
+
+### Testing Recommendations
+
+- Test with realistic data volumes - if your assertion loops through items, test with the maximum expected count
+- Test batch operations at maximum expected size
+- Use `pcl test -vvv` to monitor gas usage
+- If approaching the limit, optimize or split the assertion
 
 ## What's Next?
 
