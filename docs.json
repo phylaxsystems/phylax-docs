@@ -72,6 +72,7 @@
               "credible/invariant-to-assertion",
               "credible/store-submit-assertions",
               "credible/deploy-assertions-dapp",
+              "credible/dapp-integrations",
               "credible/accelerate-with-ai"
             ]
           },

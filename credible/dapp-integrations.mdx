@@ -1,0 +1,151 @@
+---
+title: 'Incident Notifications'
+description: 'Configure Slack and PagerDuty to receive real-time incident notifications'
+---
+
+Set up Slack and PagerDuty integrations to receive notifications when [assertion incidents](/credible/dapp-incidents) occur in your Credible Layer projects.
+
+## Accessing Integration Settings
+
+1. Navigate to your project in the Credible Layer dashboard
+2. Go to **Settings** in the navigation bar
+3. Select **Slack** or **PagerDuty** from the "Integrations" section
+
+<Frame caption="Adding Notification Integration">
+  <img src="/images/add-notification-integration-credible-dapp.webp" alt="Adding Notification Integration" />
+</Frame>
+
+## Slack Integration
+
+The Slack integration sends formatted incident notifications to a channel of your choice using Slack's Incoming Webhooks.
+
+<Steps>
+<Step title="Create a Slack App">
+1. In the Credible Layer Settings page, click **Create a Slack App**
+2. This opens Slack's app creation page with a pre-filled manifest. No manual configuration needed
+3. Select the workspace where you want to receive notifications
+4. Click **Create**
+</Step>
+
+<Step title="Enable Incoming Webhooks">
+1. In your newly created Slack app, go to **Features → Incoming Webhooks**
+2. Toggle **Activate Incoming Webhooks** to **On**
+3. Click **Add New Webhook to Workspace**
+4. Select the channel where you want incident notifications
+5. Click **Allow**
+</Step>
+
+<Step title="Copy the Webhook URL">
+After authorizing, you'll see your new webhook URL:
+
+```
+https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+```
+
+Copy this URL.
+</Step>
+
+<Step title="Configure in Credible Layer">
+1. Return to Credible Layer Settings → Slack tab
+2. Paste your webhook URL in the input field
+3. Click **Save**
+</Step>
+
+<Step title="Test the Integration">
+1. After saving, click **Send Test Notification**
+2. Verify the message arrives in your selected Slack channel
+</Step>
+</Steps>
+
+## PagerDuty Integration
+
+The PagerDuty integration creates incidents in PagerDuty when assertion violations occur, using the Events API v2.
+
+<Steps>
+<Step title="Create a PagerDuty Service Integration">
+1. In PagerDuty, navigate to **Services → Service Directory**
+2. Select an existing service or create a new one
+3. Go to the **Integrations** tab
+4. Click **Add Integration**
+5. Search for and select **Events API v2**
+6. Click **Add**
+</Step>
+
+<Step title="Get the Integration Key">
+After adding the integration, you'll see the **Integration Key** (also called Routing Key). This is a 32-character alphanumeric string. Copy this key.
+
+<Tip>
+Click the **PagerDuty Integration Guide** button in the Credible Layer Settings page for direct access to PagerDuty's official documentation.
+</Tip>
+</Step>
+
+<Step title="Configure in Credible Layer">
+1. Go to Credible Layer Settings → PagerDuty tab
+2. Paste your 32-character routing key in the input field
+3. Click **Save**
+</Step>
+
+<Step title="Test the Integration">
+1. After saving, click **Send Test Notification**
+2. Verify the incident appears in your PagerDuty service
+</Step>
+</Steps>
+
+## What Gets Notified
+
+Both integrations send notifications when [assertion incidents](/credible/dapp-incidents) occur. Notifications include:
+
+- Project name and affected contract
+- Network/chain information
+- Transaction details (hash, block number)
+- Assertion violation reason
+- Direct link to view the incident in the dashboard
+
+## Managing Integrations
+
+### Updating a Webhook or Key
+
+Paste a new URL or key and click **Save**. The old configuration is replaced.
+
+### Removing an Integration
+
+1. Scroll to the bottom of the integration card
+2. Click **Remove Integration**
+3. Confirm the removal
+
+<Note>
+Removing an integration stops all notifications but does not delete historical data. You can reconfigure at any time.
+</Note>
+
+## Troubleshooting
+
+| Issue | Solution |
+| --- | --- |
+| Slack webhook URL rejected | Ensure the URL starts with `https://hooks.slack.com/services/` |
+| PagerDuty key rejected | Verify the key is exactly 32 alphanumeric characters |
+| Test notification not received | Check that the integration is correctly configured in Slack/PagerDuty |
+| No notifications on incidents | Verify the integration shows as "configured" in Settings |
+
+## Security
+
+- Webhook URLs and routing keys are stored securely and never displayed in full after saving
+- Only project managers can configure integrations
+- Test notifications are rate-limited to prevent abuse
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Incidents" icon="warning" href="/credible/dapp-incidents">
+    Learn about incident monitoring
+  </Card>
+  <Card title="Projects" icon="folder" href="/credible/dapp-projects">
+    Manage your projects
+  </Card>
+  <Card title="dApp Overview" icon="info" href="/credible/dapp-overview">
+    Explore the full dApp
+  </Card>
+  <Card title="Writing Assertions" icon="code" href="/credible/write-first-assertion">
+    Create assertions for your contracts
+  </Card>
+</CardGroup>
+
