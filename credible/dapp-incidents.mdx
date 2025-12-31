@@ -5,6 +5,22 @@ description: 'View incidents prevented by the Credible Layer'
 
 Incidents show when transactions were dropped because they violated assertions protecting contracts. This happens when a transaction that interacted with an assertion-protected contract was dropped by the [Enforcer](/credible/glossary#assertion-enforcer) because it caused an assertion to revert.
 
+## How Incidents Are Grouped
+
+An incident represents the invalidation of an assertion over a one-hour time period. Multiple dropped transactions can belong to the same incident if they violate the same assertion within that window.
+
+**Why group transactions into incidents?**
+
+- An attacker may craft multiple transactions that all violate the same assertion—these represent the same logical attack
+- One hour is a reasonable estimate for how long an attack attempt might last
+- After one hour without violations, a new invalidation likely indicates a different attack and creates a new incident
+
+This grouping ensures you receive meaningful alerts without being spammed by repeated notifications for the same security event.
+
+<Note>
+This is our initial approach to incident grouping and may be refined based on user feedback.
+</Note>
+
 ## Incidents View
 
 Access incidents from the **Incidents** tab in the dApp navigation bar. This shows a limited view of all incidents across all networks:
@@ -57,9 +73,7 @@ You can also set up external alerts via webhooks:
 - **Slack Integration**: Configure Slack webhooks to receive incident notifications in your Slack channels
 - **PagerDuty Integration**: Configure PagerDuty webhooks to receive incident notifications
 
-<Note>
-Detailed setup instructions for Slack and PagerDuty integrations will be available in a dedicated documentation page.
-</Note>
+See [Integrations](/credible/dapp-integrations) for setup instructions.
 
 ## Use Cases
 

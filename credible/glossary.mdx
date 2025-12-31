@@ -159,6 +159,11 @@ The transparent and public nature of all assertions deployed on PCL. Since asser
 
 ## Prevention
 
+### Incident
+A security event representing the invalidation of an assertion over a one-hour time period. Multiple dropped transactions can belong to the same incident if they violate the same assertion within that window. This grouping treats repeated attempts to exploit the same vulnerability as a single logical attack.
+
+Learn more: [Incidents](/credible/dapp-incidents)
+
 ### Revert
 What happens at the EVM/Solidity level when an assertion function detects that a transaction violates the rules defined in the assertion. When an assertion reverts, it signals that the transaction would result in an undesired state. The sidecar detects this revert and notifies the sequencer that the transaction should be dropped.
 
