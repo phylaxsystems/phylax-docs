@@ -101,6 +101,18 @@ Both integrations send notifications when [assertion incidents](/credible/dapp-i
 - Assertion violation reason
 - Direct link to view the incident in the dashboard
 
+## How Incidents Are Grouped
+
+You receive one notification per incident, not per transaction. An incident is defined as an assertion being invalidated within a one-hour time window.
+
+If an attacker crafts multiple transactions that all violate the same assertion, these are grouped into a single incident since they represent the same logical attack. After one hour without violations, a new invalidation creates a new incident.
+
+This prevents notification spam while ensuring you're alerted to distinct security events. See [Incidents](/credible/dapp-incidents#how-incidents-are-grouped) for more details.
+
+<Note>
+This grouping logic is our initial approach and may be refined based on user feedback.
+</Note>
+
 ## Managing Integrations
 
 ### Updating a Webhook or Key
