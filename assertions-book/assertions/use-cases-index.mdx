@@ -45,7 +45,7 @@ This section contains assertion patterns organized by use case categories.
 
 - [**ERC4626 Assets to Shares**](/assertions-book/assertions/ass12-erc4626-assets-to-shares): Verifies correct conversion between assets and shares in ERC4626 vaults, preventing accounting errors that could lead to fund loss.
 
-- [**ERC4626 Deposit and Withdraw**](/assertions-book/assertions/ass13-erc4626-deposit-withdraw): Ensures deposit and withdrawal operations maintain correct accounting in ERC4626 vaults, protecting user funds during transfers.
+- [**ERC4626 Vault Operations**](/assertions-book/assertions/ass13-erc4626-deposit-withdraw): Ensures all ERC4626 operations (deposit, withdraw, mint, redeem) maintain correct accounting, with support for batch transaction validation.
 
 - [**Harvest Increases Balance**](/assertions-book/assertions/ass18-harvest-increases-balance): Verifies that yield-generating operations like harvests always increase the total balance of vaults, preventing value extraction attacks.
 
@@ -59,10 +59,6 @@ This section contains assertion patterns organized by use case categories.
 - [**ERC20 Drain**](/assertions-book/assertions/ass20-erc20-drain): Prevents excessive token outflows in a single transaction, mitigating the impact of potential exploits by limiting how quickly funds can be drained.
 
 - [**Ether Drain**](/assertions-book/assertions/ass21-ether-drain): Monitors and limits ETH outflows from contracts, protecting against unauthorized withdrawals that could deplete protocol reserves.
-
-## Data Integrity & Message Verification
-
-- [**Farcaster Protocol Integrity**](/assertions-book/assertions/ass22-farcaster-protocol-integrity): Ensures the integrity of cross-chain messages in the Farcaster protocol, preventing unauthorized or malformed message processing.
 
 ---
 
