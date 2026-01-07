@@ -1,45 +1,57 @@
 ---
-title: ERC4626 Vault Deposit and Withdrawal
-description: Assert that ERC4626 deposit and withdrawal operations maintain correct accounting
+title: ERC4626 Vault Operations
+description: Ensure that ERC4626 operations maintain correct accounting
 ---
 
 import ass13Erc4626DepositWithdraw from "/snippets/ass13-erc4626-deposit-withdraw.a.mdx";
+import ass2Erc4626Operations from "/snippets/ass2-erc4626-operations.a.mdx";
 
 ## Use Case & Applications
 
-Ensures ERC4626 deposit and withdrawal operations maintain correct accounting for both assets and shares, preventing share calculation errors and fund loss. Critical for yield aggregators (Yearn, Aave, Compound), lending protocols with ERC4626 interest-bearing tokens, liquidity pools using ERC4626 for LP tokens, and staking protocols with ERC4626 staking tokens.
+Ensures ERC4626 operations maintain correct accounting for both assets and shares, preventing share calculation errors and fund loss. Critical for yield aggregators (Yearn, Aave, Compound), lending protocols with ERC4626 interest-bearing tokens, liquidity pools using ERC4626 for LP tokens, and staking protocols with ERC4626 staking tokens.
 
 Any discrepancy between preview functions and actual operations could lead to users receiving incorrect amounts, potentially resulting in value loss.
 
-## Explanation
+## Focused Approach: Deposit & Withdraw
 
-Collection of five assertion functions providing comprehensive verification of deposit/withdrawal operations:
+Five assertion functions for deposit/withdrawal verification:
 
 **Deposit Assertions:**
 - **Asset Accounting**: Total vault assets increase by exact deposit amount
-- **Share Accounting**: Depositors receive correct shares (verified against `previewDeposit()`)
+- **Share Accounting**: Depositors receive correct shares
 
 **Withdrawal Assertions:**
 - **Asset Accounting**: Total vault assets decrease by exact withdrawal amount  
-- **Share Accounting**: Correct shares burned (verified against `previewWithdraw()`)
+- **Share Accounting**: Correct shares burned
 
 **Share Value Assertion:**
-- **Share Value Monotonicity**: Share value never decreases unexpectedly
+- **Share Value Monotonicity**: Share value never decreases unexpectedly (with precision tolerance for rounding)
 
-Uses these cheatcodes:
-- `ph.getCallInputs()`: Track deposit/withdraw call inputs
-- `ph.forkPreState()` / `ph.forkPostState()`: Compare balances before/after operations
-- `registerCallTrigger()`: Trigger on ERC4626 vault operations
-
-The assertions verify no discrepancy exists between preview function predictions and actual operation results.
-
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
-
-## Code Example
+Uses `ph.getCallInputs()`, `ph.forkPreTx()` / `ph.forkPostTx()`, and `registerCallTrigger()`. See the [Cheatcodes Reference](/credible/cheatcodes-reference) for details.
 
 <ass13Erc4626DepositWithdraw />
+
+## Comprehensive Approach: All Operations + Batch Handling
+
+Use this approach when your protocol:
+- Uses mint/redeem in addition to deposit/withdraw
+- Handles multiple operations in a single transaction
+- Needs validation against preview functions
+
+Four assertion functions covering all ERC4626 operations:
+
+- **Batch Operations Consistency**: Validates deposit, mint, withdraw, and redeem in a single transaction. Uses preview functions for expected value calculation.
+- **Deposit Balance Verification**: Confirms vault assets increase by exact deposit amount
+- **Depositor Shares Verification**: Confirms depositor receives shares matching `previewDeposit()`
+- **Base Invariant**: Ensures vault always has at least as many assets as shares
+
+Uses both `registerCallTrigger()` and `registerStorageChangeTrigger()`.
+
+<ass2Erc4626Operations />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
 ## Related Assertions
-- [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
+
+- [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares) — simple base invariant check
+- [Harvest Increases Balance](/assertions-book/assertions/ass18-harvest-increases-balance) — yield operation validation

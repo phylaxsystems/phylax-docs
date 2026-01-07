@@ -192,12 +192,6 @@
             ]
           },
           {
-            "group": "Data Integrity & Message Verification",
-            "pages": [
-              "assertions-book/assertions/ass22-farcaster-protocol-integrity"
-            ]
-          },
-          {
             "group": "Use Case Mapping",
             "pages": [
               "credible/use-case-mappings/intro-use-case-mapping",
