@@ -77,9 +77,14 @@ Controls how transactions are detected in the block range.
 **`false`:** Scans each block individually
 - One `eth_getBlockByNumber` call per block
 - Only detects direct calls where `tx.to == targetContract`
+- Does not detect internal calls (e.g., when another contract calls your target contract through a router or aggregator)
 - **RPC calls for 100 blocks:** ~100 calls
 
 Use `trace_filter` for large block ranges or when you need to detect internal calls. Use block scanning when your RPC provider doesn't support `trace_filter`.
+
+<Note>
+Not all RPC providers support `trace_filter`, and some providers only support it on certain networks. Check your provider's documentation to confirm `trace_filter` availability for your target chain.
+</Note>
 
 ```solidity
 useTraceFilter: true  // Recommended for most cases

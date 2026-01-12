@@ -17,8 +17,8 @@ Backtesting operates in two phases:
 2. **Transaction Validation**: Replays each transaction with your assertion enabled
 
 The tool fetches transactions using one of two methods:
-- **trace_filter API** (recommended): Single RPC call for the entire block range, detects internal calls
-- **Block scanning**: One RPC call per block, detects only direct calls
+- **trace_filter API** (recommended): Single RPC call for the entire block range, detects both direct and internal calls (e.g., when Contract A calls your target Contract B through a router or aggregator)
+- **Block scanning**: One RPC call per block, detects only direct calls where `tx.to` equals your target contract (does not detect internal calls)
 
 For validation, the tool forks the EVM at each transaction to the target contract and replays it against the specified assertion.
 
