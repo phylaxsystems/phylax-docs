@@ -27,6 +27,9 @@
             "group": "Architecture",
             "pages": [
               "credible/architecture-overview",
+              "credible/network-integration",
+              "credible/dapp-integration",
+              "credible/trust-model",
               "credible/assertion-enforcer",
               "credible/phevm",
               "credible/credible-layer-contracts",

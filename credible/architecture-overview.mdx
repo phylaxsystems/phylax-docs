@@ -127,6 +127,39 @@ flowchart LR
 The Assertion Enforcer is integrated with the block builder. During block production, the block builder invokes the Assertion Enforcer to validate transactions before including them.
 </Note>
 
+## Incident Lifecycle (Public View)
+
+When an assertion is violated, the incident is recorded and exposed for transparency and alerts.
+
+```mermaid
+---
+title: Incident Lifecycle
+---
+flowchart LR
+    ENFORCER["Assertion Enforcer"] --> DAPP["Credible dApp"]
+    DAPP --> DASH["Transparency Dashboard"]
+    DAPP --> ALERTS["Slack/PagerDuty Alerts"]
+
+    classDef enforcer fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+    classDef dapp fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    classDef output fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
+
+    class ENFORCER enforcer
+    class DAPP dapp
+    class DASH,ALERTS output
+```
+
+## Integration Paths
+
+<CardGroup cols={2}>
+  <Card title="dApp Integration Overview" icon="browser" href="/credible/dapp-integration">
+    How protocols deploy and manage assertions
+  </Card>
+  <Card title="Network Integration Overview" icon="sitemap" href="/credible/network-integration">
+    How networks and sequencers integrate enforcement
+  </Card>
+</CardGroup>
+
 For details on the assertion validation process, see [Assertion Enforcer](/credible/assertion-enforcer#validation-process).
 
 ## System Components
@@ -178,5 +211,8 @@ For concrete assertion examples and real-world use cases, explore the [Assertion
   </Card>
   <Card title="Cheatcodes Reference" icon="book" href="/credible/cheatcodes-reference">
     Detailed reference for assertion functions
+  </Card>
+  <Card title="Trust Model" icon="shield-check" href="/credible/trust-model">
+    Guarantees, assumptions, and failure modes
   </Card>
 </CardGroup>
