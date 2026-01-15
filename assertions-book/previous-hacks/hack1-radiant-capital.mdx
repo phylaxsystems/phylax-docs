@@ -49,9 +49,9 @@ contract LendingPoolAddressesProviderAssertions is Assertion {
     // return true indicates a valid state -> owner is the same
     // return false indicates an invalid state -> owner is different
     function assertionOwnerChange() external returns (bool) {
-        ph.forkPreState();
+        ph.forkPreTx();
         address prevOwner = lendingPoolAddressesProvider.owner();
-        ph.forkPostState();
+        ph.forkPostTx();
         address newOwner = lendingPoolAddressesProvider.owner();
         return prevOwner == newOwner;
     }
@@ -60,9 +60,9 @@ contract LendingPoolAddressesProviderAssertions is Assertion {
     // return true indicates a valid state -> emergency admin is the same
     // return false indicates an invalid state -> emergency admin is different
     function assertionEmergencyAdminChange() external returns (bool) {
-        ph.forkPreState();
+        ph.forkPreTx();
         address prevEmergencyAdmin = lendingPoolAddressesProvider.getEmergencyAdmin();
-        ph.forkPostState();
+        ph.forkPostTx();
         address newEmergencyAdmin = lendingPoolAddressesProvider.getEmergencyAdmin();
         return prevEmergencyAdmin == newEmergencyAdmin;
     }
@@ -71,9 +71,9 @@ contract LendingPoolAddressesProviderAssertions is Assertion {
     // return true indicates a valid state -> pool admin is the same
     // return false indicates an invalid state -> pool admin is different
     function assertionPoolAdminChange() external returns (bool) {
-        ph.forkPreState();
+        ph.forkPreTx();
         address prevPoolAdmin = lendingPoolAddressesProvider.getPoolAdmin();
-        ph.forkPostState();
+        ph.forkPostTx();
         address newPoolAdmin = lendingPoolAddressesProvider.getPoolAdmin();
         return prevPoolAdmin == newPoolAdmin;
     }

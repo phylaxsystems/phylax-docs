@@ -63,7 +63,7 @@ Assuming we can check run assertions on each call in the transaction and that we
 
 ```solidity
 function assertionNoUnsafeDebt() external {
-    ph.forkPostState();
+    ph.forkPostTx();
     
     // Get all accounts that were modified in this tx
     address[] memory accounts = ph.getModifiedAccounts();

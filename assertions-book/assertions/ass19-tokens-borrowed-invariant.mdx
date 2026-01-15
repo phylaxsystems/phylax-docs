@@ -15,7 +15,7 @@ Violating this invariant could lead to protocol insolvency, loss of user funds, 
 
 Implements straightforward verification that total tokens borrowed never exceed total tokens deposited:
 
-- `ph.forkPostState()`: Capture protocol state after transaction to verify invariant holds
+- `ph.forkPostTx()`: Capture protocol state after transaction to verify invariant holds
 - `registerStorageChangeTrigger()`: Trigger on storage slots tracking supply and borrow totals
 - Check total supply of assets (tokens deposited) and total borrowed assets
 - Assert total supply ≥ total borrowed assets

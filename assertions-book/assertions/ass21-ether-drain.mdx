@@ -17,7 +17,7 @@ Malicious actors often attempt to extract all available ETH in a single transact
 
 Implements tiered protection strategy to detect rapid ETH draining:
 
-- `forkPreState()` / `forkPostState()`: Capture contract's ETH balance and whitelist balances before/after transaction
+- `forkPreTx()` / `forkPostTx()`: Capture contract's ETH balance and whitelist balances before/after transaction
 - `registerBalanceChangeTrigger()`: Trigger when ETH balances change
 - For small withdrawals (below threshold): Allow regardless of destination
 - For large withdrawals (above threshold): Require destination to be whitelisted address

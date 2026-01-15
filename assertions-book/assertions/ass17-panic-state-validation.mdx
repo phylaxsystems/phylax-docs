@@ -15,7 +15,7 @@ Improper handling of pause states can lead to fund lockups, unauthorized access,
 
 Monitors protocol balance and pause state to ensure proper emergency behavior using a multi-layered approach:
 
-- `ph.forkPreState()` / `ph.forkPostState()`: Capture protocol state before and after transaction
+- `ph.forkPreTx()` / `ph.forkPostTx()`: Capture protocol state before and after transaction
 - `getStateChangesUint()`: Track all state changes during transaction
 - `registerCallTrigger()`: Monitor all function calls to the contract
 - Verify protocol balance can only decrease when paused (allowing withdrawals)

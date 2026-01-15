@@ -21,7 +21,7 @@ Since direct iteration over all positions isn't currently supported, this assert
 4. Verify that the new total supply equals the pre-state total supply plus the sum of position changes
 
 Uses these cheatcodes:
-- `ph.forkPreState()` / `ph.forkPostState()`: Capture total supply before and after transaction
+- `ph.forkPreTx()` / `ph.forkPostTx()`: Capture total supply before and after transaction
 - `ph.getCallInputs()`: Track function calls that modify positions
 - `registerCallTrigger()`: Trigger on position-modifying functions
 

@@ -37,7 +37,7 @@ function assertion_triggerDeposit_remainsSolvent() public view {
     uint256 postBalanceCollateral = visr.balanceOf(address(adopter));
     uint256 postTotalSupplyRewards = vvisr.totalSupply();
     uint256 postRatio = postBalanceCollateral / postTotalSupplyRewards;
-    ph.forkPreState();
+    ph.forkPreTx();
 
     uint256 preBalanceCollateral = visr.balanceOf(address(adopter));
     uint256 preTotalSupplyRewards = vvisr.totalSupply();

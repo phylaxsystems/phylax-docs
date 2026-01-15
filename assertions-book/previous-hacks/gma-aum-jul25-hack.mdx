@@ -77,11 +77,11 @@ function assertSimplifiedAUMBounds() external {
     // Core principle: AUM should closely track actual token flows
 
     // 1. Capture AUM before transaction
-    ph.forkPreState();
+    ph.forkPreTx();
     uint256 aumBefore = getAumInUsdg(true);
 
     // 2. Capture AUM after transaction
-    ph.forkPostState();
+    ph.forkPostTx();
     uint256 aumAfter = getAumInUsdg(true);
 
     // 3. Calculate AUM change

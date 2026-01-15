@@ -64,7 +64,7 @@ a transaction.
 
 PhEvm precompiles used:
 
-- _forkPreState_ allowing to fork the state of the contract before a transaction
+- _forkPreTx_ allowing to fork the state of the contract before a transaction
 - _load_ reading specific storage slots
 - _getStateChangesAddress_ getting all state changes within a transaction for a given slot
 
@@ -89,7 +89,7 @@ contract SafeAssertion is Assertion {
     }
 
     function implementationAddressChange() external view {
-        ph.forkPreState();
+        ph.forkPreTx();
         address preImplementationAddress = address(uint160(uint256(ph.load(address(safe), bytes32(0x0)))));
 
         address[] memory addresses = getStateChangesAddress(address(safe), bytes32(0x0));
@@ -108,14 +108,14 @@ the balance of the whitelisted addresses increased with the respective amount.
 
 ```solidity
  function assertionSafeDrain() external {
-        ph.forkPreState();
+        ph.forkPreTx();
         uint256 preBalance = address(bybitSafeAddress).balance;
         uint256[] memory preWhitelistBalances = new uint256[](whitelistedAddresses.length);
         for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
             preWhitelistBalances[i] = address(whitelistedAddresses[i]).balance;
         }
 
-        ph.forkPostState();
+        ph.forkPostTx();
         uint256 postBalance = address(bybitSafeAddress).balance;
         if (postBalance > preBalance) {
             return; // Balance increased, not a hack

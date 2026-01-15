@@ -15,7 +15,7 @@ For example, in the [Radiant Capital hack](/assertions-book/previous-hacks/hack1
 
 Monitors changes to the owner address storage slot in contracts using:
 
-- `ph.forkPreState()` / `ph.forkPostState()`: Compare owner address before and after transaction
+- `ph.forkPreTx()` / `ph.forkPostTx()`: Compare owner address before and after transaction
 - `getStateChangesAddress()`: Track all changes to the owner address slot during transaction execution
 - `registerStorageChangeTrigger()`: Trigger when owner address changes
 
