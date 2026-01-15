@@ -28,17 +28,37 @@
             "group": "Architecture",
             "pages": [
               "credible/architecture-overview",
-              "credible/trust-model",
-              "credible/interfaces-overview",
-              "credible/network-integration",
-              "credible/dapp-integration",
-              "credible/assertion-enforcer",
-              "credible/phevm",
-              "credible/assertion-da",
-              "credible/credible-layer-contracts",
-              "credible/architecture-op-stack",
-              "credible/system-requirements",
-              "credible/neutrality"
+              {
+                "group": "Principles",
+                "pages": [
+                  "credible/trust-model",
+                  "credible/interfaces-overview",
+                  "credible/neutrality"
+                ]
+              },
+              {
+                "group": "Core Components",
+                "pages": [
+                  "credible/assertion-enforcer",
+                  "credible/phevm",
+                  "credible/assertion-da",
+                  "credible/credible-layer-contracts"
+                ]
+              },
+              {
+                "group": "Integrations",
+                "pages": [
+                  "credible/network-integration",
+                  "credible/dapp-integration",
+                  "credible/architecture-op-stack"
+                ]
+              },
+              {
+                "group": "Operations",
+                "pages": [
+                  "credible/system-requirements"
+                ]
+              }
             ]
           },
           {
