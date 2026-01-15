@@ -5,6 +5,11 @@ description: 'View incidents prevented by the Credible Layer'
 
 Incidents show when transactions were dropped because they violated assertions protecting contracts. This happens when a transaction that interacted with an assertion-protected contract was dropped by the [Enforcer](/credible/glossary#assertion-enforcer) because it caused an assertion to revert.
 
+<Note>
+For the end-to-end flow, see the incident lifecycle diagram in
+[Architecture Overview](/credible/architecture-overview#incident-lifecycle-public-view).
+</Note>
+
 ## How Incidents Are Grouped
 
 An incident represents the invalidation of an assertion over a one-hour time period. Multiple dropped transactions can belong to the same incident if they violate the same assertion within that window.
@@ -101,4 +106,3 @@ Incident viewing is read-only. You cannot modify or delete incident records.
     Understand how assertion validation works
   </Card>
 </CardGroup>
-
