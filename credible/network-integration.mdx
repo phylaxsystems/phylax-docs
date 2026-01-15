@@ -44,6 +44,13 @@ Networks provide the following integration surfaces:
 - Enforcement is deterministic and only depends on on-chain state and assertion code.
 - Networks can stage assertion deployments before enforcing them in production.
 
+## Integration Checklist (High Level)
+
+- Identify the block-building hook for transaction validation
+- Configure access to the on-chain registry and assertion data
+- Decide on staging vs production enforcement
+- Set up monitoring and incident review workflows
+
 ## Next Steps
 
 <CardGroup cols={2}>

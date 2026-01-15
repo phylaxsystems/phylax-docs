@@ -27,6 +27,7 @@
             "group": "Architecture",
             "pages": [
               "credible/architecture-overview",
+              "credible/interfaces-overview",
               "credible/network-integration",
               "credible/dapp-integration",
               "credible/trust-model",
