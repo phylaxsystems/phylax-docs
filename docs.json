@@ -50,6 +50,7 @@
                 "pages": [
                   "credible/network-integration",
                   "credible/dapp-integration",
+                  "credible/architecture-linea",
                   "credible/architecture-op-stack"
                 ]
               },
