@@ -28,15 +28,15 @@
             "group": "Architecture",
             "pages": [
               "credible/architecture-overview",
+              "credible/trust-model",
               "credible/interfaces-overview",
               "credible/network-integration",
               "credible/dapp-integration",
-              "credible/trust-model",
               "credible/assertion-enforcer",
               "credible/phevm",
+              "credible/assertion-da",
               "credible/credible-layer-contracts",
               "credible/architecture-op-stack",
-              "credible/assertion-da",
               "credible/system-requirements",
               "credible/neutrality"
             ]
