@@ -33,16 +33,16 @@ flowchart LR
 Networks provide the following integration surfaces:
 
 - **Block-building hook**: the block builder queries the Assertion Enforcer before including a
-  transaction.
-- **Registry access**: the enforcer reads the on-chain registry to discover which assertions apply.
-- **Assertion data access**: the enforcer fetches assertion bytecode from Assertion DA.
-- **Operational monitoring**: incidents and status are surfaced via the Credible dApp.
+  transaction
+- **Registry access**: the enforcer reads the on-chain registry to discover which assertions apply
+- **Assertion data access**: the enforcer fetches assertion bytecode from Assertion DA
+- **Operational monitoring**: incidents and status are surfaced via the Credible dApp
 
 ## Operational Expectations
 
-- The enforcer runs alongside the block builder and does not change consensus rules.
-- Enforcement is deterministic and only depends on on-chain state and assertion code.
-- Networks can stage assertion deployments before enforcing them in production.
+- The enforcer runs alongside the block builder and does not change consensus rules
+- Enforcement is deterministic and only depends on on-chain state and assertion code
+- Networks can stage assertion deployments before enforcing them in production
 
 ## Integration Checklist (High Level)
 

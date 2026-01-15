@@ -39,11 +39,12 @@ flowchart LR
 
   TxPool --> Builder
   Builder --> Plugin
-  Plugin <--> Sidecar
+  Plugin --> Sidecar
+  Sidecar --> Plugin
   Sidecar --> Engine
   Engine --> Store
-  Store <---> Registry
-  Store <---> DA
+  Sidecar --> Registry
+  Sidecar --> DA
 ```
 
 ## Validation Flow
@@ -64,3 +65,4 @@ flowchart LR
 - [Network Integration Overview](/credible/network-integration)
 - [Assertion Enforcer](/credible/assertion-enforcer)
 - [Assertion DA](/credible/assertion-da)
+- [OP Stack](/credible/architecture-op-stack)
