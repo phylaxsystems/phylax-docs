@@ -27,8 +27,8 @@ To create a new project:
 4. Click "Continue"
 5. Add contract addresses:
    - Enter each contract address you want to protect
-   - Only contracts where you are the `owner` can be added
-   - The dApp verifies ownership by calling the `owner()` function
+   - Only contracts where your wallet is authorized can be added
+   - The dApp verifies admin access via the network's admin verifier (often owner-based)
 6. Review your project details
 7. Click "Save and publish" to create the project
 
@@ -37,9 +37,9 @@ To create a new project:
 </Frame>
 
 <Note>
-Only the owner of a contract can create a project for it. Ensure your contract implements an `owner()` function that returns the current owner address. See [Ownership Verification](/credible/ownership-verification) for details.
+Only authorized admins can create a project for a contract. Most deployments use owner-based verification by default, but some networks can use allowlists. See [Ownership Verification](/credible/ownership-verification) for details.
 
-For contracts without the `owner()` interface, a Manual Verification Request process is available.
+For contracts that don't pass the default verifier, a Manual Verification Request process may be available.
 </Note>
 
 ## Managing Projects
@@ -117,4 +117,3 @@ The project dashboard provides a unified view of your project's security:
     `pcl` command reference
   </Card>
 </CardGroup>
-

@@ -1,0 +1,70 @@
+---
+title: 'dApp Integration Overview'
+description: 'High-level integration path for protocols adopting the Credible Layer'
+---
+
+This page outlines how protocol teams adopt the Credible Layer to protect their smart contracts.
+It focuses on the minimum steps and interfaces needed to get protected.
+
+## Adoption Workflow
+
+Teams follow the same underlying steps. The CLI is used to author and store assertions, while the dApp
+is used to manage deployments and monitoring.
+
+- **CLI authoring**: write assertions locally and store bytecode
+- **dApp management**: link contracts, stage or deploy, and monitor incidents
+
+## End-to-End Flow
+
+```mermaid
+---
+title: Protocol Adoption Flow
+---
+flowchart LR
+  Dev[Protocol Team] --> Assertion[Write Assertions]
+  Assertion --> DA[Assertion DA]
+  Assertion --> Dapp[Credible dApp]
+  Dapp --> Registry[On-Chain Registry]
+  Registry --> Enforcer[Assertion Enforcer]
+  Enforcer --> Outcome[Block Inclusion Decision]
+  Outcome --> Incidents[Incidents + Dashboard]
+```
+
+## What You Control
+
+- Which assertions protect which contracts
+- Staging vs production deployments
+- Incident notification routing and monitoring
+
+## Deployment Modes
+
+- **Staging**: test and iterate on assertions without impacting production users
+- **Production**: enforce assertions at the network level for real transactions
+
+Learn more about ownership checks in [Ownership Verification](/credible/ownership-verification).
+
+## What Users Can Verify
+
+- Which assertions are active for a protocol
+- On-chain registry entries and transparency views
+- Incident history for protected contracts
+
+## What Successful Rollout Looks Like
+
+- Assertions cover critical protocol invariants and admin operations
+- Staging assertions are validated before moving to production
+- Teams review incidents and iterate on coverage over time
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deploy Assertions" icon="rocket" href="/credible/deploy-assertions-dapp">
+    Step-by-step deployment guide
+  </Card>
+  <Card title="Assertions Overview" icon="code" href="/credible/assertions-overview">
+    Learn how assertions work and how to write them
+  </Card>
+  <Card title="dApp Overview" icon="browser" href="/credible/dapp-overview">
+    Understand how the dApp is used by teams and users
+  </Card>
+</CardGroup>

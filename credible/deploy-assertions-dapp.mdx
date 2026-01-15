@@ -50,8 +50,8 @@ Authentication links your wallet address with your `pcl` session, allowing you t
 
 4. Add contract addresses:
    - Enter each contract you want to protect
-   - Only contracts where you are the `owner` can be added
-   - The dApp verifies ownership by calling `owner()` on each contract
+   - Only contracts where your wallet is authorized can be added
+   - The dApp verifies admin access via the network's admin verifier (often owner-based)
 
 5. Review and click "Save and publish"
 
@@ -60,7 +60,7 @@ Authentication links your wallet address with your `pcl` session, allowing you t
 </Frame>
 
 <Note>
-Only the contract owner can create a project for it. See [Ownership Verification](/credible/ownership-verification) for details on verification methods.
+Only authorized admins can create a project for a contract. See [Ownership Verification](/credible/ownership-verification) for details on verification methods.
 </Note>
 
 ## Step 3: Store and Submit Your Assertion
@@ -122,7 +122,7 @@ After deployment, manage assertions through your project dashboard:
 
 | Error | Solution |
 |-------|----------|
-| "Contract ownership verification failed" | Ensure your contract has `owner()` and you're connected with the owner wallet |
+| "Contract ownership verification failed" | Ensure your wallet passes the admin verifier (often `owner()`) or request manual verification if available |
 | "Assertion already exists" | Use a different name or update the existing assertion |
 | "Authentication expired" | Run `pcl auth login` to refresh |
 

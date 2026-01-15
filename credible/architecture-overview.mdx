@@ -22,7 +22,7 @@ The Credible Layer consists of four core components:
 
 The Credible Layer is a **sidecar security infrastructure** that validates transactions against developer-defined security rules (assertions) before they are included in blocks. As a sidecar, it runs alongside the L2 network's main components, intercepting transactions during block building and ensuring they don't violate any deployed security rules.
 
-The Assertion Enforcer is operated by the network's sequencer. Networks that integrate the Credible Layer run this sidecar as part of their sequencer infrastructure. This means you're not adding new trust assumptions: if you trust the network to include your transactions, you can trust it to enforce your assertions.
+The Assertion Enforcer is operated by the network's block builder or sequencer. Networks that integrate the Credible Layer run this sidecar as part of their block production infrastructure. This means enforcement does not rely on external execution services beyond the network you already trust to include transactions.
 
 ### System Architecture
 
@@ -43,7 +43,7 @@ flowchart LR
 
     subgraph network["Network"]
         direction LR
-        VALIDATOR["Network Validator"]
+        VALIDATOR["Block Builder / Sequencer"]
         REGISTRY["Credible Layer<br/>Contracts"]
     end
 
@@ -57,7 +57,7 @@ flowchart LR
     CLI -->|"Submit"| DAPP
     DAPP -->|"Deploy"| REGISTRY
 
-    VALIDATOR -->|"Transaction"| PhEVM
+    VALIDATOR -->|"Candidate Tx"| PhEVM
     PhEVM -->|"Valid/Invalid"| VALIDATOR
     PhEVM -.->|"Fetch"| DA
     PhEVM -.->|"Check"| REGISTRY
@@ -77,16 +77,16 @@ flowchart LR
 
 The diagram shows two main flows:
 
-**Development Flow**: Developers use [`pcl`](/credible/store-submit-assertions) to develop and test assertions. `pcl` stores assertion code in [Assertion DA](/credible/assertion-da), then submits to the [Credible dApp](/credible/dapp-overview). The dApp deploys assertions to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts).
+**Development Flow**: Developers use [`pcl`](/credible/store-submit-assertions) to develop and test assertions. `pcl` stores assertion code in [Assertion DA](/credible/assertion-da), then submits to the [Credible dApp](/credible/dapp-overview). The dApp deploys assertions to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts) so they can be enforced by the network.
 
-**Runtime Flow**: The network validator sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer fetches relevant assertions and executes them via [PhEVM](/credible/phevm). Valid transactions are included in blocks; invalid transactions are dropped.
+**Runtime Flow**: The block builder or sequencer sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer uses its registry snapshot (from on-chain events) and cached assertion bytecode (from [Assertion DA](/credible/assertion-da)) to execute relevant assertions via [PhEVM](/credible/phevm). Valid transactions are included in blocks; invalid transactions are dropped.
 
 ### How It Works
 
 1. **Assertion Deployment**: Developers write and submit assertions through `pcl` and the dApp, which are stored in Assertion DA and deployed on-chain
 2. **Transaction Validation**: The network sends transactions to the Assertion Enforcer during block production
 3. **Assertion Execution**: The Assertion Enforcer simulates each transaction and validates it against relevant assertions using PhEVM
-4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the network validator
+4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the block builder or sequencer
 5. **Security Enforcement**: Only valid transactions are included in blocks, preventing security violations before they reach the blockchain
 
 ## Transaction Flow
@@ -99,10 +99,11 @@ title: Transaction Validation Flow
 ---
 flowchart LR
     USER["User"] -->|"Submits Transaction"| MP["Mempool"]
-    MP --> SIDECAR["Assertion Enforcer<br/>(Sidecar)"]
-
-    SIDECAR -->|"Valid"| BLOCK["Block"]
+    MP --> BUILDER["Block Builder / Sequencer"]
+    BUILDER -->|"Candidate Tx"| SIDECAR["Assertion Enforcer<br/>(Sidecar)"]
+    SIDECAR -->|"Valid"| BUILDER
     SIDECAR -->|"Invalid"| DROP["Dropped"]
+    BUILDER -->|"Include"| BLOCK["Block"]
 
     classDef user fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
     classDef mempool fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#fff
@@ -126,6 +127,42 @@ flowchart LR
 <Note>
 The Assertion Enforcer is integrated with the block builder. During block production, the block builder invokes the Assertion Enforcer to validate transactions before including them.
 </Note>
+
+## Incident Lifecycle (Public View)
+
+When an assertion is violated, the incident is recorded and exposed for transparency and alerts.
+
+```mermaid
+---
+title: Incident Lifecycle
+---
+flowchart LR
+    ENFORCER["Assertion Enforcer"] --> DAPP["Credible dApp"]
+    DAPP --> DASH["Transparency Dashboard"]
+    DAPP --> ALERTS["Slack/PagerDuty Alerts"]
+
+    classDef enforcer fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+    classDef dapp fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    classDef output fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
+
+    class ENFORCER enforcer
+    class DAPP dapp
+    class DASH,ALERTS output
+```
+
+## Integration Paths
+
+<CardGroup cols={2}>
+  <Card title="dApp Integration Overview" icon="browser" href="/credible/dapp-integration">
+    How protocols deploy and manage assertions
+  </Card>
+  <Card title="Network Integration Overview" icon="sitemap" href="/credible/network-integration">
+    How networks and sequencers integrate enforcement
+  </Card>
+  <Card title="Interface Overview" icon="diagram-project" href="/credible/interfaces-overview">
+    High-level component boundaries and dependencies
+  </Card>
+</CardGroup>
 
 For details on the assertion validation process, see [Assertion Enforcer](/credible/assertion-enforcer#validation-process).
 
@@ -178,5 +215,8 @@ For concrete assertion examples and real-world use cases, explore the [Assertion
   </Card>
   <Card title="Cheatcodes Reference" icon="book" href="/credible/cheatcodes-reference">
     Detailed reference for assertion functions
+  </Card>
+  <Card title="Trust Model" icon="shield-check" href="/credible/trust-model">
+    Guarantees, assumptions, and failure modes
   </Card>
 </CardGroup>

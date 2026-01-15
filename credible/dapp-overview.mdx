@@ -5,7 +5,7 @@ description: 'Overview of the Credible Layer dApp and its role in the Credible L
 
 The Credible Layer dApp is the interface for managing assertions and monitoring incidents. Protocol teams use it to create projects, link contracts, and deploy assertions to protect their contracts. When deploying assertions, teams choose between Staging (for testing) or Production (for active protection). Users, investors, and researchers use it to review which assertions protect specific protocols.
 
-When you create a project and deploy assertions through the dApp, those assertions are deployed on-chain. Network validators use this registry to validate every transaction against your assertions before including them in blocks.
+When you create a project and deploy assertions through the dApp, those assertions are deployed on-chain. Block builders or sequencers use this registry to validate transactions against your assertions before including them in blocks.
 
 ## Core Components
 
@@ -27,7 +27,7 @@ The [Incidents](/credible/dapp-incidents) page tracks assertion violations that 
 
 ## Authentication
 
-To use project management features, you need to authenticate through [`pcl`](/credible/cli-reference#auth). The dApp uses OAuth-based authentication integrated with `pcl`, ensuring secure access through wallet connection.
+To use project management features, you need to authenticate through [`pcl`](/credible/cli-reference#auth). The dApp uses a `pcl`-based authentication flow with wallet connection to enable secure access.
 
 <Note>
 Authentication is required to create and manage projects. See the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-1-authenticate) for step-by-step authentication instructions.
@@ -63,5 +63,8 @@ Authentication is required to create and manage projects. See the [Deploy Assert
   </Card>
   <Card title="Ownership Verification" icon="shield-check" href="/credible/ownership-verification">
     Understand ownership requirements
+  </Card>
+  <Card title="Integration Overview" icon="diagram-project" href="/credible/dapp-integration">
+    High-level adoption flow for protocol teams
   </Card>
 </CardGroup>

@@ -15,7 +15,7 @@ Phylax's real-time security system detects and pre-emptively removes exploits be
 
 At a glance:
 
-- **Security rules** are defined by the protocol team and deployed as on-chain [assertions](/credible/glossary#assertion)
+- **Security rules** are defined by the protocol team and deployed on-chain as [assertions](/credible/glossary#assertion)
 - **The network** validates every transaction against relevant assertions before adding them to blocks
 - **Invalid transactions** are [dropped](/credible/glossary#drop). If an assertion fails, the transaction never executes
 
@@ -54,6 +54,17 @@ Assertions enable a wide range of security and compliance use cases:
 </CardGroup>
 
 For concrete examples and implementations, explore the [Assertions Book](/assertions-book/assertions-book-intro).
+
+## Who It's For
+
+<CardGroup cols={2}>
+  <Card title="Protocol Teams" icon="code" href="/credible/dapp-integration">
+    Deploy and manage assertions to protect your contracts
+  </Card>
+  <Card title="Networks & Sequencers" icon="sitemap" href="/credible/network-integration">
+    Integrate enforcement into block building
+  </Card>
+</CardGroup>
 
 ## How It Works
 
@@ -162,6 +173,8 @@ For the full technical flow, see [Architecture](/credible/architecture-overview)
 <Note>
 The Credible Layer is designed as neutral middleware that preserves decentralization for both dApps and networks. Learn more about [why neutrality matters](/credible/neutrality).
 </Note>
+
+For interface boundaries and integration touchpoints, see [Interface Overview](/credible/interfaces-overview).
 
 ## Next Steps
 

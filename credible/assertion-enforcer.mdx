@@ -7,9 +7,9 @@ The Assertion Enforcer is a sidecar component that validates transactions agains
 
 ## Role in the System
 
-The Assertion Enforcer sits between the mempool and block production:
+The Assertion Enforcer operates inside the block production pipeline:
 
-1. Receives transactions from the network validator
+1. Receives candidate transactions from the block builder or sequencer
 2. Identifies which assertions apply to each transaction
 3. Invokes [PhEVM](/credible/phevm) to execute assertions against transaction states
 4. Returns validation results (valid/invalid) to the network
@@ -20,7 +20,7 @@ The Assertion Enforcer sits between the mempool and block production:
 As a [sidecar](/credible/glossary#sidecar), the Assertion Enforcer:
 
 - **Operates independently** from the main L2 infrastructure
-- **Integrates without code changes** to the sequencer
+- **Integrates alongside block builders** without changing core protocol rules
 - **Scales separately** from the main network components
 - **Fails gracefully** without affecting L2 operations
 
@@ -79,7 +79,7 @@ flowchart LR
 
 ### Step-by-Step
 
-1. **Identify Relevant Assertions**: The Assertion Enforcer queries the [on-chain registry](/credible/credible-layer-contracts) to find which assertions apply to the contracts the transaction interacts with
+1. **Identify Relevant Assertions**: The Assertion Enforcer consults registry data (indexed from [on-chain events](/credible/credible-layer-contracts)) to find which assertions apply to the contracts the transaction interacts with
 
 2. **Fetch Assertion Bytecode**: Assertion bytecode is retrieved from internal cache (populated from [Assertion DA](/credible/assertion-da) when assertions are deployed)
 
@@ -99,8 +99,15 @@ flowchart LR
 The Assertion Enforcer integrates with block builders to ensure only valid transactions enter blocks:
 
 - Transactions that would violate assertions are dropped before block inclusion
-- The network validator receives clear valid/invalid signals
+- The block builder or sequencer receives clear valid/invalid signals
 - Block production continues normally with validated transactions
+
+## Operational Expectations (Public)
+
+- **Non-invasive**: Runs alongside existing block builders without changing consensus rules
+- **Deterministic**: Results are based on on-chain state and assertion code only
+- **Staging support**: Networks can validate assertions before enforcing them in production
+- **Transparent outcomes**: Incidents are visible in the dApp and dashboard
 
 ## Forced Inclusion Transactions
 
@@ -119,3 +126,13 @@ To ensure high-performance validation, the Assertion Enforcer maintains an inter
 
 This caching strategy ensures validation latency doesn't impact block production times.
 
+## Learn More
+
+<CardGroup cols={2}>
+  <Card title="Network Integration" icon="sitemap" href="/credible/network-integration">
+    High-level integration for networks and sequencers
+  </Card>
+  <Card title="Trust Model" icon="shield-check" href="/credible/trust-model">
+    Guarantees, assumptions, and failure modes
+  </Card>
+</CardGroup>

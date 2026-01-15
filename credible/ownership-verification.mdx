@@ -5,11 +5,11 @@ description: 'Understanding ownership verification requirements for the Credible
 
 # Ownership Verification
 
-The current version of the Credible Layer requires that the address returned by the `owner()` function of a contract is the only address that can deploy assertions for that contract. This is a temporary implementation that will be expanded in future versions.
+The Credible Layer uses admin verifier modules to determine who can deploy assertions for a contract. Most deployments use owner-based verification by default, and some networks can configure allowlist-based verification. This design will continue to expand with additional ownership patterns.
 
 ## Current Implementation
 
-The Credible Layer expects contracts to implement the `owner()` function, typically through the Ownable pattern. Here's an example of the expected interface:
+The common default verifier expects contracts to implement the `owner()` function (Ownable pattern). Here's an example of the expected interface:
 
 ```solidity
 interface IOwnable {
@@ -17,7 +17,7 @@ interface IOwnable {
 }
 ```
 
-When testing or developing with the Credible Layer, ensure your contracts implement this interface to enable project registration and assertion management.
+When testing or developing with the Credible Layer, ensure your contracts implement this interface or that your network provides an allowlist verifier to enable project registration and assertion management.
 
 ## Future Development
 
@@ -36,4 +36,3 @@ These improvements will be implemented in future versions of the Credible Layer.
 - [Assertion Guide](/credible/write-first-assertion) - Learn how to write assertions
 - [Deploy Assertions](/credible/deploy-assertions-dapp) - Learn how to deploy assertions
 - [FAQ](/credible/faq) - Find answers to common questions
-

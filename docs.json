@@ -18,22 +18,48 @@
             "group": "Getting Started",
             "pages": [
               "credible/credible-introduction",
+              "credible/credible-layer-overview",
+              "credible/evaluate-credible-layer",
               "credible/credible-install",
-              "credible/pcl-quickstart",
-              "credible/credible-layer-overview"
+              "credible/pcl-quickstart"
             ]
           },
           {
             "group": "Architecture",
             "pages": [
               "credible/architecture-overview",
-              "credible/assertion-enforcer",
-              "credible/phevm",
-              "credible/credible-layer-contracts",
-              "credible/architecture-op-stack",
-              "credible/assertion-da",
-              "credible/system-requirements",
-              "credible/neutrality"
+              {
+                "group": "Principles",
+                "pages": [
+                  "credible/trust-model",
+                  "credible/interfaces-overview",
+                  "credible/neutrality"
+                ]
+              },
+              {
+                "group": "Core Components",
+                "pages": [
+                  "credible/assertion-enforcer",
+                  "credible/phevm",
+                  "credible/assertion-da",
+                  "credible/credible-layer-contracts"
+                ]
+              },
+              {
+                "group": "Integrations",
+                "pages": [
+                  "credible/network-integration",
+                  "credible/dapp-integration",
+                  "credible/architecture-linea",
+                  "credible/architecture-op-stack"
+                ]
+              },
+              {
+                "group": "Operations",
+                "pages": [
+                  "credible/system-requirements"
+                ]
+              }
             ]
           },
           {

@@ -5,6 +5,14 @@ description: 'OP Stack specific implementation of the Credible Layer'
 
 The OP Stack implementation uses [Rollup-Boost](https://github.com/flashbots/rollup-boost) to connect an external sidecar assertion validation components with the L2 sequencer through a bridge proxy.
 
+<Note>
+For the general integration path, see [Network Integration Overview](/credible/network-integration).
+</Note>
+
+<Note>
+Looking for the Besu/Linea pattern? See [Linea / Besu Integration](/credible/architecture-linea).
+</Note>
+
 ## Architecture Diagram
 
 ```mermaid
@@ -39,9 +47,9 @@ end
 SequencerEL --> |Fallback Blocks + Validation| RollupBoost
 
 AssertionDA --> |Serve Assertions| AssertionEnforcerBlockBuilder
-AssertionEnforcerCLI --> |Submit Assertions| AssertionEnforcerDapp
-AssertionEnforcerDapp --> |OAuth| AssertionEnforcerCLI
-AssertionEnforcerDapp --> |Submit Assertions| AssertionDA
+AssertionEnforcerCLI --> |Store bytecode| AssertionDA
+AssertionEnforcerCLI --> |Auth + submit metadata| AssertionEnforcerDapp
+AssertionEnforcerDapp --> |Fetch assertions| AssertionDA
 
 AssertionEnforcerEL <--> |Pulls State + Txs| SequencerEL
 AssertionEnforcerEL <--> |Provide Best Transactions| AssertionEnforcerBlockBuilder
