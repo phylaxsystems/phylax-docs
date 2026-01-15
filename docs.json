@@ -18,10 +18,10 @@
             "group": "Getting Started",
             "pages": [
               "credible/credible-introduction",
-              "credible/credible-install",
-              "credible/pcl-quickstart",
               "credible/credible-layer-overview",
-              "credible/evaluate-credible-layer"
+              "credible/evaluate-credible-layer",
+              "credible/credible-install",
+              "credible/pcl-quickstart"
             ]
           },
           {

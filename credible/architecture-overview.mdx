@@ -22,7 +22,7 @@ The Credible Layer consists of four core components:
 
 The Credible Layer is a **sidecar security infrastructure** that validates transactions against developer-defined security rules (assertions) before they are included in blocks. As a sidecar, it runs alongside the L2 network's main components, intercepting transactions during block building and ensuring they don't violate any deployed security rules.
 
-The Assertion Enforcer is operated by the network's sequencer. Networks that integrate the Credible Layer run this sidecar as part of their sequencer infrastructure. This means you're not adding new trust assumptions: if you trust the network to include your transactions, you can trust it to enforce your assertions.
+The Assertion Enforcer is operated by the network's sequencer. Networks that integrate the Credible Layer run this sidecar as part of their sequencer infrastructure. This means enforcement does not rely on external execution services beyond the network you already trust to include transactions.
 
 ### System Architecture
 
