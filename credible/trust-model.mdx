@@ -8,29 +8,29 @@ This page summarizes the Credible Layer trust model in plain language.
 ## What We Guarantee
 
 - **Deterministic enforcement**: given the same on-chain state and assertion code, enforcement
-  results are deterministic.
+  results are deterministic
 - **Pre-execution protection**: transactions that violate deployed assertions are excluded from
-  blocks by networks running the enforcer.
-- **Transparent rules**: assertions are public Solidity code and can be audited by anyone.
+  blocks by networks running the enforcer
+- **Transparent rules**: assertions are public Solidity code and can be audited by anyone
 
 ## What We Do Not Guarantee
 
-- **Assertion correctness**: teams are responsible for writing accurate assertions.
-- **Complete coverage**: only behaviors covered by assertions are enforced.
-- **Off-chain security**: custodial, UI, or off-chain service risks are out of scope.
+- **Assertion correctness**: teams are responsible for writing accurate assertions
+- **Complete coverage**: only behaviors covered by assertions are enforced
+- **Off-chain security**: custodial, UI, or off-chain service risks are out of scope
 
 ## Operational Assumptions
 
-- The network runs the Assertion Enforcer during block building.
-- The enforcer can access the on-chain registry and assertion bytecode.
-- The network follows its normal transaction validity rules alongside enforcement.
+- The network runs the Assertion Enforcer during block building
+- The enforcer can access the on-chain registry and assertion bytecode
+- The network follows its normal transaction validity rules alongside enforcement
 
 ## Failure Modes (High Level)
 
 - **Enforcer unavailable**: the network continues normal operation without enforcement until the
-  enforcer is restored.
-- **Registry misconfiguration**: assertions may not apply to intended contracts.
-- **DA connectivity issues**: new assertions may be delayed until bytecode is reachable.
+  enforcer is restored
+- **Registry misconfiguration**: assertions may not apply to intended contracts
+- **DA connectivity issues**: new assertions may be delayed until bytecode is reachable
 
 ## Next Steps
 
