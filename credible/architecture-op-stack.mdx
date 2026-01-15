@@ -47,9 +47,9 @@ end
 SequencerEL --> |Fallback Blocks + Validation| RollupBoost
 
 AssertionDA --> |Serve Assertions| AssertionEnforcerBlockBuilder
-AssertionEnforcerCLI --> |Submit Assertions| AssertionEnforcerDapp
-AssertionEnforcerDapp --> |OAuth| AssertionEnforcerCLI
-AssertionEnforcerDapp --> |Submit Assertions| AssertionDA
+AssertionEnforcerCLI --> |Store bytecode| AssertionDA
+AssertionEnforcerCLI --> |Auth + submit metadata| AssertionEnforcerDapp
+AssertionEnforcerDapp --> |Fetch assertions| AssertionDA
 
 AssertionEnforcerEL <--> |Pulls State + Txs| SequencerEL
 AssertionEnforcerEL <--> |Provide Best Transactions| AssertionEnforcerBlockBuilder
