@@ -20,7 +20,8 @@
               "credible/credible-introduction",
               "credible/credible-install",
               "credible/pcl-quickstart",
-              "credible/credible-layer-overview"
+              "credible/credible-layer-overview",
+              "credible/evaluate-credible-layer"
             ]
           },
           {
