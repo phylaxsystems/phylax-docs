@@ -7,9 +7,9 @@ The Assertion Enforcer is a sidecar component that validates transactions agains
 
 ## Role in the System
 
-The Assertion Enforcer sits between the mempool and block production:
+The Assertion Enforcer operates inside the block production pipeline:
 
-1. Receives transactions from the block builder or sequencer
+1. Receives candidate transactions from the block builder or sequencer
 2. Identifies which assertions apply to each transaction
 3. Invokes [PhEVM](/credible/phevm) to execute assertions against transaction states
 4. Returns validation results (valid/invalid) to the network
@@ -79,7 +79,7 @@ flowchart LR
 
 ### Step-by-Step
 
-1. **Identify Relevant Assertions**: The Assertion Enforcer queries the [on-chain registry](/credible/credible-layer-contracts) to find which assertions apply to the contracts the transaction interacts with
+1. **Identify Relevant Assertions**: The Assertion Enforcer consults registry data (indexed from [on-chain events](/credible/credible-layer-contracts)) to find which assertions apply to the contracts the transaction interacts with
 
 2. **Fetch Assertion Bytecode**: Assertion bytecode is retrieved from internal cache (populated from [Assertion DA](/credible/assertion-da) when assertions are deployed)
 

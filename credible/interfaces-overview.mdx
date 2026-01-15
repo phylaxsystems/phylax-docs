@@ -17,7 +17,7 @@ flowchart LR
   DappUI[Credible dApp UI] <--> Contracts[Credible Layer Contracts]
   DappUI <--> Indexer[Transparency Indexer]
   Enforcer[Assertion Enforcer] <--> Builder[Block Builder]
-  Enforcer <--> Registry[On-Chain Registry]
+  Enforcer <--> Registry["Registry Data<br/>(On-Chain Events)"]
   Enforcer <--> DA[Assertion DA]
 ```
 
@@ -29,7 +29,7 @@ flowchart LR
 | dApp UI ↔ Contracts | Contract ABI + events | dApp + contracts maintainers |
 | dApp UI ↔ Indexer | GraphQL schema | dApp + indexer maintainers |
 | Enforcer ↔ Block Builder | Transaction validation hook | Network integrators |
-| Enforcer ↔ Registry | Registry contract schema | Network + contracts maintainers |
+| Enforcer ↔ Registry | Registry events + schema | Network + contracts maintainers |
 | Enforcer ↔ Assertion DA | Bytecode storage API | DA + enforcer maintainers |
 
 ## Guidance

@@ -33,9 +33,10 @@ flowchart LR
   subgraph Sidecar["Assertion Enforcer Sidecar"]
     Engine["Assertion Execution Engine"]
     Store["Assertion Store"]
-    Registry["On-Chain Registry"]
-    DA["Assertion DA"]
   end
+
+  Registry["Registry Data<br/>(On-Chain Events)"]
+  DA["Assertion DA"]
 
   TxPool --> Builder
   Builder --> Plugin
@@ -57,7 +58,7 @@ flowchart LR
 ## Notes
 
 - The plugin uses Besu’s transaction selection hooks to validate transactions during block building.
-- The sidecar relies on the on-chain registry and assertion data to determine applicable assertions.
+- The sidecar relies on registry data (from on-chain events) and assertion data to determine applicable assertions.
 - This integration does not change core protocol rules; it runs alongside the existing block builder.
 
 ## Related Docs

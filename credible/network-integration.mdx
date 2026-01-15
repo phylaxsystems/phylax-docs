@@ -34,7 +34,7 @@ Networks provide the following integration surfaces:
 
 - **Block-building hook**: the block builder queries the Assertion Enforcer before including a
   transaction
-- **Registry access**: the enforcer reads the on-chain registry to discover which assertions apply
+- **Registry access**: the enforcer consumes registry data (indexed from on-chain events) to discover which assertions apply
 - **Assertion data access**: the enforcer fetches assertion bytecode from Assertion DA
 - **Operational monitoring**: incidents and status are surfaced via the Credible dApp
 
@@ -47,14 +47,14 @@ Networks provide the following integration surfaces:
 ## Integration Checklist (High Level)
 
 - Identify the block-building hook for transaction validation
-- Configure access to the on-chain registry and assertion data
+- Configure access to registry data and assertion bytecode
 - Decide on staging vs production enforcement
 - Set up monitoring and incident review workflows
 
 ## Integration Requirements (Public)
 
 - **Block-building hook** that can query the enforcer before inclusion
-- **Registry access** for assertion discovery
+- **Registry access** for assertion discovery (on-chain events indexed locally)
 - **DA access** for assertion bytecode retrieval
 - **Incident visibility** through the Credible dApp
 
