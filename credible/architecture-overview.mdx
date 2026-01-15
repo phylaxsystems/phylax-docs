@@ -43,7 +43,7 @@ flowchart LR
 
     subgraph network["Network"]
         direction LR
-        VALIDATOR["Network Validator"]
+        VALIDATOR["Block Builder / Sequencer"]
         REGISTRY["Credible Layer<br/>Contracts"]
     end
 
@@ -57,7 +57,7 @@ flowchart LR
     CLI -->|"Submit"| DAPP
     DAPP -->|"Deploy"| REGISTRY
 
-    VALIDATOR -->|"Transaction"| PhEVM
+    VALIDATOR -->|"Candidate Tx"| PhEVM
     PhEVM -->|"Valid/Invalid"| VALIDATOR
     PhEVM -.->|"Fetch"| DA
     PhEVM -.->|"Check"| REGISTRY
@@ -79,14 +79,14 @@ The diagram shows two main flows:
 
 **Development Flow**: Developers use [`pcl`](/credible/store-submit-assertions) to develop and test assertions. `pcl` stores assertion code in [Assertion DA](/credible/assertion-da), then submits to the [Credible dApp](/credible/dapp-overview). The dApp deploys assertions to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts).
 
-**Runtime Flow**: The network validator sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer fetches relevant assertions and executes them via [PhEVM](/credible/phevm). Valid transactions are included in blocks; invalid transactions are dropped.
+**Runtime Flow**: The block builder or sequencer sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer fetches relevant assertions and executes them via [PhEVM](/credible/phevm). Valid transactions are included in blocks; invalid transactions are dropped.
 
 ### How It Works
 
 1. **Assertion Deployment**: Developers write and submit assertions through `pcl` and the dApp, which are stored in Assertion DA and deployed on-chain
 2. **Transaction Validation**: The network sends transactions to the Assertion Enforcer during block production
 3. **Assertion Execution**: The Assertion Enforcer simulates each transaction and validates it against relevant assertions using PhEVM
-4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the network validator
+4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the block builder or sequencer
 5. **Security Enforcement**: Only valid transactions are included in blocks, preventing security violations before they reach the blockchain
 
 ## Transaction Flow

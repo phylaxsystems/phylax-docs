@@ -9,7 +9,7 @@ The Assertion Enforcer is a sidecar component that validates transactions agains
 
 The Assertion Enforcer sits between the mempool and block production:
 
-1. Receives transactions from the network validator
+1. Receives transactions from the block builder or sequencer
 2. Identifies which assertions apply to each transaction
 3. Invokes [PhEVM](/credible/phevm) to execute assertions against transaction states
 4. Returns validation results (valid/invalid) to the network
@@ -20,7 +20,7 @@ The Assertion Enforcer sits between the mempool and block production:
 As a [sidecar](/credible/glossary#sidecar), the Assertion Enforcer:
 
 - **Operates independently** from the main L2 infrastructure
-- **Integrates without code changes** to the sequencer
+- **Integrates alongside block builders** without changing core protocol rules
 - **Scales separately** from the main network components
 - **Fails gracefully** without affecting L2 operations
 
@@ -99,7 +99,7 @@ flowchart LR
 The Assertion Enforcer integrates with block builders to ensure only valid transactions enter blocks:
 
 - Transactions that would violate assertions are dropped before block inclusion
-- The network validator receives clear valid/invalid signals
+- The block builder or sequencer receives clear valid/invalid signals
 - Block production continues normally with validated transactions
 
 ## Operational Expectations (Public)

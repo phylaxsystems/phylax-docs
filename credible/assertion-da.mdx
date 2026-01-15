@@ -59,7 +59,7 @@ pcl store MyAssertion
 2. Uploads flattened source code and compiler options to Assertion DA
 3. Returns the assertion ID (Keccak256 hash of the bytecode) and DA prover signature
 
-Only the contract owner (the address returned by the contract's `owner()` function) can deploy, modify, or remove assertions for their contract. This is enforced on-chain by the Credible Layer smart contracts, which verify ownership before allowing any assertion management operations. During the early phase of the project, there is also a manual whitelist in place. Ownership verification will be expanded and improved in future versions to support additional ownership patterns and multisig integration. See [Ownership Verification](/credible/ownership-verification) for details.
+Only authorized admins can deploy, modify, or remove assertions for their contracts. This is enforced on-chain by the Credible Layer smart contracts, which verify administrative authority (such as owner-based checks or approved allowlists) before allowing assertion management operations. Ownership verification will be expanded and improved in future versions to support additional ownership patterns and multisig integration. See [Ownership Verification](/credible/ownership-verification) for details.
 
 ### Retrieving Assertions
 
