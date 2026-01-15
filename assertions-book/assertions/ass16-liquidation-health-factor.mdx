@@ -15,8 +15,8 @@ Incorrect health factor validation could lead to unfair liquidations, protocol i
 
 Implements multi-layered liquidation health factor verification:
 
-- **Pre-liquidation**: `forkPreState()` captures health factor before liquidation, verifies position is actually unhealthy
-- **Post-liquidation**: `forkPostState()` verifies health factor improves after liquidation
+- **Pre-liquidation**: `forkPreTx()` captures health factor before liquidation, verifies position is actually unhealthy
+- **Post-liquidation**: `forkPostTx()` verifies health factor improves after liquidation
 - **Parameter validation**: `getCallInputs()` monitors liquidation calls, validates seized assets and repaid shares are non-zero, enforces maximum liquidation amounts
 - `registerCallTrigger()`: Triggers on liquidation function calls
 

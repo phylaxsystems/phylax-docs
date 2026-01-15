@@ -15,7 +15,7 @@ Incorrect harvest implementations could lead to loss of user funds, price per sh
 
 Implements multi-layered approach to verify harvest operations:
 
-- `forkPreState()` / `forkPostState()`: Capture vault balance and price per share before/after harvest
+- `forkPreTx()` / `forkPostTx()`: Capture vault balance and price per share before/after harvest
 - `getStateChangesUint()`: Monitor all balance changes during transaction execution
 - `registerCallTrigger()`: Trigger on harvest function calls
 - Ensures balance hasn't decreased (can stay same if harvested recently)

@@ -56,7 +56,7 @@ contract VestraDAOHack is Assertion {
 
     // Check if the user has already unstaked for a maturity
     function assertionExample() external {
-        ph.forkPostState();
+        ph.forkPostTx();
         PhEvm.CallInputs[] memory unStakes = ph.getCallInputs(address(vestraDAO), vestraDAO.unStake.selector);
 
         for (uint256 i = 0; i < unStakes.length; i++) {

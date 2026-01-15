@@ -15,7 +15,7 @@ For example, it's possible to define a whitelist of allowed implementations - an
 
 Monitors changes to the implementation address storage slot in proxy contracts using:
 
-- `ph.forkPreState()` / `ph.forkPostState()`: Compare implementation address before and after transaction
+- `ph.forkPreTx()` / `ph.forkPostTx()`: Compare implementation address before and after transaction
 - `getStateChangesAddress()`: Track all changes to the implementation slot during transaction execution  
 - `registerStorageChangeTrigger()`: Trigger when implementation address changes
 

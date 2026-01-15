@@ -15,7 +15,7 @@ If attackers could push prices outside valid tick ranges, they could execute tra
 
 Implements focused tick integrity verification:
 
-- `ph.forkPreState()` / `ph.forkPostState()`: Capture tick state before and after transaction
+- `ph.forkPreTx()` / `ph.forkPostTx()`: Capture tick state before and after transaction
 - `registerStorageChangeTrigger()`: Monitor changes to tick-related storage slots
 - Verify ticks stay within global bounds (-887272 to 887272)
 - Ensure ticks align with pool's tick spacing requirements

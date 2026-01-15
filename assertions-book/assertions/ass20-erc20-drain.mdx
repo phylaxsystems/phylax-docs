@@ -15,7 +15,7 @@ By limiting outflow rates, protocols gain valuable time to respond to security i
 
 Implements percentage-based limit on token outflows in a single transaction:
 
-- `forkPreState()` / `forkPostState()`: Capture token balance before and after transaction
+- `forkPreTx()` / `forkPostTx()`: Capture token balance before and after transaction
 - `registerCallTrigger()`: Trigger on every transaction without specifying particular function signature
 - Calculate percentage of tokens withdrawn in transaction
 - Revert if withdrawal percentage exceeds configured threshold

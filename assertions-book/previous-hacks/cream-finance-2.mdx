@@ -56,7 +56,7 @@ function assertion_priceDeviation() public view {
         postPrices.push(priceOracle.getPrice(touchedAssets[i]));
     }
 
-    ph.forkPreState();
+    ph.forkPreTx();
 
     for (uint256 i = 0; i < touchedAssets.length; i++) {
         uint256 prePrice = priceOracle.getPrice(touchedAssets[i]);
