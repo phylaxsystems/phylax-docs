@@ -30,9 +30,12 @@ flowchart LR
     Plugin["Credible Layer Plugin"]
   end
 
-  subgraph Sidecar["Assertion Enforcer Sidecar"]
+  subgraph SidecarGroup["Assertion Enforcer Sidecar"]
+    SidecarSvc["Assertion Enforcer"]
     Engine["Assertion Execution Engine"]
     Store["Assertion Store"]
+    SidecarSvc --> Engine
+    Engine --> Store
   end
 
   Registry["Registry Data<br/>(On-Chain Events)"]
@@ -40,12 +43,10 @@ flowchart LR
 
   TxPool --> Builder
   Builder --> Plugin
-  Plugin --> Sidecar
-  Sidecar --> Plugin
-  Sidecar --> Engine
-  Engine --> Store
-  Sidecar --> Registry
-  Sidecar --> DA
+  Plugin --> SidecarSvc
+  SidecarSvc --> Plugin
+  SidecarSvc --> Registry
+  SidecarSvc --> DA
 ```
 
 ## Validation Flow
