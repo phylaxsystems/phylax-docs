@@ -49,9 +49,14 @@
                 "group": "Integrations",
                 "pages": [
                   "credible/network-integration",
-                  "credible/dapp-integration",
-                  "credible/architecture-linea",
-                  "credible/architecture-op-stack"
+                  {
+                    "group": "Network Implementations",
+                    "pages": [
+                      "credible/network-integrations/architecture-linea",
+                      "credible/network-integrations/architecture-op-stack"
+                    ]
+                  },
+                  "credible/dapp-integration"
                 ]
               },
               {

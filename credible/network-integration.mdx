@@ -42,13 +42,13 @@ Networks provide the following integration surfaces:
 
 - The enforcer runs alongside the block builder and does not change consensus rules
 - Enforcement is deterministic and only depends on on-chain state and assertion code
-- Networks can stage assertion deployments before enforcing them in production
+- dApps choose whether assertions are staged or enforced; networks honor the registry status during validation
 
 ## Integration Checklist (High Level)
 
 - Identify the block-building hook for transaction validation
 - Configure access to registry data and assertion bytecode
-- Decide on staging vs production enforcement
+- Ensure the enforcer respects staged vs enforced assertions as set by dApps
 - Set up monitoring and incident review workflows
 
 ## Integration Requirements (Public)
@@ -64,13 +64,13 @@ Networks provide the following integration surfaces:
   <Card title="Architecture Overview" icon="diagram-project" href="/credible/architecture-overview">
     Detailed system architecture and transaction flow
   </Card>
-  <Card title="Linea / Besu Integration" icon="plug" href="/credible/architecture-linea">
+  <Card title="Linea / Besu Integration" icon="plug" href="/credible/network-integrations/architecture-linea">
     Plugin-based integration pattern for Besu
   </Card>
   <Card title="Assertion Enforcer" icon="shield" href="/credible/assertion-enforcer">
     Sidecar validation flow and enforcement role
   </Card>
-  <Card title="OP Stack Implementation" icon="sitemap" href="/credible/architecture-op-stack">
+  <Card title="OP Stack Implementation" icon="sitemap" href="/credible/network-integrations/architecture-op-stack">
     OP Stack integration notes
   </Card>
 </CardGroup>
