@@ -12,17 +12,17 @@ Each analysis includes:
 
 ## Access Control & Administrative Vulnerabilities
 
-### [Radiant Capital Hack](/assertions-book/previous-hacks/hack1-radiant-capital)
-**Attack Type:** Ownership Takeover
-**Loss:** $58M+ USD
-**Root Cause:** Attackers gained control of multisig signers and changed ownership of lending pools
-**Prevention:** Owner change assertions with proper validation and whitelisting
-
 ### [Bybit - Compromised Safe Wallet UI](/assertions-book/previous-hacks/bybit-safe-ui)
 **Attack Type:** UI Compromise + Implementation Change
 **Loss:** $1.4B USD
 **Root Cause:** Compromised frontend showed fake transactions while changing proxy implementation
 **Prevention:** Implementation address change assertions and transaction validation
+
+### [Radiant Capital Hack](/assertions-book/previous-hacks/hack1-radiant-capital)
+**Attack Type:** Ownership Takeover
+**Loss:** $58M+ USD
+**Root Cause:** Attackers gained control of multisig signers and changed ownership of lending pools
+**Prevention:** Owner change assertions with proper validation and whitelisting
 
 ### [UxLink Multisig Ownership Compromise](/assertions-book/previous-hacks/uxlink-multisig-hack)
 **Attack Type:** Private Key Compromise + Multisig Manipulation
@@ -32,11 +32,11 @@ Each analysis includes:
 
 ## Arithmetic & Calculation Errors
 
-### [Abracadabra Rounding Error Attack](/assertions-book/previous-hacks/abracadabra-rounding-error)
-**Attack Type:** Rounding Error Exploitation
-**Loss:** $6.5M USD
-**Root Cause:** Rounding error in RebaseToken mechanism allowed base value inflation
-**Prevention:** Invariant checks ensuring debt shares consistency
+### [Balancer V2 Rate Manipulation Exploit](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit)
+**Attack Type:** Rounding Error Accumulation
+**Loss:** $120M+ USD
+**Root Cause:** Accumulated rounding errors in stable pool invariant calculation manipulated exchange rates
+**Prevention:** Rate change bounds assertions detecting drastic pool rate changes within single transactions
 
 ### [Bunni XYZ Rounding Error Exploit](/assertions-book/previous-hacks/bunni-xyz-rounding-error)
 **Attack Type:** Rounding Error + Liquidity Manipulation
@@ -44,17 +44,11 @@ Each analysis includes:
 **Root Cause:** Rounding error in withdrawal mechanism led to disproportionate liquidity decreases
 **Prevention:** Withdrawal proportionality assertions ensuring balance decreases match share burns
 
-### [Balancer V2 Rate Manipulation Exploit](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit)
-**Attack Type:** Rounding Error Accumulation
-**Loss:** $120M+ USD
-**Root Cause:** Accumulated rounding errors in stable pool invariant calculation manipulated exchange rates
-**Prevention:** Rate change bounds assertions detecting drastic pool rate changes within single transactions
-
-### [Compound Upgrade Bug](/assertions-book/previous-hacks/compound-upgrade-bug)
-**Attack Type:** Logic Error in Upgrade
-**Loss:** $280K USD (limited by quick response)
-**Root Cause:** One-letter bug (`>` instead of `>=`) in reward calculation
-**Prevention:** Maximum reward rate validation assertions
+### [Abracadabra Rounding Error Attack](/assertions-book/previous-hacks/abracadabra-rounding-error)
+**Attack Type:** Rounding Error Exploitation
+**Loss:** $6.5M USD
+**Root Cause:** Rounding error in RebaseToken mechanism allowed base value inflation
+**Prevention:** Invariant checks ensuring debt shares consistency
 
 ### [Vestra DAO Hack](/assertions-book/previous-hacks/hack2-vestra-dao)
 **Attack Type:** Unchecked State Flag
@@ -62,19 +56,13 @@ Each analysis includes:
 **Root Cause:** Missing validation of `isActive` flag in unstake function
 **Prevention:** State flag validation assertions
 
+### [Compound Upgrade Bug](/assertions-book/previous-hacks/compound-upgrade-bug)
+**Attack Type:** Logic Error in Upgrade
+**Loss:** $280K USD (limited by quick response)
+**Root Cause:** One-letter bug (`>` instead of `>=`) in reward calculation
+**Prevention:** Maximum reward rate validation assertions
+
 ## Oracle & Price Manipulation
-
-### [Cream Finance 2](/assertions-book/previous-hacks/cream-finance-2)
-**Attack Type:** Price Manipulation
-**Loss:** $130M USD
-**Root Cause:** Sudden price manipulation through asset donation to vault
-**Prevention:** Price deviation monitoring assertions
-
-### [KiloEx Price Oracle Manipulation](/assertions-book/previous-hacks/kiloex-price-manipulation-hack)
-**Attack Type:** Access Control + Price Manipulation
-**Loss:** $7.5M USD
-**Root Cause:** Lack of access controls in MinimalForwarder allowed price manipulation
-**Prevention:** Price deviation assertions and access control validation
 
 ### [GMX v1 AUM Manipulation Hack](/assertions-book/previous-hacks/gma-aum-jul25-hack)
 **Attack Type:** Reentrancy + AUM Manipulation
@@ -82,7 +70,37 @@ Each analysis includes:
 **Root Cause:** Reentrancy vulnerability allowed artificial AUM inflation
 **Prevention:** AUM manipulation bounds assertions and atomic state consistency
 
+### [KiloEx Price Oracle Manipulation](/assertions-book/previous-hacks/kiloex-price-manipulation-hack)
+**Attack Type:** Access Control + Price Manipulation
+**Loss:** $7.5M USD
+**Root Cause:** Lack of access controls in MinimalForwarder allowed price manipulation
+**Prevention:** Price deviation assertions and access control validation
+
+### [Vicuna Finance Oracle Manipulation](/assertions-book/previous-hacks/vicuna-finance-hack)
+**Attack Type:** LP Token Oracle Manipulation
+**Loss:** $700K USD
+**Root Cause:** LP tokens priced using simple sum formula instead of fair pricing
+**Prevention:** Price deviation assertions monitoring oracle changes per call
+
+### [Cream Finance 2](/assertions-book/previous-hacks/cream-finance-2)
+**Attack Type:** Price Manipulation
+**Loss:** $130M USD
+**Root Cause:** Sudden price manipulation through asset donation to vault
+**Prevention:** Price deviation monitoring assertions
+
 ## Protocol Logic Vulnerabilities
+
+### [Abracadabra GMX V2 Cauldron Exploit](/assertions-book/previous-hacks/abracadabra-gmx-v2-exploit)
+**Attack Type:** Accounting Bug
+**Loss:** $13.4M USD
+**Root Cause:** Phantom collateral created when tokens extracted without updating order value
+**Prevention:** Collateral tracking assertions ensuring borrowed amounts never exceed actual collateral
+
+### [Abracadabra CauldronV4 Cook Function Exploit](/assertions-book/previous-hacks/abracadabra-hack-3)
+**Attack Type:** Logic Flaw in Action Sequencing
+**Loss:** $1.8M USD
+**Root Cause:** Action sequence [5, 0] allowed solvency check flag to be set then immediately cleared
+**Prevention:** Post-transaction solvency assertions enforcing outcome-based validation
 
 ### [Euler Finance Donation Hack](/assertions-book/previous-hacks/euler-finance-donation-hack)
 **Attack Type:** Missing Health Check
@@ -90,14 +108,14 @@ Each analysis includes:
 **Root Cause:** Donation function lacked health factor validation
 **Prevention:** Health factor assertions after all state changes
 
-### [First Depositor Bug](/assertions-book/previous-hacks/first-depositor)
-**Attack Type:** Share Price Manipulation
-**Loss:** Various protocols affected
-**Root Cause:** First depositor can manipulate exchange rate through donation
-**Prevention:** Minimum supply assertions and exchange rate validation
-
 ### [Visor Finance Unrestricted Mint](/assertions-book/previous-hacks/visor-finance-unrestricted-mint)
 **Attack Type:** Unrestricted Token Minting
 **Loss:** Protocol funds
 **Root Cause:** Anyone could mint reward tokens without proper validation
 **Prevention:** Collateralization ratio assertions
+
+### [First Depositor Bug](/assertions-book/previous-hacks/first-depositor)
+**Attack Type:** Share Price Manipulation
+**Loss:** Various protocols affected
+**Root Cause:** First depositor can manipulate exchange rate through donation
+**Prevention:** Minimum supply assertions and exchange rate validation

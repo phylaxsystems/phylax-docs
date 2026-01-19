@@ -55,15 +55,15 @@ contract VestraDAOHack is Assertion {
     }
 
     // Check if the user has already unstaked for a maturity
-    function assertionExample() external {
+    function assertionExample() external view {
         ph.forkPostTx();
         PhEvm.CallInputs[] memory unStakes = ph.getCallInputs(address(vestraDAO), vestraDAO.unStake.selector);
 
         for (uint256 i = 0; i < unStakes.length; i++) {
-            uint8 maturity = abi.decode(unStakes[i].input.maturity, (uint8));
+            uint8 maturity = abi.decode(unStakes[i].input, (uint8));
             address from = unStakes[i].caller;
-            IVestraDAO.Stake storage user = vestraDAO.stakes[from][maturity];
-            require(user.isActive, "User has already unstaked for this maturity");
+            (,,,,,bool isActive) = vestraDAO.stakes(from, maturity);
+            require(isActive, "User has already unstaked for this maturity");
         }
     }
 }

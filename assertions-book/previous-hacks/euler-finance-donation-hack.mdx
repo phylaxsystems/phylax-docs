@@ -59,25 +59,30 @@ Attack was carried out for several different assets, including DAI, WETH, and US
 Proper health checks should be performed on the account that is performing the donation.
 It is worth noting that the below assertion checks for modifications made by the user in the transaction.
 The user should never be allowed to make changes to their own collateral or debt that brings their positions under water.
-Assuming we can check run assertions on each call in the transaction and that we can get all modified accounts in the transaction, we can implement the following assertion:
+
+<Warning>
+The code below is **conceptual pseudo code** to illustrate the invariant that should be enforced. The `getModifiedAccounts()` cheatcode does not currently exist. In practice, you would need to identify affected accounts through other means, such as parsing logs with `getLogs()` or tracking call inputs with `getCallInputs()`.
+</Warning>
 
 ```solidity
-function assertionNoUnsafeDebt() external {
+// CONCEPTUAL - getModifiedAccounts() is not a real cheatcode
+function assertionNoUnsafeDebt() external view {
     ph.forkPostTx();
-    
+
     // Get all accounts that were modified in this tx
+    // NOTE: This cheatcode does not exist - this is conceptual
     address[] memory accounts = ph.getModifiedAccounts();
-    
+
     for (uint256 i = 0; i < accounts.length; i++) {
         address account = accounts[i];
-        
+
         // Core invariant: Collateral must always be >= Debt
         require(euler.healthCheck(account), "Account has more debt than collateral");
     }
 }
 ```
 
-This assertion ensures that users don't have more debt than collateral after the transaction.
+The key insight is that the **invariant itself is simple**: after any transaction, no account should have more debt than collateral. The challenge is identifying which accounts to check, which in a real implementation might require parsing transaction logs or call inputs.
 
 ## Additional Considerations
 
