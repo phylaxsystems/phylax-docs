@@ -5,7 +5,7 @@ description: 'Understanding ownership verification requirements for the Credible
 
 # Ownership Verification
 
-The Credible Layer uses admin verifier modules to determine who can deploy assertions for a contract. Most deployments use owner-based verification by default, and some networks can configure allowlist-based verification. This design will continue to expand with additional ownership patterns.
+The Credible Layer uses admin verifier modules to determine who can deploy assertions for a contract. Most deployments use owner-based verification by default. This design will continue to expand with additional ownership patterns.
 
 ## Current Implementation
 
@@ -17,7 +17,20 @@ interface IOwnable {
 }
 ```
 
-When testing or developing with the Credible Layer, ensure your contracts implement this interface or that your network provides an allowlist verifier to enable project registration and assertion management.
+When testing or developing with the Credible Layer, ensure your contracts implement this interface to enable project registration and assertion management.
+
+## Manual Verification (Overview)
+
+If your contracts are immutable or don't expose an admin interface, you may be able to request manual verification. In this path, Phylax validates that the requesting team controls the protocol and then registers a protocol admin (manager) address for the specific contracts in the State Oracle registry.
+
+High-level requirements and signals include:
+- Demonstrated control over the protocol codebase (e.g., ability to merge to the official repo and manage collaborators)
+- Strong public proof that the protocol wants to use the Credible Layer and that the selected admin address reflects the organization's intent (e.g., multisig signatures or official social announcements)
+- Willingness to share identity or evidence when needed
+
+After approval, the protocol admin address is added to the registry and a timelock begins before assertions can be deployed. Protocols can also opt out of registry additions if they do not want assertions attached to their contracts.
+
+See [Manual Verification](/credible/manual-verification) for the full process and requirements.
 
 ## Future Development
 
