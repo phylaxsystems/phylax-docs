@@ -85,7 +85,7 @@ contract SafeAssertion is Assertion {
 
     // Define the triggers for the assertions
     function triggers() public view override {
-        triggerRecorder.registerStateChangeTrigger(this.implementationAddressChange.selector, 0x0);
+        registerStorageChangeTrigger(this.implementationAddressChange.selector, bytes32(0x0));
     }
 
     function implementationAddressChange() external view {
