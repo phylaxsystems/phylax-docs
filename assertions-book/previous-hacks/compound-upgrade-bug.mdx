@@ -29,26 +29,33 @@ This way even if a bug is introduced, it will be caught by the assertion.
 
 The assertion below calculates the maximum possible rate of COMP accrual and checks that a distribution does not exceed this rate.
 
+<Warning>
+The code below is **conceptual pseudo code** to illustrate the invariant that should be enforced. It uses simplified syntax for accessing storage mappings (`compound.compAccrued[supplier]`) that would not compile in actual Solidity. A real implementation would need to use proper getter functions or storage slot calculations via `ph.load()`.
+</Warning>
+
 ```solidity
-// Verify that COMP accrual never exceeds the maximum possible rate
-function assertionValidCompAccrual() external {
-    PhEvm.CallInputs[] memory distributions = ph.getCallInputs(address(compound), Comptroller.distributeSupplierComp.selector);
+// CONCEPTUAL - Verify that COMP accrual never exceeds the maximum possible rate
+function assertionValidCompAccrual() external view {
+    PhEvm.CallInputs[] memory distributions = ph.getCallInputs(
+        address(comptroller),
+        Comptroller.distributeSupplierComp.selector
+    );
 
     for (uint256 i = 0; i < distributions.length; i++) {
-        bytes memory data = distributions[i].input;
-        (address cToken, address supplier) = abi.decode(stripSelector(data), (address, address));
+        // Decode call inputs (selector already stripped by cheatcode)
+        (address cToken, address supplier) = abi.decode(distributions[i].input, (address, address));
 
-        // Check COMP accrued before and after distribution
-        ph.forkPreCallState();
-        uint256 preAccrued = compound.compAccrued[supplier];
-        CompMarketState storage supplyState = comptroller.compSupplyState[cToken];
-        uint supplyIndex = supplyState.index;
-        uint maxDeltaPerToken = sub_(supplyIndex, comptroller.compInitialIndex);
-        uint supplierTokens = CToken(cToken).balanceOf(supplier);
-        uint maxIncrease = mul_(supplierTokens, maxDeltaPerToken);
+        // Check COMP accrued before distribution
+        ph.forkPreCall(distributions[i].id);
+        uint256 preAccrued = comptroller.compAccrued(supplier);
+        uint256 supplyIndex = comptroller.compSupplyState(cToken).index;
+        uint256 maxDeltaPerToken = supplyIndex - comptroller.compInitialIndex();
+        uint256 supplierTokens = CToken(cToken).balanceOf(supplier);
+        uint256 maxIncrease = supplierTokens * maxDeltaPerToken;
 
-        ph.forkPostCallState();
-        uint256 postAccrued = compound.compAccrued[supplier];
+        // Check COMP accrued after distribution
+        ph.forkPostCall(distributions[i].id);
+        uint256 postAccrued = comptroller.compAccrued(supplier);
 
         if (postAccrued > preAccrued) {
             uint256 increase = postAccrued - preAccrued;

@@ -37,12 +37,36 @@ The vulnerability stems from an intricate implementation of a RebaseToken mechan
 
 ## Proposed Solution
 
-Assuming the original implementation was well-intentioned but flawed, a simple invariant check could have prevented the attack:
+Assuming the original implementation was well-intentioned but flawed, a simple invariant check could have prevented the attack.
+
+The key invariant is: **when no assets are owed (elastic = 0), there should be no debt shares (base = 0)**.
 
 ```solidity
-function assertionNoDebtSharesIfNoDebt() public view {
-    if (elastic == 0) {
-        require(base == 0, "No debt shares if no debt");
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {Assertion} from "credible-std/Assertion.sol";
+
+interface ICauldronV4 {
+    function totalBorrow() external view returns (uint128 elastic, uint128 base);
+}
+
+contract AbracadabraRebaseInvariantAssertion is Assertion {
+    function triggers() external view override {
+        // Trigger on any storage change to the cauldron
+        registerStorageChangeTrigger(this.assertionNoDebtSharesIfNoDebt.selector);
+    }
+
+    function assertionNoDebtSharesIfNoDebt() external view {
+        ICauldronV4 cauldron = ICauldronV4(ph.getAssertionAdopter());
+
+        ph.forkPostTx();
+        (uint128 elastic, uint128 base) = cauldron.totalBorrow();
+
+        // Core invariant: if no debt exists, no shares should exist
+        if (elastic == 0) {
+            require(base == 0, "No debt shares should exist when no debt");
+        }
     }
 }
 ```

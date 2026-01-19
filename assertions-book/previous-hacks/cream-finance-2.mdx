@@ -19,51 +19,74 @@ One possible solution is to check price deviations from touched assets in the pr
 This would avoid flashloan price manipulation attacks.
 
 ```solidity
-function assertion_priceDeviation() public view {
-    PhEvm.Logs[] memory logs = PhEvm.getLogs();
-    bytes32[] memory topics = [
-        CTokenInterface.Redeem.selector,
-        CTokenInterface.Borrow.selector,
-        CTokenInterface.RepayBorrow.selector,
-        CTokenInterface.LiquidateBorrow.selector
-    ];
+uint256 constant MAX_DEVIATION_BPS = 500; // 5% max deviation
 
-
-    address[] memory touchedAssets = new address[];
-    for (uint256 i = 0; i < logs.length; i++) {
-
-        if(logs[i].topics[0] == CTokenInterface.Mint.selector) {
-            touchedAssets.push(getAssetFromMintLog(logs[i]));
-            continue;
-        }
-        if(logs[i].topics[0] == CTokenInterface.Redeem.selector) {
-            touchedAssets.push(getAssetFromRedeemLog(logs[i]));
-            continue;
-        }
-        if(logs[i].topics[0] == CTokenInterface.Borrow.selector) {
-            touchedAssets.push(getAssetFromBorrowLog(logs[i]));
-            continue;
-        }
-        if(logs[i].topics[0] == CTokenInterface.RepayBorrow.selector) {
-            touchedAssets.push(getAssetFromRepayBorrowLog(logs[i]));
-            continue;
-        }
-
-    }
-
-    uint256[] memory postPrices = new uint256[](touchedAssets);
-    for (uint256 i = 0; i < touchedAssets.length; i++) {
-        postPrices.push(priceOracle.getPrice(touchedAssets[i]));
-    }
-
+function assertion_priceDeviation() external view {
+    // Get pre-transaction prices first
     ph.forkPreTx();
+    PhEvm.Log[] memory logs = ph.getLogs();
+
+    // Count relevant logs to size our array
+    uint256 count = 0;
+    for (uint256 i = 0; i < logs.length; i++) {
+        bytes32 topic = logs[i].topics[0];
+        if (topic == CTokenInterface.Mint.selector ||
+            topic == CTokenInterface.Redeem.selector ||
+            topic == CTokenInterface.Borrow.selector ||
+            topic == CTokenInterface.RepayBorrow.selector) {
+            count++;
+        }
+    }
+
+    // Collect touched assets and their pre-prices
+    address[] memory touchedAssets = new address[](count);
+    uint256[] memory prePrices = new uint256[](count);
+    uint256 idx = 0;
+
+    for (uint256 i = 0; i < logs.length; i++) {
+        bytes32 topic = logs[i].topics[0];
+        address asset;
+
+        if (topic == CTokenInterface.Mint.selector) {
+            asset = getAssetFromLog(logs[i]);
+        } else if (topic == CTokenInterface.Redeem.selector) {
+            asset = getAssetFromLog(logs[i]);
+        } else if (topic == CTokenInterface.Borrow.selector) {
+            asset = getAssetFromLog(logs[i]);
+        } else if (topic == CTokenInterface.RepayBorrow.selector) {
+            asset = getAssetFromLog(logs[i]);
+        } else {
+            continue;
+        }
+
+        touchedAssets[idx] = asset;
+        prePrices[idx] = priceOracle.getPrice(asset);
+        idx++;
+    }
+
+    // Get post-transaction prices and compare
+    ph.forkPostTx();
 
     for (uint256 i = 0; i < touchedAssets.length; i++) {
-        uint256 prePrice = priceOracle.getPrice(touchedAssets[i]);
-        require(
-            postPrice[i] < prePrice * (1 + MAX_DEVIATION_FACTOR) &&
-            postPrice[i] > prePrice * (1 - MAX_DEVIATION_FACTOR),
-            "Price deviation too high"
-            );
+        uint256 postPrice = priceOracle.getPrice(touchedAssets[i]);
+        uint256 prePrice = prePrices[i];
+
+        // Check deviation in both directions
+        uint256 deviation;
+        if (postPrice > prePrice) {
+            deviation = ((postPrice - prePrice) * 10000) / prePrice;
+        } else {
+            deviation = ((prePrice - postPrice) * 10000) / prePrice;
+        }
+
+        require(deviation <= MAX_DEVIATION_BPS, "Price deviation too high");
+    }
+}
+
+// Helper to extract asset address from log (implementation depends on log structure)
+function getAssetFromLog(PhEvm.Log memory log) internal pure returns (address) {
+    // Decode asset address from log topics or data
+    // Implementation depends on the specific event structure
+    return abi.decode(log.data, (address));
 }
 ```
