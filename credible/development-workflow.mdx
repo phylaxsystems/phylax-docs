@@ -1,0 +1,178 @@
+---
+title: 'Development Workflow'
+description: 'The development workflow for assertions: deploy to staging early, iterate with real transactions'
+---
+
+<Check>
+**Summary**
+- Local testing validates core logic; staging validates real-world behavior
+- Deploy to staging early to catch false positives and edge cases
+- Real transactions expose scenarios that are difficult to predict locally
+- Use backtesting to debug specific transactions with the smallest feedback loop
+</Check>
+
+## The Testing Philosophy
+
+The most effective approach to assertion development prioritizes [staging](/credible/glossary#staging) over exhaustive local testing. In staging, assertions run against real transactions on a mirrored environment but don't drop transactions—allowing you to observe behavior safely. In [production](/credible/glossary#production), assertions actively prevent violations by dropping invalid transactions.
+
+Real-world transactions reveal edge cases that would take significant effort to anticipate and mock locally.
+
+**Why local testing has limits:**
+- You can only think of so many test cases manually
+- Complex protocol states are difficult to reproduce
+- Setting up realistic testing environments for multi-protocol interactions is time-consuming
+
+**Why staging excels:**
+- Real usage patterns and transaction diversity
+- Edge cases emerge organically from actual user behavior
+- Weeks of staging exposure reveals issues that extended local testing might miss
+
+## How to Allocate Your Time
+
+| Phase | Effort | Goal |
+|-------|--------|------|
+| Local testing | ~20-30% | Validate core logic, catch obvious bugs, verify gas limits |
+| Backtesting | ~10-20% | Sanity check before staging; debug specific transactions after |
+| Staging | ~50-60% | Discover edge cases, observe real-world behavior, iterate |
+
+The bulk of your validation happens in staging. Local testing catches the obvious issues quickly so you can deploy with confidence, but staging is where you discover the edge cases.
+
+## What to Test Locally
+
+Focus local testing on:
+
+- **Happy paths:** Verify assertions pass on valid transactions
+- **Known violation scenarios:** Verify assertions catch the specific violations you designed for
+- **Gas limits:** Ensure assertions stay within the 300k gas limit, especially on the happy path (which typically uses more gas since all checks run to completion)
+
+**What NOT to over-invest in locally:**
+- Exhaustive edge case enumeration
+- Complex multi-protocol interaction scenarios
+- Simulating every possible user behavior
+
+These are better discovered through staging with real transactions.
+
+<Note>
+See [Testing Assertions](/credible/testing-assertions) for local testing patterns and [Gas Limits](/credible/testing-assertions#gas-limits) for gas considerations.
+</Note>
+
+<Tip>
+**Leverage existing invariant tests.** If your protocol already has Forge invariant tests, the test setup and infrastructure can often be reused for assertion testing. This can significantly reduce the time spent on local test configuration.
+</Tip>
+
+## Backtesting: Two Key Uses
+
+Backtesting serves two distinct purposes in the development workflow:
+
+### 1. Pre-Staging Sanity Check
+
+Before deploying to staging, run a quick backtest against recent transactions:
+
+- Verifies no obvious false positives on normal protocol operations
+- Catches trigger mismatches (assertion not running when expected)
+- Identifies gas issues with realistic transaction complexity
+
+Keep block ranges small (10-100 blocks) for this sanity check. The goal is quick verification, not comprehensive coverage.
+
+### 2. Debugging Staging Issues
+
+When staging reveals unexpected behavior, backtesting becomes your debugging tool:
+
+- Replay the specific transaction that triggered the issue locally
+- Step through assertion logic with full visibility
+- Fastest feedback loop for debugging
+
+This is often faster than trying to reproduce the scenario from scratch in a local test.
+
+<Note>
+See [Backtesting](/credible/backtesting) for configuration and usage details.
+</Note>
+
+## The Staging Workflow
+
+```mermaid
+flowchart LR
+    LOCAL[Local Testing] --> BACKTEST[Backtesting<br/>sanity check]
+    BACKTEST --> STAGING[Deploy to<br/>Staging]
+    STAGING --> MONITOR[Monitor]
+    MONITOR --> ISSUE{Issues<br/>Found?}
+    ISSUE --> |Yes| DEBUG[Backtest<br/>specific tx]
+    DEBUG --> FIX[Fix & Redeploy]
+    FIX --> STAGING
+    ISSUE --> |No, over weeks| PROD[Promote to<br/>Production]
+
+    style PROD fill:#27ae60,color:#fff
+```
+
+### Deploy Early
+
+Once local tests pass and backtesting shows no obvious issues, [deploy to staging](/credible/deploy-assertions-dapp). Don't wait for "perfect" local coverage—staging will reveal what you missed. Note that deployments have a [timelock](/credible/glossary#timelock) period before assertions become active, so starting early is beneficial.
+
+### Monitor Staging Behavior
+
+Check the [dApp dashboard](/credible/dapp-overview) regularly for assertion execution status and enable [incident notifications](/credible/dapp-integrations) to get alerted via Slack or PagerDuty. Look for:
+
+- False positives on legitimate operations
+- Unexpected assertion behavior or edge cases
+
+Staging runs assertions but does NOT drop transactions, so you can observe behavior without risk.
+
+### Debug with Backtesting
+
+When an issue appears in staging:
+
+1. Identify the transaction that triggered unexpected behavior
+2. Use backtesting to replay that exact transaction locally
+3. Debug with full visibility into assertion execution (`-vvvv`)
+4. Fix the issue and redeploy
+
+<Tip>
+**Add regression tests for discovered edge cases.** When staging or backtesting reveals an unexpected scenario, create a local unit test that reproduces the behavior. This prevents regressions and builds a test suite informed by real-world usage patterns rather than speculation.
+</Tip>
+
+### Recommended Staging Duration
+
+- **Minimum:** 1-2 weeks before considering production
+- **High-traffic protocols:** More transactions means faster feedback
+- **Low-traffic protocols:** May need longer staging periods
+
+The goal is sufficient transaction diversity, not a specific timeframe. As the developer, you are best positioned to judge when your assertions have been validated against enough real-world scenarios to warrant promotion to production.
+
+## When to Move to Production
+
+Before promoting to production, verify:
+
+- No false positives observed on legitimate transactions
+- Sufficient transaction diversity to build confidence
+- You understand how the assertion behaves across different scenarios
+
+<Warning>
+Moving to production means transactions that violate your assertion will be dropped. Ensure you have validated behavior thoroughly in staging before promoting.
+</Warning>
+
+## Common Mistakes
+
+**Over-investing in local testing:** Trying to cover every edge case locally is inefficient. Staging does this better with real transactions.
+
+**Skipping backtesting entirely:** A quick backtest catches obvious issues before staging and is essential for debugging staging discoveries.
+
+**Deploying directly to production:** Always validate in staging first. The cost of a false positive in production can be high.
+
+**Expecting immediate feedback:** Edge cases may take weeks to surface in staging. Be patient and let real usage patterns emerge.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Testing Assertions" icon="flask-vial" href="/credible/testing-assertions">
+    Local testing patterns and best practices
+  </Card>
+  <Card title="Backtesting" icon="clock-rotate-left" href="/credible/backtesting">
+    Test against historical transactions
+  </Card>
+  <Card title="Deploy with dApp" icon="rocket" href="/credible/deploy-assertions-dapp">
+    Deploy assertions to staging or production
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/credible/troubleshooting">
+    Common errors and solutions
+  </Card>
+</CardGroup>

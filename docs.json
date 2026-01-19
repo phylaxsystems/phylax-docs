@@ -72,6 +72,7 @@
             "pages": [
               "credible/assertions-overview",
               "credible/development-effort",
+              "credible/development-workflow",
               "credible/cheatcodes-overview",
               "credible/triggers",
               {
