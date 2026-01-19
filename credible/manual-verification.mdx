@@ -11,7 +11,7 @@ Manual verification is the fallback path for protocols whose contracts are immut
 
 | Term | Definition |
 | --- | --- |
-| Assertion Group | A smart contract that follows the Assertion Interface and is deployed as EVM bytecode. It is associated with a target smart contract. |
+| Assertion Group | A smart contract that follows the Assertion Interface and is deployed as EVM bytecode. It is associated with a target smart contract (assertion adopter). |
 | Protocol Admin (Manager) | The smart contract or EOA that has permission to deploy, update, and remove assertions for one or more target contracts. |
 | Protocol | A group of deployed smart contracts maintained by a company, DAO, or other entity. |
 | State Oracle (Registry) | The Credible Layer contract that is the source of truth for protocol admins, assertions, and the target contracts they are attached to. |
@@ -45,6 +45,8 @@ Manual verification is provided at Phylax's discretion and may be declined for a
 - Must have permissions to manage collaborators in the GitHub org
 - Must be able to commit and merge a PR to a default branch
 
+<br />
+
 **Proof of intent and alignment**
 Phylax will look for strong public signals that the organization wants to use the Credible Layer and that the selected admin address reflects the org's intent. Non-exhaustive examples:
 - Proof of control (e.g., signature) from an emergency council or admin multisig
@@ -60,17 +62,17 @@ Phylax will look for strong public signals that the organization wants to use th
 
 ## After manual verification is approved
 
-- The selected protocol admin address is added to the State Oracle registry.
-- The protocol admin is associated with a specific set of contract addresses and can deploy assertions for those contracts.
-- A 5-day timelock begins before the admin can add assertions, giving the protocol time to react or cancel if needed.
+- The selected protocol admin address is added to the State Oracle registry
+- The protocol admin is associated with a specific set of contract addresses and can deploy assertions for those contracts
+- A 5-day timelock begins before the admin can add assertions, giving the protocol time to react or cancel if needed
 
 ## Opt-out / Blacklist
 
-<u>Protocols can request manual verification specifically to be blacklisted: we still verify control, but instead of adding them to the registry, we add their contracts to an opt-out registry that blocks additions from everyone except a provided escape-hatch address.</u>
+**Protocols can request manual verification specifically to be blacklisted: we still verify control, but instead of adding them to the registry, we add their contracts to an opt-out registry that blocks additions from everyone except a provided escape-hatch address.**
 
-- Any protocol that wants to opt out can add themselves to an opt-out registry after manual verification confirms control.
-- This opt-out registry prevents Phylax from adding the specified contracts to the registry (no assertions can be attached to those contracts).
-- The only entity that can re-enable registration is an address provided by the dApp at the time of blacklisting. This escape hatch allows protocols to opt out of Phylax while preserving the option to opt back in later.
+- Any protocol that wants to opt out can add themselves to an opt-out registry after manual verification confirms control
+- This opt-out registry prevents Phylax from adding the specified contracts to the registry (no assertions can be attached to those contracts)
+- The only entity that can re-enable registration is an address provided by the dApp at the time of blacklisting. This escape hatch allows protocols to opt out of Phylax while preserving the option to opt back in later
 
 ## Related docs
 
