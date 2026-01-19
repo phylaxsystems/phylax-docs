@@ -72,7 +72,7 @@ contract AbracadabraCookSolvencyAssertion is Assertion {
     uint256 constant COLLATERIZATION_RATE_PRECISION = 1e5;
 
     function triggers() public view override {
-        triggerRecorder.registerCallTrigger(
+        registerCallTrigger(
             this.assertUserSolvency.selector,
             ICauldronV4.cook.selector
         );
