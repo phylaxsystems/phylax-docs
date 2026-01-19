@@ -77,6 +77,7 @@
               {
                 "group": "Testing",
                 "pages": [
+                  "credible/testing-strategy",
                   "credible/testing-assertions",
                   "credible/execution-model",
                   "credible/fuzz-testing",
