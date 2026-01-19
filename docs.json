@@ -72,12 +72,12 @@
             "pages": [
               "credible/assertions-overview",
               "credible/development-effort",
-              "credible/development-workflow",
               "credible/cheatcodes-overview",
               "credible/triggers",
               {
                 "group": "Testing",
                 "pages": [
+                  "credible/testing-strategy",
                   "credible/testing-assertions",
                   "credible/execution-model",
                   "credible/fuzz-testing",
