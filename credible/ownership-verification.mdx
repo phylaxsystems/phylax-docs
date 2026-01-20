@@ -19,6 +19,10 @@ interface IOwnable {
 
 When testing or developing with the Credible Layer, ensure your contracts implement this interface to enable project registration and assertion management.
 
+<Note>
+Managing assertions is a sensitive role. We recommend using hardware wallets and multisig accounts for protocol admin (assertion manager) addresses.
+</Note>
+
 ## Manual Verification (Overview)
 
 If your contracts are immutable or don't expose an admin interface, you may be able to request manual verification. In this path, Phylax validates that the requesting team controls the protocol and then registers a protocol admin (manager) address for the specific contracts in the State Oracle registry.
