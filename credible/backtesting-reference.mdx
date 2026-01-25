@@ -13,7 +13,7 @@ New to backtesting? Start with the [Backtesting Guide](/credible/backtesting) to
 
 ### `targetContract`
 
-The address of the contract ([Assertion Adopter](/credible/glossary#assertion-adopter)) to test assertions against. The backtesting tool will find all transactions that interact with this contract (either directly or internally, depending on `useTraceFilter`).
+The address of the contract ([Assertion Adopter](/credible/glossary#assertion-adopter)) to test assertions against. The backtesting tool will find all transactions that interact with this contract, including both direct calls and internal calls (e.g., through routers or aggregators).
 
 ```solidity
 targetContract: 0x5fd84259d66Cd46123540766Be93DFE6D43130D7
@@ -65,51 +65,12 @@ rpcUrl: "https://sepolia.optimism.io"
 rpcUrl: vm.envString("MAINNET_RPC_URL")
 ```
 
-### `useTraceFilter`
-
-Controls how transactions are detected in the block range.
-
-**`true` (recommended):** Uses the `trace_filter` RPC method
-- Fetches all transactions in a single RPC call per batch
-- Detects both direct calls and internal calls to the target contract
-- **RPC calls for 100 blocks:** ~1-2 calls
-
-**`false`:** Scans each block individually
-- One `eth_getBlockByNumber` call per block
-- Only detects direct calls where `tx.to == targetContract`
-- Does not detect internal calls (e.g., when another contract calls your target contract through a router or aggregator)
-- **RPC calls for 100 blocks:** ~100 calls
-
-Use `trace_filter` for large block ranges or when you need to detect internal calls. Use block scanning when your RPC provider doesn't support `trace_filter`.
-
-<Note>
-Not all RPC providers support `trace_filter`, and some providers only support it on certain networks. Check your provider's documentation to confirm `trace_filter` availability for your target chain.
-</Note>
-
-```solidity
-useTraceFilter: true  // Recommended for most cases
-useTraceFilter: false // For RPC providers and endpoints without trace_filter support
-```
-
 ### `forkByTxHash`
 
-Controls how the EVM state is forked for each transaction replay.
-
-**`false` (recommended):** Forks at the start of the block
-- Uses `vm.createSelectFork(rpcUrl, blockNumber)`
-- Faster and more RPC-efficient
-- Suitable for most backtesting scenarios
-
-**`true`:** Forks at the exact transaction
-- Uses `vm.createSelectFork(rpcUrl, txHash)`
-- Replays all prior transactions in the block to get exact state
-- Slower but necessary for transactions where transactions earlier in the block change the state of the target contract
-
-Use `false` for normal backtesting. Use `true` only when debugging specific failures where exact transaction state is needed.
+Controls how the EVM state is forked for each transaction replay. This parameter is kept for interface compatibility but is effectively always `true` internally to ensure correct pre-transaction state.
 
 ```solidity
-forkByTxHash: false // Recommended default
-forkByTxHash: true  // Only for debugging specific failures
+forkByTxHash: true  // Default and recommended
 ```
 
 ### `detailedBlocks`
@@ -119,38 +80,6 @@ Controls logging verbosity. Currently reserved for future functionality.
 ```solidity
 detailedBlocks: false // Standard output
 ```
-
-## RPC Call Estimates
-
-Understanding RPC usage helps you plan for rate limits and choose the right RPC provider.
-
-### With trace_filter (Recommended)
-
-**Configuration:**
-```solidity
-useTraceFilter: true
-```
-
-**100 blocks, 50 matching transactions:**
-- **Fetching:** 1-2 calls
-- **Validation:** 50 calls (one per transaction)
-- **Total:** ~52 RPC calls
-
-### Without trace_filter
-
-**Configuration:**
-```solidity
-useTraceFilter: false
-```
-
-**100 blocks, 50 matching transactions:**
-- **Fetching:** 100 calls (one per block)
-- **Validation:** 50 calls (one per transaction)
-- **Total:** ~150 RPC calls
-
-<Note>
-For large block ranges (>1,000 blocks), use paid RPC providers to avoid rate limiting. The `useTraceFilter` option significantly reduces RPC calls.
-</Note>
 
 ## API Reference
 
@@ -181,10 +110,52 @@ BacktestingTypes.BacktestingResults memory results = executeBacktest(
         assertionSelector: MyAssertion.assertionInvariant.selector,
         rpcUrl: "https://sepolia.optimism.io",
         detailedBlocks: false,
-        useTraceFilter: true,
-        forkByTxHash: false
+        forkByTxHash: true
     })
 );
+```
+
+### executeBacktestForTransaction
+
+Executes a backtest for a single transaction specified by its hash. This is useful for:
+- Testing assertions against specific known transactions (such as historical exploits)
+- Debugging potential false positives reported during staging (see [Testing Strategy](/credible/testing-strategy) for more on the staging workflow)
+- Quickly validating assertion behavior on a problematic transaction without specifying a block range
+
+```solidity
+function executeBacktestForTransaction(
+    bytes32 txHash,
+    address targetContract,
+    bytes memory assertionCreationCode,
+    bytes4 assertionSelector,
+    string memory rpcUrl
+) public returns (BacktestingTypes.BacktestingResults memory results)
+```
+
+**Parameters:**
+- `txHash`: The transaction hash to backtest
+- `targetContract`: The target contract address (assertion adopter)
+- `assertionCreationCode`: The assertion contract creation code
+- `assertionSelector`: The assertion function selector
+- `rpcUrl`: The RPC URL to use
+
+**Returns:**
+- `results`: Results struct containing test execution statistics
+
+**Example:**
+```solidity
+bytes32 exploitTxHash = 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef;
+
+BacktestingTypes.BacktestingResults memory results = executeBacktestForTransaction(
+    exploitTxHash,
+    TARGET_CONTRACT,
+    type(MyAssertion).creationCode,
+    MyAssertion.assertionInvariant.selector,
+    vm.envString("MAINNET_RPC_URL")
+);
+
+// Expect the assertion to catch the exploit
+assertEq(results.assertionFailures, 1, "Assertion should catch the exploit");
 ```
 
 ### BacktestingConfig
@@ -200,7 +171,6 @@ struct BacktestingConfig {
     bytes4 assertionSelector;           // Assertion function selector
     string rpcUrl;                      // RPC endpoint
     bool detailedBlocks;                // Detailed logging (reserved)
-    bool useTraceFilter;                // Use trace_filter API
     bool forkByTxHash;                  // Fork at exact transaction
 }
 ```
@@ -216,8 +186,7 @@ struct BacktestingConfig {
 | `assertionSelector` | `bytes4` | Function selector of the assertion to execute |
 | `rpcUrl` | `string` | RPC endpoint URL for blockchain data |
 | `detailedBlocks` | `bool` | Enable detailed logging (reserved for future use) |
-| `useTraceFilter` | `bool` | Use trace_filter API for transaction detection |
-| `forkByTxHash` | `bool` | Fork at exact transaction vs. block start |
+| `forkByTxHash` | `bool` | Fork at exact transaction (kept for interface compatibility) |
 
 ### BacktestingResults
 
@@ -228,8 +197,9 @@ struct BacktestingResults {
     uint256 totalTransactions;      // Total transactions found
     uint256 processedTransactions;  // Transactions validated
     uint256 successfulValidations;  // Passing validations
-    uint256 failedValidations;      // Failing validations
+    uint256 skippedTransactions;    // Transactions where assertion wasn't triggered
     uint256 assertionFailures;      // Protocol violations detected
+    uint256 replayFailures;         // Transactions that failed to replay
     uint256 unknownErrors;          // Unexpected errors
 }
 ```
@@ -241,8 +211,9 @@ struct BacktestingResults {
 | `totalTransactions` | `uint256` | Total number of transactions found in the block range |
 | `processedTransactions` | `uint256` | Number of transactions that were validated |
 | `successfulValidations` | `uint256` | Transactions that passed validation |
-| `failedValidations` | `uint256` | Transactions that failed validation |
-| `assertionFailures` | `uint256` | Number of protocol violations detected |
+| `skippedTransactions` | `uint256` | Transactions where the assertion wasn't triggered (function selector didn't match) |
+| `assertionFailures` | `uint256` | Number of protocol violations detected (assertion reverted) |
+| `replayFailures` | `uint256` | Transactions that failed to replay before assertion could execute |
 | `unknownErrors` | `uint256` | Unexpected errors during execution |
 
 **Interpreting Results:**
@@ -259,7 +230,8 @@ if (results.assertionFailures > 0) {
 // Log detailed results
 console.log("Total transactions:", results.totalTransactions);
 console.log("Successful validations:", results.successfulValidations);
-console.log("Failed validations:", results.failedValidations);
+console.log("Skipped transactions:", results.skippedTransactions);
+console.log("Assertion failures:", results.assertionFailures);
 ```
 
 **Common Causes of Assertion Failures:**
@@ -285,8 +257,7 @@ BacktestingTypes.BacktestingConfig({
     assertionSelector: MyAssertion.assertionInvariant.selector,
     rpcUrl: vm.envString("MAINNET_RPC_URL"),
     detailedBlocks: false,
-    useTraceFilter: true,   // Efficient fetching
-    forkByTxHash: false     // Fast validation
+    forkByTxHash: true
 })
 ```
 
@@ -295,6 +266,9 @@ BacktestingTypes.BacktestingConfig({
 ## Learn More
 
 <CardGroup cols={2}>
+  <Card title="Full API Reference" icon="file-code" href="https://phylaxsystems.github.io/credible-std/src/CredibleTestWithBacktesting.sol/abstract.CredibleTestWithBacktesting.html">
+    Autogenerated API documentation for backtesting
+  </Card>
   <Card title="Backtesting Guide" icon="book" href="/credible/backtesting">
     Learn how to use backtesting to validate assertions
   </Card>
