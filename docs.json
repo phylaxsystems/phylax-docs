@@ -94,7 +94,8 @@
               "credible/dapp-transparency-dashboard",
               "credible/dapp-projects",
               "credible/dapp-incidents",
-              "credible/ownership-verification"
+              "credible/ownership-verification",
+              "credible/manual-verification"
             ]
           },
           {
