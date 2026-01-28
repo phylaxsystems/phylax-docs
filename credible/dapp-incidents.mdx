@@ -26,59 +26,87 @@ This grouping ensures you receive meaningful alerts without being spammed by rep
 This is our initial approach to incident grouping and may be refined based on user feedback.
 </Note>
 
-## Incidents View
+## Project Incidents (Manager View)
 
-Access incidents from the **Incidents** tab in the dApp navigation bar. This shows a limited view of all incidents across all networks:
+Project incidents are visible only to the project manager and live inside the project dashboard.
+Non-owners see project events, not incidents.
 
-- **Network**: Which network the incident occurred on
-- **Timestamp**: When the transaction was dropped
-- **Incident Reference ID**: Unique identifier for the incident
+### Access and Navigation
 
-<Frame caption="Incidents View">
-  <img src="/images/incidents_view.png" alt="Incidents View" />
+- Open a project and select the **Incidents** tab.
+- Route: `/projects/{project_id}/incidents`
+
+<Frame caption="Project view header with the Incidents tab selected (screenshot placeholder)">
+  <div>Screenshot placeholder: Project view header with Incidents tab selected.</div>
 </Frame>
 
-<Note>
-The Incidents tab is publicly accessible. Anyone can view this limited incident information.
-</Note>
+### Incidents List
 
-## Project Dashboard Incidents
+The incidents list shows recent incidents for the project, ordered by most recent window start.
+Each row includes:
 
-As a project owner, you can view detailed incidents for your projects in the project dashboard. See [Projects](/credible/dapp-projects) for information about accessing your project dashboard.
+- **Timestamp**
+- **Contract Affected**
+- **Assertion Triggered**
+- **Invalid Transactions** count
+- **Environment** (staging or production)
 
-<Frame caption="Incident in Project Dashboard Assertion View">
-  <img src="/images/incident_assertion_project.png" alt="Incident in Project Assertion Dashboard" />
+Click a row to open the incident detail view.
+
+<Frame caption="Project incidents list view (screenshot placeholder)">
+  <div>Screenshot placeholder: Project incidents list view.</div>
 </Frame>
 
-View incidents in the **Recent Incidents** container on the project dashboard. Click on an incident to see:
+### Incident Detail and Invalidating Transactions
 
-- **Transaction Object**: The full decoded transaction that was dropped (viewable as JSON)
-- **Transaction Hash**: The hash of the dropped transaction
+The incident detail page summarizes the incident and lists invalidating transactions.
+It includes:
 
-<Frame caption="Detailed Incident View">
-  <img src="/images/detailed_incidents_view.png" alt="Detailed Incident View" />
+- **Incident detail card** with date, contract affected, assertion triggered, assertion group, invalid transaction count, and environment
+- **Critical warning banner** if any invalidating transaction landed on-chain
+- **Invalid Transactions** list with expandable rows and action buttons
+
+Each invalidating transaction includes:
+
+- Transaction hash, to/from, value, calldata, and block number (if available)
+- **Open Debug View** to inspect the trace
+- **Copy Data as JSON** to export the transaction
+
+<Frame caption="Incident detail with invalidating transactions (screenshot placeholder)">
+  <div>Screenshot placeholder: Incident detail view with the transaction list expanded.</div>
 </Frame>
 
-<Note>
-Only project owners can view detailed incidents for their projects. Non-owners viewing a project see **events** (when contracts and assertions were added or removed), not incidents.
-</Note>
+### Debug Trace View
 
-### Real-Time Alerts
+The debug trace view opens from an invalidating transaction.
 
-When viewing your project dashboard as an authenticated project owner, incidents update in real time:
+- Route: `/projects/{project_id}/trace/{incident_id}/{transaction_id}`
+- **Transaction Attributes** panel with copy-all action
+- **Execution Context** panel (block environment + previous transactions)
+- **Transaction Trace** panel with status: pending, in progress, completed, failed, or skipped
+- Trace output renders ANSI-colored Foundry traces when complete
+- Copy options include transaction-only or full-block trace, with or without colors
 
-- **Auto-Updating UI**: Components listing incidents automatically prepend newly received incidents to the list
-- **Toast Notifications**: A notification appears in the upper right corner stating "an incident for this project was received"
-- **Live Updates**: Real-time updates only occur when viewing that specific project as its authenticated manager
+Trace output is generated asynchronously by the `invalidating-trace` service and stored via the dApp API.
 
-**External Alerts**
+<Frame caption="Debug trace view (screenshot placeholder)">
+  <div>Screenshot placeholder: Debug trace view (attributes, execution context, trace panel).</div>
+</Frame>
 
+### Real-Time Updates and Alerts
+
+When a project manager is viewing the incidents list, new incidents stream into the list in real time.
 You can also set up external alerts via webhooks:
 
-- **Slack Integration**: Configure Slack webhooks to receive incident notifications in your Slack channels
+- **Slack Integration**: Configure Slack webhooks to receive incident notifications
 - **PagerDuty Integration**: Configure PagerDuty webhooks to receive incident notifications
 
 See [Integrations](/credible/dapp-integrations) for setup instructions.
+
+## Public Transparency Incidents
+
+The Transparency dashboard includes a public incidents list with limited metadata for visibility.
+Detailed transaction and trace views are only available to project managers.
 
 ## Use Cases
 
