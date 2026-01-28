@@ -28,7 +28,8 @@ This is our initial approach to incident grouping and may be refined based on us
 
 ## Project Incidents (Manager View)
 
-Project incidents are visible only to the project manager and live inside the project dashboard.
+<Check>Project incidents are visible only to the project manager and live inside the project dashboard.</Check>
+
 Non-owners see project events, not incidents.
 
 ### Access and Navigation
@@ -37,12 +38,14 @@ Non-owners see project events, not incidents.
 - Route: `/projects/{project_id}/incidents`
 
 <Frame caption="Project view header with the Incidents tab selected (screenshot placeholder)">
-  <div>Screenshot placeholder: Project view header with Incidents tab selected.</div>
+  <img src="/images/incidents_project.png" alt="Incidents Tab" />
 </Frame>
 
-### Incidents List
 
-The incidents list shows recent incidents for the project, ordered by most recent window start.
+### Incidents
+
+The incidents list shows recent incidents for the project, ordered by most recent.
+
 Each row includes:
 
 - **Timestamp**
@@ -53,8 +56,8 @@ Each row includes:
 
 Click a row to open the incident detail view.
 
-<Frame caption="Project incidents list view (screenshot placeholder)">
-  <div>Screenshot placeholder: Project incidents list view.</div>
+<Frame caption="Project incidents list view">
+  <img src="/images/incident_overview.png" alt="Incident Overview" />
 </Frame>
 
 ### Incident Detail and Invalidating Transactions
@@ -72,8 +75,8 @@ Each invalidating transaction includes:
 - **Open Debug View** to inspect the trace
 - **Copy Data as JSON** to export the transaction
 
-<Frame caption="Incident detail with invalidating transactions (screenshot placeholder)">
-  <div>Screenshot placeholder: Incident detail view with the transaction list expanded.</div>
+<Frame caption="Incident detail with invalidating transactions"> 
+  <img src="/images/incident_tx_details.png" alt="Incident details" />
 </Frame>
 
 ### Debug Trace View
@@ -84,13 +87,13 @@ The debug trace view opens from an invalidating transaction.
 - **Transaction Attributes** panel with copy-all action
 - **Execution Context** panel (block environment + previous transactions)
 - **Transaction Trace** panel with status: pending, in progress, completed, failed, or skipped
-- Trace output renders ANSI-colored Foundry traces when complete
-- Copy options include transaction-only or full-block trace, with or without colors
 
-Trace output is generated asynchronously by the `invalidating-trace` service and stored via the dApp API.
+<Frame caption="Debug trace start">
+  <img src="/images/incident_trace.png" alt="Incident trace 1" />
+</Frame>
 
-<Frame caption="Debug trace view (screenshot placeholder)">
-  <div>Screenshot placeholder: Debug trace view (attributes, execution context, trace panel).</div>
+<Frame caption="Debug trace cont.">
+  <img src="/images/incident_trace_2.png" alt="Incident trace 1" />
 </Frame>
 
 ### Real-Time Updates and Alerts
