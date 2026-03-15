@@ -5,13 +5,13 @@ description: Assert that oracle price updates stay within an acceptable deviatio
 
 import ass28IntraTxOracleDeviation from "/snippets/ass28-intra-tx-oracle-deviation.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Monitors oracle price updates to detect and prevent price manipulation within a single transaction, protecting against flash loan attacks and malicious arbitrage. Critical for AMM-based DEXs using oracle prices, lending protocols relying on oracles for collateral valuation, synthetic asset platforms, derivatives protocols using oracles for settlement, and yield farming platforms calculating rewards based on asset prices.
 
 Intra-transaction price manipulations can lead to flash loan attacks, theft of funds through manipulated liquidations, or protocol insolvency due to incorrect asset valuations.
 
-## Explanation
+## What This Pattern Checks
 
 Implements approach to verify oracle price updates using both pre/post state comparison and intra-transaction inspection:
 
@@ -25,13 +25,13 @@ The assertion ensures oracle prices remain within acceptable deviation range thr
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass28IntraTxOracleDeviation />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Oracle Validation](/assertions-book/assertions/ass10-oracle-validation)
 - [TWAP Deviation](/assertions-book/assertions/ass11-twap-deviation)
 - [Price Within Ticks](/assertions-book/assertions/ass15-price-within-ticks)

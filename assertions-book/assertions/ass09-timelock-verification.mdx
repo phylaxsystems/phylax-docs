@@ -5,13 +5,13 @@ description: Make sure that a timelock has been correctly triggered for governan
 
 import ass9TimelockVerification from "/snippets/ass9-timelock-verification.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Ensures timelocks are correctly triggered for governance actions, enforcing delays between proposal and execution to allow community review. Critical for DeFi lending protocols, DEX protocols, yield aggregators, cross-chain bridges, and DAOs that use timelocks to prevent flash loan attacks, allow security review periods, and protect against governance attacks.
 
 Timelocks provide a buffer against malicious governance actions - without proper enforcement, changes could be executed immediately.
 
-## Explanation
+## What This Pattern Checks
 
 Verifies timelock integrity by comparing timelock state and parameters before and after transactions:
 
@@ -24,12 +24,12 @@ The assertion performs both pre/post state comparison and parameter validation t
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass9TimelockVerification />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Owner Change](/assertions-book/assertions/ass05-ownership-change)
 - [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)

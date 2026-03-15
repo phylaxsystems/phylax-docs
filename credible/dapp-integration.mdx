@@ -1,18 +1,23 @@
 ---
-title: 'dApp Integration Overview'
+title: 'Platform Integration Overview'
 description: 'High-level integration path for protocols adopting the Credible Layer'
 ---
 
-This page outlines how protocol teams adopt the Credible Layer to protect their smart contracts.
-It focuses on the minimum steps and interfaces needed to get protected.
+Use this page when your goal is to plan how a protocol team would adopt the Credible Layer.
+
+<Note>
+If you are ready to execute deployment, use [Deploy Assertions with the Platform](./deploy-assertions-dapp). If you need background on how the system works, start with the [Architecture Overview](./architecture-overview).
+</Note>
+
+This page outlines the minimum steps and interfaces needed to get protected.
 
 ## Adoption Workflow
 
-Teams follow the same underlying steps. The CLI is used to author and store assertions, while the dApp
+Teams follow the same underlying steps. The CLI is used to author and store assertions, while the platform
 is used to manage deployments and monitoring.
 
 - **CLI authoring**: write assertions locally and store bytecode
-- **dApp management**: link contracts, stage or deploy, and monitor incidents
+- **Platform management**: link contracts, stage or deploy, and monitor incidents
 
 ## End-to-End Flow
 
@@ -23,7 +28,7 @@ title: Protocol Adoption Flow
 flowchart LR
   Dev[Protocol Team] --> Assertion[Write Assertions]
   Assertion --> DA[Assertion DA]
-  Assertion --> Dapp[Credible dApp]
+  Assertion --> Dapp[Phylax Platform]
   Dapp --> Registry[On-Chain Registry]
   Registry --> Enforcer[Assertion Enforcer]
   Enforcer --> Outcome[Block Inclusion Decision]
@@ -64,7 +69,7 @@ Learn more about ownership checks in [Ownership Verification](/credible/ownershi
   <Card title="Assertions Overview" icon="code" href="/credible/assertions-overview">
     Learn how assertions work and how to write them
   </Card>
-  <Card title="dApp Overview" icon="browser" href="/credible/dapp-overview">
-    Understand how the dApp is used by teams and users
+  <Card title="Platform Overview" icon="browser" href="/credible/dapp-overview">
+    Understand how the platform is used by teams and users
   </Card>
 </CardGroup>

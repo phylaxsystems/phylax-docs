@@ -5,13 +5,13 @@ description: Assert that the address of an implementation has not changed unexpe
 
 import ass1ImplAddrChange from "/snippets/ass1-implementation-change.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Prevents unauthorized changes to proxy implementation addresses, which could allow attackers to replace contract logic with malicious code. Critical for proxy-based upgradeable contracts in DeFi protocols (lending pools, yield aggregators), governance systems with timelocks, and cross-chain bridges.
 
 For example, it's possible to define a whitelist of allowed implementations - any other implementation would be considered an invalid state.
 
-## Explanation
+## What This Pattern Checks
 
 Monitors changes to the implementation address storage slot in proxy contracts using:
 
@@ -23,12 +23,12 @@ The assertion performs both direct pre/post comparison and verification of all i
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass1ImplAddrChange />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Owner Change](/assertions-book/assertions/ass05-ownership-change)
 - [Timelock Verification](/assertions-book/assertions/ass09-timelock-verification)

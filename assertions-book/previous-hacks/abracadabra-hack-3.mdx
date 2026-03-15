@@ -3,7 +3,7 @@ title: Abracadabra CauldronV4 Cook Function Exploit
 description: Logic flaw in the cook() function allowed bypassing solvency checks, enabling $1.8M in uncollateralized borrowing
 ---
 
-## Description
+## What Happened
 
 A logic flaw in Abracadabra's `cook()` function allowed an attacker to borrow $1.8M in MIM tokens without posting any collateral.
 
@@ -23,7 +23,7 @@ By chaining [Action 5, Action 0], the borrow executes and marks that a solvency 
 3. Repeat across six cauldron contracts
 4. Total stolen: 1,793,755 MIM (~$1.8M)
 
-## Proposed Solution
+## Assertion Pattern
 
 This exploit could have been prevented by enforcing a fundamental invariant: **users cannot borrow without sufficient collateral**.
 

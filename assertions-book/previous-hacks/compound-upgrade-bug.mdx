@@ -3,7 +3,7 @@ title: Compound Upgrade Bug
 description: Compound comptroller contract had a one letter bug that allowed users to receive massive amounts of COMP rewards
 ---
 
-## Description
+## What Happened
 
 Compound upgraded their comptroller contract to https://etherscan.io/address/0x374abb8ce19a73f2c4efad642bda76c797f19233 which had a one letter bug on L1217.
 
@@ -22,7 +22,7 @@ The bug was caused by using > instead of >= in the check. This meant that when s
 
 The previous version worked because supplyIndex started at 0 instead of 1e36, though >= would have been more correct.
 
-## Proposed Solution
+## Assertion Pattern
 
 It would have made sense for the developers to make sure that the COMPS accrual never exceeds the maximum possible rate.
 This way even if a bug is introduced, it will be caught by the assertion.

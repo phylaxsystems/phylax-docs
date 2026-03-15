@@ -5,13 +5,13 @@ description: Assert that the health factor of updated positions in a lending pro
 
 import ass07LendingHealthFactor from "/snippets/ass7-lending-health-factor.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Ensures the health factor of updated positions in lending protocols remains above a threshold, preventing unauthorized liquidations and protocol insolvency. Critical for lending protocols (Aave, Compound, Morpho), margin trading platforms, and any DeFi protocol using health factors for position management.
 
 Focuses on core lending operations (supply, borrow, withdraw, repay) while allowing other functions like liquidations to operate as designed.
 
-## Explanation
+## What This Pattern Checks
 
 Monitors health factors of positions during specific lending operations using:
 
@@ -23,7 +23,7 @@ The assertion checks each lending operation individually to ensure positions aff
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass07LendingHealthFactor/>
 
@@ -36,7 +36,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 - Maintain clear separation of concerns between different protocol features
 </Info>
 
-## Related Assertions
+## Related Patterns
 - [Full Aave Assertion Suite](/assertions-book/assertions/aave-v3-suite)
 - [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
 - [Panic State Validation](/assertions-book/assertions/ass17-panic-state-validation)

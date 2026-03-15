@@ -2,13 +2,15 @@
 title: GMX v1 AUM Manipulation Hack
 ---
 
+## What Happened
+
 On July 9, 2025, [GMX v1 lost around ~\$42 million to an attack](https://x.com/GMX_IO/status/1942989975814820347) that exploited how the protocol calculated its total value (Assets Under Management or AUM). This was GMX's second hack of 2025, following a $13 million loss in March. The attacker used a reentrancy vulnerability to manipulate pricing data, artificially inflating the protocol's apparent value, then immediately withdrew tokens at the inflated price.
 
 - [Exploit tx](http://arbiscan.io/tx/0x03182d3f0956a91c4e4c8f225bbc7975f9434fab042228c7acdc5ec9a32626ef)
 - [Exploiter address Arbitrum](https://arbiscan.io/address/0xdf3340a436c27655ba62f8281565c9925c3a5221)
 - [Exploiter address Mainnet](https://etherscan.io/address/0xdf3340a436c27655ba62f8281565c9925c3a5221)
 
-## Core Vulnerability Mechanism
+## Why It Worked
 
 The attack exploited a design flaw where short position operations immediately updated `globalShortAveragePrices`, which directly impacted AUM calculations used for GLP token minting and redemption. The attacker used reentrancy to establish massive short positions within a single transaction, artificially inflating GLP prices.
 
@@ -66,7 +68,7 @@ Critical financial operations must originate from externally owned accounts (EOA
 ### 5. Position-to-Pool Ratio Invariant
 Individual positions must not exceed a maximum percentage of total pool value. This limits the impact any single position can have on global averages.
 
-## AUM Manipulation Bounds Assertion Example
+## Assertion Pattern
 
 A Credible Layer assertion similar to the one below could have prevented an attack like this.
 We have simplified the assertion for brevity, but a real world assertion would check for each call in the call stack that the invariant holds. In the example we just show the logic that would be checked for one call.
@@ -109,7 +111,7 @@ function assertSimplifiedAUMBounds() external {
 }
 ```
 
-### How This Assertion Catches the Exploit
+### How the Assertion Would Have Prevented It
 
 This assertion implements a simple but powerful economic sanity check that would have prevented the GMX attack:
 
@@ -128,7 +130,7 @@ The GMX attacker artificially inflated AUM by a massive amount with only a small
 
 **Key insight**: This assertion doesn't need to understand the technical details of the reentrancy attack. It simply enforces the economic principle that "protocol value should match actual assets at any point in the call stack" - a rule that the attack fundamentally violated.
 
-## Key Takeaway
+## Key Takeaways
 
 The GMX attack succeeded because the protocol trusted its internal accounting without validating that value changes matched actual asset movements. A simple economic sanity check - "did our total value increase by more than our deposits?" - would have prevented this $42M loss.
 

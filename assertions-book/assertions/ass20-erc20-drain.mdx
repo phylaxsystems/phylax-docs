@@ -5,13 +5,13 @@ description: 'Prevent tokens from being drained from a contract'
 
 import ass20ERC20Drain from "/snippets/ass20-erc20-drain.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Monitors and limits token outflows to prevent catastrophic asset loss during exploits, creating a delay window for emergency response. Critical for lending protocols with token reserves (Compound, Aave, Morpho), liquidity pools and DEXs, treasury management systems and DAOs, yield aggregators, and cross-chain bridges holding tokens in escrow.
 
 By limiting outflow rates, protocols gain valuable time to respond to security incidents and activate circuit breakers, even if complete prevention isn't possible.
 
-## Explanation
+## What This Pattern Checks
 
 Implements percentage-based limit on token outflows in a single transaction:
 
@@ -28,8 +28,14 @@ This assertion is meant to be an example of monitoring token outflows. Due to th
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass20ERC20Drain />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+
+## Related Patterns
+
+- [Ether Drain](/assertions-book/assertions/ass21-ether-drain)
+- [Ownership Change](/assertions-book/assertions/ass05-ownership-change)
+- [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)

@@ -49,8 +49,8 @@ The sidecar component responsible for validating transactions against assertions
 
 Learn more: [Assertion Enforcer](/credible/assertion-enforcer)
 
-### Credible dApp
-The web application interface for interacting with the Credible Layer. It allows dApp developers and end-users to deploy, manage, and view assertions and projects.
+### Platform
+The [Phylax platform](https://app.phylax.systems) is the web application interface for interacting with the Credible Layer. It allows protocol teams and end-users to deploy, manage, and view assertions and projects.
 
 ### Transparency Dashboard
 A tool that allows users to view and browse all assertions deployed by different protocols, providing visibility into their security posture.
@@ -179,7 +179,7 @@ The overarching term used to describe what the combination of assertions, sideca
 The process of uploading assertion bytecode and source code to [Assertion DA](/credible/glossary#assertion-da-data-availability) using `pcl store`. This makes the assertion available for retrieval by the network but does not yet associate it with a project.
 
 ### Submit
-The process of submitting an assertion contract to a project in the Credible Layer dApp using `pcl submit`. After storing, assertions must be submitted to a project before they can be deployed.
+The process of submitting an assertion contract to a project in the Phylax platform using `pcl submit`. After storing, assertions must be submitted to a project before they can be deployed.
 
 ### Deployment
 The process of reviewing an assertion, linking it to a contract, and signing the transaction to deploy it on-chain. Deployment includes choosing whether to deploy to Staging or Production environment. The deployment transaction must succeed for the assertion to be deployed on-chain.
@@ -191,7 +191,7 @@ A mirrored chain environment used for testing assertions without affecting produ
 The real chain environment where assertions actively prevent hacks. In production, transactions that violate assertions are dropped before they can execute, protecting protocols from exploits.
 
 ### Timelock
-A period between assertion deployment and enforcement (production) or staging (staging environment). The timelock exists for two reasons: (1) to provide latency for the enforcer to index on-chain state and prepare for enforcement, and (2) to give users time to expect changes to protocol behavior. During the timelock period, assertions are marked for enforcement or staging but not yet active.
+A period enforced by the on-chain State Oracle contracts between an assertion change and when that change takes effect. The timelock applies when you add an assertion and when you remove one. It exists for two reasons: (1) to provide latency for the enforcer to index on-chain state and prepare for enforcement changes, and (2) to give users time to expect changes to protocol behavior. During the timelock period, newly added assertions are marked for enforcement or staging but are not yet active, and removed assertions remain active until the timelock finishes.
 
 ### Marked for Enforcement
 The state of an assertion deployed to production during the timelock period. The assertion is deployed but not yet actively preventing hacks. After the timelock expires, the assertion becomes enforced.
@@ -206,4 +206,4 @@ The state of an assertion in production after the timelock period has expired. A
 The state of an assertion in staging after the timelock period has expired. A staged assertion is running on the mirrored chain environment, allowing protocol teams to observe how it behaves without transactions being dropped if they violate the assertion.
 
 ### Removal
-The process of removing an assertion from active enforcement or staging. Removal requires a timelock period before the assertion stops being enforced or staged, giving users time to expect the change.
+The process of removing an assertion from active enforcement or staging. Removal is scheduled through the State Oracle contracts and requires the configured timelock to expire before the assertion stops being enforced or staged.

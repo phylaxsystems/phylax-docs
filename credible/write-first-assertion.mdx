@@ -1,11 +1,15 @@
 ---
-title: 'Write Your First Assertion'
-description: 'Build a complete assertion that protects ownership changes'
+title: 'Tutorial: Write Your First Assertion'
+description: 'Tutorial: build a complete assertion that blocks unauthorized ownership changes'
 ---
 
 This guide walks you through writing your first assertion from scratch. By the end, you'll have a working assertion that prevents unauthorized ownership transfers.
 
-**Prerequisites**: Familiarity with Solidity, the [Assertions Overview](/credible/assertions-overview), and [`pcl` installed](/credible/credible-install).
+<Note>
+Use this tutorial to learn the basic shape of an assertion. If you already understand the workflow and need specific syntax, jump to [Triggers](./triggers) and the [Cheatcodes API Reference](./cheatcodes-reference).
+</Note>
+
+**Prerequisites**: Familiarity with Solidity, the [Assertions Overview](./assertions-overview), and [`pcl` installed](./credible-install).
 
 **What you'll build**: An assertion that blocks any transaction attempting to change a contract's owner.
 
@@ -69,7 +73,7 @@ my-protocol/
   src/        # Protocol contracts
 ```
 
-For manual setup, see the [Quickstart Guide](/credible/pcl-quickstart).
+For manual setup, see the [Quickstart Guide](./pcl-quickstart).
 
 ## Step 2: Write the Assertion
 
@@ -116,7 +120,7 @@ import {Assertion} from "credible-std/Assertion.sol";
 contract OwnableAssertion is Assertion {
 ```
 
-The `Assertion` base class provides [cheatcodes](/credible/glossary#cheatcodes) via the `ph` namespace.
+The `Assertion` base class provides [cheatcodes](./glossary#cheatcodes) via the `ph` namespace.
 
 **Triggers:**
 
@@ -134,7 +138,7 @@ Key points about triggers:
 - Each trigger maps to exactly one assertion function
 - Use triggers to run assertions only when needed (saves gas)
 
-See [Triggers](/credible/triggers) for more trigger types and optimization.
+See [Triggers](./triggers) for more trigger types and optimization.
 
 **Assertion logic:**
 
@@ -218,11 +222,11 @@ contract TestOwnableAssertion is CredibleTest, Test {
 
 ### Key Testing Concepts
 
-- [`cl.assertion()`](/credible/testing-assertions#credible-layer-testing-interface): Registers the assertion to run on the next transaction
+- [`cl.assertion()`](./testing-assertions#register-an-assertion-for-the-next-transaction): Registers the assertion to run on the next transaction
 - `vm.expectRevert()`: Verifies the assertion blocks the transaction
 - Test both cases: invalid (ownership changes) and valid (no change)
 
-For more details on testing assertions, see [Testing Assertions](/credible/testing-assertions).
+For more details on testing assertions, see [Testing Assertions](./testing-assertions).
 
 Run the tests:
 
@@ -269,4 +273,3 @@ For a visual walkthrough of assertion development:
     More assertion examples
   </Card>
 </CardGroup>
-

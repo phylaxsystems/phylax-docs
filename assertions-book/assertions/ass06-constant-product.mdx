@@ -5,13 +5,13 @@ description: Assert that a constant product is maintained in an AMM pool
 
 import ass6ConstantProduct from "/snippets/ass6-constant-product.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Ensures the constant product (k = x * y) is maintained in AMM pools, preventing unauthorized manipulation of pool reserves and potential flash loan attacks. Critical for Uniswap V2-style AMMs, DEX aggregators, lending protocols using AMM price oracles, and yield farming protocols providing liquidity.
 
 The constant product formula is fundamental to many AMM designs - any deviation could indicate a serious security issue or potential exploit.
 
-## Explanation
+## What This Pattern Checks
 
 Monitors the product of reserves (k) in AMM pools to ensure it remains constant after transactions using:
 
@@ -23,13 +23,13 @@ The assertion verifies both initial/final states and detects potential manipulat
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass6ConstantProduct />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations)
 - [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
 - [Panic State Validation](/assertions-book/assertions/ass17-panic-state-validation)

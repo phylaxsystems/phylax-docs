@@ -8,7 +8,7 @@ This guide walks you through uploading your assertion to Assertion DA and submit
 **Prerequisites**:
 - [pcl installed](/credible/credible-install)
 - An assertion [written](/credible/write-first-assertion) and [tested](/credible/testing-assertions)
-- A [project created](/credible/deploy-assertions-dapp#step-2-create-a-project) in the dApp
+- A [project created](/credible/deploy-assertions-dapp#step-2-create-a-project) in the platform
 
 **What you'll do**: Authenticate, store your assertion, and submit it to your project.
 
@@ -49,7 +49,7 @@ pcl store MyAssertionContract 0xCONTRACT_ADDRESS
 ## Step 3: Submit to Your Project
 
 <Note>
-If you haven't created a project yet, do that first in the [dApp](/credible/deploy-assertions-dapp#step-2-create-a-project).
+If you haven't created a project yet, do that first in the [platform](/credible/deploy-assertions-dapp#step-2-create-a-project).
 </Note>
 
 Submit the stored assertion to your project:
@@ -68,15 +68,19 @@ pcl submit -a 'MyAssertionContract' -p my-project
 To submit multiple assertions, use interactive mode: run `pcl submit` without options to select which stored assertions to submit and which project to submit them to.
 </Tip>
 
-## Step 4: Deploy in the dApp
+## Step 4: Deploy in the Platform
 
-After submitting, complete deployment in the [Credible Layer dApp](/credible/deploy-assertions-dapp#step-4-deploy-the-assertion):
+After submitting, complete deployment in the [Phylax platform](https://app.phylax.systems) using the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-4-deploy-the-assertion):
 
 1. Navigate to your project
 2. Click "Deployment" tab
 3. Find your assertion and click "Proceed to Review"
 4. Select the target contract and environment (Staging or Production)
 5. Click "Deploy" and sign the transaction
+
+<Note>
+Submitting through `pcl` does not make the assertion active by itself. The assertion becomes active only after you deploy it through the platform and the configured timelock in the on-chain State Oracle contracts expires. Removals follow the same State Oracle timelock flow.
+</Note>
 
 ## Troubleshooting
 
@@ -92,15 +96,15 @@ After submitting, complete deployment in the [Credible Layer dApp](/credible/dep
 
 | Error | Solution |
 |-------|----------|
-| "Project not found" | Create the project in the dApp first |
+| "Project not found" | Create the project in the platform first |
 | "Assertion not found" | Check assertion name matches exactly |
 | Constructor args mismatch | Use same args format as when storing |
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Deploy with dApp" icon="rocket" href="/credible/deploy-assertions-dapp">
-    Complete deployment in the dApp
+  <Card title="Deploy with the Platform" icon="rocket" href="/credible/deploy-assertions-dapp">
+    Complete deployment in the platform
   </Card>
   <Card title="pcl Reference" icon="book" href="/credible/cli-reference">
     Full command reference
@@ -112,4 +116,3 @@ After submitting, complete deployment in the [Credible Layer dApp](/credible/dep
     Common issues and solutions
   </Card>
 </CardGroup>
-

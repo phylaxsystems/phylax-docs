@@ -7,9 +7,9 @@ import ass4KycWhitelist from "/snippets/ass4-kyc-whitelist.a.mdx";
 
 Assert that only KYC-verified addresses can perform privileged actions across multiple dapps using a shared registry
 
-## Use Case & Applications
+## When to Use This Pattern
 
-Since regulated funds and prime brokerages can only gain exposure into regulated products, a DeFi protocol may want to attract greater fund deployment by proving itself as a compliant venue. This assertion is a simple proof-of-concept that demonstrates a single, shared registry that multiple dApps can reference.
+Since regulated funds and prime brokerages can only gain exposure into regulated products, a DeFi protocol may want to attract greater fund deployment by proving itself as a compliant venue. This assertion is a simple proof-of-concept that demonstrates a single, shared registry that multiple applications can reference.
 
 It’s designed such that
 
@@ -17,7 +17,7 @@ It’s designed such that
 - The protocol can adopt KYC requirements without implementing their own verification systems
 - Registry owners maintain centralized control over access permissions, the owner may revoke an investor accrediation once and have it impact access for all integrated protocols
 
-## Explanation
+## What This Pattern Checks
 
 What you should know about this KYC assertion example:
 
@@ -26,12 +26,12 @@ What you should know about this KYC assertion example:
 - The assertion validates that `msg.sender` exists in the KYC registry before allowing execution of protected functions. This prevents non-KYC addresses from interacting with regulated tokens or permissioned protocol functions.
 - It is assumed the admin that controls the Registry may be different than the integrating protocol’s admin.
 
-## Code Example
+## Assertion Pattern
 
 <ass4KycWhitelist />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Owner Change](/assertions-book/assertions/ass05-ownership-change)
 - [Timelock Verification](/assertions-book/assertions/ass01-impl-addr-change)

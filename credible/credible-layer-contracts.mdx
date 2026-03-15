@@ -40,19 +40,22 @@ flowchart TD
 
 ### State Oracle
 
-The State Oracle is the core contract that coordinates protocol admins and network operators. It maintains the mapping between protected contracts and their assertions.
+The State Oracle is the core contract that coordinates protocol admins and network operators. It maintains the mapping between protected contracts and their assertions, and it is the contract layer that decides when assertion changes take effect.
 
 **Key responsibilities:**
 - Store assertion registrations for each protected contract (assertion adopter)
-- Enforce timelock periods for assertion activation and deactivation
+- Enforce the configured timelock for assertion additions and removals
 - Manage assertion windows that define when assertions are active
 - Coordinate with admin verifiers to ensure only authorized parties can register assertions
 
 **Behavior:**
 - Each assertion adopter maintains a manager and a set of assertion windows
 - An assertion ID can only be registered once. If removed, it cannot be re-added.
-- Activation and deactivation are enforced via a configured timelock
+- Adding an assertion starts a configured timelock before it becomes staged or enforced
+- Removing an assertion starts a configured timelock before it stops being staged or enforced
 - External admin verifiers govern who may register new adopters
+
+In other words, the platform and `pcl` initiate assertion changes, but the State Oracle contracts enforce the waiting period on-chain.
 
 The [Assertion Enforcer](/credible/assertion-enforcer) reads from the State Oracle to determine which assertions apply to incoming transactions.
 

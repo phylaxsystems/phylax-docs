@@ -3,12 +3,12 @@ title: Bunni XYZ Rounding Error Exploit
 description: Sophisticated rounding error exploitation in Bunni AMM led to $8.4M loss through disproportionate liquidity manipulation
 ---
 
-## Description
+## What Happened
 
 On September 2, 2025, Bunni was exploited for $8.4M through a rounding error in the protocol's withdrawal mechanism. The attack affected two pools: weETH/ETH on Unichain and USDC/USDT on Ethereum.
 
 
-## Core Vulnerability Mechanism
+## Why It Worked
 
 The attack exploited a rounding error in Bunni's idle balance update mechanism during withdrawals. The vulnerability occurred in `BunniHubLogic::withdraw()`:
 
@@ -57,7 +57,7 @@ The largest Bunni pool (Unichain USDC/USD₮0) was spared due to insufficient fl
 - Uniswap v4 couldn't be used due to conflicts with step 2 withdrawals
 - Pool assets were rehypothecated to Euler, making them unavailable for exploitation
 
-## Root Cause Analysis
+## Root Cause
 
 **The Issue:**
 A rounding direction that's safe for individual operations may not be safe for multiple operations in sequence.
@@ -69,7 +69,7 @@ A rounding direction that's safe for individual operations may not be safe for m
 4. This made `totalLiquidityEstimate1` (USDT-based) the chosen estimate, which was larger than the artificially decreased value from step 2
 5. The liquidity increase was then sandwiched by the attacker
 
-## Proposed Solution
+## Assertion Pattern
 
 A withdrawal proportionality assertion could have prevented this attack by ensuring that active balance decreases are proportional to shares burned:
 
@@ -140,7 +140,7 @@ contract BunniWithdrawalInvariantAssertion is Assertion {
 }
 ```
 
-### How This Assertion Prevents the Attack
+### How the Assertion Would Have Prevented It
 
 **What it does:**
 1. Monitors all withdrawals to the Bunni protocol
@@ -158,7 +158,7 @@ The attacker's 44 tiny withdrawals in a single transaction caused the USDC activ
 
 **Key insight**: This assertion enforces that withdrawals must decrease pool balances proportionally to shares burned - a rule that the rounding error attack violated.
 
-## Key Takeaway
+## Key Takeaways
 
 The Bunni attack succeeded because the protocol's rounding assumptions were safe for individual operations but exploitable in combination. The attack demonstrates that mathematical properties must hold not just for individual operations, but across sequences of operations.
 

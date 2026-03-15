@@ -15,25 +15,77 @@
         "icon": "shield",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Start Here",
             "pages": [
               "credible/credible-introduction",
-              "credible/credible-layer-overview",
-              "credible/evaluate-credible-layer",
-              "credible/credible-install",
-              "credible/pcl-quickstart"
+              "credible/credible-layer-overview"
             ]
           },
           {
-            "group": "Architecture",
+            "group": "Tutorials",
             "pages": [
-              "credible/architecture-overview",
+              "credible/pcl-quickstart",
+              "credible/write-first-assertion"
+            ]
+          },
+          {
+            "group": "How-to Guides",
+            "pages": [
               {
-                "group": "Principles",
+                "group": "Set Up and Evaluate",
                 "pages": [
+                  "credible/evaluate-credible-layer",
+                  "credible/credible-install",
+                  "credible/accelerate-with-ai"
+                ]
+              },
+              {
+                "group": "Build and Deploy",
+                "pages": [
+                  "credible/invariant-to-assertion",
+                  "credible/store-submit-assertions",
+                  "credible/deploy-assertions-dapp",
+                  "credible/manual-verification"
+                ]
+              },
+              {
+                "group": "Test and Operate",
+                "pages": [
+                  "credible/testing-assertions",
+                  "credible/fuzz-testing",
+                  "credible/backtesting",
+                  "credible/ci-cd-integration",
+                  "credible/dapp-integrations",
+                  "credible/troubleshooting"
+                ]
+              },
+              {
+                "group": "Integrate Credible Layer",
+                "pages": [
+                  "credible/dapp-integration",
+                  "credible/network-integration",
+                  "credible/ownership-verification"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Explanation",
+            "pages": [
+              {
+                "group": "Architecture and Principles",
+                "pages": [
+                  "credible/architecture-overview",
                   "credible/trust-model",
                   "credible/interfaces-overview",
-                  "credible/neutrality"
+                  "credible/neutrality",
+                  {
+                    "group": "Network Implementations",
+                    "pages": [
+                      "credible/network-integrations/architecture-linea",
+                      "credible/network-integrations/architecture-op-stack"
+                    ]
+                  }
                 ]
               },
               {
@@ -46,84 +98,64 @@
                 ]
               },
               {
-                "group": "Integrations",
+                "group": "Assertions",
                 "pages": [
-                  "credible/network-integration",
-                  {
-                    "group": "Network Implementations",
-                    "pages": [
-                      "credible/network-integrations/architecture-linea",
-                      "credible/network-integrations/architecture-op-stack"
-                    ]
-                  },
-                  "credible/dapp-integration"
-                ]
-              },
-              {
-                "group": "Operations",
-                "pages": [
-                  "credible/system-requirements"
-                ]
-              }
-            ]
-          },
-          {
-            "group": "Assertions",
-            "pages": [
-              "credible/assertions-overview",
-              "credible/development-effort",
-              "credible/cheatcodes-overview",
-              "credible/triggers",
-              {
-                "group": "Testing",
-                "pages": [
+                  "credible/assertions-overview",
+                  "credible/development-effort",
+                  "credible/cheatcodes-overview",
+                  "credible/triggers",
                   "credible/testing-strategy",
-                  "credible/testing-assertions",
-                  "credible/execution-model",
-                  "credible/fuzz-testing",
-                  "credible/backtesting",
-                  "credible/ci-cd-integration"
+                  "credible/execution-model"
                 ]
               }
             ]
           },
           {
-            "group": "dApp",
+            "group": "Platform",
             "pages": [
               "credible/dapp-overview",
               "credible/dapp-transparency-dashboard",
               "credible/dapp-projects",
               "credible/dapp-incidents",
-              "credible/ownership-verification",
-              "credible/manual-verification"
-            ]
-          },
-          {
-            "group": "Guides",
-            "pages": [
-              "credible/write-first-assertion",
-              "credible/invariant-to-assertion",
-              "credible/store-submit-assertions",
-              "credible/deploy-assertions-dapp",
-              "credible/dapp-integrations",
-              "credible/accelerate-with-ai"
+              "credible/faq"
             ]
           },
           {
             "group": "Reference",
             "pages": [
-              "credible/cheatcodes-reference",
-              "credible/backtesting-reference",
-              "credible/cli-reference",
-              "credible/credible-std-overview"
-            ]
-          },
-          {
-            "group": "Resources",
-            "pages": [
-              "credible/glossary",
-              "credible/faq",
-              "credible/troubleshooting"
+              {
+                "group": "CLI and APIs",
+                "pages": [
+                  "credible/cli-reference",
+                  "credible/cheatcodes-reference",
+                  "credible/backtesting-reference",
+                  "credible/credible-std-overview"
+                ]
+              },
+              {
+                "group": "Operational Reference",
+                "pages": [
+                  "credible/system-requirements",
+                  "credible/glossary"
+                ]
+              },
+              {
+                "group": "Use Case Mappings",
+                "pages": [
+                  "credible/use-case-mappings/intro-use-case-mapping",
+                  "credible/use-case-mappings/function-call-inputs",
+                  "credible/use-case-mappings/read-logs",
+                  "credible/use-case-mappings/storage-lookups",
+                  "credible/use-case-mappings/state-changes",
+                  "credible/use-case-mappings/call-frame-context",
+                  {
+                    "group": "Unsupported",
+                    "pages": [
+                      "credible/use-case-mappings/unsupported-use-cases/modified-keys"
+                    ]
+                  }
+                ]
+              }
             ]
           }
         ]
@@ -133,110 +165,102 @@
         "icon": "book",
         "groups": [
           {
-            "group": "Introduction",
+            "group": "Start Here",
             "pages": ["assertions-book/assertions-book-intro"]
           },
           {
-            "group": "Real World Protocols",
+            "group": "Explanation",
             "pages": [
-              "assertions-book/assertions/aave-v3-suite",
-              "assertions-book/assertions/optimism-fma-suite"
-            ]
-          },
-          {
-            "group": "Previous Hacks",
-            "pages": [
-              "assertions-book/previous-hacks/prev-hacks-index",
-              "assertions-book/previous-hacks/balancer-v2-stable-rate-exploit",
-              "assertions-book/previous-hacks/bybit-safe-ui",
-              "assertions-book/previous-hacks/gma-aum-jul25-hack",
-              "assertions-book/previous-hacks/abracadabra-gmx-v2-exploit",
-              "assertions-book/previous-hacks/abracadabra-hack-3",
-              "assertions-book/previous-hacks/bunni-xyz-rounding-error",
-              "assertions-book/previous-hacks/hack1-radiant-capital",
-              "assertions-book/previous-hacks/uxlink-multisig-hack",
-              "assertions-book/previous-hacks/kiloex-price-manipulation-hack",
-              "assertions-book/previous-hacks/hack2-vestra-dao",
-              "assertions-book/previous-hacks/vicuna-finance-hack",
-              "assertions-book/previous-hacks/euler-finance-donation-hack",
-              "assertions-book/previous-hacks/abracadabra-rounding-error",
-              "assertions-book/previous-hacks/visor-finance-unrestricted-mint",
-              "assertions-book/previous-hacks/first-depositor",
-              "assertions-book/previous-hacks/compound-upgrade-bug",
-              "assertions-book/previous-hacks/cream-finance-2"
-            ]
-          },
-          {
-            "group": "General Use Cases",
-            "pages": ["assertions-book/assertions/use-cases-index"]
-          },
-          {
-            "group": "Access Control & Administrative Changes",
-            "pages": [
-              "assertions-book/assertions/ass01-impl-addr-change",
-              "assertions-book/assertions/ass04-kyc-whitelist",
-              "assertions-book/assertions/ass05-ownership-change",
-              "assertions-book/assertions/ass09-timelock-verification"
-            ]
-          },
-          {
-            "group": "Liquidity Pool & AMM Security",
-            "pages": [
-              "assertions-book/assertions/ass06-constant-product",
-              "assertions-book/assertions/ass15-price-within-ticks",
-              "assertions-book/assertions/ass14-fee-calculations"
-            ]
-          },
-          {
-            "group": "Lending Protocol Safety",
-            "pages": [
-              "assertions-book/assertions/ass07-lending-health-factor",
-              "assertions-book/assertions/ass16-liquidation-health-factor",
-              "assertions-book/assertions/ass08-sum-of-all-positions",
-              "assertions-book/assertions/ass19-tokens-borrowed-invariant"
-            ]
-          },
-          {
-            "group": "Oracle Security",
-            "pages": [
-              "assertions-book/assertions/ass10-oracle-validation",
-              "assertions-book/assertions/ass11-twap-deviation",
-              "assertions-book/assertions/ass28-intra-tx-oracle-deviation"
-            ]
-          },
-          {
-            "group": "Vault & ERC4626 Security",
-            "pages": [
-              "assertions-book/assertions/ass12-erc4626-assets-to-shares",
-              "assertions-book/assertions/ass13-erc4626-deposit-withdraw",
-              "assertions-book/assertions/ass18-harvest-increases-balance"
-            ]
-          },
-          {
-            "group": "Emergency & Special Mode Protection",
-            "pages": ["assertions-book/assertions/ass17-panic-state-validation"]
-          },
-
-          {
-            "group": "Fund Protection",
-            "pages": [
-              "assertions-book/assertions/ass20-erc20-drain",
-              "assertions-book/assertions/ass21-ether-drain"
-            ]
-          },
-          {
-            "group": "Use Case Mapping",
-            "pages": [
-              "credible/use-case-mappings/intro-use-case-mapping",
-              "credible/use-case-mappings/function-call-inputs",
-              "credible/use-case-mappings/read-logs",
-              "credible/use-case-mappings/storage-lookups",
-              "credible/use-case-mappings/state-changes",
-              "credible/use-case-mappings/call-frame-context",
               {
-                "group": "Unsupported",
+                "group": "Protocol Case Studies",
                 "pages": [
-                  "credible/use-case-mappings/unsupported-use-cases/modified-keys"
+                  "assertions-book/assertions/aave-v3-suite",
+                  "assertions-book/assertions/optimism-fma-suite"
+                ]
+              },
+              {
+                "group": "Hack Case Studies",
+                "pages": [
+                  "assertions-book/previous-hacks/prev-hacks-index",
+                  "assertions-book/previous-hacks/balancer-v2-stable-rate-exploit",
+                  "assertions-book/previous-hacks/bybit-safe-ui",
+                  "assertions-book/previous-hacks/gma-aum-jul25-hack",
+                  "assertions-book/previous-hacks/abracadabra-gmx-v2-exploit",
+                  "assertions-book/previous-hacks/abracadabra-hack-3",
+                  "assertions-book/previous-hacks/bunni-xyz-rounding-error",
+                  "assertions-book/previous-hacks/hack1-radiant-capital",
+                  "assertions-book/previous-hacks/uxlink-multisig-hack",
+                  "assertions-book/previous-hacks/kiloex-price-manipulation-hack",
+                  "assertions-book/previous-hacks/hack2-vestra-dao",
+                  "assertions-book/previous-hacks/vicuna-finance-hack",
+                  "assertions-book/previous-hacks/euler-finance-donation-hack",
+                  "assertions-book/previous-hacks/abracadabra-rounding-error",
+                  "assertions-book/previous-hacks/visor-finance-unrestricted-mint",
+                  "assertions-book/previous-hacks/first-depositor",
+                  "assertions-book/previous-hacks/compound-upgrade-bug",
+                  "assertions-book/previous-hacks/cream-finance-2"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              {
+                "group": "Assertion Pattern Catalog",
+                "pages": ["assertions-book/assertions/use-cases-index"]
+              },
+              {
+                "group": "Access Control and Administrative Changes",
+                "pages": [
+                  "assertions-book/assertions/ass01-impl-addr-change",
+                  "assertions-book/assertions/ass04-kyc-whitelist",
+                  "assertions-book/assertions/ass05-ownership-change",
+                  "assertions-book/assertions/ass09-timelock-verification"
+                ]
+              },
+              {
+                "group": "Liquidity Pool and AMM Security",
+                "pages": [
+                  "assertions-book/assertions/ass06-constant-product",
+                  "assertions-book/assertions/ass15-price-within-ticks",
+                  "assertions-book/assertions/ass14-fee-calculations"
+                ]
+              },
+              {
+                "group": "Lending Protocol Safety",
+                "pages": [
+                  "assertions-book/assertions/ass07-lending-health-factor",
+                  "assertions-book/assertions/ass16-liquidation-health-factor",
+                  "assertions-book/assertions/ass08-sum-of-all-positions",
+                  "assertions-book/assertions/ass19-tokens-borrowed-invariant"
+                ]
+              },
+              {
+                "group": "Oracle Security",
+                "pages": [
+                  "assertions-book/assertions/ass10-oracle-validation",
+                  "assertions-book/assertions/ass11-twap-deviation",
+                  "assertions-book/assertions/ass28-intra-tx-oracle-deviation"
+                ]
+              },
+              {
+                "group": "Vault and ERC4626 Security",
+                "pages": [
+                  "assertions-book/assertions/ass12-erc4626-assets-to-shares",
+                  "assertions-book/assertions/ass13-erc4626-deposit-withdraw",
+                  "assertions-book/assertions/ass18-harvest-increases-balance"
+                ]
+              },
+              {
+                "group": "Emergency and Special Mode Protection",
+                "pages": ["assertions-book/assertions/ass17-panic-state-validation"]
+              },
+              {
+                "group": "Fund Protection",
+                "pages": [
+                  "assertions-book/assertions/ass20-erc20-drain",
+                  "assertions-book/assertions/ass21-ether-drain"
                 ]
               }
             ]

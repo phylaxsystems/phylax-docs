@@ -3,6 +3,12 @@ title: 'Network Integration Overview'
 description: 'High-level integration path for networks and sequencers adopting the Credible Layer'
 ---
 
+Use this page when your goal is to scope a network integration and identify the infrastructure surfaces your team will need.
+
+<Note>
+If you need concrete implementation details, continue to the [Linea / Besu integration](./network-integrations/architecture-linea) or [OP Stack implementation](./network-integrations/architecture-op-stack). If you need background first, read the [Architecture Overview](./architecture-overview).
+</Note>
+
 This page explains how networks integrate the Credible Layer at a high level. It focuses on the
 interface surfaces and operational expectations without internal implementation details.
 
@@ -19,7 +25,7 @@ interface surfaces and operational expectations without internal implementation 
 title: Network Integration Flow
 ---
 flowchart LR
-  Users[Users + dApps] --> RPC[Network RPC]
+  Users[Users + Applications] --> RPC[Network RPC]
   RPC --> Builder[Block Builder]
   Builder --> Enforcer[Assertion Enforcer]
   Enforcer -->|valid| Block[Block]
@@ -36,19 +42,19 @@ Networks provide the following integration surfaces:
   transaction
 - **Registry access**: the enforcer consumes registry data (indexed from on-chain events) to discover which assertions apply
 - **Assertion data access**: the enforcer fetches assertion bytecode from Assertion DA
-- **Operational monitoring**: incidents and status are surfaced via the Credible dApp
+- **Operational monitoring**: incidents and status are surfaced via the Phylax platform
 
 ## Operational Expectations
 
 - The enforcer runs alongside the block builder and does not change consensus rules
 - Enforcement is deterministic and only depends on on-chain state and assertion code
-- dApps choose whether assertions are staged or enforced; networks honor the registry status during validation
+- Protocol teams choose whether assertions are staged or enforced; networks honor the registry status during validation
 
 ## Integration Checklist (High Level)
 
 - Identify the block-building hook for transaction validation
 - Configure access to registry data and assertion bytecode
-- Ensure the enforcer respects staged vs enforced assertions as set by dApps
+- Ensure the enforcer respects staged vs enforced assertions as set by protocol teams
 - Set up monitoring and incident review workflows
 
 ## Integration Requirements (Public)
@@ -56,7 +62,7 @@ Networks provide the following integration surfaces:
 - **Block-building hook** that can query the enforcer before inclusion
 - **Registry access** for assertion discovery (on-chain events indexed locally)
 - **DA access** for assertion bytecode retrieval
-- **Incident visibility** through the Credible dApp
+- **Incident visibility** through the Phylax platform
 
 ## Next Steps
 

@@ -7,7 +7,7 @@ This is a fairly simple bug that let anyone mint rewardTokens.
 
 Background: https://x.com/storming0x/status/1473321779250802693
 
-# Description
+## What Happened
 
 - The deposit function lets anyone mint rewardTokens if
   - the from address is a contract and has an owner and where msg.sender == owner
@@ -16,7 +16,7 @@ Background: https://x.com/storming0x/status/1473321779250802693
   - it can be a noop
 - The attacker can mint rewardTokens to himself
 
-## Solution
+## Assertion Pattern
 
 While this is an obvious bug, an invariant could have prevented an exploit of the bug.
 

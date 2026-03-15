@@ -5,13 +5,13 @@ description: 'Make sure that the price is within the tick range'
 
 import ass15PriceWithinTicks from "/snippets/ass15-price-within-ticks.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Ensures prices remain within valid tick boundaries in concentrated liquidity AMMs, preventing price manipulation and maintaining protocol mathematical validity. Critical for AMMs using concentrated liquidity models (Uniswap V3, PancakeSwap V3), protocols with tick-based price calculations, DeFi protocols interacting with tick-based AMMs, and cross-chain bridges using tick-based price feeds.
 
 If attackers could push prices outside valid tick ranges, they could execute trades at invalid prices, manipulate liquidity positions, or cause protocol calculations to fail.
 
-## Explanation
+## What This Pattern Checks
 
 Implements focused tick integrity verification:
 
@@ -24,12 +24,12 @@ The assertion maintains proper concentrated liquidity calculations and prevents 
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass15PriceWithinTicks />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations)
 - [Liquidation Health Factor](/assertions-book/assertions/ass16-liquidation-health-factor)

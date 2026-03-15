@@ -1,11 +1,13 @@
 ---
-title: 'Quickstart'
-description: 'A quickstart guide to writing assertions and using `pcl`'
+title: 'Quickstart Tutorial'
+description: 'Tutorial: write, submit, and deploy your first assertion with `pcl`'
 ---
 
 ## Introduction
 
-This guide will walk you through the process of creating, testing, and submitting an assertion using `pcl`. By the end of this tutorial, you'll understand how to:
+Use this tutorial when you are new to the Credible Layer and want one guided, happy-path run from local project setup to an enforced assertion.
+
+By the end of this tutorial, you will:
 
 1. Set up your project structure
 2. Test your assertion
@@ -17,11 +19,15 @@ This guide will walk you through the process of creating, testing, and submittin
 8. Deploy your assertion
 9. Verify that the assertion is working
 
+<Note>
+If you already know the overall flow and only need one task, use the dedicated guides for [installation](./credible-install), [storing and submitting assertions](./store-submit-assertions), or [deployment in the platform](./deploy-assertions-dapp).
+</Note>
+
 ## Prerequisites
 
 Before you begin, make sure you have:
 
-- `pcl` installed (see the [Installation Guide](/credible/credible-install))
+- `pcl` installed (see the [Installation Guide](./credible-install))
 - Solidity compiler [installed](https://docs.soliditylang.org/en/latest/installing-solidity.html)
 - Foundry installed (see the [Foundry Installation Guide](https://book.getfoundry.sh/getting-started/installation))
 - A browser wallet for authentication (MetaMask or similar)
@@ -29,11 +35,11 @@ Before you begin, make sure you have:
 
 ## 1. Project Setup
 
-We've created an example project with containing some complete assertion examples that work out of the box and that you can use as a starting point for your own projects.
+We've created an example project that contains complete assertion examples that work out of the box and can serve as a starting point for your own projects.
 
 The project can be found [here](https://github.com/phylaxsystems/credible-layer-starter).
 
-For a detailed understanding of what an assertion is and how it works, see the [Assertion Guide](/credible/write-first-assertion). For testing assertions, see the [Testing Assertions](/credible/testing-assertions) guide.
+For a detailed understanding of what an assertion is and how it works, see the [Assertion Guide](./write-first-assertion). For testing assertions, see the [Testing Assertions](./testing-assertions) guide.
 
 <Note>
     The `credible-layer-starter` repo has several examples that you can deploy and try out once you're done with this guide.
@@ -78,15 +84,15 @@ forge script script/DeployOwnable.s.sol --rpc-url <RPC_URL> --sender <DEPLOYER_A
 Explanation of the arguments:
 
 - `<RPC_URL>`: The RPC URL of the network you're deploying to
-- `<PRIVATE_KEY>`: The private key of the account you used to sign in to the dApp
-- `<DEPLOYER_ADDRESS>`: The address of the account you used to sign in to the dApp
+- `<PRIVATE_KEY>`: The private key of the account you used to sign in to the platform
+- `<DEPLOYER_ADDRESS>`: The address of the account you used to sign in to the platform
 
 Make sure to note down the address of the deployed contract as you'll need it to create a project in the next step.
 It will be the `Deployed to:` address in the output of the command.
 
 ## 4. Authenticating with Credible Layer
 
-Here's a full video that you can consult to follow along with the process entire process from authentication to activating the assertion:
+Here's a full video that you can use to follow the full process from authentication to activating the assertion:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/MrDVLp5UDZ0?si=tdgQEJ3Tkps2LwJA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
@@ -102,17 +108,15 @@ pcl auth login
 
 This will provide you with with a URL and an authentication code that you can use to authenticate with the Credible Layer.
 
-If authentication fails, ensure:
-- Your wallet has the correct network selected
-- The `pcl` CLI uses the correct url
-- You have an internet connection
-- The `pcl` CLI is properly installed
+<Note>
+If authentication fails, first confirm that your wallet is on the correct network and that `pcl` is using the expected auth URL. Then use the [Troubleshooting guide](./troubleshooting) for the common failure modes.
+</Note>
 
 ## 5. Create a Project
 
-Once you have deployed your contract, you'll need to create a project in the dApp if you don't have one already. Navigate to the browser window opened by the `pcl auth login` command and create a new project. When asked to link your contract, use the address of the contract you deployed in the previous step.
+Once you have deployed your contract, you'll need to create a project in the platform if you don't have one already. Navigate to [app.phylax.systems](https://app.phylax.systems) and create a new project. When asked to link your contract, use the address of the contract you deployed in the previous step.
 
-For a more detailed overview of how to use the dApp and manage projects, see the [Deploy Assertions guide](/credible/deploy-assertions-dapp).
+For a more detailed overview of how to use the platform and manage projects, see the [Deploy Assertions guide](./deploy-assertions-dapp).
 
 ## 6. Storing Your Assertion
 
@@ -128,7 +132,7 @@ This command submits your assertion's bytecode and source code to be stored by t
 
 ## 7. Submitting Your Assertion
 
-Finally, submit your assertion to the Credible Layer dApp:
+Finally, submit your assertion to the platform:
 
 ```bash
 pcl submit
@@ -142,19 +146,19 @@ Alternatively, you can specify the project and assertion directly as per the out
 pcl submit -a 'OwnableAssertion' -p <project_name>
 ```
 
-Note, that `<project_name>` is the name of the project you created in the dApp, capitalized in the same way as you did when creating the project.
+Note that `<project_name>` is the name of the project you created in the platform, capitalized in the same way as you did when creating the project.
 
 ## 8. Deploying Your Assertion
 
-Last step is to go to the dApp and deploy the assertion. Go back to the url that you opened with the `pcl auth login` command and navigate to the project that the assertion was added to. 
+To finish the tutorial, open the platform at [app.phylax.systems](https://app.phylax.systems) and navigate to the project that the assertion was added to.
 
 You'll notice that there's one assertion ready for deployment. Go ahead and proceed to review and deploy it. During the review process, you'll choose whether to deploy to **Staging** (for testing) or **Production** (for active protection).
 
 <Note>
-After deployment, your assertion enters a timelock period. During this period, it is marked for enforcement (production) or marked for staging (staging environment). After the timelock expires, the assertion becomes enforced (production) or staged (staging), actively protecting your contract. See the [Glossary](/credible/glossary#timelock) for details about timelocks.
+After deployment, your assertion enters a timelock period. During this period, it is marked for enforcement (production) or marked for staging (staging environment). After the timelock expires, the assertion becomes enforced (production) or staged (staging), actively protecting your contract. See the [Glossary](./glossary#timelock) for details about timelocks.
 </Note>
 
-For a more detailed overview of how to use the dApp, see the [Deploy Assertions guide](/credible/deploy-assertions-dapp).
+For a more detailed overview of how to use the platform, see the [Deploy Assertions guide](./deploy-assertions-dapp).
 
 ## 9. Verify That The Assertion Is Working
 
@@ -194,11 +198,11 @@ Congratulations! You've successfully created, tested, deployed, and verified you
 
 ### Next Steps
 
-1. **Read the Assertions Book**: Check out the [Assertions Book](/assertions-book) for more detailed explanations and a collection of assertions for various use cases
+1. **Read the Assertions Book**: Check out the [Assertions Book](../assertions-book/assertions-book-intro) for more detailed explanations and a collection of assertions for various use cases
 2. **Try more complex assertions**: We've created some more assertions in the [credible-layer-starter](https://github.com/phylaxsystems/credible-layer-starter) repo that are ready to be deployed and used with a couple of commands
-2. **Integrate with your own projects**: Apply assertions to your existing smart contracts
-3. **Join the community**: Share your assertions and learn from others in the [Phylax Telegram](https://t.me/phylax_credible_layer)
+3. **Integrate with your own projects**: Apply assertions to your existing smart contracts
+4. **Join the community**: Share your assertions and learn from others in the [Phylax Telegram](https://t.me/phylax_credible_layer)
 
-For more detailed information about `pcl` and its commands, see [Store and Submit Assertions](/credible/store-submit-assertions) and [pcl Reference](/credible/cli-reference).
+For more detailed information about `pcl` and its commands, see [Store and Submit Assertions](./store-submit-assertions) and [pcl Reference](./cli-reference).
 
-For a comprehensive list of terms and concepts used in the Credible Layer, see the [Glossary](/credible/glossary).
+For a comprehensive list of terms and concepts used in the Credible Layer, see the [Glossary](./glossary).

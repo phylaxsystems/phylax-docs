@@ -5,13 +5,13 @@ description: 'Ensure protocol behaves correctly during emergency pause states'
 
 import ass17PanicStateVerification from "/snippets/ass17-panic-state-verificatoin.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Ensures protocols maintain proper security controls during emergency pause states, allowing existing users to withdraw funds while preventing new deposits. Critical for yield aggregators and vaults (Yearn, Beefy), lending protocols with pause mechanisms, DEXs with emergency circuit breakers, cross-chain bridges with pause functionality, and any protocol with emergency pause capabilities.
 
 Improper handling of pause states can lead to fund lockups, unauthorized access, or users being unable to exit during emergencies.
 
-## Explanation
+## What This Pattern Checks
 
 Monitors protocol balance and pause state to ensure proper emergency behavior using a multi-layered approach:
 
@@ -27,12 +27,12 @@ The assertion ensures users can withdraw funds during emergencies while preventi
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass17PanicStateVerification />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)
 - [Owner Change](/assertions-book/assertions/ass05-ownership-change)

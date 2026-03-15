@@ -7,6 +7,15 @@ description: 'Block exploits before they execute by linking security rules to yo
 
 The Credible Layer is security infrastructure that enables developers to link security rules to their smart contracts on-chain. Then, the network validates every transaction that interacts with their smart contracts against their security rules, dropping any invalidating transaction.
 
+<Note>
+Use this page to choose the right kind of documentation for what you need next:
+
+- Learn by doing: [Quickstart Tutorial](./pcl-quickstart)
+- Complete a specific task: [How-to Guides](./credible-install)
+- Understand the system: [High-Level Overview](./credible-layer-overview)
+- Look up commands and APIs: [Reference](./cli-reference)
+</Note>
+
 ## How It Works
 
 <Steps>
@@ -21,29 +30,37 @@ The Credible Layer is security infrastructure that enables developers to link se
   </Step>
 </Steps>
 
-## I Want To...
+## Choose the Right Path
 
 <CardGroup cols={2}>
-  <Card title="Start Building" icon="rocket" href="/credible/pcl-quickstart">
-    Write and deploy your first assertion. Get from zero to protected in minutes.
+  <Card title="Learn by Doing" icon="rocket" href="./pcl-quickstart">
+    Follow a guided tutorial to write, submit, and deploy your first assertion end to end.
   </Card>
-  <Card title="Evaluate Credible Layer" icon="list-check" href="/credible/evaluate-credible-layer">
-    A quick checklist for dApps and networks.
+  <Card title="Complete a Task" icon="list-check" href="./store-submit-assertions">
+    Jump straight to task-focused guides for installation, deployment, testing, and operations.
   </Card>
-  <Card title="Understand at a High Level" icon="compass" href="/credible/credible-layer-overview">
-    Non-technical overview of how the Credible Layer prevents exploits.
+  <Card title="Understand the System" icon="compass" href="./architecture-overview">
+    Read the explanation docs for architecture, trust model, assertions, and the platform.
   </Card>
-  <Card title="Evaluate the Architecture" icon="gears" href="/credible/architecture-overview">
-    Technical deep dive into system design, transaction flow, and integration requirements.
+  <Card title="Look Up Details" icon="book" href="./cheatcodes-reference">
+    Use the reference docs for commands, cheatcodes, glossary entries, and use-case mappings.
   </Card>
-  <Card title="Integrate as a Protocol" icon="browser" href="/credible/dapp-integration">
-    High-level adoption flow for protocol teams.
+</CardGroup>
+
+## By Audience
+
+<CardGroup cols={2}>
+  <Card title="Protocol Teams" icon="browser" href="./dapp-integration">
+    See the adoption path for writing assertions, deploying them, and monitoring incidents.
   </Card>
-  <Card title="Browse Examples" icon="book" href="/assertions-book/assertions-book-intro">
-    Explore assertion patterns and see how real-world hacks could have been prevented.
+  <Card title="Networks and Sequencers" icon="sitemap" href="./network-integration">
+    See the high-level integration path for enforcement during block building.
   </Card>
-  <Card title="Integrate as a Network" icon="sitemap" href="/credible/network-integration">
-    High-level integration for networks and sequencers.
+  <Card title="Security Engineers" icon="shield-halved" href="../assertions-book/assertions-book-intro">
+    Browse pattern catalogs and exploit case studies in the Assertions Book.
+  </Card>
+  <Card title="Researchers and Auditors" icon="magnifying-glass" href="./dapp-transparency-dashboard">
+    Inspect deployed assertions, incidents, and public protocol coverage.
   </Card>
 </CardGroup>
 

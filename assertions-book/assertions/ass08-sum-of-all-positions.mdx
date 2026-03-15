@@ -5,13 +5,13 @@ description: Assert that the sum of all positions is the same as the total suppl
 
 import ass8PositionsSum from "/snippets/ass8-positions-sum.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Verifies that the sum of all individual positions exactly matches the total supply reported by the protocol, preventing supply manipulation, double counting, and accounting discrepancies. Critical for lending protocols, liquidity pools, staking mechanisms, synthetic asset protocols, and fractionalized NFT protocols where accurate position accounting is fundamental to security.
 
 Any discrepancy between individual positions and total supply could lead to incorrect calculations, withdrawal failures, or protocol insolvency.
 
-## Explanation
+## What This Pattern Checks
 
 Since direct iteration over all positions isn't currently supported, this assertion uses a workaround that tracks position changes through function calls:
 
@@ -29,12 +29,12 @@ Check the [Modified Keys](/credible/use-case-mappings/unsupported-use-cases/modi
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass8PositionsSum />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Lending Health Factor](/assertions-book/assertions/ass07-lending-health-factor): Ensures user balances are consistent across different views
 - [Liquidation Health Factor](/assertions-book/assertions/ass16-liquidation-health-factor): Verifies that the total supply doesn't exceed protocol limits

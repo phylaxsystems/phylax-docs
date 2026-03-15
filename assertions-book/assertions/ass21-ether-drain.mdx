@@ -5,7 +5,7 @@ description: 'Make sure that ether is not drained from a contract'
 
 import ass21EtherDrain from "/snippets/ass21-ether-drain.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Prevents rapid ETH draining by limiting sudden large withdrawals, giving protocols time to respond to potential exploits. Critical for DeFi lending platforms using ETH as collateral, cross-chain bridges with large ETH reserves, DAOs and protocol treasuries, staking protocols managing ETH deposits, yield aggregators holding ETH, and centralized exchanges.
 
@@ -13,7 +13,7 @@ Malicious actors often attempt to extract all available ETH in a single transact
 
 > **Real-world example:** In February 2025, Bybit suffered one of the largest hacks in crypto history, losing approximately $1.4 billion USD when attackers compromised Safe Wallet's UI and changed the implementation address of their proxy contract. This allowed the attackers to drain all assets without requiring additional approvals from the original owners. ETH drain assertions, especially with whitelist functionality, could have prevented or significantly limited the impact of this attack. See the [Bybit Safe UI attack](/assertions-book/previous-hacks/bybit-safe-ui) for more details.
 
-## Explanation
+## What This Pattern Checks
 
 Implements tiered protection strategy to detect rapid ETH draining:
 
@@ -27,13 +27,13 @@ The tiered approach ensures normal operations with small withdrawals continue un
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass21EtherDrain />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
 - [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)
 - [Ownership Change](/assertions-book/assertions/ass05-ownership-change)

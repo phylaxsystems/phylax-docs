@@ -3,6 +3,8 @@ title: First Depositor Bug
 description: First depositor bug in Compound / Aave v2 lending protocols
 ---
 
+## What Happened
+
 Background: https://akshaysrivastav.hashnode.dev/first-deposit-bug-in-compoundv2-and-its-forks
 
 The First Depositor Attack in Compound / Aave v2 lending protocols:
@@ -24,7 +26,9 @@ Example:
 4. Victim deposits 100 tokens, gets only ~0.1 shares due to inflated rate -> will be rounded down to 0
 5. Attacker withdraws 1 share and gets 1100 tokens, stealing all of victim's deposit
 
-Traditional prevention :
+## Why This Matters
+
+Traditional prevention:
 
 - Attack only makes sense if attacker owns all shares (or close to it)
   - If he owns all shares, donating tokens to the pool will still be owned by the attacker
@@ -33,7 +37,7 @@ Traditional prevention :
   - Adjustments to the protocol could mint tokens to 0x0 upon first mint/deposit
 - Many forks fail to combine these actions
 
-## How can assertions help?
+## Assertion Pattern
 
 - History has shown that an old vulnerability has found its way into many protocols
 - Many succesfull attacks leveraged this vulnerability
@@ -46,7 +50,7 @@ Traditional prevention :
     their governance process let the attacker execute the transactions out of order
 - Low entry barrier to enable publicly known assertions for famous protocols to your own fork
 
-### Example: Enforce atomically opening the market and depositing first assets
+### Example Assertion: Enforce atomically opening the market and depositing first assets
 
 ```solidity
 function assertionHasMinimumSupply() public view {
@@ -55,7 +59,7 @@ function assertionHasMinimumSupply() public view {
 }
 ```
 
-### Example: Enforce exchange rate < deposit amount
+### Example Assertion: Enforce exchange rate < deposit amount
 
 ```solidity
 function assertionExchangeRate() public view {

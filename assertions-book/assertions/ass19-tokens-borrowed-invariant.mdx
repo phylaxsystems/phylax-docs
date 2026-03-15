@@ -5,13 +5,13 @@ description: 'Make sure that the tokens borrowed are not more than the tokens de
 
 import ass19TokensBorrowedInvariant from "/snippets/ass19-tokens-borrowed-invariant.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Ensures the fundamental lending protocol invariant that total tokens borrowed never exceed total tokens deposited, preventing protocol insolvency and ensuring withdrawal requests can be honored. Critical for lending and borrowing platforms (Aave, Compound, Morpho), money markets with deposit/borrow pools, yield aggregators implementing lending strategies, and synthetic asset protocols with collateralized debt positions.
 
 Violating this invariant could lead to protocol insolvency, loss of user funds, or destabilization of dependent DeFi ecosystems.
 
-## Explanation
+## What This Pattern Checks
 
 Implements straightforward verification that total tokens borrowed never exceed total tokens deposited:
 
@@ -24,13 +24,13 @@ The assertion verifies final state after all transaction operations complete, en
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass19TokensBorrowedInvariant />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Liquidation Health Factor](/assertions-book/assertions/ass16-liquidation-health-factor)
 - [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
 - [Lending Health Factor](/assertions-book/assertions/ass07-lending-health-factor)

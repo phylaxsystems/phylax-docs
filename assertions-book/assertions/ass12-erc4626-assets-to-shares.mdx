@@ -5,13 +5,13 @@ description: Make sure that the total shares are not more than the total assets
 
 import ass12Erc4626AssetsShares from "/snippets/ass12-erc4626-assets-shares.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Enforces a critical ERC4626 vault invariant: total shares must never exceed total assets converted to shares, preventing share price manipulation and fund loss. Critical for yield aggregators, lending protocols implementing ERC4626, liquidity pools using ERC4626 for LP tokens, and staking protocols with ERC4626 vaults.
 
 Any violation could allow unauthorized share minting that dilutes existing holders or enables withdrawal of more assets than deposited, potentially leading to protocol insolvency.
 
-## Explanation
+## What This Pattern Checks
 
 Verifies the fundamental ERC4626 share-to-asset relationship using a basic approach:
 
@@ -23,12 +23,12 @@ This ensures there are always enough assets to back all shares, maintaining accu
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass12Erc4626AssetsShares />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 
 - [ERC4626 Vault Operations](/assertions-book/assertions/ass13-erc4626-deposit-withdraw) — deposit, withdraw, mint, redeem with batch handling
