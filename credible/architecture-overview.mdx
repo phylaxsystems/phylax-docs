@@ -34,7 +34,7 @@ flowchart LR
     subgraph dev["Development Tools"]
         direction TB
         CLI["pcl"]
-        DAPP["Credible dApp"]
+        DAPP["Phylax Platform"]
     end
 
     subgraph storage["Storage"]
@@ -77,13 +77,13 @@ flowchart LR
 
 The diagram shows two main flows:
 
-**Development Flow**: Developers use [`pcl`](/credible/store-submit-assertions) to develop and test assertions. `pcl` stores assertion code in [Assertion DA](/credible/assertion-da), then submits to the [Credible dApp](/credible/dapp-overview). The dApp deploys assertions to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts) so they can be enforced by the network.
+**Development Flow**: Developers use [`pcl`](/credible/store-submit-assertions) to develop and test assertions. `pcl` stores assertion code in [Assertion DA](/credible/assertion-da), then submits to the [Phylax platform](https://app.phylax.systems). The platform deploys assertions to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts) so they can be enforced by the network.
 
 **Runtime Flow**: The block builder or sequencer sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer uses its registry snapshot (from on-chain events) and cached assertion bytecode (from [Assertion DA](/credible/assertion-da)) to execute relevant assertions via [PhEVM](/credible/phevm). Valid transactions are included in blocks; invalid transactions are dropped.
 
 ### How It Works
 
-1. **Assertion Deployment**: Developers write and submit assertions through `pcl` and the dApp, which are stored in Assertion DA and deployed on-chain
+1. **Assertion Deployment**: Developers write and submit assertions through `pcl` and the platform, which are stored in Assertion DA and deployed on-chain
 2. **Transaction Validation**: The network sends transactions to the Assertion Enforcer during block production
 3. **Assertion Execution**: The Assertion Enforcer simulates each transaction and validates it against relevant assertions using PhEVM
 4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the block builder or sequencer
@@ -137,7 +137,7 @@ When an assertion is violated, the incident is recorded and exposed for transpar
 title: Incident Lifecycle
 ---
 flowchart LR
-    ENFORCER["Assertion Enforcer"] --> DAPP["Credible dApp"]
+    ENFORCER["Assertion Enforcer"] --> DAPP["Phylax Platform"]
     DAPP --> DASH["Transparency Dashboard"]
     DAPP --> ALERTS["Slack/PagerDuty Alerts"]
 
@@ -153,7 +153,7 @@ flowchart LR
 ## Integration Paths
 
 <CardGroup cols={2}>
-  <Card title="dApp Integration Overview" icon="browser" href="/credible/dapp-integration">
+  <Card title="Platform Integration Overview" icon="browser" href="/credible/dapp-integration">
     How protocols deploy and manage assertions
   </Card>
   <Card title="Network Integration Overview" icon="sitemap" href="/credible/network-integration">
@@ -186,7 +186,7 @@ The [Credible Layer Contracts](/credible/credible-layer-contracts) are on-chain 
 
 ### Developer Tools
 
-- **[Credible dApp](/credible/dapp-overview)**: Web interface for deploying, managing, and viewing assertions
+- **[Phylax platform](https://app.phylax.systems)**: Web interface for deploying, managing, and viewing assertions
 - **[`pcl`](/credible/store-submit-assertions)**: Command-line tool for writing, testing, and deploying assertions
 - **[`credible-std`](/credible/credible-std-overview)**: Standard library exposing cheatcodes and testing utilities
 

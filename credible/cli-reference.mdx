@@ -22,10 +22,10 @@ Commands are listed in the order they are usually used in the assertion developm
 
 ### `auth`
 
-Manage authentication with your Credible Layer dApp account.
+Manage authentication with your Phylax platform account.
 
 ```bash
-Authenticate `pcl` with your Credible Layer dApp account
+Authenticate `pcl` with your Phylax platform account
 
 Usage: pcl auth [OPTIONS] <COMMAND>
 
@@ -134,10 +134,10 @@ Constructor arguments must be provided in the same order as defined in your asse
 
 ### `submit`
 
-Submit [assertions](/credible/glossary#assertion) to the [Credible Layer dApp](/credible/glossary#credible-dapp).
+Submit [assertions](/credible/glossary#assertion) to the [Phylax platform](https://app.phylax.systems).
 
 ```bash
-Arguments for submitting assertions to the Credible Layer dApp
+Arguments for submitting assertions to the Phylax platform
 
 Usage: pcl submit [OPTIONS] [ASSERTION_CONTRACT] [CONSTRUCTOR_ARGS]...
 
@@ -146,7 +146,7 @@ Arguments:
   [CONSTRUCTOR_ARGS]...  Constructor arguments for the assertion
 
 Options:
-  -u, --api-url <API Endpoint>   Base URL for the Credible Layer dApp API [env: PCL_API_URL=] [default: https://app.phylax.systems/api/v1]
+  -u, --api-url <API Endpoint>   Base URL for the Phylax platform API [env: PCL_API_URL=] [default: https://app.phylax.systems/api/v1]
   -p, --project-name <PROJECT>   Optional project name to skip interactive selection
   -a, --assertion <ASSERTION>    Assertion in format 'Name(arg1,arg2)'. Use multiple -a flags for multiple assertions.
   -h, --help                     Print help (see more with '--help')
@@ -223,7 +223,7 @@ pcl store MyAssertion
 
 ### `PCL_API_URL`
 
-Base URL for the [Credible Layer dApp](/credible/glossary#credible-dapp) API. Default: `https://app.phylax.systems/api/v1`
+Base URL for the [Phylax platform](https://app.phylax.systems) API. Default: `https://app.phylax.systems/api/v1`
 
 ```bash
 export PCL_API_URL=https://custom-api-url.com/api/v1
@@ -252,8 +252,7 @@ You can view the configuration with `pcl config show` or delete it with `pcl con
   <Card title="Installation" icon="download" href="/credible/credible-install">
     Install pcl
   </Card>
-  <Card title="Deploy with dApp" icon="browser" href="/credible/deploy-assertions-dapp">
+  <Card title="Deploy with the Platform" icon="browser" href="/credible/deploy-assertions-dapp">
     Deploy assertions to protect your contracts
   </Card>
 </CardGroup>
-

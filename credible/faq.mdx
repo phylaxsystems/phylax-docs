@@ -29,7 +29,7 @@ There are several key advantages:
 
 1. **Off-chain Execution**: Rules that would be too expensive or impossible to express on-chain due to gas costs and limits can be implemented easily as assertions as they are run off-chain. Our current benchmarks show around 1000x efficiency gains.
 2. **Simpler Security Model**: By writing invariants that define a state to prevent instead of every edge case that would lead there, you simplify and strengthen your protocol. If you are confused about what an invariant is, read on 👇🏻
-3. **No redeployment or downtime**: Add new security rules without modifying your existing contracts. You can even add rules to immutable contracts. To learn how this is possible read the [How do you extend the validation logic of the sequencer to the dApp?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-dapp) section below.
+3. **No redeployment or downtime**: Add new security rules without modifying your existing contracts. You can even add rules to immutable contracts. To learn how this is possible read the [How do you extend the validation logic of the sequencer to the platform?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-platform) section below.
 
 **Learn More:**
 - [Credible Layer Overview - Use Cases](/credible/credible-layer-overview#use-cases)
@@ -211,8 +211,8 @@ The solution is currently in development. Ask us about it!
 
 ### Does the Credible Layer introduce new trust assumptions or centralization points?
 
-No. For single-sequencer L2s, users/dApps already trust the sequencer with transaction inclusion, because, in theory, a sequencer can censor transactions arbitrarily when it receives them at the RPC layer.
-The Credible Layer simply extends the sequencer's validation logic with dApp-defined rules, expressed as Assertions (EVM bytecode).
+No. For single-sequencer L2s, users and protocol teams already trust the sequencer with transaction inclusion, because, in theory, a sequencer can censor transactions arbitrarily when it receives them at the RPC layer.
+The Credible Layer simply extends the sequencer's validation logic with protocol-defined rules, expressed as Assertions (EVM bytecode).
 
 **Learn More:**
 - [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
@@ -220,7 +220,7 @@ The Credible Layer simply extends the sequencer's validation logic with dApp-def
 
 ### Is this a form of censorship?
 
-The Credible Layer simply lets dApps define assertions that can prevent certain states regardless of the contract code. These assertions should be thought of as an addition to the dApps' core contracts. It would be censorship if a 3rd party (anyone other than the dApp) could write assertions for a dApp's contracts. This is not how the Credible Layer works, and hence this is not censorship. Read more about this in [Can anyone write assertions for my contracts?](#can-anyone-write-assertions-for-my-contracts?) below.
+The Credible Layer simply lets protocol teams define assertions that can prevent certain states regardless of the contract code. These assertions should be thought of as an addition to the protocol's core contracts. It would be censorship if a 3rd party (anyone other than the protocol team) could write assertions for a protocol's contracts. This is not how the Credible Layer works, and hence this is not censorship. Read more about this in [Can anyone write assertions for my contracts?](#can-anyone-write-assertions-for-my-contracts?) below.
 
 **Learn More:**
 - [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
@@ -234,13 +234,13 @@ No. We have performed worst-case stress tests, using the most inefficient operat
 - [Architecture - PhEVM](/credible/architecture-overview#phevm-phylax-evm)
 - [Architecture](/credible/architecture-overview)
 
-### How do you extend the validation logic of the sequencer to the dApp?
+### How do you extend the validation logic of the sequencer to the platform?
 
 For OP stack chains, Flashbots introduced a piece of software that enables a sequencer to have an external block-builder that implements custom block-building logic, without changing the sequencer itself. This is also what powers Flashblocks.
 
 For other chains, the exact implementation varries but generally follows the following architecture:
 
-Our custom block builder enables the sequencer to check each transaction against assertions defined by the dApp.
+Our custom block builder enables the sequencer to check each transaction against assertions defined through the platform.
 This requires no changes to contracts as it is effectively middleware.
 
 **Learn More:**
@@ -258,14 +258,14 @@ This way, we ensure that no malicious third party reduces functionality by writi
 
 ### My protocol doesn't support the owner interface, can I still use the Credible Layer?
 
-We are working on more authentication techniques to service dApps with non-traditional ownership architectures. Reach out!
+We are working on more authentication techniques to service protocols with non-traditional ownership architectures. Reach out!
 
 **Learn More:**
 - [Ownership Verification](/credible/ownership-verification)
 
 ### How can you write rules for immutable contracts?
 
-As mentioned above in [How do you extend the validation logic of the sequencer to the dApp?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-dapp), the Credible Layer is functionally middleware as it enables the sequencer to drop transactions that would break the dApp's rules.
+As mentioned above in [How do you extend the validation logic of the sequencer to the platform?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-platform), the Credible Layer is functionally middleware as it enables the sequencer to drop transactions that would break the protocol's rules.
 The Credible Layer will still work with immutable contracts because the prevention happens at the sequencing step, which is where the L2 has ultimate power over transaction inclusion, whether or not they come from immutable contracts.
 
 **Learn More:**
@@ -279,7 +279,7 @@ Short answer: We don't know.
 But here is what we think: If there *is* an owner it communicates that the protocol wants to have some power over the contracts.
 That is why we only allow only the owners of contracts to write assertions.
 
-We will use timelocks on protocols with immutable contracts as many of the users may be using that protocol because it is immutable and would not want to use it any longer if there is anything resembling censorship, even if it is defined and executed by the dApp itself.
+We will use timelocks on protocols with immutable contracts as many of the users may be using that protocol because it is immutable and would not want to use it any longer if there is anything resembling censorship, even if it is configured through the platform itself.
 
 **Learn More:**
 - [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)

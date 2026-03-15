@@ -13,8 +13,8 @@ It is intentionally high-level and does not expose internal endpoints or configu
 title: Public Interface Boundaries
 ---
 flowchart LR
-  CLI[pcl CLI] <--> DappAPI[Credible dApp API]
-  DappUI[Credible dApp UI] <--> Contracts[Credible Layer Contracts]
+  CLI[pcl CLI] <--> DappAPI[Platform API]
+  DappUI[Platform UI] <--> Contracts[Credible Layer Contracts]
   DappUI <--> Indexer[Transparency Indexer]
   Enforcer[Assertion Enforcer] <--> Builder[Block Builder]
   Enforcer <--> Registry["Registry Data<br/>(On-Chain Events)"]
@@ -25,9 +25,9 @@ flowchart LR
 
 | Interface | Depends On | Coordinate With |
 | --- | --- | --- |
-| CLI ↔ dApp API | Assertion submission and auth flows | dApp + CLI maintainers |
-| dApp UI ↔ Contracts | Contract ABI + events | dApp + contracts maintainers |
-| dApp UI ↔ Indexer | GraphQL schema | dApp + indexer maintainers |
+| CLI ↔ Platform API | Assertion submission and auth flows | Platform + CLI maintainers |
+| Platform UI ↔ Contracts | Contract ABI + events | Platform + contracts maintainers |
+| Platform UI ↔ Indexer | GraphQL schema | Platform + indexer maintainers |
 | Enforcer ↔ Block Builder | Transaction validation hook | Network integrators |
 | Enforcer ↔ Registry | Registry events + schema | Network + contracts maintainers |
 | Enforcer ↔ Assertion DA | Bytecode storage API | DA + enforcer maintainers |
@@ -42,5 +42,5 @@ flowchart LR
 
 - [Architecture Overview](/credible/architecture-overview)
 - [Trust Model & Guarantees](/credible/trust-model)
-- [dApp Integration Overview](/credible/dapp-integration)
+- [Platform Integration Overview](/credible/dapp-integration)
 - [Network Integration Overview](/credible/network-integration)

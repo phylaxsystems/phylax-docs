@@ -1,11 +1,11 @@
 ---
-title: 'dApp Overview'
-description: 'Overview of the Credible Layer dApp and its role in the Credible Layer stack'
+title: 'Platform Overview'
+description: 'Overview of the Phylax platform and its role in the Credible Layer stack'
 ---
 
-The Credible Layer dApp is the interface for managing assertions and monitoring incidents. Protocol teams use it to create projects, link contracts, and deploy assertions to protect their contracts. When deploying assertions, teams choose between Staging (for testing) or Production (for active protection). Users, investors, and researchers use it to review which assertions protect specific protocols.
+The [Phylax platform](https://app.phylax.systems) is the interface for managing assertions and monitoring incidents. Protocol teams use it to create projects, link contracts, and deploy assertions to protect their contracts. When deploying assertions, teams choose between Staging (for testing) or Production (for active protection). Users, investors, and researchers use it to review which assertions protect specific protocols.
 
-When you create a project and deploy assertions through the dApp, those assertions are deployed on-chain. Block builders or sequencers use this registry to validate transactions against your assertions before including them in blocks.
+When you create a project and deploy assertions through the platform, those assertions are deployed on-chain. Block builders or sequencers use this registry to validate transactions against your assertions before including them in blocks.
 
 ## Core Components
 
@@ -21,16 +21,16 @@ The [Projects](/credible/dapp-projects) interface enables protocol teams to crea
 
 The [Incidents](/credible/dapp-incidents) page tracks assertion violations that were prevented, showing when transactions were dropped and which assertions caught them.
 
-<Frame caption="Credible dAppLanding Page">
+<Frame caption="Phylax platform landing page">
   <img src="/images/landing_view_transparency.png" alt="Landing Page" />
 </Frame>
 
 ## Authentication
 
-To use project management features, you need to authenticate through [`pcl`](/credible/cli-reference#auth). The dApp uses a `pcl`-based authentication flow with wallet connection to enable secure access.
+To use project management features, you need to authenticate through [`pcl`](/credible/cli-reference#auth). The platform uses a `pcl`-based authentication flow with wallet connection to enable secure access.
 
 <Note>
-Authentication is required to create and manage projects. See the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-1-authenticate) for step-by-step authentication instructions.
+Authentication is required to create and manage projects. Open the platform at [app.phylax.systems](https://app.phylax.systems), then use the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-1-authenticate) for the step-by-step authentication flow.
 </Note>
 
 ## Key Features
@@ -59,7 +59,7 @@ Authentication is required to create and manage projects. See the [Deploy Assert
     Get started with pcl
   </Card>
   <Card title="Authentication" icon="key" href="/credible/deploy-assertions-dapp#step-1-authenticate">
-    Learn how to authenticate with the dApp
+    Learn how to authenticate with the platform
   </Card>
   <Card title="Ownership Verification" icon="shield-check" href="/credible/ownership-verification">
     Understand ownership requirements
@@ -67,7 +67,7 @@ Authentication is required to create and manage projects. See the [Deploy Assert
   <Card title="Manual Verification" icon="shield-check" href="/credible/manual-verification">
     Fallback process for immutable contracts
   </Card>
-  <Card title="Integration Overview" icon="diagram-project" href="/credible/dapp-integration">
+  <Card title="Platform Integration Overview" icon="diagram-project" href="/credible/dapp-integration">
     High-level adoption flow for protocol teams
   </Card>
 </CardGroup>

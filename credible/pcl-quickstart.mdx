@@ -20,7 +20,7 @@ By the end of this tutorial, you will:
 9. Verify that the assertion is working
 
 <Note>
-If you already know the overall flow and only need one task, use the dedicated guides for [installation](./credible-install), [storing and submitting assertions](./store-submit-assertions), or [deployment in the dApp](./deploy-assertions-dapp).
+If you already know the overall flow and only need one task, use the dedicated guides for [installation](./credible-install), [storing and submitting assertions](./store-submit-assertions), or [deployment in the platform](./deploy-assertions-dapp).
 </Note>
 
 ## Prerequisites
@@ -84,8 +84,8 @@ forge script script/DeployOwnable.s.sol --rpc-url <RPC_URL> --sender <DEPLOYER_A
 Explanation of the arguments:
 
 - `<RPC_URL>`: The RPC URL of the network you're deploying to
-- `<PRIVATE_KEY>`: The private key of the account you used to sign in to the dApp
-- `<DEPLOYER_ADDRESS>`: The address of the account you used to sign in to the dApp
+- `<PRIVATE_KEY>`: The private key of the account you used to sign in to the platform
+- `<DEPLOYER_ADDRESS>`: The address of the account you used to sign in to the platform
 
 Make sure to note down the address of the deployed contract as you'll need it to create a project in the next step.
 It will be the `Deployed to:` address in the output of the command.
@@ -114,9 +114,9 @@ If authentication fails, first confirm that your wallet is on the correct networ
 
 ## 5. Create a Project
 
-Once you have deployed your contract, you'll need to create a project in the dApp if you don't have one already. Navigate to the browser window opened by the `pcl auth login` command and create a new project. When asked to link your contract, use the address of the contract you deployed in the previous step.
+Once you have deployed your contract, you'll need to create a project in the platform if you don't have one already. Navigate to [app.phylax.systems](https://app.phylax.systems) and create a new project. When asked to link your contract, use the address of the contract you deployed in the previous step.
 
-For a more detailed overview of how to use the dApp and manage projects, see the [Deploy Assertions guide](./deploy-assertions-dapp).
+For a more detailed overview of how to use the platform and manage projects, see the [Deploy Assertions guide](./deploy-assertions-dapp).
 
 ## 6. Storing Your Assertion
 
@@ -132,7 +132,7 @@ This command submits your assertion's bytecode and source code to be stored by t
 
 ## 7. Submitting Your Assertion
 
-Finally, submit your assertion to the Credible Layer dApp:
+Finally, submit your assertion to the platform:
 
 ```bash
 pcl submit
@@ -146,11 +146,11 @@ Alternatively, you can specify the project and assertion directly as per the out
 pcl submit -a 'OwnableAssertion' -p <project_name>
 ```
 
-Note, that `<project_name>` is the name of the project you created in the dApp, capitalized in the same way as you did when creating the project.
+Note that `<project_name>` is the name of the project you created in the platform, capitalized in the same way as you did when creating the project.
 
 ## 8. Deploying Your Assertion
 
-To finish the tutorial, go to the dApp and deploy the assertion. Go back to the URL that you opened with the `pcl auth login` command and navigate to the project that the assertion was added to.
+To finish the tutorial, open the platform at [app.phylax.systems](https://app.phylax.systems) and navigate to the project that the assertion was added to.
 
 You'll notice that there's one assertion ready for deployment. Go ahead and proceed to review and deploy it. During the review process, you'll choose whether to deploy to **Staging** (for testing) or **Production** (for active protection).
 
@@ -158,7 +158,7 @@ You'll notice that there's one assertion ready for deployment. Go ahead and proc
 After deployment, your assertion enters a timelock period. During this period, it is marked for enforcement (production) or marked for staging (staging environment). After the timelock expires, the assertion becomes enforced (production) or staged (staging), actively protecting your contract. See the [Glossary](./glossary#timelock) for details about timelocks.
 </Note>
 
-For a more detailed overview of how to use the dApp, see the [Deploy Assertions guide](./deploy-assertions-dapp).
+For a more detailed overview of how to use the platform, see the [Deploy Assertions guide](./deploy-assertions-dapp).
 
 ## 9. Verify That The Assertion Is Working
 

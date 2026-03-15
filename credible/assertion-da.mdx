@@ -41,7 +41,7 @@ The current implementation is operated by Phylax Systems with a highly available
 
 - **Storage**: Off-chain server stores assertion bytecode and source code
 - **Access**: Publicly accessible for transparency and verification
-- **Integration**: Works with [`pcl`](/credible/glossary#pcl-cli) and the [Credible dApp](/credible/glossary#credible-dapp). See the [Architecture Overview](/credible/architecture-overview) for details.
+- **Integration**: Works with [`pcl`](/credible/glossary#pcl-cli) and the [Phylax platform](https://app.phylax.systems). See the [Architecture Overview](/credible/architecture-overview) for details.
 - **Roadmap**: Decentralization planned for 2026
 
 ## How It Works
@@ -79,7 +79,7 @@ The complete flow from assertion development to enforcement involves multiple st
 
 1. **Development**: Write and test assertions locally using `pcl`
 2. **Storage**: Store assertion bytecode in Assertion DA using `pcl store`, which returns the assertion ID
-3. **Submission**: Submit the assertion ID to your project in the [Credible dApp](/credible/glossary#credible-dapp) using `pcl submit`
+3. **Submission**: Submit the assertion ID to your project in the [Phylax platform](https://app.phylax.systems) using `pcl submit`
 4. **Deployment**: Review the assertion, link it to specific contract addresses, choose Staging or Production environment, and sign the transaction to deploy it on-chain
 5. **Marked for Enforcement/Staging**: During the timelock period, the assertion is marked for enforcement (production) or marked for staging (staging environment)
 6. **Enforced/Staged**: After the timelock expires, Assertion Enforcers fetch assertions from Assertion DA and execute them during block production. Assertions become enforced or staged
