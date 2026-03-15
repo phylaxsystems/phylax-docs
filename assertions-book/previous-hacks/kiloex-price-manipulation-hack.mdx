@@ -5,7 +5,7 @@ description: Access control vulnerability in price oracle implementation led to 
 
 import ass28IntraTxOracleDeviation from "/snippets/ass28-intra-tx-oracle-deviation.a.mdx";
 
-## Description
+## What Happened
 
 Background: https://x.com/SlowMist_Team/status/1911991384254402737
 
@@ -43,7 +43,7 @@ The vulnerability stemmed from a critical access control flaw in KiloEx's price 
 - The entire access control chain relied on each component trusting the next
 - The protocol had been audited 5 times since June 2023, but the vulnerability remained undetected
 
-## Prevention Assertions
+## Assertion Pattern
 
 ### Price Deviation Assertion
 

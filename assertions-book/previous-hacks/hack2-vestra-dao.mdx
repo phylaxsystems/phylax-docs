@@ -3,7 +3,7 @@ title: Vestra DAO Hack
 description: Unchecked isActive flag in maturity
 ---
 
-## Overview
+## What Happened
 In December 2024, VestraDAO was hacked. The hacker exploited a vulnerability in the `unStake` function which allowed users to stake and unstake without waiting for the maturity period.
 For an in-depth analysis of the hack, you can read this [post](https://x.com/_czepluch/status/1866112404242743590).
 
@@ -13,14 +13,14 @@ This resulted in an attacker being able to repeatedly call `unStake` and get add
 It should be noted that there were no tests for the code base and the code was not audited. However, with an assertion it would be possible to patch the vulnerability until a new version of the code is deployed.
 The assertion would simply check if the `isActive` flag is `false` before calling the `unStake` function.
 
-## Use Case
+## Why This Matters
 In this hack, a simple require statement would have been enough to prevent the vulnerability. Usually, a contract redeployment is needed to fix a vulnerability like this.
 With an assertion, it is possible to patch this directly and make sure that all calls to the `unStake` function check the `isActive` flag.
 
 This is a very powerful concept and can be useful in many situations. Imagine a security researcher reports a vulnerability in a protocol before anyone has exploited it. 
 In that case the protocol can publish an assertion that guards against the vulnerability until the team has had the time to fix the vulnerability in the best way possible.
 
-## Assertion
+## Assertion Pattern
 This assertions checks if the `isActive` flag is `false` before calling the `unStake` function if it's false the transaction will not be included in the block.
 Alternatively, there could be an assertion that checks that the `totalStaked` is always equal to the sum of all `stakeAmount` in the `stakes` mapping. 
 This would require a way to iterate over all the stakes and sum them up, which is not yet supported by a cheatcode.

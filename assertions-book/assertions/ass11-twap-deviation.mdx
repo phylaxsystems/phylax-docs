@@ -5,13 +5,13 @@ description: Assert that the TWAP price doesn't deviate more than X% from the pr
 
 import ass11TwapDeviation from "/snippets/ass11-twap-deviation.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Prevents TWAP (Time-Weighted Average Price) price manipulation by ensuring oracle prices don't deviate more than X% from pre-state TWAP prices. Critical for AMMs and DEXs (price discovery), lending protocols (collateral valuation), yield aggregators (rebalancing), options protocols (settlement), and cross-chain bridges (asset pricing).
 
 Sudden price deviations could indicate manipulation through flash loan attacks or oracle failures, potentially leading to protocol insolvency or fund extraction.
 
-## Explanation
+## What This Pattern Checks
 
 Monitors TWAP price changes using a two-stage approach to ensure price stability:
 
@@ -23,12 +23,12 @@ The assertion verifies both the final price and any intermediate price updates a
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass11TwapDeviation />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Intra-tx Oracle Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation)
 - [Liquidation Health Factor](/assertions-book/assertions/ass16-liquidation-health-factor)

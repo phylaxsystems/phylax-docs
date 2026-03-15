@@ -5,13 +5,13 @@ description: 'Make sure that the balance increases after a harvest'
 
 import ass18HarvestIncreasesBalance from "/snippets/ass18-harvest-increases-balance.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Ensures harvest operations in yield farming protocols maintain integrity by preventing balance decreases and price per share manipulation. Critical for yield farming protocols (Beefy, Yearn, Harvest), liquidity mining programs, staking protocols with reward distribution, and auto-compounding vaults.
 
 Incorrect harvest implementations could lead to loss of user funds, price per share manipulation enabling flash loan attacks, or protocol insolvency through improper reward distribution.
 
-## Explanation
+## What This Pattern Checks
 
 Implements multi-layered approach to verify harvest operations:
 
@@ -26,13 +26,13 @@ The assertion verifies each balance change is valid relative to previous state, 
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass18HarvestIncreasesBalance />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
 - [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
 - [Price Within Ticks](/assertions-book/assertions/ass15-price-within-ticks)

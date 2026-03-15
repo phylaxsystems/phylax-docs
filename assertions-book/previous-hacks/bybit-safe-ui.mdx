@@ -3,7 +3,7 @@ title: Bybit - Compromised Safe Wallet UI
 description: Safe Wallet UI was compromised by gaining access to the host machine.
 ---
 
-## Description
+## What Happened
 
 Bybit suffered from a security breach in Safe's hosting infrastructure losing 1.4bn USD.
 
@@ -25,7 +25,7 @@ software or hardware wallets.
 3. The frontend would show the intended transaction but in fact the message to be signed was malicious
 4. The malicious message was a delegate call which would change the implementation of the Safe's proxycontract
 
-## How assertions could have prevented this
+## Assertion Pattern
 
 In Safe's proxy implementation, the first storage slot is the implementation address.
 
@@ -53,7 +53,7 @@ It should be highlighted that even if there is no logic to change the implemenat
 implementation by safe, delegate calls can modify storage slots of the calling contract.
 This allows for full flexibility but opens up the possibility for attacks.
 
-### Preventing attacks through assertions
+### How the Assertion Would Have Prevented It
 
 It might be fair to assume that most users of safes would never actually want to change the
 implementation address of their safe, but they have no way to express their preferences.

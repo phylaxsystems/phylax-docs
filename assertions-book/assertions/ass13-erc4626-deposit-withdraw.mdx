@@ -6,13 +6,13 @@ description: Ensure that ERC4626 operations maintain correct accounting
 import ass13Erc4626DepositWithdraw from "/snippets/ass13-erc4626-deposit-withdraw.a.mdx";
 import ass2Erc4626Operations from "/snippets/ass2-erc4626-operations.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Ensures ERC4626 operations maintain correct accounting for both assets and shares, preventing share calculation errors and fund loss. Critical for yield aggregators (Yearn, Aave, Compound), lending protocols with ERC4626 interest-bearing tokens, liquidity pools using ERC4626 for LP tokens, and staking protocols with ERC4626 staking tokens.
 
 Any discrepancy between preview functions and actual operations could lead to users receiving incorrect amounts, potentially resulting in value loss.
 
-## Focused Approach: Deposit & Withdraw
+## Pattern Variant 1: Deposit and Withdraw
 
 Five assertion functions for deposit/withdrawal verification:
 
@@ -31,7 +31,7 @@ Uses `ph.getCallInputs()`, `ph.forkPreTx()` / `ph.forkPostTx()`, and `registerCa
 
 <ass13Erc4626DepositWithdraw />
 
-## Comprehensive Approach: All Operations + Batch Handling
+## Pattern Variant 2: Full ERC4626 Operation Coverage
 
 Use this approach when your protocol:
 - Uses mint/redeem in addition to deposit/withdraw
@@ -51,7 +51,7 @@ Uses both `registerCallTrigger()` and `registerStorageChangeTrigger()`.
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 
 - [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares) — simple base invariant check
 - [Harvest Increases Balance](/assertions-book/assertions/ass18-harvest-increases-balance) — yield operation validation

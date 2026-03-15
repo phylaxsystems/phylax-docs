@@ -7,13 +7,13 @@ Cream Finance suffered a 130M USD hack in October 2021.
 
 Detailed Analysis: https://mudit.blog/cream-hack-analysis/
 
-## Description
+## What Happened
 
 The attack stem from a sudden price manipulation of a supported asset (yUSDVault) in the protocol.
 The attacker built up leveraged positions and then manipulated the price of the asset by donating
 the underlying into the yUSDVault.
 
-# Solution
+## Assertion Pattern
 
 One possible solution is to check price deviations from touched assets in the protocol during the transaction.
 This would avoid flashloan price manipulation attacks.

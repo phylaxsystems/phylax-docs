@@ -3,11 +3,11 @@ title: UxLink Multisig Ownership Compromise
 description: Compromised private keys led to \$10M+ drain from UxLink multisig through threshold manipulation and owner replacement
 ---
 
-## Description
+## What Happened
 
 On September 22, 2025, UxLink's multisig was compromised through private key theft, resulting in \$11.3M direct theft plus unauthorized minting of 10 trillion tokens worth ~\$28M. Attackers manipulated the multisig configuration to drain funds and gain token minting privileges.
 
-## Core Vulnerability Mechanism
+## Why It Worked
 
 The attack exploited two weaknesses:
 
@@ -38,7 +38,7 @@ Used multisig control to mint unlimited UXLINK tokens, causing a price crash and
 3. **No Rate Limiting**: Multisig changes executed immediately without cooling periods
 4. **Missing Access Controls**: No whitelisting for owner changes
 
-## Proposed Solution
+## Assertion Pattern
 
 Multisig protection assertions could have prevented this attack by enforcing governance invariants:
 
@@ -144,7 +144,7 @@ contract UxLinkMultisigProtectionAssertion is Assertion {
 Assertions cannot track state across transactions (e.g., cooling periods). The original attack used rapid sequential transactions, which would require off-chain monitoring or timelocked governance contracts to fully prevent. However, the assertions above still provide strong protection by enforcing minimum thresholds and owner whitelisting.
 </Note>
 
-### How These Assertions Prevent the Attack
+### How the Assertions Would Have Prevented It
 
 **What they do:**
 1. **Threshold Protection**: Prevents threshold from dropping below a safe minimum (e.g., 2)
@@ -160,7 +160,7 @@ Assertions cannot track state across transactions (e.g., cooling periods). The o
 
 **Key insight**: While these assertions can't prevent private key compromise or enforce time delays between transactions, they establish hard boundaries that attackers cannot cross regardless of how many keys they control.
 
-## Key Takeaway
+## Key Takeaways
 
 The UxLink attack shows that multisig security requires both operational security (private key protection) and protocol-level protections (configuration validation). The \$39.3M total impact (\$11.3M direct + \$28M token minting) demonstrates how compromised private keys can lead to complete protocol takeover when governance controls are missing.
 

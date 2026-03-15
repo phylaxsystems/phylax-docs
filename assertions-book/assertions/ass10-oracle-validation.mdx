@@ -5,16 +5,16 @@ description: Assert that an oracle is updated within a specified time window
 
 import ass10OracleLiveness from "/snippets/ass10-oracle-liveness.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Ensures oracle data is fresh and updated within an acceptable time window, preventing the use of stale price data that could lead to incorrect valuations and financial losses. Critical for lending protocols (collateral valuation, liquidations), DEXs (price discovery, arbitrage detection), yield farming protocols (reward calculations), insurance protocols (premium calculations), and options/derivatives protocols (settlement).
 
 Stale oracle data can indicate service disruption or attacks on oracle infrastructure, potentially leading to significant protocol vulnerabilities.
 
-### Related Hacks
+### Related Case Studies
 - [Loopscale](https://rekt.news/loopscale-rekt): Hack caused by a stale oracle. It was on Solana, so not relevant to Credible Layer, but the same idea applies.
 
-## Explanation
+## What This Pattern Checks
 
 Monitors oracle timestamp updates when critical protocol functions are called:
 
@@ -26,11 +26,11 @@ Upon functions that rely on oracle data, the assertion ensures transactions only
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass10OracleLiveness />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Oracle Price Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation)

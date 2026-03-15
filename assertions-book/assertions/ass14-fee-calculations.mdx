@@ -5,13 +5,13 @@ description: 'Make sure that the fees do not change unexpectedly'
 
 import ass14FeeVerification from "/snippets/ass14-fee-verification.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Prevents unauthorized fee manipulation in AMMs and DeFi protocols by using a whitelist approach to control fee changes. Critical for AMMs (Velodrome, Aerodrome, Curve), DEX aggregators, lending protocols with origination fees, yield aggregators with performance fees, and cross-chain bridges with transfer fees.
 
 Unexpected fee changes can lead to unauthorized manipulation, protocol revenue loss, user losses, or market manipulation through fee bypasses.
 
-## Explanation
+## What This Pattern Checks
 
 Uses a whitelist approach to control fee changes:
 
@@ -24,11 +24,11 @@ When triggered, verifies the new fee matches one of the allowed values, preventi
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass14FeeVerification />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Price Within Ticks](/assertions-book/assertions/ass15-price-within-ticks)

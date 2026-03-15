@@ -5,13 +5,13 @@ description: Assert that the owner of a contract has not changed unexpectedly
 
 import ass5OwnerChange from "/snippets/ass5-owner-change.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Prevents unauthorized ownership transfers, which could allow attackers to take complete control of the protocol. Critical for DeFi protocols with owner-controlled administrative functions, lending protocols, yield aggregators, cross-chain bridges, and governance systems.
 
 For example, in the [Radiant Capital hack](/assertions-book/previous-hacks/hack1-radiant-capital), the attacker gained control over 3 signers of the multisig, which allowed them to change ownership of the lending pools and ultimately drain the protocol. This assertion would have prevented such an attack.
 
-## Explanation
+## What This Pattern Checks
 
 Monitors changes to the owner address storage slot in contracts using:
 
@@ -23,12 +23,12 @@ The assertion performs both direct pre/post comparison and verification of all i
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass5OwnerChange />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)
 - [Timelock Verification](/assertions-book/assertions/ass09-timelock-verification)

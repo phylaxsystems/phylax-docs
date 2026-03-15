@@ -5,13 +5,13 @@ description: 'Make sure that liquidations can only happen if the position is unh
 
 import ass16LiquidationHealthFactor from "/snippets/ass16-liquidation-health-factor.a.mdx";
 
-## Use Case & Applications
+## When to Use This Pattern
 
 Ensures liquidations only occur when positions are unhealthy, preventing unauthorized liquidations of healthy positions and protecting user funds. Critical for lending protocols (Aave, Compound, Morpho), margin trading platforms with position health monitoring, perpetual futures protocols with liquidation mechanisms, and any DeFi protocol using health factors for position solvency.
 
 Incorrect health factor validation could lead to unfair liquidations, protocol insolvency, or market manipulation through targeted liquidations.
 
-## Explanation
+## What This Pattern Checks
 
 Implements multi-layered liquidation health factor verification:
 
@@ -24,12 +24,12 @@ The assertion ensures only unhealthy positions can be liquidated, liquidations i
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
-## Code Example
+## Assertion Pattern
 
 <ass16LiquidationHealthFactor />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 
-## Related Assertions
+## Related Patterns
 - [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
 - [Lending Health Factor](/assertions-book/assertions/ass07-lending-health-factor)

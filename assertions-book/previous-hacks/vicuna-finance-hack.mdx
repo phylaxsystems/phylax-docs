@@ -3,7 +3,7 @@ title: Vicuna Finance Oracle Manipulation Hack
 description: Vicuna Finance lost $700K due to LP token oracle manipulation that ignored invariant-based pricing
 ---
 
-## Description
+## What Happened
 
 The Vicuna Finance hack resulted in a $700K loss through oracle manipulation of Beets LP tokens used as collateral on the Sonic chain. The Core Bug was that LP tokens were priced using a simple sum formula: `price_lp = price_token1 * amount_token1 + price_token0 * amount_token0` instead of fair pricing that accounts for the underlying pool's constant product formula.
 
@@ -14,7 +14,7 @@ The Vicuna Finance hack resulted in a $700K loss through oracle manipulation of 
 
 The attack was executed across two markets - the `$S` market and the stablecoin market - draining approximately $700K in total. The fundamental issue was that the oracle treated LP tokens like regular assets without considering that their value should reflect extractable value, not just the sum of underlying token values.
 
-## Proposed Solution
+## Assertion Pattern
 
 A targeted price deviation check on all calls could have prevented this oracle manipulation attack. The assertion function monitors how each call affects oracle prices and reverts if any single call causes price swings exceeding 5%:
 
@@ -38,7 +38,7 @@ function assertPriceDeviation() external view {
 }
 ```
 
-## How This Assertion Prevents the Exploit
+## How the Assertion Would Have Prevented It
 
 This assertion function detects oracle price manipulation by monitoring how each call affects prices.
 

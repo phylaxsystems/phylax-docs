@@ -3,7 +3,7 @@ title: Abracadabra Rounding Error Attack
 description: Rounding error in Abracadabra protocol allowed attacker to inflate base value without corresponding adjustment of elastic value
 ---
 
-## Description
+## What Happened
 
 The vulnerability stems from an intricate implementation of a RebaseToken mechanism in the Abracadabra protocol:
 
@@ -35,7 +35,7 @@ The vulnerability stems from an intricate implementation of a RebaseToken mechan
 - With base set to infinite, the attacker's debt ratio becomes negligible
 
 
-## Proposed Solution
+## Assertion Pattern
 
 Assuming the original implementation was well-intentioned but flawed, a simple invariant check could have prevented the attack.
 
