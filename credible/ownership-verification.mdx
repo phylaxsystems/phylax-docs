@@ -1,11 +1,13 @@
 ---
 title: 'Ownership Verification'
-description: 'Understanding ownership verification requirements for the Credible Layer'
+description: 'Understand how the Credible Layer determines who is allowed to manage assertions for a contract'
 ---
 
-# Ownership Verification
-
 The Credible Layer uses admin verifier modules to determine who can deploy assertions for a contract. Most deployments use owner-based verification by default. This design will continue to expand with additional ownership patterns.
+
+<Note>
+This page explains the ownership model. If your contracts do not fit the default verifier and you need the process for getting approved, use [Manual Verification](./manual-verification).
+</Note>
 
 ## Current Implementation
 
@@ -34,7 +36,7 @@ High-level requirements and signals include:
 
 After approval, the protocol admin address is added to the registry and a timelock begins before assertions can be deployed. Protocols can also opt out of registry additions if they do not want assertions attached to their contracts.
 
-See [Manual Verification](/credible/manual-verification) for the full process and requirements.
+See [Manual Verification](./manual-verification) for the full process and requirements.
 
 ## Future Development
 
@@ -48,7 +50,7 @@ These improvements will be implemented in future versions of the Credible Layer.
 
 ## Next Steps
 
-- [Quickstart Guide](/credible/pcl-quickstart) - Get started with the Credible Layer
-- [Assertion Guide](/credible/write-first-assertion) - Learn how to write assertions
-- [Deploy Assertions](/credible/deploy-assertions-dapp) - Learn how to deploy assertions
-- [FAQ](/credible/faq) - Find answers to common questions
+- [Quickstart Guide](./pcl-quickstart) - Get started with the Credible Layer
+- [Assertion Guide](./write-first-assertion) - Learn how to write assertions
+- [Deploy Assertions](./deploy-assertions-dapp) - Learn how to deploy assertions
+- [FAQ](./faq) - Find answers to common questions
