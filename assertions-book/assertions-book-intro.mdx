@@ -1,21 +1,35 @@
 ---
-title: Introduction to the Assertions Book
-description: Resource for assertion use cases and patterns
+title: Using the Assertions Book
+description: Learn how to use the Assertions Book as a catalog of assertion patterns and a set of exploit case studies
 ---
 
-This resource is a collection of use cases and patterns for assertions. The goal is to show how assertions can be used to prevent hacks and vulnerabilities in smart contracts and protocols.
-The content of the book is a great source for inspiration for how to write assertions for your own use cases and protocols.
+The Assertions Book has two jobs:
 
-The book consists of two main parts: **assertions** that demonstrate specific assertion patterns and examples, and **previous hacks** that show how assertions could have prevented real-world exploits. Each entry shows code snippets of assertions accompanied by minimal interfaces for the protocols they protect.
+- **Reference**: a catalog of reusable assertion patterns you can adapt to your own protocol
+- **Explanation**: case studies that explain how real exploits worked and why specific assertions would have blocked them
+
+Use this section when you want examples and inspiration. If you want a guided path for writing and deploying assertions, start in the [Credible Layer docs](../credible/credible-introduction).
+
+Each entry shows code snippets of assertions accompanied by minimal interfaces for the protocols they protect.
 
 Full examples that include mock protocol code and test cases are available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples).
 
-## Getting Started
-It's a good idea to check out the two links below to get started with assertions, but it's not required to understand the content of the book.
+## How to Use This Book
 
-- Learn all about assertions in the [Assertion Guide](/credible/write-first-assertion)
-- Follow the [`pcl` Quickstart Guide](/credible/pcl-quickstart) to set up your own assertions project
-- Check the [PhEVM Cheatcodes Reference](/credible/cheatcodes-reference) for available assertion tools
+<CardGroup cols={2}>
+  <Card title="Browse Assertion Patterns" icon="book-open" href="./assertions/use-cases-index">
+    Use the reference catalog when you already know the type of risk you want to cover.
+  </Card>
+  <Card title="Study Real Exploits" icon="bug" href="./previous-hacks/prev-hacks-index">
+    Use the case studies when you want to understand why an exploit worked and what assertion would have stopped it.
+  </Card>
+  <Card title="See Full Protocol Suites" icon="sitemap" href="./assertions/aave-v3-suite">
+    Review deeper examples that show how assertion coverage can be shaped for a real protocol.
+  </Card>
+  <Card title="Start Building" icon="rocket" href="../credible/pcl-quickstart">
+    Leave the book and follow a tutorial when you want to build your own assertion from scratch.
+  </Card>
+</CardGroup>
 
 If you have questions or issues, please reach out on telegram [@phylax_credible_layer](https://t.me/phylax_credible_layer).
 
@@ -25,19 +39,22 @@ If you think an assertion is missing, please don't hesitate to open a PR or reac
 
 This book is organized into three sections:
 
-### Part 1: Real World Protocols
-Complete assertion suites for production protocols. These examples show how to protect real-world systems with comprehensive assertion coverage.
+### Part 1: Protocol Case Studies
 
-**[View real world protocol suites →](/assertions-book/assertions/aave-v3-suite)**
+Explanation pages that show how comprehensive assertion coverage can be designed for real systems.
+
+**[View real world protocol suites →](./assertions/aave-v3-suite)**
 
 ### Part 2: Previous Hacks
-Analysis of real-world DeFi hacks and how assertions could have prevented them. These case studies show how assertions catch vulnerabilities that slip through audits and testing.
 
-**[View the previous hacks analysis →](/assertions-book/previous-hacks/)**
+Explanation pages that analyze real-world DeFi hacks and show how assertions could have prevented them.
 
-### Part 3: General Use Cases
-Curated assertion patterns organized by security category. These examples demonstrate proactive security measures you can implement to protect your protocols.
+**[View the previous hacks analysis →](./previous-hacks/)**
 
-**[View the complete use cases catalog →](/assertions-book/assertions/)**
+### Part 3: Assertion Patterns
+
+Reference pages that catalog reusable assertion patterns by security category.
+
+**[View the complete use cases catalog →](./assertions/)**
 
 All sections include assertion code examples, explanations of the vulnerability or pattern being addressed, and minimal protocol interfaces for context.
