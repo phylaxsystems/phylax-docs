@@ -105,7 +105,11 @@ After submitting via `pcl`, complete deployment in the platform:
 </Frame>
 
 <Note>
-After deployment, your assertion enters a [timelock](/credible/glossary#timelock) period. Once the timelock expires, the assertion becomes actively enforced.
+Adding an assertion is not immediate. The deployment transaction registers it in the on-chain [State Oracle](./credible-layer-contracts#state-oracle), and the State Oracle enforces a configured [timelock](./glossary#timelock) before the assertion becomes staged or enforced.
+</Note>
+
+<Note>
+The same model applies when you remove an assertion later. Removal is also scheduled through the State Oracle contracts and only takes effect after that configured timelock expires.
 </Note>
 
 ## Step 5: Monitor Your Assertions
@@ -116,7 +120,7 @@ After deployment, manage assertions through your project dashboard:
 - **Monitor Status**: Check assertion execution and triggered violations
 - **View Incidents**: View incidents that were prevented by assertions
 - **Update Assertions**: Submit new versions as your protocol evolves
-- **Remove Assertions**: Deactivate assertions when needed
+- **Remove Assertions**: Request removal when needed; the assertion remains active until the State Oracle timelock finishes
 
 ## Troubleshooting
 

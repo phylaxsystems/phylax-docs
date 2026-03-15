@@ -5,7 +5,9 @@ description: 'Overview of the Phylax platform and its role in the Credible Layer
 
 The [Phylax platform](https://app.phylax.systems) is the interface for managing assertions and monitoring incidents. Protocol teams use it to create projects, link contracts, and deploy assertions to protect their contracts. When deploying assertions, teams choose between Staging (for testing) or Production (for active protection). Users, investors, and researchers use it to review which assertions protect specific protocols.
 
-When you create a project and deploy assertions through the platform, those assertions are deployed on-chain. Block builders or sequencers use this registry to validate transactions against your assertions before including them in blocks.
+When you create a project and deploy assertions through the platform, those assertions are deployed on-chain. The platform is the control surface, but the on-chain [State Oracle](./credible-layer-contracts#state-oracle) contracts are the source of truth for which assertions are attached to which contracts and when they become active.
+
+Adding an assertion or removing one is not instantaneous. Both operations pass through a configured timelock enforced by the State Oracle contracts before the change takes effect.
 
 ## Core Components
 

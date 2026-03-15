@@ -59,7 +59,7 @@ pcl store MyAssertion
 2. Uploads flattened source code and compiler options to Assertion DA
 3. Returns the assertion ID (Keccak256 hash of the bytecode) and DA prover signature
 
-Only authorized admins can deploy, modify, or remove assertions for their contracts. This is enforced on-chain by the Credible Layer smart contracts, which verify administrative authority (such as owner-based checks) before allowing assertion management operations. Ownership verification will be expanded and improved in future versions to support additional ownership patterns. See [Ownership Verification](/credible/ownership-verification) for details.
+Only authorized admins can deploy, modify, or remove assertions for their contracts. This is enforced on-chain by the Credible Layer smart contracts, which verify administrative authority (such as owner-based checks) before allowing assertion management operations. The on-chain State Oracle contracts also enforce the configured timelock for both adding and removing assertions. Ownership verification will be expanded and improved in future versions to support additional ownership patterns. See [Ownership Verification](/credible/ownership-verification) for details.
 
 ### Retrieving Assertions
 
@@ -81,8 +81,10 @@ The complete flow from assertion development to enforcement involves multiple st
 2. **Storage**: Store assertion bytecode in Assertion DA using `pcl store`, which returns the assertion ID
 3. **Submission**: Submit the assertion ID to your project in the [Phylax platform](https://app.phylax.systems) using `pcl submit`
 4. **Deployment**: Review the assertion, link it to specific contract addresses, choose Staging or Production environment, and sign the transaction to deploy it on-chain
-5. **Marked for Enforcement/Staging**: During the timelock period, the assertion is marked for enforcement (production) or marked for staging (staging environment)
+5. **Marked for Enforcement/Staging**: After the add transaction is accepted on-chain, the State Oracle timelock begins. During that period, the assertion is marked for enforcement (production) or marked for staging (staging environment)
 6. **Enforced/Staged**: After the timelock expires, Assertion Enforcers fetch assertions from Assertion DA and execute them during block production. Assertions become enforced or staged
+
+If you later remove the assertion, that removal is also delayed by the configured State Oracle timelock before the assertion stops applying to transactions.
 
 For a detailed view of how these components interact, see the [System Architecture](/credible/architecture-overview#system-architecture) section in the Architecture Overview.
 

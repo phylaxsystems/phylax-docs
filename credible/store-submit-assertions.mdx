@@ -78,6 +78,10 @@ After submitting, complete deployment in the [Phylax platform](https://app.phyla
 4. Select the target contract and environment (Staging or Production)
 5. Click "Deploy" and sign the transaction
 
+<Note>
+Submitting through `pcl` does not make the assertion active by itself. The assertion becomes active only after you deploy it through the platform and the configured timelock in the on-chain State Oracle contracts expires. Removals follow the same State Oracle timelock flow.
+</Note>
+
 ## Troubleshooting
 
 ### Authentication Issues

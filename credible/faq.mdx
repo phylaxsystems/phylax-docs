@@ -293,7 +293,7 @@ When deploying assertions, you can choose between two environments:
 
 - **Production**: The real chain environment where assertions actively prevent hacks. In production, transactions that violate assertions are dropped before they can execute, protecting protocols from exploits. After the timelock period, assertions become "enforced".
 
-Both environments require a timelock period before assertions become active. During the timelock, assertions are marked for enforcement (production) or marked for staging (staging environment).
+Both environments require a timelock period before assertions become active. That timelock is enforced by the on-chain State Oracle contracts. During the timelock, assertions are marked for enforcement (production) or marked for staging (staging environment).
 
 **Learn More:**
 - [Glossary - Staging](/credible/glossary#staging)
@@ -302,7 +302,7 @@ Both environments require a timelock period before assertions become active. Dur
 
 ### How long is the timelock period?
 
-The timelock period exists for two reasons: (1) to provide latency for the enforcer to index on-chain state and prepare for enforcement, and (2) to give users time to expect changes to protocol behavior. The exact duration may vary, but the timelock ensures that assertions don't become active immediately after deployment, giving all parties time to prepare.
+The timelock period exists for two reasons: (1) to provide latency for the enforcer to index on-chain state and prepare for enforcement, and (2) to give users time to expect changes to protocol behavior. The exact duration may vary because it is configured on the State Oracle smart contracts. The same model applies when assertions are removed: the change is scheduled on-chain first, then only takes effect after the configured timelock expires.
 
 **Learn More:**
 - [Glossary - Timelock](/credible/glossary#timelock)
