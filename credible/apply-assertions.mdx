@@ -1,16 +1,16 @@
 ---
 title: 'Apply Assertions'
-description: 'Configure and deploy assertions to the platform using `pcl apply`'
+description: 'Configure assertions and create a release on the platform using `pcl apply`'
 ---
 
-This guide walks you through configuring your assertions in `credible.toml` and deploying them to the platform with `pcl apply`.
+This guide walks you through configuring your assertions in `credible.toml` and creating a release on the platform with `pcl apply`.
 
 **Prerequisites**:
 - [pcl installed](/credible/credible-install)
 - An assertion [written](/credible/write-first-assertion) and [tested](/credible/testing-assertions)
 - A [project created](/credible/deploy-assertions-dapp#step-2-create-a-project) in the platform
 
-**What you'll do**: Authenticate, configure `credible.toml`, and deploy your assertions.
+**What you'll do**: Authenticate, configure `credible.toml`, and create a release. Then review and deploy it in the platform.
 
 ## Step 1: Authenticate
 
@@ -77,7 +77,7 @@ Set `project_id` in your `credible.toml` to skip the interactive project selecti
 
 ## Step 3: Apply Your Assertions
 
-Deploy your assertions to the platform:
+Create a release on the platform:
 
 ```bash
 pcl apply
@@ -109,7 +109,7 @@ After applying, complete deployment in the [Phylax platform](https://app.phylax.
 5. Click "Deploy" and sign the transaction
 
 <Note>
-Applying through `pcl` does not make the assertion active by itself. The assertion becomes active only after you deploy it through the platform and the configured timelock in the on-chain State Oracle contracts expires. Removals follow the same State Oracle timelock flow.
+Creating a release through `pcl apply` does not make the assertion active by itself. The assertion becomes active only after you deploy it through the platform and the configured timelock in the on-chain State Oracle contracts expires. Removals follow the same State Oracle timelock flow.
 </Note>
 
 ## Troubleshooting
