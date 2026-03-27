@@ -75,17 +75,24 @@ Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 648.17ms (1.11s CPU
 
 ## 3. Deploy Your Contract
 
-You can deploy the Ownable contract using the following command:
+First, import your private key into an encrypted Foundry keystore so you never have to expose it as an environment variable:
 
 ```bash
-forge script script/DeployOwnable.s.sol --rpc-url <RPC_URL> --sender <DEPLOYER_ADDRESS> --private-key <PRIVATE_KEY> --broadcast
+cast wallet import <account_name> --interactive
+```
+
+You'll be prompted to paste your private key and set a password. Foundry stores the encrypted key locally and will prompt for the password when you sign transactions.
+
+Now deploy the Ownable contract:
+
+```bash
+forge script script/DeployOwnable.s.sol --rpc-url <RPC_URL> --account <account_name> --broadcast
 ```
 
 Explanation of the arguments:
 
 - `<RPC_URL>`: The RPC URL of the network you're deploying to
-- `<PRIVATE_KEY>`: The private key of the account you used to sign in to the platform
-- `<DEPLOYER_ADDRESS>`: The address of the account you used to sign in to the platform
+- `<account_name>`: The name you chose when importing your key above
 
 Make sure to note down the address of the deployed contract as you'll need it to create a project in the next step.
 It will be the `Deployed to:` address in the output of the command.
@@ -172,10 +179,10 @@ cast call <ADDRESS_OF_OWNABLE_CONTRACT> "owner()" --rpc-url <RPC_URL>
 
 This command should return the initial owner address that was set when we deployed the contract.
 
-Next, let's attempt to transfer ownership to a new address. Make sure you replace `NEW_OWNER_ADDRESS` with an address that is not the initial owner and `PRIVATE_KEY_OF_THE_OWNER` with the private key of the owner of the contract. This transaction should cause the assertion to revert, which will result in the transaction being dropped:
+Next, let's attempt to transfer ownership to a new address. Make sure you replace `NEW_OWNER_ADDRESS` with an address that is not the initial owner. This transaction should cause the assertion to revert, which will result in the transaction being dropped:
 
 ```bash
-cast send <ADDRESS_OF_OWNABLE_CONTRACT> "transferOwnership(address)" <NEW_OWNER_ADDRESS> --rpc-url <RPC_URL> --private-key <PRIVATE_KEY_OF_THE_OWNER>
+cast send <ADDRESS_OF_OWNABLE_CONTRACT> "transferOwnership(address)" <NEW_OWNER_ADDRESS> --rpc-url <RPC_URL> --account <account_name>
 ```
 
 The transaction should timeout, which means that the assertion reverted and the transaction was dropped:
