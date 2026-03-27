@@ -1,6 +1,6 @@
 ---
 title: 'Quickstart Tutorial'
-description: 'Tutorial: write, submit, and deploy your first assertion with `pcl`'
+description: 'Tutorial: write, test, and deploy your first assertion with `pcl`'
 ---
 
 ## Introduction
@@ -14,13 +14,13 @@ By the end of this tutorial, you will:
 3. Deploy your contract
 4. Authenticate with `pcl`
 5. Create a project
-6. Store your assertion
-7. Submit your assertion to the Credible Layer
-8. Deploy your assertion
+6. Configure `credible.toml`
+7. Deploy your assertion with `pcl apply`
+8. Review and activate your assertion
 9. Verify that the assertion is working
 
 <Note>
-If you already know the overall flow and only need one task, use the dedicated guides for [installation](./credible-install), [storing and submitting assertions](./store-submit-assertions), or [deployment in the platform](./deploy-assertions-dapp).
+If you already know the overall flow and only need one task, use the dedicated guides for [installation](./credible-install), [applying assertions](./apply-assertions), or [deployment in the platform](./deploy-assertions-dapp).
 </Note>
 
 ## Prerequisites
@@ -94,7 +94,7 @@ Explanation of the arguments:
 - `<RPC_URL>`: The RPC URL of the network you're deploying to
 - `<account_name>`: The name you chose when importing your key above
 
-Make sure to note down the address of the deployed contract as you'll need it to create a project in the next step.
+Make sure to note down the address of the deployed contract as you'll need it to configure `credible.toml` in a later step.
 It will be the `Deployed to:` address in the output of the command.
 
 ## 4. Authenticating with Credible Layer
@@ -103,17 +103,17 @@ Here's a full video that you can use to follow the full process from authenticat
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/MrDVLp5UDZ0?si=tdgQEJ3Tkps2LwJA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
-Before submitting your assertion, you need to authenticate:
+Before deploying your assertion, you need to authenticate:
 
 ```bash
 pcl auth login
 ```
 
 <Note>
-    Make sure to use the same address as you set as the initial owner of the contract in the previous step.
+    Your account must be linked to the wallet address that owns the contract on-chain. The platform verifies ownership before allowing assertion deployment. See [Ownership Verification](./ownership-verification) for details.
 </Note>
 
-This will provide you with with a URL and an authentication code that you can use to authenticate with the Credible Layer.
+This will provide you with a URL and an authentication code. You can authenticate via wallet or email.
 
 <Note>
 If authentication fails, first confirm that your wallet is on the correct network and that `pcl` is using the expected auth URL. Then use the [Troubleshooting guide](./troubleshooting) for the common failure modes.
@@ -125,39 +125,51 @@ Once you have deployed your contract, you'll need to create a project in the pla
 
 For a more detailed overview of how to use the platform and manage projects, see the [Deploy Assertions guide](./deploy-assertions-dapp).
 
-## 6. Storing Your Assertion
+## 6. Configure `credible.toml`
 
-Next, store your assertion in the Assertion Data Availability layer (Assertion DA):
+The `credible.toml` file defines which assertions protect which contracts. The starter project already includes one at `assertions/credible.toml`. Update it with the address of the contract you deployed:
 
-```bash
-pcl store OwnableAssertion
+```toml
+environment = "production"
+
+[contracts.ownable]
+address = "<ADDRESS_OF_DEPLOYED_CONTRACT>"
+name = "Ownable"
+
+[[contracts.ownable.assertions]]
+file = "assertions/src/OwnableAssertion.a.sol"
 ```
 
-Here `OwnableAssertion` is the name of the assertion.
+Replace `<ADDRESS_OF_DEPLOYED_CONTRACT>` with the address from step 3.
 
-This command submits your assertion's bytecode and source code to be stored by the Assertion DA, making it available for verification by the network.
+<Tip>
+You can also set `project_id` in `credible.toml` to skip the interactive project selection prompt. Find your project ID in the platform URL or project settings.
+</Tip>
 
-## 7. Submitting Your Assertion
+For details on all `credible.toml` fields, see the [pcl Reference](./cli-reference#credibletoml-configuration).
 
-Finally, submit your assertion to the platform:
+## 7. Deploy Your Assertion
 
-```bash
-pcl submit
-```
-
-This will prompt you to select the project and assertion(s) you want to submit. Follow the interactive prompts to complete the submission.
-
-Alternatively, you can specify the project and assertion directly as per the output of the `pcl store` command:
+Deploy your assertion to the platform with a single command:
 
 ```bash
-pcl submit -a 'OwnableAssertion' -p <project_name>
+pcl apply
 ```
 
-Note that `<project_name>` is the name of the project you created in the platform, capitalized in the same way as you did when creating the project.
+This command:
+1. Reads your `credible.toml` configuration
+2. Builds and compiles the assertion contracts
+3. Creates a release on the platform
 
-## 8. Deploying Your Assertion
+You'll be prompted to confirm the deployment. After confirmation, `pcl apply` returns a release number and a link to review the release in the platform.
 
-To finish the tutorial, open the platform at [app.phylax.systems](https://app.phylax.systems) and navigate to the project that the assertion was added to.
+<Note>
+If `project_id` is not set in your `credible.toml`, you'll be prompted to select a project interactively. You can also specify it with the project name you created in step 5.
+</Note>
+
+## 8. Review and Activate Your Assertion
+
+Open the platform at [app.phylax.systems](https://app.phylax.systems) and navigate to the project that the assertion was added to.
 
 You'll notice that there's one assertion ready for deployment. Go ahead and proceed to review and deploy it. During the review process, you'll choose whether to deploy to **Staging** (for testing) or **Production** (for active protection).
 
@@ -210,6 +222,6 @@ Congratulations! You've successfully created, tested, deployed, and verified you
 3. **Integrate with your own projects**: Apply assertions to your existing smart contracts
 4. **Join the community**: Share your assertions and learn from others in the [Phylax Telegram](https://t.me/phylax_credible_layer)
 
-For more detailed information about `pcl` and its commands, see [Store and Submit Assertions](./store-submit-assertions) and [pcl Reference](./cli-reference).
+For more detailed information about `pcl` and its commands, see [Apply Assertions](./apply-assertions) and [pcl Reference](./cli-reference).
 
 For a comprehensive list of terms and concepts used in the Credible Layer, see the [Glossary](./glossary).

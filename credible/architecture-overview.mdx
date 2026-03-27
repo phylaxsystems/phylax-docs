@@ -34,7 +34,7 @@ flowchart LR
     subgraph dev["Development Tools"]
         direction TB
         CLI["pcl"]
-        DAPP["Phylax Platform"]
+        PLATFORM["Phylax Platform"]
     end
 
     subgraph storage["Storage"]
@@ -53,9 +53,9 @@ flowchart LR
         PhEVM["PhEVM"]
     end
 
-    CLI -->|"Store"| DA
-    CLI -->|"Submit"| DAPP
-    DAPP -->|"Deploy"| REGISTRY
+    CLI -->|"Apply"| PLATFORM
+    PLATFORM -->|"Store"| DA
+    PLATFORM -->|"Deploy"| REGISTRY
 
     VALIDATOR -->|"Candidate Tx"| PhEVM
     PhEVM -->|"Valid/Invalid"| VALIDATOR
@@ -68,7 +68,7 @@ flowchart LR
     classDef sidecar fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
     classDef invisible fill:none,stroke:none
 
-    class CLI,DAPP dev
+    class CLI,PLATFORM dev
     class DA storage
     class VALIDATOR,REGISTRY network
     class PhEVM sidecar
@@ -77,13 +77,13 @@ flowchart LR
 
 The diagram shows two main flows:
 
-**Development Flow**: Developers use [`pcl`](/credible/store-submit-assertions) to develop and test assertions. `pcl` stores assertion code in [Assertion DA](/credible/assertion-da), then submits to the [Phylax platform](https://app.phylax.systems). The platform deploys assertions to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts) so they can be enforced by the network.
+**Development Flow**: Developers use [`pcl`](/credible/apply-assertions) to develop, test, and deploy assertions. Running `pcl apply` compiles assertion code and creates a release on the [Phylax platform](https://app.phylax.systems), which handles storing it in [Assertion DA](/credible/assertion-da). The platform deploys assertions to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts) so they can be enforced by the network.
 
 **Runtime Flow**: The block builder or sequencer sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer uses its registry snapshot (from on-chain events) and cached assertion bytecode (from [Assertion DA](/credible/assertion-da)) to execute relevant assertions via [PhEVM](/credible/phevm). Valid transactions are included in blocks; invalid transactions are dropped.
 
 ### How It Works
 
-1. **Assertion Deployment**: Developers write and submit assertions through `pcl` and the platform, which are stored in Assertion DA and deployed on-chain
+1. **Assertion Deployment**: Developers write assertions and deploy them via `pcl apply`, which creates a release on the platform. The platform stores assertion bytecode in Assertion DA and deploys on-chain
 2. **Transaction Validation**: The network sends transactions to the Assertion Enforcer during block production
 3. **Assertion Execution**: The Assertion Enforcer simulates each transaction and validates it against relevant assertions using PhEVM
 4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the block builder or sequencer
@@ -137,16 +137,16 @@ When an assertion is violated, the incident is recorded and exposed for transpar
 title: Incident Lifecycle
 ---
 flowchart LR
-    ENFORCER["Assertion Enforcer"] --> DAPP["Phylax Platform"]
-    DAPP --> DASH["Transparency Dashboard"]
-    DAPP --> ALERTS["Slack/PagerDuty Alerts"]
+    ENFORCER["Assertion Enforcer"] --> PLATFORM["Phylax Platform"]
+    PLATFORM --> DASH["Transparency Dashboard"]
+    PLATFORM --> ALERTS["Slack/PagerDuty Alerts"]
 
     classDef enforcer fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
-    classDef dapp fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    classDef platform fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
     classDef output fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
 
     class ENFORCER enforcer
-    class DAPP dapp
+    class PLATFORM platform
     class DASH,ALERTS output
 ```
 
@@ -187,7 +187,7 @@ The [Credible Layer Contracts](/credible/credible-layer-contracts) are on-chain 
 ### Developer Tools
 
 - **[Phylax platform](https://app.phylax.systems)**: Web interface for deploying, managing, and viewing assertions
-- **[`pcl`](/credible/store-submit-assertions)**: Command-line tool for writing, testing, and deploying assertions
+- **[`pcl`](/credible/apply-assertions)**: Command-line tool for writing, testing, and deploying assertions
 - **[`credible-std`](/credible/credible-std-overview)**: Standard library exposing cheatcodes and testing utilities
 
 ## Network Integrations

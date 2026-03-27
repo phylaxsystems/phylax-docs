@@ -43,7 +43,7 @@
                 "group": "Build and Deploy",
                 "pages": [
                   "credible/invariant-to-assertion",
-                  "credible/store-submit-assertions",
+                  "credible/apply-assertions",
                   "credible/deploy-assertions-dapp",
                   "credible/manual-verification"
                 ]

@@ -76,7 +76,7 @@ See [Ownership Verification](/credible/ownership-verification) for details on ho
 
 The Data Availability Verification interface ensures that assertion bytecode is available before it can be registered on-chain. This prevents assertions from being registered without their bytecode being accessible to the [Assertion Enforcer](/credible/assertion-enforcer).
 
-When adding assertions, a proof of availability must be provided. The current implementation (`DAVerifierECDSA`) requires a signature from the [Assertion DA](/credible/assertion-da) prover, which is returned when storing an assertion using [`pcl store`](/credible/cli-reference#store).
+When adding assertions, a proof of availability must be provided. The current implementation (`DAVerifierECDSA`) requires a signature from the [Assertion DA](/credible/assertion-da) prover, which is generated when deploying assertions via [`pcl apply`](/credible/cli-reference#apply).
 
 ### State Oracle Administration
 

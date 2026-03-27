@@ -1,0 +1,149 @@
+---
+title: 'Apply Assertions'
+description: 'Configure and deploy assertions to the platform using `pcl apply`'
+---
+
+This guide walks you through configuring your assertions in `credible.toml` and deploying them to the platform with `pcl apply`.
+
+**Prerequisites**:
+- [pcl installed](/credible/credible-install)
+- An assertion [written](/credible/write-first-assertion) and [tested](/credible/testing-assertions)
+- A [project created](/credible/deploy-assertions-dapp#step-2-create-a-project) in the platform
+
+**What you'll do**: Authenticate, configure `credible.toml`, and deploy your assertions.
+
+## Step 1: Authenticate
+
+Before deploying, authenticate with the Credible Layer:
+
+```bash
+pcl auth login
+```
+
+This opens a browser window where you can authenticate with your wallet or email. Once approved, `pcl` automatically detects the authentication.
+
+<Note>
+Your account must be linked to the wallet address that owns the contracts listed in `credible.toml`. The platform verifies on-chain ownership (via the admin verifier, typically `owner()`) before allowing assertion deployment. See [Ownership Verification](/credible/ownership-verification) for details.
+</Note>
+
+Check your status anytime:
+
+```bash
+pcl auth status
+```
+
+## Step 2: Configure `credible.toml`
+
+Create a `credible.toml` file at `assertions/credible.toml` in your project root. This file declares which assertions protect which contracts:
+
+```toml
+environment = "production"
+
+[contracts.my_contract]
+address = "0xYOUR_CONTRACT_ADDRESS"
+name = "MyContract"
+
+[[contracts.my_contract.assertions]]
+file = "assertions/src/MyAssertion.a.sol"
+```
+
+To protect multiple contracts, add more entries:
+
+```toml
+environment = "production"
+
+[contracts.vault]
+address = "0xVAULT_ADDRESS"
+name = "Vault"
+
+[[contracts.vault.assertions]]
+file = "assertions/src/VaultAssertion.a.sol"
+
+[contracts.token]
+address = "0xTOKEN_ADDRESS"
+name = "Token"
+
+[[contracts.token.assertions]]
+file = "assertions/src/TokenDrainAssertion.a.sol"
+```
+
+<Note>
+Each contract address must be unique within the configuration. See the [pcl Reference](/credible/cli-reference#credibletoml-configuration) for all available fields.
+</Note>
+
+<Tip>
+Set `project_id` in your `credible.toml` to skip the interactive project selection prompt. This is especially useful for CI/CD pipelines.
+</Tip>
+
+## Step 3: Apply Your Assertions
+
+Deploy your assertions to the platform:
+
+```bash
+pcl apply
+```
+
+This command:
+1. Reads your `credible.toml` configuration
+2. Builds and compiles the referenced assertion contracts
+3. Creates a release on the platform
+
+You'll be prompted to confirm before applying. Use `--yes` to skip the confirmation prompt:
+
+```bash
+pcl apply --yes
+```
+
+<Note>
+`pcl apply` automatically builds your project. You can also run `pcl build` separately to check for compilation errors before applying.
+</Note>
+
+## Step 4: Deploy in the Platform
+
+After applying, complete deployment in the [Phylax platform](https://app.phylax.systems) using the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-4-deploy-the-assertion):
+
+1. Navigate to your project
+2. Click "Deployment" tab
+3. Find your assertion and click "Proceed to Review"
+4. Select the target contract and environment (Staging or Production)
+5. Click "Deploy" and sign the transaction
+
+<Note>
+Applying through `pcl` does not make the assertion active by itself. The assertion becomes active only after you deploy it through the platform and the configured timelock in the on-chain State Oracle contracts expires. Removals follow the same State Oracle timelock flow.
+</Note>
+
+## Troubleshooting
+
+### Authentication Issues
+
+| Error | Solution |
+|-------|----------|
+| "Not authenticated" | Run `pcl auth login` |
+| "Authentication expired" | Run `pcl auth login` to refresh |
+| Browser doesn't open | Manually visit the URL shown in terminal |
+
+### Apply Issues
+
+| Error | Solution |
+|-------|----------|
+| "credible.toml not found" | Check that the file exists at `assertions/credible.toml` or specify the path with `-c` |
+| "duplicate contract address" | Each contract address must be unique in `credible.toml` |
+| "Project not found" | Create the project in the platform first, or set `project_id` in `credible.toml` |
+| Build failures | Run `pcl build` separately to diagnose compilation errors |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deploy with the Platform" icon="rocket" href="/credible/deploy-assertions-dapp">
+    Complete deployment in the platform
+  </Card>
+  <Card title="pcl Reference" icon="book" href="/credible/cli-reference">
+    Full command reference
+  </Card>
+  <Card title="Testing Assertions" icon="flask" href="/credible/testing-assertions">
+    Test before deployment
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/credible/troubleshooting">
+    Common issues and solutions
+  </Card>
+</CardGroup>
