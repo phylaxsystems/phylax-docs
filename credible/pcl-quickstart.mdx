@@ -15,7 +15,7 @@ By the end of this tutorial, you will:
 4. Authenticate with `pcl`
 5. Create a project
 6. Configure `credible.toml`
-7. Deploy your assertion with `pcl apply`
+7. Create a release with `pcl apply`
 8. Review and activate your assertion
 9. Verify that the assertion is working
 
@@ -148,9 +148,9 @@ You can also set `project_id` in `credible.toml` to skip the interactive project
 
 For details on all `credible.toml` fields, see the [pcl Reference](./cli-reference#credibletoml-configuration).
 
-## 7. Deploy Your Assertion
+## 7. Create a Release with `pcl apply`
 
-Deploy your assertion to the platform with a single command:
+Create a release for your assertion in the platform with a single command:
 
 ```bash
 pcl apply
@@ -161,17 +161,17 @@ This command:
 2. Builds and compiles the assertion contracts
 3. Creates a release on the platform
 
-You'll be prompted to confirm the deployment. After confirmation, `pcl apply` returns a release number and a link to review the release in the platform.
+You'll be prompted to confirm the release. After confirmation, `pcl apply` returns a release number and a link to review that release in the platform.
 
 <Note>
-If `project_id` is not set in your `credible.toml`, you'll be prompted to select a project interactively. You can also specify it with the project name you created in step 5.
+If `project_id` is not set in your `credible.toml`, `pcl apply` prompts you to select a project interactively.
 </Note>
 
 ## 8. Review and Activate Your Assertion
 
-Open the platform at [app.phylax.systems](https://app.phylax.systems) and navigate to the project that the assertion was added to.
+Open the release link returned by `pcl apply`, or go to [app.phylax.systems](https://app.phylax.systems) and navigate to the project where the release was created.
 
-You'll notice that there's one assertion ready for deployment. Go ahead and proceed to review and deploy it. During the review process, you'll choose whether to deploy to **Staging** (for testing) or **Production** (for active protection).
+You'll notice that the release is ready for review. Go ahead and proceed to review and deploy it. During the review process, you'll choose whether to deploy to **Staging** (for testing) or **Production** (for active protection).
 
 <Note>
 After deployment, your assertion enters a timelock period. During this period, it is marked for enforcement (production) or marked for staging (staging environment). After the timelock expires, the assertion becomes enforced (production) or staged (staging), actively protecting your contract. See the [Glossary](./glossary#timelock) for details about timelocks.

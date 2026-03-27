@@ -8,6 +8,12 @@
     "dark": "#2DA2F6"
   },
   "favicon": "/favicon.png",
+  "redirects": [
+    {
+      "source": "/credible/store-submit-assertions",
+      "destination": "/credible/apply-assertions"
+    }
+  ],
   "navigation": {
     "anchors": [
       {

@@ -27,8 +27,8 @@ title: Protocol Adoption Flow
 ---
 flowchart LR
   Dev[Protocol Team] --> Assertion[Write Assertions]
-  Assertion --> DA[Assertion DA]
   Assertion --> Platform[Phylax Platform]
+  Platform --> DA[Assertion DA]
   Platform --> Registry[On-Chain Registry]
   Registry --> Enforcer[Assertion Enforcer]
   Enforcer --> Outcome[Block Inclusion Decision]
