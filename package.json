@@ -1,4 +1,15 @@
 {
+	"packageManager": "pnpm@10.9.0",
+	"engines": {
+		"node": "24.x"
+	},
+	"scripts": {
+		"dev": "./scripts/run-mint.sh dev",
+		"start": "./scripts/run-mint.sh dev",
+		"validate": "./scripts/run-mint.sh validate",
+		"broken-links": "./scripts/run-mint.sh broken-links",
+		"a11y": "./scripts/run-mint.sh a11y"
+	},
 	"dependencies": {
 		"mint": "^4.2.434"
 	}

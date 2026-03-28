@@ -8,6 +8,12 @@
     "dark": "#2DA2F6"
   },
   "favicon": "/favicon.png",
+  "redirects": [
+    {
+      "source": "/credible/store-submit-assertions",
+      "destination": "/credible/apply-assertions"
+    }
+  ],
   "navigation": {
     "anchors": [
       {
@@ -43,7 +49,7 @@
                 "group": "Build and Deploy",
                 "pages": [
                   "credible/invariant-to-assertion",
-                  "credible/store-submit-assertions",
+                  "credible/apply-assertions",
                   "credible/deploy-assertions-dapp",
                   "credible/manual-verification"
                 ]

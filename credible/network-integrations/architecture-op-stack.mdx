@@ -47,8 +47,8 @@ end
 SequencerEL --> |Fallback Blocks + Validation| RollupBoost
 
 AssertionDA --> |Serve Assertions| AssertionEnforcerBlockBuilder
-AssertionEnforcerCLI --> |Store bytecode| AssertionDA
-AssertionEnforcerCLI --> |Auth + submit metadata| AssertionEnforcerDapp
+AssertionEnforcerCLI --> |Auth + Apply| AssertionEnforcerDapp
+AssertionEnforcerDapp --> |Store bytecode| AssertionDA
 AssertionEnforcerDapp --> |Fetch assertions| AssertionDA
 
 AssertionEnforcerEL <--> |Pulls State + Txs| SequencerEL
@@ -70,7 +70,7 @@ class RollupBoostProxy,AssertionEnforcer rollupBoost
 ### Credible Layer (Sidecar)
 - **[Block Builder](/credible/glossary#block-builder)**: The component of the network that simulates transactions and runs assertions before transaction finalization to ensure they don't violate defined conditions.
 - **op-reth**: The execution layer client within the Credible Layer that processes transactions and maintains state.
-- **[`pcl` CLI](/credible/glossary#pcl-cli)**: Command-line interface for developers to write, test, and submit assertions to the system.
+- **[`pcl` CLI](/credible/glossary#pcl-cli)**: Command-line interface for developers to write, test, and deploy assertions to the system.
 - **[Platform](https://app.phylax.systems)**: The web application interface to deploy, manage, and view assertions and projects.
 - **[Assertion DA](/credible/glossary#assertion-da-data-availability)**: The Assertion Data Availability layer, which stores assertion bytecode and serves it to both end-users and the Assertion Enforcer for execution.
 

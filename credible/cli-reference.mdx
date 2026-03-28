@@ -4,7 +4,7 @@ description: 'Reference documentation for all `pcl` commands, options, and param
 ---
 
 <Note>
-New to `pcl`? Start with [Store and Submit Assertions](/credible/store-submit-assertions) to understand the workflow.
+New to `pcl`? Start with the [Quickstart Tutorial](/credible/pcl-quickstart) to learn the workflow.
 </Note>
 
 ## Global Options
@@ -42,7 +42,7 @@ Options:
 
 #### `auth login`
 
-Login to `pcl` using your wallet. Opens a browser window for wallet authentication.
+Login to `pcl`. Opens a browser window where you can authenticate via wallet, email, Google, or GitHub.
 
 #### `auth logout`
 
@@ -90,94 +90,56 @@ Options:
   -h, --help         Print help
 ```
 
-<Note>
-`pcl build` will be run automatically if the project hasn't been built yet when using `pcl store`.
-</Note>
+### `apply`
 
-### `store`
+Preview and apply declarative deployment changes from `credible.toml`. This is the primary command for deploying assertions to the platform.
 
-Submit [assertion bytecode](/credible/glossary#assertion-bytecode) and source code to the [Assertion DA](/credible/glossary#assertion-da-data-availability).
+`pcl apply` reads your [`credible.toml`](#credibletoml-configuration) configuration, builds and compiles the referenced assertion contracts, and creates a release on the platform.
 
 ```bash
-Submit the Assertion bytecode and source code to be stored by the Assertion DA of the Credible Layer
+Preview and apply declarative deployment changes from credible.toml
 
-Usage: pcl store [OPTIONS] <ASSERTION_CONTRACT> [CONSTRUCTOR_ARGS]...
-
-Arguments:
-  <ASSERTION_CONTRACT>   Name of the assertion contract to build and flatten
-  [CONSTRUCTOR_ARGS]...  Constructor arguments for the assertion contract.
-                                Format: <ARG0> <ARG1> <ARG2>
+Usage: pcl apply [OPTIONS]
 
 Options:
-  -u, --da-url <DA_URL>   URL of the assertion-DA server [env: PCL_DA_URL=]
-                          [default: https://da.phylax.systems]
-      --root <ROOT>       Root directory of the project
-  -h, --help              Print help (see more with '--help')
+      --root <ROOT>      Project root directory [default: .]
+  -c, --config <CONFIG>  Path to credible.toml, relative to root or absolute [default: assertions/credible.toml]
+      --json             Emit machine-readable output
+      --yes              Apply without interactive confirmation
+  -u, --api-url <URL>    Base URL for the platform API [env: PCL_API_URL=] [default: https://app.phylax.systems]
+  -h, --help             Print help
 ```
 
 **Examples:**
 
 ```bash
-# Store assertion contract without constructor arguments
-pcl store MyAssertionContract
+# Apply using default config location (assertions/credible.toml)
+pcl apply
 
-# Store assertion with constructor arguments
-pcl store MyAssertion 0xADDRESS_OF_SMART_CONTRACT
+# Specify a project root directory
+pcl apply --root ./my-project
 
-# Store assertion with multiple constructor arguments
-pcl store MyAssertion 0xADDRESS arg1 arg2
+# Use a custom config path
+pcl apply --root ./my-project -c path/to/credible.toml
+
+# Auto-approve without interactive confirmation
+pcl apply --yes
+
+# Output in JSON format for CI/CD
+pcl apply --json --yes
 ```
+
+<Note>
+By default, `pcl apply` looks for `credible.toml` at `assertions/credible.toml` relative to the project root. Use `-c` to override this path.
+</Note>
 
 <Tip>
-Constructor arguments must be provided in the same order as defined in your assertion contract. When submitting later, use the exact same arguments.
+If `project_id` is not set in your `credible.toml`, `pcl apply` will prompt you to select a project interactively. Set it in the config to skip this prompt, especially useful in CI/CD.
 </Tip>
-
-### `submit`
-
-Submit [assertions](/credible/glossary#assertion) to the [Phylax platform](https://app.phylax.systems).
-
-```bash
-Arguments for submitting assertions to the Phylax platform
-
-Usage: pcl submit [OPTIONS] [ASSERTION_CONTRACT] [CONSTRUCTOR_ARGS]...
-
-Arguments:
-  [ASSERTION_CONTRACT]   Name of the assertion to submit (when submitting a single assertion)
-  [CONSTRUCTOR_ARGS]...  Constructor arguments for the assertion
-
-Options:
-  -u, --api-url <API Endpoint>   Base URL for the Phylax platform API [env: PCL_API_URL=] [default: https://app.phylax.systems/api/v1]
-  -p, --project-name <PROJECT>   Optional project name to skip interactive selection
-  -a, --assertion <ASSERTION>    Assertion in format 'Name(arg1,arg2)'. Use multiple -a flags for multiple assertions.
-  -h, --help                     Print help (see more with '--help')
-```
-
-**Examples:**
-
-```bash
-# Interactive mode (prompts you to select which stored assertions to submit and which project to submit them to)
-pcl submit
-
-# Submit a single assertion contract using positional arguments
-pcl submit MyAssertionContract arg0 arg1 arg2
-
-# Submit a single assertion contract with constructor arguments with -a flag
-pcl submit -a 'MyAssertionContract(0xADDRESS_OF_SMART_CONTRACT)' -p my-project
-
-# Submit assertion contract without constructor arguments
-pcl submit -a 'MyAssertionContract' -p my-project
-
-# Submit multiple assertion contracts using multiple -a flags
-pcl submit -a 'AssertionContract1(arg0,arg1)' -a 'AssertionContract2(arg0,arg1)' -p my-project
-```
-
-<Note>
-If you have stored several assertions that you want to submit to the same project, it's fastest to use the interactive mode for selecting the project and assertions.
-</Note>
 
 ### `config`
 
-Manage your `pcl` configuration including authentication token, pending assertions for submission, and project settings.
+Manage your `pcl` configuration including authentication tokens and settings.
 
 ```bash
 Manage configuration
@@ -195,11 +157,78 @@ Options:
 
 #### `config show`
 
-Display the current configuration stored in `~/.pcl/config.toml`.
+Display the current configuration stored in `~/.config/pcl/config.toml`.
 
 #### `config delete`
 
 Delete the current configuration file.
+
+## `credible.toml` Configuration
+
+The `credible.toml` file defines your project's assertion deployment configuration. It maps contracts to their assertions in a declarative format.
+
+**Default location:** `assertions/credible.toml` (relative to your project root)
+
+### Format
+
+```toml
+environment = "production"
+project_id = "550e8400-e29b-41d4-a716-446655440000" # optional
+
+[contracts.my_contract]
+address = "0x1234567890abcdef1234567890abcdef12345678"
+name = "MyContract"
+
+[[contracts.my_contract.assertions]]
+file = "assertions/src/MyAssertion.a.sol"
+```
+
+### Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `environment` | string | Yes | Deployment environment name (e.g., `"production"`) |
+| `project_id` | UUID | No | Platform project ID. If omitted, you are prompted to select one interactively |
+| `contracts` | map | Yes | Named contract definitions (see below) |
+
+**Contract fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `address` | string | Yes | Contract address on-chain |
+| `name` | string | Yes | Human-readable contract name |
+| `assertions` | array | Yes | List of assertions to apply to this contract |
+
+**Assertion fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `file` | string | Yes | Path to assertion contract file (relative to project root) |
+| `args` | array | No | Constructor arguments for the assertion |
+
+### Example
+
+```toml
+environment = "production"
+
+[contracts.ownable]
+address = "0x75634113D6A2fbfF5e65151ce1572195bE1d001A"
+name = "Ownable"
+
+[[contracts.ownable.assertions]]
+file = "assertions/src/OwnableAssertion.a.sol"
+
+[contracts.phylock]
+address = "0xD452d2C8602322a46DFf0936fD6426BDC08358bf"
+name = "PhyLock"
+
+[[contracts.phylock.assertions]]
+file = "assertions/src/PhyLockAssertion.a.sol"
+```
+
+<Note>
+Each contract address must be unique within the configuration. `pcl apply` validates this and returns an error if duplicates are found.
+</Note>
 
 ## Environment Variables
 
@@ -212,39 +241,28 @@ export PCL_AUTH_URL=https://custom-auth-url.com
 pcl auth login
 ```
 
-### `PCL_DA_URL`
-
-URL of the [Assertion DA](/credible/glossary#assertion-da-data-availability) server. Default: `https://da.phylax.systems`
-
-```bash
-export PCL_DA_URL=https://custom-da-url.com
-pcl store MyAssertion
-```
-
 ### `PCL_API_URL`
 
-Base URL for the [Phylax platform](https://app.phylax.systems) API. Default: `https://app.phylax.systems/api/v1`
+Base URL for the [Phylax platform](https://app.phylax.systems) API. Default: `https://app.phylax.systems`
 
 ```bash
-export PCL_API_URL=https://custom-api-url.com/api/v1
-pcl submit -a 'MyAssertion' -p my-project
+export PCL_API_URL=https://custom-api-url.com
+pcl apply
 ```
 
 ## Configuration File
 
-Configuration is stored in `~/.pcl/config.toml` and includes:
+Configuration is stored in `~/.config/pcl/config.toml` and includes:
 
-- Authentication token
-- Pending assertions for submission (assertions that have been stored but not yet submitted)
-- Project settings
+- Authentication tokens and identity
 
 You can view the configuration with `pcl config show` or delete it with `pcl config delete`.
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Store and Submit" icon="upload" href="/credible/store-submit-assertions">
-    Learn how to use pcl in your workflow
+  <Card title="Apply Assertions" icon="upload" href="/credible/apply-assertions">
+    Learn how to deploy assertions with pcl apply
   </Card>
   <Card title="Quick Start Guide" icon="rocket" href="/credible/pcl-quickstart">
     Step-by-step tutorial for your first assertion

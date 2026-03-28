@@ -730,8 +730,8 @@ Use `console.log` to log debug information to the console during testing with `p
 ### Deployment Workflow
 
 1. Write and test assertions locally with `pcl test`
-2. Build assertions with `pcl build`
-3. Deploy protocol contracts
-4. Submit assertions to Credible Layer
-5. Activate assertions for protection
+2. Deploy protocol contracts
+3. Configure `credible.toml` with contract addresses and assertion mappings
+4. Create a release on the Credible Layer with `pcl apply` (builds automatically)
+5. Review your release and deploy it in the platform to activate assertions
 ``````

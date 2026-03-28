@@ -13,10 +13,10 @@ This page outlines the minimum steps and interfaces needed to get protected.
 
 ## Adoption Workflow
 
-Teams follow the same underlying steps. The CLI is used to author and store assertions, while the platform
+Teams follow the same underlying steps. The CLI is used to author and deploy assertions, while the platform
 is used to manage deployments and monitoring.
 
-- **CLI authoring**: write assertions locally and store bytecode
+- **CLI authoring**: write assertions locally and create a release with `pcl apply`
 - **Platform management**: link contracts, stage or deploy, and monitor incidents
 
 ## End-to-End Flow
@@ -27,9 +27,9 @@ title: Protocol Adoption Flow
 ---
 flowchart LR
   Dev[Protocol Team] --> Assertion[Write Assertions]
-  Assertion --> DA[Assertion DA]
-  Assertion --> Dapp[Phylax Platform]
-  Dapp --> Registry[On-Chain Registry]
+  Assertion --> Platform[Phylax Platform]
+  Platform --> DA[Assertion DA]
+  Platform --> Registry[On-Chain Registry]
   Registry --> Enforcer[Assertion Enforcer]
   Enforcer --> Outcome[Block Inclusion Decision]
   Outcome --> Incidents[Incidents + Dashboard]
