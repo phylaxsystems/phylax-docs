@@ -26,7 +26,7 @@ contract IntraTxOracleDeviationAssertion is Assertion {
         IOracle adopter = IOracle(ph.getAssertionAdopter());
 
         // Start with a simple check comparing pre and post state
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
         uint256 prePrice = adopter.price();
 
         // Calculate allowed deviation thresholds (10% by default)
@@ -34,7 +34,7 @@ contract IntraTxOracleDeviationAssertion is Assertion {
         uint256 minAllowedPrice = (prePrice * (100 - MAX_DEVIATION_PERCENTAGE)) / 100;
 
         // First check post-state price
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
         uint256 postPrice = adopter.price();
 
         // Verify post-state price is within allowed deviation from initial price

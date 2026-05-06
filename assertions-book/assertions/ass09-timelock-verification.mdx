@@ -15,7 +15,7 @@ Timelocks provide a buffer against malicious governance actions - without proper
 
 Verifies timelock integrity by comparing timelock state and parameters before and after transactions:
 
-- `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads: Compare timelock state before and after transaction
+- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Compare timelock state before and after transaction
 - `registerTxEndTrigger()`: Monitor changes to timelock storage slot
 - Ensures timelock delay is within acceptable bounds (1 day to 2 weeks)
 - Confirms timelock activation follows proper procedures

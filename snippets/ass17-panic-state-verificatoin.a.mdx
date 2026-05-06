@@ -21,8 +21,8 @@ contract EmergencyStateAssertion is Assertion {
     /// @notice Checks that a paused protocol cannot increase its stored balance.
     function assertionPanickedCanOnlyDecreaseBalance() external view {
         address adopter = ph.getAssertionAdopter();
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
+        PhEvm.ForkId memory postFork = _postTx();
 
         bool wasPaused = uint256(ph.loadStateAt(adopter, PAUSED_SLOT, preFork)) != 0;
         if (!wasPaused) {

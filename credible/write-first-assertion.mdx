@@ -100,8 +100,8 @@ contract OwnableAssertion is Assertion {
     function assertionOwnershipChange() external view {
         Ownable ownable = Ownable(ph.getAssertionAdopter());
 
-        PhEvm.ForkId memory preTx = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory preTx = _preTx();
+        PhEvm.ForkId memory postTx = _postTx();
 
         address preOwner = address(uint160(uint256(ph.loadStateAt(address(ownable), bytes32(uint256(0)), preTx))));
         address postOwner = address(uint160(uint256(ph.loadStateAt(address(ownable), bytes32(uint256(0)), postTx))));
@@ -157,8 +157,8 @@ See [Triggers](./triggers) for more trigger types and optimization.
 function assertionOwnershipChange() external view {
     Ownable ownable = Ownable(ph.getAssertionAdopter());
 
-    PhEvm.ForkId memory preTx = PhEvm.ForkId({forkType: 0, callIndex: 0});
-    PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
+    PhEvm.ForkId memory preTx = _preTx();
+    PhEvm.ForkId memory postTx = _postTx();
 
     address preOwner = address(uint160(uint256(ph.loadStateAt(address(ownable), bytes32(uint256(0)), preTx))));
     address postOwner = address(uint160(uint256(ph.loadStateAt(address(ownable), bytes32(uint256(0)), postTx))));

@@ -153,8 +153,8 @@ function validateVaultSharePriceInvariant(address vault) internal view {
     // Skip non-contract addresses
     if (vault.code.length == 0) return;
 
-    PhEvm.ForkId memory preTx = PhEvm.ForkId({forkType: 0, callIndex: 0});
-    PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
+    PhEvm.ForkId memory preTx = _preTx();
+    PhEvm.ForkId memory postTx = _postTx();
 
     uint256 preSharePrice = getSharePriceAt(vault, preTx);
     uint256 postSharePrice = getSharePriceAt(vault, postTx);

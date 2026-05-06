@@ -102,11 +102,11 @@ contract ERC4626OperationsAssertion is Assertion {
             totalAssetsRemoved += adopter.previewRedeem(shares);
         }
 
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
         uint256 preVaultAssets = adopter.totalAssets();
         uint256 preVaultSupply = adopter.totalSupply();
 
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
         uint256 postVaultAssets = adopter.totalAssets();
         uint256 postVaultSupply = adopter.totalSupply();
 
@@ -138,13 +138,13 @@ contract ERC4626OperationsAssertion is Assertion {
             (uint256 assets, address receiver) = abi.decode(inputs[i].input, (uint256, address));
 
             // Check pre-state
-            PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+            PhEvm.ForkId memory preFork = _preTx();
             uint256 vaultAssetPreBalance = adopter.totalAssets();
             uint256 userSharesPreBalance = adopter.balanceOf(receiver);
             uint256 expectedShares = adopter.previewDeposit(assets);
 
             // Check post-state
-            PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+            PhEvm.ForkId memory postFork = _postTx();
             uint256 vaultAssetPostBalance = adopter.totalAssets();
             uint256 userSharesPostBalance = adopter.balanceOf(receiver);
 
@@ -173,13 +173,13 @@ contract ERC4626OperationsAssertion is Assertion {
         PhEvm.CallInputs[] memory inputs = ph.getCallInputs(address(adopter), adopter.deposit.selector);
 
         for (uint256 i = 0; i < inputs.length; i++) {
-            PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+            PhEvm.ForkId memory preFork = _preTx();
             (uint256 assets,) = abi.decode(inputs[i].input, (uint256, address));
             uint256 previewPreAssets = adopter.previewDeposit(assets);
             address depositer = inputs[0].caller;
             uint256 preShares = adopter.balanceOf(depositer);
 
-            PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+            PhEvm.ForkId memory postFork = _postTx();
 
             uint256 postShares = adopter.balanceOf(depositer);
 
@@ -198,7 +198,7 @@ contract ERC4626OperationsAssertion is Assertion {
         // Get the assertion adopter address
         CoolVault adopter = CoolVault(ph.getAssertionAdopter());
 
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
 
         uint256 vaultAssetPostBalance = adopter.totalAssets();
         uint256 vaultSharesPostBalance = adopter.balanceOf(address(adopter));

@@ -23,11 +23,11 @@ contract TwapDeviationAssertion is Assertion {
         IPool adopter = IPool(ph.getAssertionAdopter());
 
         // Get TWAP price before the transaction (our reference point)
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
         uint256 preTwapPrice = adopter.twap();
 
         // Get price after the transaction
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
         uint256 postPrice = adopter.price();
 
         uint256 maxDeviation = 5;

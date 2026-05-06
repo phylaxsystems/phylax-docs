@@ -17,7 +17,7 @@ Monitors health factors of positions during specific lending operations using:
 
 - `getCallInputs()`: Track all function calls to specified protocol functions
 - `registerFnCallTrigger()`: Trigger on lending operations (supply, borrow, withdraw, repay)
-- `PhEvm.ForkId({forkType: 1, callIndex: 0})`: Verify health factor after each operation (used by default if no pre-state specified)
+- `_postTx()`: Verify health factor after each operation (used by default if no pre-state specified)
 
 The assertion checks each lending operation individually to ensure positions affected by these operations remain healthy.
 

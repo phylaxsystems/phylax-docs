@@ -21,7 +21,7 @@ contract TokensBorrowedInvariant is Assertion {
     /// @notice Checks that total supplied assets cover total borrowed assets after the transaction.
     function assertBorrowedInvariant() external view {
         address market = ph.getAssertionAdopter();
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
 
         uint256 totalSupplyAsset = uint256(ph.loadStateAt(market, TOTAL_SUPPLY_SLOT, postFork));
         uint256 totalBorrowedAsset = uint256(ph.loadStateAt(market, TOTAL_BORROW_SLOT, postFork));

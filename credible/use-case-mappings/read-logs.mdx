@@ -79,8 +79,8 @@ contract ReadLogsAssertion is Assertion {
 
         for (uint256 i = 0; i < changedAddresses.length; i++) {
             bytes32 balanceSlot = keccak256(abi.encode(changedAddresses[i], uint256(0)));
-            PhEvm.ForkId memory preTx = PhEvm.ForkId({forkType: 0, callIndex: 0});
-            PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
+            PhEvm.ForkId memory preTx = _preTx();
+            PhEvm.ForkId memory postTx = _postTx();
 
             preBalance = uint256(ph.loadStateAt(address(protocol), balanceSlot, preTx));
             uint256 postBalance = uint256(ph.loadStateAt(address(protocol), balanceSlot, postTx));

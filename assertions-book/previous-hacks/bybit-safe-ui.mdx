@@ -91,7 +91,7 @@ contract SafeAssertion is Assertion {
     }
 
     function implementationAddressChange() external view {
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
         address preImplementationAddress = address(uint160(uint256(ph.loadStateAt(address(safe), bytes32(0x0), preFork))));
 
         address[] memory addresses = getStateChangesAddress(address(safe), bytes32(0x0));
@@ -110,14 +110,14 @@ the balance of the whitelisted addresses increased with the respective amount.
 
 ```solidity
  function assertionSafeDrain() external {
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
         uint256 preBalance = address(bybitSafeAddress).balance;
         uint256[] memory preWhitelistBalances = new uint256[](whitelistedAddresses.length);
         for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
             preWhitelistBalances[i] = address(whitelistedAddresses[i]).balance;
         }
 
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
         uint256 postBalance = address(bybitSafeAddress).balance;
         if (postBalance > preBalance) {
             return; // Balance increased, not a hack

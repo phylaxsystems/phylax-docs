@@ -21,8 +21,8 @@ contract TimelockVerificationAssertion is Assertion {
     /// @notice Checks that an activated timelock uses a bounded delay.
     function assertionTimelock() external view {
         address adopter = ph.getAssertionAdopter();
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
+        PhEvm.ForkId memory postFork = _postTx();
 
         bool preActive = uint256(ph.loadStateAt(adopter, TIMELOCK_ACTIVE_SLOT, preFork)) != 0;
         if (preActive) {

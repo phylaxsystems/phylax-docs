@@ -95,11 +95,11 @@ contract AbracadabraCookSolvencyAssertion is Assertion {
         address caller = calls[0].caller;
 
         // Get borrow amount before transaction
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
         uint256 borrowPartBefore = cauldron.userBorrowPart(caller);
 
         // Get borrow amount after transaction
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
         uint256 borrowPartAfter = cauldron.userBorrowPart(caller);
 
         // Only check if borrow increased

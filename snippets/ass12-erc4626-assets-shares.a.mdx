@@ -21,7 +21,7 @@ contract ERC4626AssetsSharesAssertion is Assertion {
     /// @notice Checks that stored total assets are sufficient to back stored total shares.
     function assertionAssetsShares() external view {
         address vault = ph.getAssertionAdopter();
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
 
         uint256 totalAssets = uint256(ph.loadStateAt(vault, TOTAL_ASSETS_SLOT, postFork));
         uint256 totalSupply = uint256(ph.loadStateAt(vault, TOTAL_SUPPLY_SLOT, postFork));

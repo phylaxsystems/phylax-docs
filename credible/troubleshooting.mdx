@@ -148,7 +148,7 @@ Use `pcl test -vvv` to see detailed gas usage per operation.
 bytes32 data = vm.load(address, slot);
 
 // ✅ CORRECT
-bytes32 data = ph.loadStateAt(target, slot, PhEvm.ForkId({forkType: 1, callIndex: 0}));
+bytes32 data = ph.loadStateAt(target, slot, _postTx());
 ```
 
 The Phylax helper `ph` provides storage access, not the standard Forge `vm` cheatcode. New assertions should prefer Reshiram snapshot reads instead of legacy global fork switching.
@@ -361,8 +361,8 @@ import { console } from "credible-std/console.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 function assertionFunction() external {
-    uint256 preBalance = uint256(ph.loadStateAt(token, balanceSlot, PhEvm.ForkId({forkType: 0, callIndex: 0})));
-    uint256 postBalance = uint256(ph.loadStateAt(token, balanceSlot, PhEvm.ForkId({forkType: 1, callIndex: 0})));
+    uint256 preBalance = uint256(ph.loadStateAt(token, balanceSlot, _preTx()));
+    uint256 postBalance = uint256(ph.loadStateAt(token, balanceSlot, _postTx()));
     
     console.log(string.concat("Pre: ", Strings.toString(preBalance)));
     console.log(string.concat("Post: ", Strings.toString(postBalance)));

@@ -15,7 +15,7 @@ For example, in the [Radiant Capital hack](/assertions-book/previous-hacks/hack1
 
 Monitors changes to the owner address storage slot in contracts using:
 
-- `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads: Compare owner address before and after transaction
+- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Compare owner address before and after transaction
 - `ph.loadStateAt()`: Load the owner and admin slots at each snapshot
 - `registerTxEndTrigger()`: Trigger when owner address changes
 

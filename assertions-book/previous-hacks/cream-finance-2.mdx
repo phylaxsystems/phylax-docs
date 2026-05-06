@@ -23,7 +23,7 @@ uint256 constant MAX_DEVIATION_BPS = 500; // 5% max deviation
 
 function assertion_priceDeviation() external view {
     // Get pre-transaction prices first
-    PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+    PhEvm.ForkId memory preFork = _preTx();
     PhEvm.Log[] memory logs = ph.getLogs();
 
     // Count relevant logs to size our array
@@ -65,7 +65,7 @@ function assertion_priceDeviation() external view {
     }
 
     // Get post-transaction prices and compare
-    PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+    PhEvm.ForkId memory postFork = _postTx();
 
     for (uint256 i = 0; i < touchedAssets.length; i++) {
         uint256 postPrice = priceOracle.getPrice(touchedAssets[i]);

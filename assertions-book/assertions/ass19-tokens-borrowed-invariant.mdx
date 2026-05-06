@@ -15,7 +15,7 @@ Violating this invariant could lead to protocol insolvency, loss of user funds, 
 
 Implements straightforward verification that total tokens borrowed never exceed total tokens deposited:
 
-- `PhEvm.ForkId({forkType: 1, callIndex: 0})`: Capture protocol state after transaction to verify invariant holds
+- `_postTx()`: Capture protocol state after transaction to verify invariant holds
 - `registerTxEndTrigger()`: Trigger on storage slots tracking supply and borrow totals
 - Check total supply of assets (tokens deposited) and total borrowed assets
 - Assert total supply ≥ total borrowed assets

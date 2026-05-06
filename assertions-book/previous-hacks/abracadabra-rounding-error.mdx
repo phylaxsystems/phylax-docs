@@ -65,7 +65,7 @@ contract AbracadabraRebaseInvariantAssertion is Assertion {
     function assertionNoDebtSharesIfNoDebt() external view {
         ICauldronV4 cauldron = ICauldronV4(ph.getAssertionAdopter());
 
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
         (uint128 elastic, uint128 base) = cauldron.totalBorrow();
 
         // Core invariant: if no debt exists, no shares should exist

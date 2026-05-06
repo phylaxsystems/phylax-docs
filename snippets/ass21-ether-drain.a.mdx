@@ -25,11 +25,11 @@ contract EtherDrainAssertion is Assertion {
         address exampleContract = ph.getAssertionAdopter();
 
         // Capture the ETH balance before transaction execution
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
         uint256 preBalance = address(exampleContract).balance;
 
         // Capture the ETH balance after transaction execution
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
         uint256 postBalance = address(exampleContract).balance;
 
         // Only check for drainage (we don't care about ETH being added)

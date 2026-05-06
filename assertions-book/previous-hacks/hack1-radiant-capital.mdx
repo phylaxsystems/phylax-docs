@@ -53,27 +53,27 @@ contract LendingPoolAddressesProviderAssertions is Assertion {
 
     // Check if the owner has changed
     function assertionOwnerChange() external view {
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
         address prevOwner = lendingPoolAddressesProvider.owner();
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
         address newOwner = lendingPoolAddressesProvider.owner();
         require(prevOwner == newOwner, "Owner has changed");
     }
 
     // Check if the emergency admin has changed
     function assertionEmergencyAdminChange() external view {
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
         address prevEmergencyAdmin = lendingPoolAddressesProvider.getEmergencyAdmin();
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
         address newEmergencyAdmin = lendingPoolAddressesProvider.getEmergencyAdmin();
         require(prevEmergencyAdmin == newEmergencyAdmin, "Emergency admin has changed");
     }
 
     // Check if the pool admin has changed
     function assertionPoolAdminChange() external view {
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
         address prevPoolAdmin = lendingPoolAddressesProvider.getPoolAdmin();
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
         address newPoolAdmin = lendingPoolAddressesProvider.getPoolAdmin();
         require(prevPoolAdmin == newPoolAdmin, "Pool admin has changed");
     }

@@ -19,8 +19,8 @@ When a transaction is submitted to the network:
 
 ```solidity
 function checkOwnershipChange() external view {
-    PhEvm.ForkId memory preTx = PhEvm.ForkId({forkType: 0, callIndex: 0});
-    PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
+    PhEvm.ForkId memory preTx = _preTx();
+    PhEvm.ForkId memory postTx = _postTx();
 
     address ownerBefore = address(uint160(uint256(ph.loadStateAt(address(protocol), bytes32(uint256(0)), preTx))));
     address ownerAfter = address(uint160(uint256(ph.loadStateAt(address(protocol), bytes32(uint256(0)), postTx))));

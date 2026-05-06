@@ -135,8 +135,8 @@ Reshiram assertions should prefer explicit snapshot IDs over deprecated fork-swi
 Construct `ForkId` values explicitly:
 
 ```solidity
-PhEvm.ForkId memory preTx = PhEvm.ForkId({forkType: 0, callIndex: 0});
-PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
+PhEvm.ForkId memory preTx = _preTx();
+PhEvm.ForkId memory postTx = _postTx();
 PhEvm.ForkId memory preCall = PhEvm.ForkId({forkType: 2, callIndex: callId});
 PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: callId});
 ```

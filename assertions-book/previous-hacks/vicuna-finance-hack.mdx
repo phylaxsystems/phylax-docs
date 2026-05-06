@@ -21,7 +21,7 @@ A targeted price deviation check on all calls could have prevented this oracle m
 ```solidity
 function assertPriceDeviation() external view {
     BeetsLP assertionAdopter = BeetsLP(ph.getAssertionAdopter());
-    PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+    PhEvm.ForkId memory preFork = _preTx();
     uint256 preOraclePrice = oracle.getPrice(token); // Get the price before the transaction
 
     // Using swap calls as an example, but any call that affects price should be checked
@@ -43,7 +43,7 @@ function assertPriceDeviation() external view {
 This assertion function detects oracle price manipulation by monitoring how each call affects prices.
 
 **How it works:**
-1. **Captures baseline**: Uses `PhEvm.ForkId({forkType: 0, callIndex: 0})` with a Reshiram snapshot read to get the oracle price before any calls
+1. **Captures baseline**: Uses `_preTx()` with a Reshiram snapshot read to get the oracle price before any calls
 2. **Monitors each call**: Iterates through calls (like swaps) that could affect the oracle price
 3. **Checks price impact**: Uses a post-call `ForkId` with `ph.loadStateAt()` to see how each call changed the oracle price
 4. **Enforces limits**: Reverts if any single call causes >5% price deviation from the baseline

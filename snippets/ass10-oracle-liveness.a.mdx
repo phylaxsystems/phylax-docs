@@ -26,7 +26,7 @@ contract OracleLivenessAssertion is Assertion {
         IDex adopter = IDex(ph.getAssertionAdopter());
 
         // Get the current state to check the oracle's last update time
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
 
         // Check if the oracle has been updated within the maximum allowed window
         uint256 lastUpdateTime = IOracle(adopter.oracle()).lastUpdated();

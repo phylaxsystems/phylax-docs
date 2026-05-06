@@ -56,7 +56,7 @@ contract StorageLookupAssertion is Assertion {
         // 1. Convert bytes32 to uint256
         // 2. Convert uint256 to uint160 (address size)
         // 3. Cast to address type
-        PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postTx = _postTx();
         address owner = address(uint160(uint256(ph.loadStateAt(address(protocol), bytes32(uint256(0)), postTx))));
 
         // Verify the owner is in the whitelist

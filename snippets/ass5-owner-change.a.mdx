@@ -22,8 +22,8 @@ contract OwnerChangeAssertion is Assertion {
     /// @notice Checks that the owner slot is unchanged across the transaction.
     function assertionOwnerChange() external view {
         address adopter = ph.getAssertionAdopter();
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
+        PhEvm.ForkId memory postFork = _postTx();
 
         address preOwner = _loadAddressAt(adopter, OWNER_SLOT, preFork);
         address postOwner = _loadAddressAt(adopter, OWNER_SLOT, postFork);
@@ -34,8 +34,8 @@ contract OwnerChangeAssertion is Assertion {
     /// @notice Checks that the admin slot is unchanged across the transaction.
     function assertionAdminChange() external view {
         address adopter = ph.getAssertionAdopter();
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
+        PhEvm.ForkId memory postFork = _postTx();
 
         address preAdmin = _loadAddressAt(adopter, ADMIN_SLOT, preFork);
         address postAdmin = _loadAddressAt(adopter, ADMIN_SLOT, postFork);

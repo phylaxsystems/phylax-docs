@@ -27,7 +27,7 @@ contract PriceWithinTicksAssertion is Assertion {
         IUniswapV3Pool adopter = IUniswapV3Pool(ph.getAssertionAdopter());
 
         // Get post-swap state
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
         (, int24 postTick,,,,,) = adopter.slot0();
         int24 spacing = adopter.tickSpacing();
 

@@ -70,8 +70,8 @@ struct ForkId {
 Construct `ForkId` values explicitly:
 
 ```solidity
-PhEvm.ForkId memory preTx = PhEvm.ForkId({forkType: 0, callIndex: 0});
-PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
+PhEvm.ForkId memory preTx = _preTx();
+PhEvm.ForkId memory postTx = _postTx();
 PhEvm.ForkId memory preCall = PhEvm.ForkId({forkType: 2, callIndex: callId});
 PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: callId});
 ```
@@ -828,7 +828,7 @@ Switches the active fork to the state before the assertion-triggering transactio
 function forkPreTx() external;
 ```
 
-Use `loadStateAt(..., PhEvm.ForkId({forkType: 0, callIndex: 0}))` instead.
+Use `loadStateAt(..., _preTx())` instead.
 
 ### `forkPostTx`
 
@@ -838,7 +838,7 @@ Switches the active fork to the state after the assertion-triggering transaction
 function forkPostTx() external;
 ```
 
-Use `loadStateAt(..., PhEvm.ForkId({forkType: 1, callIndex: 0}))` instead.
+Use `loadStateAt(..., _postTx())` instead.
 
 ### `forkPreCall`
 

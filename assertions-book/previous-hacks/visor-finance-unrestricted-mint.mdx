@@ -34,12 +34,12 @@ The assertion could be triggered by a call to the deposit function.
 ```solidity
 function assertion_triggerDeposit_remainsSolvent() public view {
     // Get pre-transaction state
-    PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+    PhEvm.ForkId memory preFork = _preTx();
     uint256 preBalanceCollateral = visr.balanceOf(address(adopter));
     uint256 preTotalSupplyRewards = vvisr.totalSupply();
 
     // Get post-transaction state
-    PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+    PhEvm.ForkId memory postFork = _postTx();
     uint256 postBalanceCollateral = visr.balanceOf(address(adopter));
     uint256 postTotalSupplyRewards = vvisr.totalSupply();
 

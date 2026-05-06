@@ -20,8 +20,8 @@ contract ImplementationChangeAssertion is Assertion {
     /// @notice Checks that the implementation slot is unchanged across the transaction.
     function implementationChange() external view {
         address adopter = ph.getAssertionAdopter();
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
+        PhEvm.ForkId memory postFork = _postTx();
 
         address preImpl = _loadAddressAt(adopter, IMPLEMENTATION_SLOT, preFork);
         address postImpl = _loadAddressAt(adopter, IMPLEMENTATION_SLOT, postFork);

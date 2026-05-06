@@ -21,8 +21,8 @@ contract ConstantProductAssertion is Assertion {
     /// @notice Checks that the pool's stored reserve product is not reduced by the transaction.
     function assertionConstantProduct() external view {
         address pool = ph.getAssertionAdopter();
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory preFork = _preTx();
+        PhEvm.ForkId memory postFork = _postTx();
 
         uint256 reserve0Pre = uint256(ph.loadStateAt(pool, RESERVE0_SLOT, preFork));
         uint256 reserve1Pre = uint256(ph.loadStateAt(pool, RESERVE1_SLOT, preFork));

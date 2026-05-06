@@ -114,8 +114,8 @@ contract ProtocolAssertion is Assertion {
         Protocol protocol = Protocol(ph.getAssertionAdopter());
 
         // State comparison logic with explicit Reshiram snapshots
-        uint256 preValue = uint256(ph.loadStateAt(address(protocol), SOME_VALUE_SLOT, PhEvm.ForkId({forkType: 0, callIndex: 0})));
-        uint256 postValue = uint256(ph.loadStateAt(address(protocol), SOME_VALUE_SLOT, PhEvm.ForkId({forkType: 1, callIndex: 0})));
+        uint256 preValue = uint256(ph.loadStateAt(address(protocol), SOME_VALUE_SLOT, _preTx()));
+        uint256 postValue = uint256(ph.loadStateAt(address(protocol), SOME_VALUE_SLOT, _postTx()));
 
         // Require statements for invariants
         require(postValue >= preValue, "Descriptive error message");
@@ -127,8 +127,8 @@ contract ProtocolAssertion is Assertion {
 
 #### State Management
 
-- `PhEvm.ForkId({forkType: 0, callIndex: 0})` - Snapshot ID for state before the transaction
-- `PhEvm.ForkId({forkType: 1, callIndex: 0})` - Snapshot ID for state after the transaction
+- `_preTx()` - Snapshot ID for state before the transaction
+- `_postTx()` - Snapshot ID for state after the transaction
 - `PhEvm.ForkId({forkType: 2, callIndex: callId})` - Snapshot ID for state before a specific call
 - `PhEvm.ForkId({forkType: 3, callIndex: callId})` - Snapshot ID for state after a specific call
 - `ph.loadStateAt(target, slot, fork)` - Read storage at a snapshot
@@ -203,8 +203,8 @@ function triggers() external view override {
 function assertionStateInvariant() external view {
     Protocol protocol = Protocol(ph.getAssertionAdopter());
 
-    uint256 preValue = uint256(ph.loadStateAt(address(protocol), SOME_VALUE_SLOT, PhEvm.ForkId({forkType: 0, callIndex: 0})));
-    uint256 postValue = uint256(ph.loadStateAt(address(protocol), SOME_VALUE_SLOT, PhEvm.ForkId({forkType: 1, callIndex: 0})));
+    uint256 preValue = uint256(ph.loadStateAt(address(protocol), SOME_VALUE_SLOT, _preTx()));
+    uint256 postValue = uint256(ph.loadStateAt(address(protocol), SOME_VALUE_SLOT, _postTx()));
 
     require(postValue >= preValue, "Value cannot decrease");
 }
@@ -239,8 +239,8 @@ function assertionComplexInvariant() external view {
     Protocol protocol = Protocol(ph.getAssertionAdopter());
 
     // Layer 1: Basic state check (cheapest)
-    uint256 preBalance = uint256(ph.loadStateAt(address(protocol), BALANCE_SLOT, PhEvm.ForkId({forkType: 0, callIndex: 0})));
-    uint256 postBalance = uint256(ph.loadStateAt(address(protocol), BALANCE_SLOT, PhEvm.ForkId({forkType: 1, callIndex: 0})));
+    uint256 preBalance = uint256(ph.loadStateAt(address(protocol), BALANCE_SLOT, _preTx()));
+    uint256 postBalance = uint256(ph.loadStateAt(address(protocol), BALANCE_SLOT, _postTx()));
 
     if (postBalance < preBalance) {
         // Layer 2: Detailed analysis only if basic check fails
@@ -266,13 +266,13 @@ function assertionComplexInvariant() external view {
 function assertionIntraTxOracleDeviation() external view {
     IOracle oracle = IOracle(ph.getAssertionAdopter());
 
-    uint256 initialPrice = uint256(ph.loadStateAt(address(oracle), PRICE_SLOT, PhEvm.ForkId({forkType: 0, callIndex: 0})));
+    uint256 initialPrice = uint256(ph.loadStateAt(address(oracle), PRICE_SLOT, _preTx()));
 
     // Calculate allowed deviation thresholds
     uint256 maxAllowedPrice = (initialPrice * 110) / 100; // +10%
     uint256 minAllowedPrice = (initialPrice * 90) / 100;  // -10%
 
-    uint256 finalPrice = uint256(ph.loadStateAt(address(oracle), PRICE_SLOT, PhEvm.ForkId({forkType: 1, callIndex: 0})));
+    uint256 finalPrice = uint256(ph.loadStateAt(address(oracle), PRICE_SLOT, _postTx()));
     require(
         finalPrice >= minAllowedPrice && finalPrice <= maxAllowedPrice,
         "Oracle final price deviation exceeds threshold"

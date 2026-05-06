@@ -26,7 +26,7 @@ contract AmmFeeVerificationAssertion is Assertion {
     /// @notice Checks that the post-transaction fee is one of the allowed values.
     function assertFeeVerification() external view {
         address pool = ph.getAssertionAdopter();
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        PhEvm.ForkId memory postFork = _postTx();
 
         bool isStable = uint256(ph.loadStateAt(pool, STABLE_SLOT, postFork)) != 0;
         uint256 newFee = uint256(ph.loadStateAt(pool, FEE_SLOT, postFork));
