@@ -3,15 +3,20 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract LendingHealthFactorAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     function triggers() external view override {
         // Register triggers for each function that should maintain healthy positions
-        registerCallTrigger(this.assertionSupply.selector, IMorpho.supply.selector);
-        registerCallTrigger(this.assertionBorrow.selector, IMorpho.borrow.selector);
-        registerCallTrigger(this.assertionWithdraw.selector, IMorpho.withdraw.selector);
-        registerCallTrigger(this.assertionRepay.selector, IMorpho.repay.selector);
+        registerFnCallTrigger(this.assertionSupply.selector, IMorpho.supply.selector);
+        registerFnCallTrigger(this.assertionBorrow.selector, IMorpho.borrow.selector);
+        registerFnCallTrigger(this.assertionWithdraw.selector, IMorpho.withdraw.selector);
+        registerFnCallTrigger(this.assertionRepay.selector, IMorpho.repay.selector);
     }
 
     // Check that supply operation maintains healthy positions

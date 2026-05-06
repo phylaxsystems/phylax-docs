@@ -3,15 +3,20 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract IntraTxOracleDeviationAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     // Maximum allowed price deviation (10% by default)
     uint256 public constant MAX_DEVIATION_PERCENTAGE = 10;
 
     function triggers() external view override {
         // Register trigger for oracle price update calls
-        registerCallTrigger(this.assertOracleDeviation.selector, IOracle.updatePrice.selector);
+        registerFnCallTrigger(this.assertOracleDeviation.selector, IOracle.updatePrice.selector);
     }
 
     // Check that price updates don't deviate more than the allowed percentage
@@ -21,7 +26,7 @@ contract IntraTxOracleDeviationAssertion is Assertion {
         IOracle adopter = IOracle(ph.getAssertionAdopter());
 
         // Start with a simple check comparing pre and post state
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         uint256 prePrice = adopter.price();
 
         // Calculate allowed deviation thresholds (10% by default)
@@ -29,7 +34,7 @@ contract IntraTxOracleDeviationAssertion is Assertion {
         uint256 minAllowedPrice = (prePrice * (100 - MAX_DEVIATION_PERCENTAGE)) / 100;
 
         // First check post-state price
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         uint256 postPrice = adopter.price();
 
         // Verify post-state price is within allowed deviation from initial price
@@ -44,7 +49,7 @@ contract IntraTxOracleDeviationAssertion is Assertion {
 
         // Check each price update to ensure none deviate more than allowed from initial price
         for (uint256 i = 0; i < priceUpdates.length; i++) {
-            ph.forkPostCall(priceUpdates[i].id);
+            PhEvm.ForkId memory postCallFork = PhEvm.ForkId({forkType: 3, callIndex: priceUpdates[i].id});
 
             // Call the price function at the given frame in the call stack
             uint256 updatedPrice = adopter.price();

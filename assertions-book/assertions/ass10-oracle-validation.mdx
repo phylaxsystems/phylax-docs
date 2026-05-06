@@ -18,8 +18,8 @@ Stale oracle data can indicate service disruption or attacks on oracle infrastru
 
 Monitors oracle timestamp updates when critical protocol functions are called:
 
-- `forkPostTx()`: Check oracle's last update time after transaction
-- `registerCallTrigger()`: Trigger on functions that rely on oracle data (e.g., DEX swaps)
+- `PhEvm.ForkId({forkType: 1, callIndex: 0})`: Check oracle's last update time after transaction
+- `registerFnCallTrigger()`: Trigger on functions that rely on oracle data (e.g., DEX swaps)
 - Verify oracle's last update time is within defined maximum time window
 
 Upon functions that rely on oracle data, the assertion ensures transactions only proceed with fresh oracle data, preventing operations with stale pricing information.

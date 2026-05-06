@@ -3,13 +3,18 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract OwnerChangeAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     function triggers() external view override {
         // Register triggers for changes to both owner and admin storage slots
-        registerStorageChangeTrigger(this.assertionOwnerChange.selector, bytes32(uint256(0)));
-        registerStorageChangeTrigger(this.assertionAdminChange.selector, bytes32(uint256(1)));
+        registerTxEndTrigger(this.assertionOwnerChange.selector);
+        registerTxEndTrigger(this.assertionAdminChange.selector);
     }
 
     // Assert that the owner address doesn't change during the state transition
@@ -18,11 +23,11 @@ contract OwnerChangeAssertion is Assertion {
         IOwnership adopter = IOwnership(ph.getAssertionAdopter());
 
         // Get pre-state owner
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         address preOwner = adopter.owner();
 
         // Get post-state owner
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         address postOwner = adopter.owner();
 
         // Verify owner hasn't changed after the transaction
@@ -48,11 +53,11 @@ contract OwnerChangeAssertion is Assertion {
         IOwnership adopter = IOwnership(ph.getAssertionAdopter());
 
         // Get pre-state admin
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         address preAdmin = adopter.admin();
 
         // Get post-state admin
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         address postAdmin = adopter.admin();
 
         // Get all state changes for the admin slot

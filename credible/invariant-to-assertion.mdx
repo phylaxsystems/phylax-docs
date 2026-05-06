@@ -107,9 +107,9 @@ We register a trigger for each:
 
 ```solidity
 function triggers() external view override {
-    registerCallTrigger(this.assertionBatchSharePriceInvariant.selector, IEVC.batch.selector);
-    registerCallTrigger(this.assertionCallSharePriceInvariant.selector, IEVC.call.selector);
-    registerCallTrigger(this.assertionControlCollateralSharePriceInvariant.selector, IEVC.controlCollateral.selector);
+    registerFnCallTrigger(this.assertionBatchSharePriceInvariant.selector, IEVC.batch.selector);
+    registerFnCallTrigger(this.assertionCallSharePriceInvariant.selector, IEVC.call.selector);
+    registerFnCallTrigger(this.assertionControlCollateralSharePriceInvariant.selector, IEVC.controlCollateral.selector);
 }
 ```
 
@@ -149,17 +149,15 @@ Cheatcodes used:
 The core logic compares share prices before and after the transaction:
 
 ```solidity
-function validateVaultSharePriceInvariant(address vault) internal {
+function validateVaultSharePriceInvariant(address vault) internal view {
     // Skip non-contract addresses
     if (vault.code.length == 0) return;
-    
-    // Get share price BEFORE transaction
-    ph.forkPreTx();
-    uint256 preSharePrice = getSharePrice(vault);
-    
-    // Get share price AFTER transaction
-    ph.forkPostTx();
-    uint256 postSharePrice = getSharePrice(vault);
+
+    PhEvm.ForkId memory preTx = PhEvm.ForkId({forkType: 0, callIndex: 0});
+    PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
+
+    uint256 preSharePrice = getSharePriceAt(vault, preTx);
+    uint256 postSharePrice = getSharePriceAt(vault, postTx);
     
     // Check the invariant
     if (postSharePrice < preSharePrice) {
@@ -172,9 +170,9 @@ function validateVaultSharePriceInvariant(address vault) internal {
     }
 }
 
-function getSharePrice(address vault) internal view returns (uint256) {
-    uint256 totalAssets = IERC4626(vault).totalAssets();
-    uint256 totalSupply = IERC4626(vault).totalSupply();
+function getSharePriceAt(address vault, PhEvm.ForkId memory fork) internal view returns (uint256) {
+    uint256 totalAssets = uint256(ph.loadStateAt(vault, TOTAL_ASSETS_SLOT, fork));
+    uint256 totalSupply = uint256(ph.loadStateAt(vault, TOTAL_SUPPLY_SLOT, fork));
     
     if (totalSupply > 0) {
         return (totalAssets * 1e18) / totalSupply;
@@ -184,8 +182,8 @@ function getSharePrice(address vault) internal view returns (uint256) {
 ```
 
 Cheatcodes used:
-- [`ph.forkPreTx()`](/credible/cheatcodes-reference#forkpretx): Switch to blockchain state before the transaction
-- [`ph.forkPostTx()`](/credible/cheatcodes-reference#forkposttx): Switch to blockchain state after the transaction
+- [`PhEvm.ForkId`](/credible/cheatcodes-reference#forkid): Identifies the pre-transaction and post-transaction snapshots
+- [`ph.loadStateAt()`](/credible/cheatcodes-reference#loadstateat): Reads a storage slot at a specific snapshot
 
 ### Part C: Detect Bad Debt Socialization
 
@@ -373,4 +371,3 @@ The complete example from this guide is available in our fork of the [EVC reposi
     Learn about trigger types and optimization
   </Card>
 </CardGroup>
-

@@ -47,10 +47,15 @@ Multisig protection assertions could have prevented this attack by enforcing gov
 pragma solidity 0.8.28;
 
 import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {AssertionSpec} from "../../lib/credible-std/src/SpecRecorder.sol";
 import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
 import {ISafe} from "@safe-global/safe-contracts/contracts/interfaces/ISafe.sol";
 
 contract UxLinkMultisigProtectionAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     // Minimum threshold that must be maintained
     uint256 constant MIN_THRESHOLD = 2;
 
@@ -60,17 +65,17 @@ contract UxLinkMultisigProtectionAssertion is Assertion {
     address constant ALLOWED_OWNER_3 = 0x3333333333333333333333333333333333333333;
 
     function triggers() external view override {
-        registerCallTrigger(
+        registerFnCallTrigger(
             this.assertThresholdProtection.selector,
             ISafe.changeThreshold.selector
         );
 
-        registerCallTrigger(
+        registerFnCallTrigger(
             this.assertOwnerAddition.selector,
             ISafe.addOwnerWithThreshold.selector
         );
 
-        registerCallTrigger(
+        registerFnCallTrigger(
             this.assertOwnerRemoval.selector,
             ISafe.removeOwner.selector
         );

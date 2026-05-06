@@ -1,111 +1,154 @@
 ---
 title: 'Cheatcodes API Reference'
-description: 'Complete API reference for cheatcodes in the Phylax Credible Layer'
+description: 'Reference for deprecated, legacy, and Reshiram cheatcodes in the Phylax Credible Layer'
 ---
 
 <Note>
-New to cheatcodes? Start with [What are Cheatcodes?](/credible/cheatcodes-overview) to understand what they are and why they exist.
+New to cheatcodes? Start with [What are Cheatcodes?](./cheatcodes-overview) to understand what they are and why they exist.
 </Note>
 
-## State Management
+This reference lists the Credible Layer cheatcodes exposed through `credible-std`.
 
-### `forkPreTx`
+Cheatcodes are grouped by API status:
 
-Updates the active fork to the state prior to the assertion triggering transaction. Useful for:
-- Checking chain state before a transaction
-- Comparing values between pre and post states
+- **Legacy precompiles**: launch-era APIs that remain part of the legacy assertion surface.
+- **Reshiram precompiles**: newer APIs based on explicit `ForkId` snapshot reads, call context, richer log and call inspection, and protection-suite helpers.
+- **Deprecated cheatcodes**: legacy fork-switching APIs. Do not use them in new assertions.
 
-```solidity
-function forkPreTx() external
-```
+<Warning>
+As of May 6, 2026, the v2 Reshiram spec is not live on Linea mainnet. Do not assume Reshiram-only precompiles or `onFnCall` and `onTxEnd` triggers are available on Linea mainnet until that rollout is live.
+</Warning>
 
-### `forkPostTx`
+## Assertion Specs
 
-Updates the active fork to the state after the assertion triggering transaction. Useful for:
-- Verifying chain state after a transaction
-- Comparing values between pre and post states
+`credible-std` defines assertion specs in `SpecRecorder.sol`.
 
 ```solidity
-function forkPostTx() external
+enum AssertionSpec {
+    Legacy,
+    Reshiram,
+    Experimental
+}
 ```
 
-### `forkPreCall`
+| Spec | Availability |
+| --- | --- |
+| `Legacy` | Standard launch precompile set. Reshiram-only precompiles are unavailable. |
+| `Reshiram` | Reshiram precompiles plus the non-deprecated shared surface. Legacy-only fork-switching selectors are unavailable. |
+| `Experimental` | Unrestricted access to all available precompiles. May include untested or dangerous behavior. |
 
-Updates the active fork to the state at the start of call execution for the specified id. `getCallInputs(..)` can be used to get ids to fork to.
+Register the spec in the assertion constructor:
 
 ```solidity
-function forkPreCall(uint256 id) external
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+
+constructor() {
+    registerAssertionSpec(AssertionSpec.Reshiram);
+}
 ```
 
-### `forkPostCall`
+## Common Types
 
-Updates the active fork to the state after the call execution for the specified id. `getCallInputs(..)` can be used to get ids to fork to.
+### `ForkId`
+
+Identifies an immutable transaction snapshot.
 
 ```solidity
-function forkPostCall(uint256 id) external
+struct ForkId {
+    uint8 forkType;
+    uint256 callIndex;
+}
 ```
 
-## Storage Operations
+| `forkType` | Snapshot |
+| --- | --- |
+| `0` | `PreTx` |
+| `1` | `PostTx` |
+| `2` | `PreCall(callIndex)` |
+| `3` | `PostCall(callIndex)` |
 
-### `load`
-
-Loads a storage slot from an address.
-
-<Note>
-Using `forge inspect <ContractName> storage-layout` is an easy way to get the storage layout of a contract. This can be used to determine the storage slot of a specific variable to use in the cheatcode.
-</Note>
+Construct `ForkId` values explicitly:
 
 ```solidity
-function load(
-    address target,
-    bytes32 slot
-) external view returns (bytes32 data)
+PhEvm.ForkId memory preTx = PhEvm.ForkId({forkType: 0, callIndex: 0});
+PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
+PhEvm.ForkId memory preCall = PhEvm.ForkId({forkType: 2, callIndex: callId});
+PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: callId});
 ```
 
-You can see an example of how to use this cheatcode in the [Storage Lookups](/credible/use-case-mappings/storage-lookups) use case mapping.
+### `Log`
 
-## Transaction Data
-
-### `getLogs`
-
-Retrieves logs from the assertion triggering transaction.
+Represents an Ethereum log emitted during transaction execution.
 
 ```solidity
 struct Log {
-    bytes32[] topics;   // Log topics, including signature
-    bytes data;         // Raw log data
-    address emitter;    // Log emitter address
+    bytes32[] topics;
+    bytes data;
+    address emitter;
 }
-
-function getLogs() external returns (Log[] memory logs)
 ```
 
-You can see an example of how to use this cheatcode in the [Read Logs](/credible/use-case-mappings/read-logs) use case mapping.
+### `LogQuery`
 
-### `getAllCallInputs`
+Filters logs by emitter and signature.
 
-Gets all call inputs for a given target and selector. This includes all types of calls (CALL, STATICCALL, DELEGATECALL, CALLCODE).
+```solidity
+struct LogQuery {
+    address emitter;
+    bytes32 signature;
+}
+```
+
+`address(0)` matches any emitter. `bytes32(0)` matches any topic0 signature.
+
+### `CallInputs`
+
+Represents call input data recorded during transaction execution.
 
 ```solidity
 struct CallInputs {
-    bytes input;                // Call data
-    uint64 gas_limit;           // Gas limit
-    address bytecode_address;   // Code execution address
-    address target_address;     // Storage modification target
-    address caller;             // Transaction caller
-    uint256 value;              // Call value
-    uint256 id;                 // Call id (used for forkPreCall and forkPostCall)
+    bytes input;
+    uint64 gas_limit;
+    address bytecode_address;
+    address target_address;
+    address caller;
+    uint256 value;
+    uint256 id;
 }
+```
 
+Use `id` with call-scoped APIs such as `PhEvm.ForkId({forkType: 2, callIndex: id})`, `PhEvm.ForkId({forkType: 3, callIndex: id})`, `callinputAt(id)`, `callOutputAt(id)`, and `getLogsForCall(query, id)`.
+
+## Legacy Precompiles
+
+Legacy precompiles are the standard launch-era cheatcodes. Some are still useful, but prefer the Reshiram equivalents when you need explicit snapshot selection or call-scoped behavior.
+
+### `getLogs`
+
+Returns all logs emitted during the assertion-triggering transaction.
+
+```solidity
+function getLogs() external returns (Log[] memory logs);
+```
+
+Use `getLogsQuery(query, fork)` when you need emitter or signature filtering, or `getLogsForCall(query, callId)` when you need call-scoped logs.
+
+### `getAllCallInputs`
+
+Gets call inputs for a target and selector across `CALL`, `STATICCALL`, `DELEGATECALL`, and `CALLCODE`.
+
+```solidity
 function getAllCallInputs(
     address target,
     bytes4 selector
 ) external view returns (CallInputs[] memory calls);
 ```
 
+Prefer the opcode-specific functions below when you need to avoid double counting through proxies.
+
 ### `getCallInputs`
 
-Gets call inputs for a given target and selector. Only includes calls made using 'CALL' opcode.
+Gets call inputs for `CALL` opcodes only.
 
 ```solidity
 function getCallInputs(
@@ -114,11 +157,9 @@ function getCallInputs(
 ) external view returns (CallInputs[] memory calls);
 ```
 
-You can see an example of how to use this cheatcode in the [Function Call Inputs](/credible/use-case-mappings/function-call-inputs) use case mapping.
-
 ### `getStaticCallInputs`
 
-Gets static call inputs for a given target and selector. Only includes calls made using 'STATICCALL' opcode.
+Gets call inputs for `STATICCALL` opcodes only.
 
 ```solidity
 function getStaticCallInputs(
@@ -129,7 +170,7 @@ function getStaticCallInputs(
 
 ### `getDelegateCallInputs`
 
-Gets delegate call inputs for a given target and selector. Only includes calls made using 'DELEGATECALL' opcode.
+Gets call inputs for `DELEGATECALL` opcodes only.
 
 ```solidity
 function getDelegateCallInputs(
@@ -140,7 +181,7 @@ function getDelegateCallInputs(
 
 ### `getCallCodeInputs`
 
-Gets call code inputs for a given target and selector. Only includes calls made using 'CALLCODE' opcode.
+Gets call inputs for `CALLCODE` opcodes only.
 
 ```solidity
 function getCallCodeInputs(
@@ -149,60 +190,13 @@ function getCallCodeInputs(
 ) external view returns (CallInputs[] memory calls);
 ```
 
-### Avoiding Double-Counting with Call Inputs
-
-The specific call input cheatcodes (`getCallInputs`, `getStaticCallInputs`, `getDelegateCallInputs`, `getCallCodeInputs`) eliminate double-counting issues by allowing you to target only the specific call type you need. Use these instead of `getAllCallInputs()` when you want to avoid duplicate entries from proxy contracts.
-
-For example, if you're monitoring a proxy contract and only want the actual delegate calls (not the proxy calls), use `getDelegateCallInputs()` instead of `getAllCallInputs()`.
-
-```solidity
-// GOOD: Only get delegate calls, no duplicates
-CallInputs[] memory delegateCalls = ph.getDelegateCallInputs(target, selector);
-
-// AVOID: May include both proxy and delegate calls for the same operation
-CallInputs[] memory allCalls = ph.getAllCallInputs(target, selector);
-```
-
-If you must use `getAllCallInputs()`, you may still need to filter out proxy calls:
-
-```solidity
-// Filter proxy calls when using getAllCallInputs
-for (uint256 i = 0; i < callInputs.length; i++) {
-  if (callInputs[i].bytecode_address == callInputs[i].target_address) {
-    continue; // Skip proxy calls, only process delegate calls
-  }
-  // Process the actual call
-}
-```
-
 <Info>
-Internal calls are not actual EVM calls but rather a Solidity language feature. They are not traced by the CallTracer and will not result in `CallInputs` or trigger call-based assertions. However, using the `this` keyword (e.g., `this.functionName()`) creates an external call that will be traced and can trigger assertions.
-
-Example:
-```solidity
-function foo() external {
-    // Internal call - not traced, no CallInputs generated
-    bar();
-
-    // External call via 'this' - traced, generates CallInputs
-    this.bar();
-}
-
-function bar() public {
-    // Function implementation
-}
-```
+Internal Solidity calls are not EVM calls and are not recorded by the call tracer. Calls made through `this.someFunction()` are external calls and can be recorded.
 </Info>
-
-## State Change Tracking
 
 ### `getStateChanges`
 
-Returns state changes for a contract's storage slot within the current call stack.
-
-<Note>
-Using `forge inspect <ContractName> storage-layout` is an easy way to get the storage layout of a contract. This can be used to determine the storage slot of a specific variable to use in the cheatcode.
-</Note>
+Returns the sequence of values for a storage slot during transaction execution.
 
 ```solidity
 function getStateChanges(
@@ -211,215 +205,670 @@ function getStateChanges(
 ) external view returns (bytes32[] memory stateChanges);
 ```
 
-You can see an example of how to use this cheatcode in the [State Changes](/credible/use-case-mappings/state-changes) use case mapping.
+The returned array includes the initial value as the first element. The length is either `0` or at least `2`.
 
-<Note>
-The array returned includes the initial value of the slot as the first element, so the length of the array is either 0 or >= 2.
-</Note>
+### State Change Helpers
 
-### Helper Functions
-
-The following helpers convert state changes to specific types. Each has three variants:
-- Basic: Get changes for a single slot
-- Mapping: Get changes using a mapping key
-- Mapping with Offset: Get changes using a key and offset for complex storage
-
-#### `getStateChangesUint`
-
-Gets state changes for a storage slot as uint256 values.
+`StateChanges.sol` provides typed helpers for reading slot changes as common Solidity types.
 
 ```solidity
-// Basic
 function getStateChangesUint(
     address target,
     bytes32 slot
-) internal view returns (uint256[] memory)
+) internal view returns (uint256[] memory);
 
-// With mapping
-function getStateChangesUint(
+function getStateChangesAddress(
     address target,
-    bytes32 slot,
-    uint256 key
-) internal view returns (uint256[] memory)
-
-// With mapping and offset
-function getStateChangesUint(
-    address target,
-    bytes32 slot,
-    uint256 key,
-    uint256 offset
-) internal view returns (uint256[] memory)
-```
-
-Similar helper functions exist for:
-- `getStateChangesAddress`: Convert to address values
-- `getStateChangesBool`: Convert to boolean values
-- `getStateChangesBytes32`: Get raw bytes32 values
-
-Each of these functions follows the same pattern with basic, mapping, and mapping-with-offset variants.
-
-## Triggers
-
-Triggers determine when your assertion functions will be executed. You can register different types of triggers in your assertion's `triggers()` function.
-
-<Note>
-Use triggers to ensure that assertions are only called when they are needed in order to save gas and resources. For example, instead of triggering an assertion on every call to a contract, you can trigger it only on specific function calls that are able to change the state of the specific value you are asserting on.
-</Note>
-
-### Call Triggers
-
-Call triggers execute your assertion when specific contract calls occur.
-
-```solidity
-// Trigger on any call to the contract
-// Note: It is not recommended to use this trigger as it will trigger the assertion on every call to the contract
-// This can be expensive and inefficient
-function registerCallTrigger(
-    bytes4 assertionFnSelector
-) internal view
-
-// Trigger on specific function calls
-function registerCallTrigger(
-    bytes4 assertionFnSelector,
-    bytes4 triggerSelector
-) internal view
-```
-
-Example:
-```solidity
-function triggers() external view override {
-    // Run assertion on ALL calls to the contract
-    registerCallTrigger(this.checkAllCalls.selector);
-
-    // Run assertion only on transfer calls
-    registerCallTrigger(
-        this.checkTransfer.selector,
-        IERC20.transfer.selector
-    );
-}
-```
-
-### Storage Triggers
-
-Storage triggers execute your assertion when contract storage changes.
-
-<Note>
-Using `forge inspect <ContractName> storage-layout` is an easy way to get the storage layout of a contract. This can be used to determine the storage slot of a specific variable to use in the cheatcode.
-</Note>
-
-```solidity
-// Trigger on ANY storage slot change
-// Note: It is not recommended to use this trigger as it will trigger the assertion on every storage slot change
-// This can be expensive and inefficient
-function registerStorageChangeTrigger(
-    bytes4 assertionFnSelector
-) internal view
-
-// Trigger on changes to a specific storage slot
-function registerStorageChangeTrigger(
-    bytes4 assertionFnSelector,
     bytes32 slot
-) internal view
+) internal view returns (address[] memory);
+
+function getStateChangesBool(
+    address target,
+    bytes32 slot
+) internal view returns (bool[] memory);
+
+function getStateChangesBytes32(
+    address target,
+    bytes32 slot
+) internal view returns (bytes32[] memory);
 ```
 
-Example:
-```solidity
-function triggers() external view override {
-    // Run assertion on ANY storage change
-    registerStorageChangeTrigger(this.checkAllStorage.selector);
-
-    // Run assertion when totalSupply slot changes
-    registerStorageChangeTrigger(
-        this.checkSupply.selector,
-        TOTAL_SUPPLY_SLOT
-    );
-}
-```
-
-### Balance Triggers
-
-Executes assertion on ETH balance changes.
-
-```solidity
-function registerBalanceChangeTrigger(
-    bytes4 assertionFnSelector
-) internal view
-```
-
-### Combining Triggers
-
-Triggers can be combined for comprehensive coverage:
-
-```solidity
-function triggers() external view override {
-    // Multiple triggers for one assertion
-    registerStorageChangeTrigger(this.mainInvariant.selector);
-    registerCallTrigger(this.mainInvariant.selector);
-
-    // Different assertions for different events
-    registerBalanceChangeTrigger(this.checkBalances.selector);
-    registerCallTrigger(
-        this.checkCalls.selector,
-        IERC20.transfer.selector
-    );
-}
-```
-
-## Helpers
+The helper family also includes mapping-key and mapping-key-with-offset variants.
 
 ### `getAssertionAdopter`
 
-Get assertion adopter contract address associated with the assertion triggering transaction.
+Returns the assertion adopter contract address associated with the current transaction.
 
 ```solidity
 function getAssertionAdopter() external view returns (address);
 ```
 
-This cheatcode removes the need to define an assertion adopter contract in the assertion contract constructor.
-
-The cheatcode is only available in the `triggers()` function and the assertion functions. It cannot be used in the constructor since assertion contracts have no state during deployment.
+This cheatcode is available in `triggers()` and assertion functions. It is not available in the constructor because assertion contracts have no state during deployment.
 
 ### `console.log`
 
-Prints debug information to the console during testing with `pcl test`. Useful for debugging assertion logic and understanding transaction flow.
+Prints debug information during local assertion testing.
 
 ```solidity
 function console.log(string memory message) external;
 ```
 
-Example:
+Import it from `credible-std/Console.sol`.
+
+## Legacy Trigger Registration
+
+Legacy trigger registration functions are internal helpers on `Assertion`.
+
+### `registerCallTrigger`
+
+Registers an assertion function to run when the adopter receives a call.
+
 ```solidity
-import { console } from "credible-std/console.sol";
+function registerCallTrigger(
+    bytes4 assertionFnSelector
+) internal view;
 
-function assertionExample() external {
-    ph.forkPreTx();
-    uint256 preBalance = token.balanceOf(user);
+function registerCallTrigger(
+    bytes4 assertionFnSelector,
+    bytes4 triggerSelector
+) internal view;
+```
 
-    ph.forkPostTx();
-    uint256 postBalance = token.balanceOf(user);
+The one-argument overload triggers on any call to the adopter. The two-argument overload triggers on calls matching `triggerSelector`.
 
-    console.log("Checking user balance assertion");
+### `registerStorageChangeTrigger`
 
-    require(postBalance >= preBalance, "Balance should not decrease");
+Registers an assertion function to run when adopter storage changes.
+
+```solidity
+function registerStorageChangeTrigger(
+    bytes4 assertionFnSelector
+) internal view;
+
+function registerStorageChangeTrigger(
+    bytes4 assertionFnSelector,
+    bytes32 slot
+) internal view;
+```
+
+The one-argument overload triggers on any storage slot change. The two-argument overload triggers on a specific slot.
+
+### `registerBalanceChangeTrigger`
+
+Registers an assertion function to run when the adopter's ETH balance changes.
+
+```solidity
+function registerBalanceChangeTrigger(
+    bytes4 assertionFnSelector
+) internal view;
+```
+
+## Reshiram Precompiles
+
+Reshiram precompiles use explicit snapshot reads instead of global fork switching. In `credible-sdk`, these live under `crates/assertion-executor/src/inspectors/precompiles/reshiram/`.
+
+### State Access
+
+#### `loadStateAt`
+
+Reads a storage slot from a snapshot fork.
+
+```solidity
+function loadStateAt(
+    bytes32 slot,
+    ForkId calldata fork
+) external view returns (bytes32 value);
+
+function loadStateAt(
+    address target,
+    bytes32 slot,
+    ForkId calldata fork
+) external view returns (bytes32 value);
+```
+
+The first overload reads from the current assertion adopter. The second overload reads from any target account.
+
+#### `staticcallAt`
+
+Executes a read-only call against a snapshot fork.
+
+```solidity
+struct StaticCallResult {
+    bool ok;
+    bytes data;
+}
+
+function staticcallAt(
+    address target,
+    bytes calldata data,
+    uint64 gas_limit,
+    ForkId calldata fork
+) external view returns (StaticCallResult memory result);
+```
+
+`data` contains return data when `ok` is `true` and revert data when `ok` is `false`.
+
+### Logs
+
+#### `getLogsQuery`
+
+Returns logs matching an emitter/signature query from a snapshot fork.
+
+```solidity
+function getLogsQuery(
+    LogQuery calldata query,
+    ForkId calldata fork
+) external view returns (Log[] memory logs);
+```
+
+#### `getLogsForCall`
+
+Returns logs matching a query from one recorded call frame.
+
+```solidity
+function getLogsForCall(
+    LogQuery calldata query,
+    uint256 callId
+) external view returns (Log[] memory logs);
+```
+
+### Call Inspection
+
+#### `callinputAt`
+
+Returns the raw calldata for a traced call.
+
+```solidity
+function callinputAt(
+    uint256 callId
+) external view returns (bytes memory input);
+```
+
+#### `callOutputAt`
+
+Returns the raw return or revert bytes for a traced call.
+
+```solidity
+function callOutputAt(
+    uint256 callId
+) external view returns (bytes memory output);
+```
+
+#### `matchingCalls`
+
+Returns recorded calls matching target, selector, and filter criteria.
+
+```solidity
+struct CallFilter {
+    uint8 callType;
+    uint32 minDepth;
+    uint32 maxDepth;
+    bool topLevelOnly;
+    bool successOnly;
+}
+
+struct TriggerCall {
+    uint256 callId;
+    uint256 parentCallId;
+    address caller;
+    address target;
+    address codeAddress;
+    bytes4 selector;
+    uint32 depth;
+    uint8 callType;
+    bool success;
+    uint256 value;
+    bytes input;
+}
+
+function matchingCalls(
+    address target,
+    bytes4 selector,
+    CallFilter calldata filter,
+    uint256 limit
+) external view returns (TriggerCall[] memory calls);
+```
+
+`callType` uses `0` for any, `1` for `CALL`, `2` for `STATICCALL`, `3` for `DELEGATECALL`, and `4` for `CALLCODE`.
+
+### Trigger Context
+
+#### `context`
+
+Returns context for the current `registerFnCallTrigger` invocation.
+
+```solidity
+struct TriggerContext {
+    bytes4 selector;
+    uint256 callStart;
+    uint256 callEnd;
+}
+
+function context() external view returns (TriggerContext memory);
+```
+
+This reverts outside an assertion function triggered by `registerFnCallTrigger`.
+
+### ERC20 Introspection
+
+#### `Erc20TransferData`
+
+Decoded ERC20 `Transfer` event data.
+
+```solidity
+struct Erc20TransferData {
+    address token_addr;
+    address from;
+    address to;
+    uint256 value;
 }
 ```
 
-## Next Steps
+#### `getErc20Transfers`
+
+Returns decoded ERC20 transfers for one token in a snapshot fork.
+
+```solidity
+function getErc20Transfers(
+    address token,
+    ForkId calldata fork
+) external view returns (Erc20TransferData[] memory transfers);
+```
+
+#### `getErc20TransfersForTokens`
+
+Returns decoded ERC20 transfers across multiple tokens in a snapshot fork.
+
+```solidity
+function getErc20TransfersForTokens(
+    address[] calldata tokens,
+    ForkId calldata fork
+) external view returns (Erc20TransferData[] memory transfers);
+```
+
+#### `changedErc20BalanceDeltas`
+
+Returns all transfer records involving a token in a snapshot fork.
+
+```solidity
+function changedErc20BalanceDeltas(
+    address token,
+    ForkId calldata fork
+) external view returns (Erc20TransferData[] memory deltas);
+```
+
+#### `reduceErc20BalanceDeltas`
+
+Aggregates transfers into net balance deltas per unique `(from, to)` pair.
+
+```solidity
+function reduceErc20BalanceDeltas(
+    address token,
+    ForkId calldata fork
+) external view returns (Erc20TransferData[] memory deltas);
+```
+
+### Mapping Tracing
+
+#### `changedMappingKeys`
+
+Returns canonical Solidity key encodings for mapping entries written during the transaction.
+
+```solidity
+function changedMappingKeys(
+    address target,
+    bytes32 baseSlot
+) external view returns (bytes[] memory keys);
+```
+
+This is a best-effort trace heuristic. Custom assembly or precomputed hashed slots can produce false negatives.
+
+#### `mappingValueDiff`
+
+Returns pre-transaction and post-transaction values for one mapping entry.
+
+```solidity
+function mappingValueDiff(
+    address target,
+    bytes32 baseSlot,
+    bytes calldata key,
+    uint256 fieldOffset
+) external view returns (bytes32 pre, bytes32 post, bool changed);
+```
+
+### Transaction Object
+
+#### `getTxObject`
+
+Returns data from the original assertion-triggering transaction.
+
+```solidity
+struct TxObject {
+    address from;
+    address to;
+    uint256 value;
+    uint64 chain_id;
+    uint64 gas_limit;
+    uint128 gas_price;
+    bytes input;
+}
+
+function getTxObject() external view returns (TxObject memory txObject);
+```
+
+### Protection Suite Helpers
+
+#### `forbidChangeForSlot`
+
+Checks that one adopter storage slot was not modified.
+
+```solidity
+function forbidChangeForSlot(
+    bytes32 slot
+) external returns (bool ok);
+```
+
+#### `forbidChangeForSlots`
+
+Checks that none of the listed adopter storage slots were modified.
+
+```solidity
+function forbidChangeForSlots(
+    bytes32[] calldata slots
+) external returns (bool ok);
+```
+
+#### `conserveBalance`
+
+Checks that an account's ERC20 balance is unchanged between two forks.
+
+```solidity
+function conserveBalance(
+    ForkId calldata fork0,
+    ForkId calldata fork1,
+    address token,
+    address account
+) external returns (bool);
+```
+
+#### `oracleSanity`
+
+Checks oracle price consistency across all fork points.
+
+```solidity
+function oracleSanity(
+    address target,
+    bytes calldata data,
+    uint256 bpsDeviation
+) external returns (bool);
+```
+
+#### `oracleSanityAt`
+
+Checks oracle price consistency between two specific forks.
+
+```solidity
+function oracleSanityAt(
+    address target,
+    bytes calldata data,
+    uint256 bpsDeviation,
+    ForkId calldata initialFork,
+    ForkId calldata currentFork
+) external returns (bool);
+```
+
+#### `assetsMatchSharePrice`
+
+Checks ERC4626 share price consistency across all fork points.
+
+```solidity
+function assetsMatchSharePrice(
+    address vault,
+    uint256 toleranceBps
+) external returns (bool);
+```
+
+#### `assetsMatchSharePriceAt`
+
+Checks ERC4626 share price consistency between two forks.
+
+```solidity
+function assetsMatchSharePriceAt(
+    address vault,
+    uint256 toleranceBps,
+    ForkId calldata fork0,
+    ForkId calldata fork1
+) external returns (bool);
+```
+
+### Circuit Breaker Context
+
+#### `outflowContext`
+
+Returns context for an assertion triggered by `watchCumulativeOutflow`.
+
+```solidity
+struct OutflowContext {
+    address token;
+    uint256 cumulativeOutflow;
+    uint256 absoluteOutflow;
+    uint256 currentBps;
+    uint256 tvlSnapshot;
+    uint256 windowStart;
+    uint256 windowEnd;
+}
+
+function outflowContext() external view returns (OutflowContext memory ctx);
+```
+
+#### `inflowContext`
+
+Returns context for an assertion triggered by `watchCumulativeInflow`.
+
+```solidity
+struct InflowContext {
+    address token;
+    uint256 cumulativeInflow;
+    uint256 absoluteInflow;
+    uint256 currentBps;
+    uint256 tvlSnapshot;
+    uint256 windowStart;
+    uint256 windowEnd;
+}
+
+function inflowContext() external view returns (InflowContext memory ctx);
+```
+
+### Math Helpers
+
+#### `mulDivDown`
+
+Computes `(x * y) / denominator`, rounded down, using 512-bit intermediates.
+
+```solidity
+function mulDivDown(
+    uint256 x,
+    uint256 y,
+    uint256 denominator
+) external pure returns (uint256 result);
+```
+
+#### `mulDivUp`
+
+Computes `(x * y) / denominator`, rounded up, using 512-bit intermediates.
+
+```solidity
+function mulDivUp(
+    uint256 x,
+    uint256 y,
+    uint256 denominator
+) external pure returns (uint256 result);
+```
+
+#### `normalizeDecimals`
+
+Scales an amount from one decimal base to another.
+
+```solidity
+function normalizeDecimals(
+    uint256 amount,
+    uint8 fromDecimals,
+    uint8 toDecimals
+) external pure returns (uint256 result);
+```
+
+#### `ratioGe`
+
+Compares two ratios with basis-point tolerance.
+
+```solidity
+function ratioGe(
+    uint256 num1,
+    uint256 den1,
+    uint256 num2,
+    uint256 den2,
+    uint256 toleranceBps
+) external pure returns (bool);
+```
+
+### Reshiram Trigger Registration
+
+Reshiram trigger registration functions are internal helpers on `Assertion`.
+
+#### `registerFnCallTrigger`
+
+Registers an assertion that fires once per matching adopter call. Use `ph.context()` inside the assertion to inspect the matched call context.
+
+```solidity
+function registerFnCallTrigger(
+    bytes4 fnSelector,
+    bytes4 triggerSelector
+) internal view;
+```
+
+#### `registerTxEndTrigger`
+
+Registers an assertion that fires once after the transaction completes.
+
+```solidity
+function registerTxEndTrigger(
+    bytes4 fnSelector
+) internal view;
+```
+
+#### `registerErc20ChangeTrigger`
+
+Registers an assertion that fires when a token's balances change.
+
+```solidity
+function registerErc20ChangeTrigger(
+    bytes4 fnSelector,
+    address token
+) internal view;
+```
+
+#### `watchCumulativeOutflow`
+
+Registers a circuit breaker trigger for cumulative ERC20 outflow from the assertion adopter.
+
+```solidity
+function watchCumulativeOutflow(
+    address token,
+    uint256 thresholdBps,
+    uint256 windowDuration,
+    bytes4 fnSelector
+) internal view;
+```
+
+`thresholdBps` is measured against the TVL snapshot taken at the start of the rolling window. `1000` is `10%`.
+
+#### `watchCumulativeInflow`
+
+Registers a circuit breaker trigger for cumulative ERC20 inflow into the assertion adopter.
+
+```solidity
+function watchCumulativeInflow(
+    address token,
+    uint256 thresholdBps,
+    uint256 windowDuration,
+    bytes4 fnSelector
+) internal view;
+```
+
+`thresholdBps` is measured against the TVL snapshot taken at the start of the rolling window. `1000` is `10%`.
+
+## Related Pages
 
 <CardGroup cols={2}>
-  <Card title="Full API Reference" icon="file-code" href="https://phylaxsystems.github.io/credible-std/index.html">
-    Autogenerated API documentation for credible-std
+  <Card title="Cheatcodes Overview" icon="book" href="./cheatcodes-overview">
+    Conceptual overview of cheatcodes
   </Card>
-  <Card title="Assertion Guide" icon="code" href="/credible/write-first-assertion">
-    Learn how to write assertions using cheatcodes
+  <Card title="Write Your First Assertion" icon="code" href="./write-first-assertion">
+    Tutorial for writing an assertion
   </Card>
-  <Card title="Use Case Mappings" icon="map" href="/credible/use-case-mappings/intro-use-case-mapping">
-    See practical examples of cheatcodes in action
+  <Card title="Use Case Mappings" icon="map" href="./use-case-mappings/intro-use-case-mapping">
+    Examples of assertion capabilities
   </Card>
-  <Card title="Assertions Book" icon="book-open" href="/assertions-book/assertions-book-intro">
-    Real-world assertion examples and implementations
-  </Card>
-  <Card title="Testing Assertions" icon="flask" href="/credible/testing-assertions">
-    Test your assertions locally
+  <Card title="Testing Assertions" icon="flask" href="./testing-assertions">
+    How to test assertions locally
   </Card>
 </CardGroup>
+
+## Deprecated Cheatcodes
+
+<Warning>
+Do not use these cheatcodes in new assertions. They mutate the active fork globally and are replaced by Reshiram's explicit `ForkId`-based `loadStateAt` API.
+</Warning>
+
+### `forkPreTx`
+
+Switches the active fork to the state before the assertion-triggering transaction.
+
+```solidity
+function forkPreTx() external;
+```
+
+Use `loadStateAt(..., PhEvm.ForkId({forkType: 0, callIndex: 0}))` instead.
+
+### `forkPostTx`
+
+Switches the active fork to the state after the assertion-triggering transaction.
+
+```solidity
+function forkPostTx() external;
+```
+
+Use `loadStateAt(..., PhEvm.ForkId({forkType: 1, callIndex: 0}))` instead.
+
+### `forkPreCall`
+
+Switches the active fork to the state before a specific call execution.
+
+```solidity
+function forkPreCall(uint256 id) external;
+```
+
+Use `loadStateAt(..., PhEvm.ForkId({forkType: 2, callIndex: id}))` instead.
+
+### `forkPostCall`
+
+Switches the active fork to the state after a specific call execution.
+
+```solidity
+function forkPostCall(uint256 id) external;
+```
+
+Use `loadStateAt(..., PhEvm.ForkId({forkType: 3, callIndex: id}))` instead.
+
+### `load(address, bytes32)`
+
+Loads a storage slot from an address on the current active fork.
+
+```solidity
+function load(
+    address target,
+    bytes32 slot
+) external view returns (bytes32 data);
+```
+
+Use `loadStateAt(target, slot, fork)` instead.

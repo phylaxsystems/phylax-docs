@@ -1,179 +1,288 @@
 ---
-title: 'pcl Reference'
-description: 'Reference documentation for all `pcl` commands, options, and parameters'
+title: 'pcl CLI Reference'
+description: 'Reference documentation for `pcl` commands, options, configuration, and environment variables'
 ---
+
+`pcl` is the Credible CLI for building, testing, verifying, deploying, and downloading Credible Layer assertions.
 
 <Note>
 New to `pcl`? Start with the [Quickstart Tutorial](/credible/pcl-quickstart) to learn the workflow.
 </Note>
 
-## Global Options
+## Version
+
+This reference matches `pcl 1.3.3`.
 
 ```bash
-Options:
-  -j, --json      Output in JSON format
-  -h, --help      Print help
-  -V, --version   Print version
+pcl 1.3.3
+Commit: 864b0db687c83c4010bc4ca3fee379607a19b094
+Build Timestamp: 2026-04-30T16:20:59.647643000Z
+Default Platform URL: https://app.phylax.systems
 ```
+
+## Syntax
+
+```bash
+pcl [OPTIONS] COMMAND
+```
+
+## Global Options
+
+| Option | Description |
+|--------|-------------|
+| `-j, --json` | Emit JSON output where supported |
+| `-h, --help` | Print help |
+| `-V, --version` | Print version |
 
 ## Commands
 
-Commands are listed in the order they are usually used in the assertion development workflow.
+| Command | Description |
+|---------|-------------|
+| [`pcl test`](#test) | Run tests using Phorge |
+| [`pcl apply`](#apply) | Preview and apply declarative deployment changes from `credible.toml` |
+| [`pcl auth`](#auth) | Authenticate the CLI with your Credible Layer Platform account |
+| [`pcl config`](#config) | Manage CLI configuration |
+| [`pcl build`](#build) | Build contracts using Phorge |
+| [`pcl verify`](#verify) | Verify assertions locally before deployment |
+| [`pcl download`](#download) | Download assertion source code for a protocol |
 
-### `auth`
+## `test`
 
-Manage authentication with your Phylax platform account.
-
-```bash
-Authenticate `pcl` with your Phylax platform account
-
-Usage: pcl auth [OPTIONS] <COMMAND>
-
-Commands:
-  login   Login to `pcl` using your wallet
-  logout  Logout from `pcl`
-  status  Check current authentication status
-  help    Print this message or the help of the given subcommand(s)
-
-Options:
-  -u, --auth-url <AUTH_URL>  Base URL for authentication service [env: PCL_AUTH_URL=] [default: https://app.phylax.systems]
-  -h, --help                 Print help
-```
-
-#### `auth login`
-
-Login to `pcl`. Opens a browser window where you can authenticate via wallet, email, Google, or GitHub.
-
-#### `auth logout`
-
-Logout from `pcl` and clear local authentication token.
-
-#### `auth status`
-
-Check current authentication status.
-
-### `test`
-
-Run tests for your assertions.
+Runs tests using Phorge.
 
 ```bash
-Run tests
-
-Usage: pcl test [OPTIONS] [PATH]
-
-Options:
-  -h, --help  Print help (see more with '--help')
-
-Common options:
-  -v, --verbosity...            Verbosity level of the log messages. Pass multiple times to increase verbosity (e.g. -v, -vv, -vvv)
-  -q, --quiet                   Do not print log messages
-      --match-path <GLOB>       Only run tests in source files matching the specified glob pattern
-      --match-test <REGEX>      Only run test functions matching the specified regex pattern
-      --match-contract <REGEX>  Only run tests in contracts matching the specified regex pattern
+pcl test [OPTIONS] [PATH]
 ```
+
+`[PATH]` is the contract file to test. It is a shortcut for `--match-path`.
+
+### Common `test` Options
+
+| Option | Description |
+|--------|-------------|
+| `-v, --verbosity...` | Increase log verbosity. Pass multiple times, such as `-vvv` |
+| `-q, --quiet` | Do not print log messages |
+| `--json` | Format log messages as JSON |
+| `--md` | Format log messages as Markdown |
+| `--color COLOR` | Set log color mode: `auto`, `always`, or `never` |
+| `-s, --suppress-successful-traces` | Show traces only for failures |
+| `--junit` | Output test results as a JUnit XML report |
+| `-l, --list` | List tests instead of running them |
+| `--summary` | Print a test summary table |
+| `--detailed` | Print a detailed test summary table |
+| `--gas-report` | Print a gas report |
+| `--fail-fast` | Stop after the first failure |
+| `--rerun` | Re-run recorded failures from the last run |
+| `-w, --watch [PATH...]` | Watch files or directories for changes |
+
+### Test Filtering
+
+| Option | Description |
+|--------|-------------|
+| `--match-test REGEX` | Only run test functions matching the regex |
+| `--no-match-test REGEX` | Exclude test functions matching the regex |
+| `--match-contract REGEX` | Only run tests in matching contracts |
+| `--no-match-contract REGEX` | Exclude tests in matching contracts |
+| `--match-path GLOB` | Only run tests in matching source files |
+| `--no-match-path GLOB` | Exclude tests in matching source files |
+| `--no-match-coverage REGEX` | Exclude matching files from coverage output |
+
+### EVM and Build Options
+
+`pcl test` supports many Forge-compatible EVM, fork, compiler, linker, cache, project, and watch options. Use `pcl test --help` for the complete option list.
 
 <Note>
-`pcl test` uses Forge underneath for test execution. Note that `pcl` uses an older version of Forge, so newer Forge features may not be available. The Forge version is periodically updated to include new features. See the [Forge test documentation](https://book.getfoundry.sh/reference/forge/forge-test) for all available options.
+`pcl test` uses Phorge for test execution. Some Forge options may differ from upstream Foundry behavior. Use `pcl test --help` as the authoritative option list for your installed `pcl` version.
 </Note>
 
-### `build`
+## `apply`
 
-Build contracts using [`phorge`](/credible/glossary#phorge).
+Previews and applies declarative deployment changes from `credible.toml`.
 
 ```bash
-Build contracts using `phorge`
-
-Usage: pcl build [OPTIONS]
-
-Options:
-      --root <ROOT>  Root directory of the project
-  -h, --help         Print help
+pcl apply [OPTIONS]
 ```
 
-### `apply`
+`pcl apply` reads [`credible.toml`](#credibletoml-configuration), builds and verifies referenced assertion contracts, previews release changes against the platform, and creates a release after confirmation.
 
-Preview and apply declarative deployment changes from `credible.toml`. This is the primary command for deploying assertions to the platform.
+### `apply` Options
 
-`pcl apply` reads your [`credible.toml`](#credibletoml-configuration) configuration, builds and compiles the referenced assertion contracts, and creates a release on the platform.
+| Option | Description |
+|--------|-------------|
+| `--root ROOT` | Project root directory. Default: `.` |
+| `-c, --config CONFIG` | Path to `credible.toml`, relative to root or absolute. Default: `assertions/credible.toml` |
+| `--json` | Emit machine-readable output for this command |
+| `--yes` | Apply without interactive confirmation |
+| `--auto-approve` | Alias for `--yes` |
+| `-u, --api-url API_URL` | Base URL for the platform API. Default: `https://app.phylax.systems` |
+| `-h, --help` | Print help |
+
+### `apply` Behavior
+
+- If `project_id` is omitted from `credible.toml`, `pcl apply` prompts you to select a project interactively.
+- If JSON output is enabled, `project_id` is required in `credible.toml`.
+- If there are no release changes, the command exits without creating a release.
+- If `--yes` is omitted, the command prompts for confirmation before applying changes.
+
+### `apply` Examples
 
 ```bash
-Preview and apply declarative deployment changes from credible.toml
-
-Usage: pcl apply [OPTIONS]
-
-Options:
-      --root <ROOT>      Project root directory [default: .]
-  -c, --config <CONFIG>  Path to credible.toml, relative to root or absolute [default: assertions/credible.toml]
-      --json             Emit machine-readable output
-      --yes              Apply without interactive confirmation
-  -u, --api-url <URL>    Base URL for the platform API [env: PCL_API_URL=] [default: https://app.phylax.systems]
-  -h, --help             Print help
-```
-
-**Examples:**
-
-```bash
-# Apply using default config location (assertions/credible.toml)
 pcl apply
-
-# Specify a project root directory
 pcl apply --root ./my-project
-
-# Use a custom config path
 pcl apply --root ./my-project -c path/to/credible.toml
-
-# Auto-approve without interactive confirmation
 pcl apply --yes
-
-# Output in JSON format for CI/CD
 pcl apply --json --yes
 ```
 
-<Note>
-By default, `pcl apply` looks for `credible.toml` at `assertions/credible.toml` relative to the project root. Use `-c` to override this path.
-</Note>
+## `auth`
 
-<Tip>
-If `project_id` is not set in your `credible.toml`, `pcl apply` will prompt you to select a project interactively. Set it in the config to skip this prompt, especially useful in CI/CD.
-</Tip>
-
-### `config`
-
-Manage your `pcl` configuration including authentication tokens and settings.
+Authenticates the CLI with your Credible Layer Platform account.
 
 ```bash
-Manage configuration
-
-Usage: pcl config <COMMAND>
-
-Commands:
-  show    Display the current configuration
-  delete  Delete the current configuration
-  help    Print this message or the help of the given subcommand(s)
-
-Options:
-  -h, --help  Print help
+pcl auth [OPTIONS] COMMAND
 ```
 
-#### `config show`
+### `auth` Commands
 
-Display the current configuration stored in `~/.config/pcl/config.toml`.
+| Command | Description |
+|---------|-------------|
+| `login` | Login to PCL |
+| `logout` | Logout from PCL |
+| `status` | Check current authentication status |
+| `help` | Print help |
 
-#### `config delete`
+### `auth` Options
 
-Delete the current configuration file.
+| Option | Description |
+|--------|-------------|
+| `-u, --auth-url AUTH_URL` | Base URL for the authentication service. Default: `https://app.phylax.systems` |
+| `-h, --help` | Print help |
+
+## `config`
+
+Manages CLI configuration.
+
+```bash
+pcl config COMMAND
+```
+
+### `config` Commands
+
+| Command | Description |
+|---------|-------------|
+| `show` | Display the current configuration |
+| `delete` | Delete the current configuration |
+| `help` | Print help |
+
+Configuration is stored in `~/.config/pcl/config.toml` by default and includes authentication tokens and identity.
+
+## `build`
+
+Builds contracts using Phorge.
+
+```bash
+pcl build [OPTIONS]
+```
+
+### `build` Options
+
+| Option | Description |
+|--------|-------------|
+| `--root ROOT` | Root directory of the project |
+| `-h, --help` | Print help |
+
+## `verify`
+
+Verifies assertions locally before deployment.
+
+```bash
+pcl verify [OPTIONS] [ASSERTION]
+```
+
+`[ASSERTION]` can be a contract name or `file:contract`. If omitted, `pcl verify` verifies all assertions from `credible.toml`.
+
+### `verify` Options
+
+| Option | Description |
+|--------|-------------|
+| `--root ROOT` | Project root directory. Default: `.` |
+| `-c, --config CONFIG` | Path to `credible.toml`, relative to root or absolute. Default: `assertions/credible.toml` |
+| `--args ARGS...` | Constructor arguments for the assertion |
+| `--json` | Emit machine-readable JSON output |
+| `-h, --help` | Print help |
+
+### `verify` Behavior
+
+- When `[ASSERTION]` is omitted, constructor arguments come from each assertion's `args` field in `credible.toml`.
+- `--args` can only be used when verifying a specific assertion.
+- Constructor arguments are ABI-encoded against the assertion contract constructor.
+- The command exits with code `1` if any assertion fails verification.
+
+### Verification Statuses
+
+| Status | Meaning |
+|--------|---------|
+| `success` | The assertion verified successfully |
+| `deployment_failure` | The assertion failed during deployment in the local verification environment |
+| `no_triggers` | The assertion did not expose any triggers |
+| `missing_assertion_spec` | The assertion is missing the required assertion specification |
+| `invalid_assertion_spec` | The assertion specification is invalid |
+
+### `verify` Examples
+
+```bash
+pcl verify
+pcl verify OwnableAssertion
+pcl verify assertions/src/OwnableAssertion.a.sol:OwnableAssertion
+pcl verify OwnableAssertion --args 0x75634113D6A2fbfF5e65151ce1572195bE1d001A
+pcl verify --json
+```
+
+## `download`
+
+Downloads assertion source code for a protocol.
+
+```bash
+pcl download [OPTIONS]
+```
+
+### `download` Options
+
+| Option | Description |
+|--------|-------------|
+| `--project-id PROJECT_ID` | Project UUID to download assertions from |
+| `-o, --output-dir OUTPUT_DIR` | Output directory for `.sol` files. Default: `PROJECT_NAME-assertions/` |
+| `--json` | Emit machine-readable output for this command |
+| `-u, --api-url API_URL` | Base URL for the platform API. Default: `https://app.phylax.systems` |
+| `-h, --help` | Print help |
+
+### `download` Behavior
+
+- `--project-id` is required.
+- The command requires authentication. Run `pcl auth login` first.
+- By default, files are written to a directory named after the project: `PROJECT_NAME-assertions/`.
+- Downloaded files use the pattern `CONTRACT_NAME_ASSERTION_ID_PREFIX.sol`.
+- Assertions without available source are skipped.
+
+### `download` Examples
+
+```bash
+pcl download --project-id 550e8400-e29b-41d4-a716-446655440000
+pcl download --project-id 550e8400-e29b-41d4-a716-446655440000 -o ./downloaded-assertions
+pcl download --project-id 550e8400-e29b-41d4-a716-446655440000 --json
+```
 
 ## `credible.toml` Configuration
 
-The `credible.toml` file defines your project's assertion deployment configuration. It maps contracts to their assertions in a declarative format.
+The `credible.toml` file defines assertion deployment configuration for `pcl apply` and `pcl verify`.
 
-**Default location:** `assertions/credible.toml` (relative to your project root)
+**Default location:** `assertions/credible.toml`, relative to the project root.
 
 ### Format
 
 ```toml
 environment = "production"
-project_id = "550e8400-e29b-41d4-a716-446655440000" # optional
+project_id = "550e8400-e29b-41d4-a716-446655440000"
 
 [contracts.my_contract]
 address = "0x1234567890abcdef1234567890abcdef12345678"
@@ -181,82 +290,58 @@ name = "MyContract"
 
 [[contracts.my_contract.assertions]]
 file = "assertions/src/MyAssertion.a.sol"
+args = ["0x75634113D6A2fbfF5e65151ce1572195bE1d001A", "42"]
 ```
 
-### Fields
+### Root Fields
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `environment` | string | Yes | Deployment environment name (e.g., `"production"`) |
-| `project_id` | UUID | No | Platform project ID. If omitted, you are prompted to select one interactively |
-| `contracts` | map | Yes | Named contract definitions (see below) |
+| `environment` | string | Yes | Deployment environment name, such as `"production"` |
+| `project_id` | UUID | No | Platform project ID. Required when `pcl apply` emits JSON output |
+| `contracts` | map | Yes | Named contract definitions |
 
-**Contract fields:**
+### Contract Fields
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `address` | string | Yes | Contract address on-chain |
 | `name` | string | Yes | Human-readable contract name |
-| `assertions` | array | Yes | List of assertions to apply to this contract |
+| `assertions` | array | Yes | Assertions to apply to this contract |
 
-**Assertion fields:**
+### Assertion Fields
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `file` | string | Yes | Path to assertion contract file (relative to project root) |
-| `args` | array | No | Constructor arguments for the assertion |
+| `file` | string | Yes | Assertion contract file path. Use `file.sol:ContractName` when the contract name cannot be inferred from the filename |
+| `args` | array or scalar | No | Constructor arguments for the assertion. Values are converted to strings before ABI encoding |
 
-### Example
+### Contract Name Inference
 
-```toml
-environment = "production"
+`pcl` infers assertion contract names from `file` in this order:
 
-[contracts.ownable]
-address = "0x75634113D6A2fbfF5e65151ce1572195bE1d001A"
-name = "Ownable"
+| `file` value | Inferred contract |
+|--------------|-------------------|
+| `assertions/src/MyAssertion.a.sol:ExplicitAssertion` | `ExplicitAssertion` |
+| `assertions/src/MyAssertion.a.sol` | `MyAssertion` |
+| `assertions/src/MyAssertion.sol` | `MyAssertion` |
 
-[[contracts.ownable.assertions]]
-file = "assertions/src/OwnableAssertion.a.sol"
+### Validation
 
-[contracts.phylock]
-address = "0xD452d2C8602322a46DFf0936fD6426BDC08358bf"
-name = "PhyLock"
-
-[[contracts.phylock.assertions]]
-file = "assertions/src/PhyLockAssertion.a.sol"
-```
-
-<Note>
-Each contract address must be unique within the configuration. `pcl apply` validates this and returns an error if duplicates are found.
-</Note>
+- Contract addresses must be unique within the file.
+- `pcl verify` returns an error if `credible.toml` contains no assertions.
+- `pcl apply --json` returns an error if `project_id` is missing.
 
 ## Environment Variables
 
-### `PCL_AUTH_URL`
-
-Base URL for authentication service. Default: `https://app.phylax.systems`
-
-```bash
-export PCL_AUTH_URL=https://custom-auth-url.com
-pcl auth login
-```
-
-### `PCL_API_URL`
-
-Base URL for the [Phylax platform](https://app.phylax.systems) API. Default: `https://app.phylax.systems`
-
-```bash
-export PCL_API_URL=https://custom-api-url.com
-pcl apply
-```
+| Variable | Used by | Description | Default |
+|----------|---------|-------------|---------|
+| `PCL_AUTH_URL` | `pcl auth` | Base URL for the authentication service | `https://app.phylax.systems` |
+| `PCL_API_URL` | `pcl apply`, `pcl download` | Base URL for the platform API | `https://app.phylax.systems` |
 
 ## Configuration File
 
-Configuration is stored in `~/.config/pcl/config.toml` and includes:
-
-- Authentication tokens and identity
-
-You can view the configuration with `pcl config show` or delete it with `pcl config delete`.
+`pcl` stores CLI configuration in `~/.config/pcl/config.toml` by default. Use `pcl config show` to view the current configuration and `pcl config delete` to delete it.
 
 ## Next Steps
 

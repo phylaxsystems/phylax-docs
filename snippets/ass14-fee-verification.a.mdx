@@ -3,10 +3,15 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 // Check that fee invariants are maintained
 contract AmmFeeVerificationAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     // Hardcoded whitelist of allowed fee values
     uint256 private constant STABLE_POOL_FEE_1 = 1; // 0.1%
     uint256 private constant STABLE_POOL_FEE_2 = 15; // 0.15%
@@ -15,7 +20,7 @@ contract AmmFeeVerificationAssertion is Assertion {
 
     function triggers() external view override {
         // Register trigger for changes to the fee storage slot
-        registerStorageChangeTrigger(this.assertFeeVerification.selector, bytes32(uint256(1))); // Assuming fee is in slot 1
+        registerTxEndTrigger(this.assertFeeVerification.selector); // Assuming fee is in slot 1
     }
 
     // Verify that any fee change is to an allowed value
@@ -25,7 +30,7 @@ contract AmmFeeVerificationAssertion is Assertion {
 
         // Get the new fee value and pool type
         bool isStable = adopter.stable();
-        uint256 newFee = uint256(ph.load(address(adopter), bytes32(uint256(1))));
+        uint256 newFee = uint256(ph.loadStateAt(address(adopter), bytes32(uint256(1)), PhEvm.ForkId({forkType: 1, callIndex: 0})));
 
         // Check if the new fee is in the whitelist
         bool isAllowed = isStable

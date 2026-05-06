@@ -3,16 +3,21 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract LiquidationHealthFactorAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     // Simple health factor constants (no scaling)
     uint256 constant LIQUIDATION_THRESHOLD = 100; // Below this = liquidatable
     uint256 constant MIN_HEALTH_FACTOR = 120; // Minimum safe health factor after liquidation
 
     function triggers() external view override {
         // Register trigger for liquidation function calls
-        registerCallTrigger(this.assertHealthFactor.selector, ILendingProtocol.liquidate.selector);
+        registerFnCallTrigger(this.assertHealthFactor.selector, ILendingProtocol.liquidate.selector);
     }
 
     // Check that liquidation can't happen if the position is healthy
@@ -37,12 +42,12 @@ contract LiquidationHealthFactorAssertion is Assertion {
             require(repaidDebt > 0, "Zero debt repaid");
 
             // Check health factor before liquidation
-            ph.forkPreCall(callInputs[i].id);
+            PhEvm.ForkId memory preCallFork = PhEvm.ForkId({forkType: 2, callIndex: callInputs[i].id});
             uint256 preHealthFactor = adopter.healthFactor(borrower);
             require(preHealthFactor <= LIQUIDATION_THRESHOLD, "Account not eligible for liquidation");
 
             // Check health factor after liquidation
-            ph.forkPostCall(callInputs[i].id);
+            PhEvm.ForkId memory postCallFork = PhEvm.ForkId({forkType: 3, callIndex: callInputs[i].id});
             uint256 postHealthFactor = adopter.healthFactor(borrower);
 
             // Verify the liquidation actually improved the position's health

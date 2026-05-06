@@ -15,9 +15,9 @@ Intra-transaction price manipulations can lead to flash loan attacks, theft of f
 
 Implements approach to verify oracle price updates using both pre/post state comparison and intra-transaction inspection:
 
-- `forkPreTx()` / `forkPostTx()`: Capture oracle price before and after transaction, compare for deviations
+- `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads: Capture oracle price before and after transaction, compare for deviations
 - `getCallInputs()`: Monitor all price update function calls within transaction
-- `registerCallTrigger()`: Trigger when oracle price update is detected
+- `registerFnCallTrigger()`: Trigger when oracle price update is detected
 - Verify each update's price parameter against initial price
 - Enforce no price update can deviate more than maximum allowed percentage
 

@@ -15,7 +15,7 @@ The constant product formula is fundamental to many AMM designs - any deviation 
 
 Monitors the product of reserves (k) in AMM pools to ensure it remains constant after transactions using:
 
-- `forkPreTx()` / `forkPostTx()`: Compare reserve product before and after transaction
+- `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads: Compare reserve product before and after transaction
 - `getStateChanges()`: Monitor reserve changes throughout transaction callstack
 - Direct validation that k = reserve0 * reserve1 remains unchanged
 

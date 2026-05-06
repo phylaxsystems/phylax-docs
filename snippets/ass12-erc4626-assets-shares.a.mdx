@@ -3,15 +3,16 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract ERC4626AssetsSharesAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     function triggers() external view override {
-        // Register trigger specifically for changes to the total supply storage slot
-        registerStorageChangeTrigger(
-            this.assertionAssetsShares.selector,
-            bytes32(uint256(1)) // Total supply storage slot
-        );
+        registerTxEndTrigger(this.assertionAssetsShares.selector);
     }
 
     // Assert that the total assets are sufficient to back all shares

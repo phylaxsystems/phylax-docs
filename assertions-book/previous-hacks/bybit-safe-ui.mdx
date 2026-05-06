@@ -72,7 +72,8 @@ PhEvm precompiles used:
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol"; // Credible Layer precompiles
+import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
+import {AssertionSpec} from "../../lib/credible-std/src/SpecRecorder.sol"; // Credible Layer precompiles
 import {Safe} from "../../lib/safe-contracts/src/Safe.sol"; // Safe contract
 import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
 
@@ -80,17 +81,18 @@ contract SafeAssertion is Assertion {
     Safe safe;
 
     constructor(address payable safe_) {
+        registerAssertionSpec(AssertionSpec.Reshiram);
         safe = Safe(safe_); // Define address of Safe contract
     }
 
     // Define the triggers for the assertions
     function triggers() public view override {
-        registerStorageChangeTrigger(this.implementationAddressChange.selector, bytes32(0x0));
+        registerTxEndTrigger(this.implementationAddressChange.selector);
     }
 
     function implementationAddressChange() external view {
-        ph.forkPreTx();
-        address preImplementationAddress = address(uint160(uint256(ph.load(address(safe), bytes32(0x0)))));
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
+        address preImplementationAddress = address(uint160(uint256(ph.loadStateAt(address(safe), bytes32(0x0), preFork))));
 
         address[] memory addresses = getStateChangesAddress(address(safe), bytes32(0x0));
         for (uint256 i = 0; i < addresses.length; i++) {
@@ -108,14 +110,14 @@ the balance of the whitelisted addresses increased with the respective amount.
 
 ```solidity
  function assertionSafeDrain() external {
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         uint256 preBalance = address(bybitSafeAddress).balance;
         uint256[] memory preWhitelistBalances = new uint256[](whitelistedAddresses.length);
         for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
             preWhitelistBalances[i] = address(whitelistedAddresses[i]).balance;
         }
 
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         uint256 postBalance = address(bybitSafeAddress).balance;
         if (postBalance > preBalance) {
             return; // Balance increased, not a hack

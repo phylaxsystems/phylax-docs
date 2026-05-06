@@ -17,8 +17,8 @@ Malicious actors often attempt to extract all available ETH in a single transact
 
 Implements tiered protection strategy to detect rapid ETH draining:
 
-- `forkPreTx()` / `forkPostTx()`: Capture contract's ETH balance and whitelist balances before/after transaction
-- `registerBalanceChangeTrigger()`: Trigger when ETH balances change
+- `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads: Capture contract's ETH balance and whitelist balances before/after transaction
+- `registerTxEndTrigger()`: Trigger when ETH balances change
 - For small withdrawals (below threshold): Allow regardless of destination
 - For large withdrawals (above threshold): Require destination to be whitelisted address
 - If no whitelist defined, block all large withdrawals as safety measure

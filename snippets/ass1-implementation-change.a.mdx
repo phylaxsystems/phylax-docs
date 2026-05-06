@@ -3,13 +3,18 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract ImplementationChangeAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     function triggers() external view override {
         // Register trigger for changes to the implementation address storage slot
         // The implementation address is typically stored in the first storage slot (slot 0)
-        registerStorageChangeTrigger(this.implementationChange.selector, bytes32(uint256(0)));
+        registerTxEndTrigger(this.implementationChange.selector);
     }
 
     // Assert that the implementation contract address doesn't change
@@ -19,11 +24,11 @@ contract ImplementationChangeAssertion is Assertion {
         IImplementation adopter = IImplementation(ph.getAssertionAdopter());
 
         // Get pre-state implementation
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         address preImpl = adopter.implementation();
 
         // Get post-state implementation
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         address postImpl = adopter.implementation();
 
         // Get all state changes for the implementation slot

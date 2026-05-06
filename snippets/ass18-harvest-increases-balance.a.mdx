@@ -3,13 +3,18 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 // Inspired by https://github.com/beefyfinance/beefy-contracts/blob/master/forge/test/vault/ChainVaultsTest.t.sol#L77-L110
 contract BeefyHarvestAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     function triggers() external view override {
         // Register trigger for harvest function calls
-        registerCallTrigger(this.assertionHarvestIncreasesBalance.selector, IBeefyVault.harvest.selector);
+        registerFnCallTrigger(this.assertionHarvestIncreasesBalance.selector, IBeefyVault.harvest.selector);
     }
 
     // Assert that the balance of the vault doesn't decrease after a harvest
@@ -19,12 +24,12 @@ contract BeefyHarvestAssertion is Assertion {
         IBeefyVault adopter = IBeefyVault(ph.getAssertionAdopter());
 
         // Check pre-harvest state
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         uint256 preBalance = adopter.balance();
         uint256 prePricePerShare = adopter.getPricePerFullShare();
 
         // Check post-harvest state
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         uint256 postBalance = adopter.balance();
         uint256 postPricePerShare = adopter.getPricePerFullShare();
 

@@ -25,26 +25,31 @@ pragma solidity ^0.8.13;
  * changes, ensuring that all operations maintain the vault's accounting integrity.
  */
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {CoolVault} from "../../src/ass2-erc4626-operations.sol";
 import {IERC4626} from "openzeppelin-contracts/interfaces/IERC4626.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract ERC4626OperationsAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     // The triggers function tells the Credible Layer which assertion functions to run
     function triggers() external view override {
         // Batch operations assertion - triggers on any of the four functions
-        registerCallTrigger(this.assertionBatchOperationsConsistency.selector, CoolVault.deposit.selector);
-        registerCallTrigger(this.assertionBatchOperationsConsistency.selector, CoolVault.mint.selector);
-        registerCallTrigger(this.assertionBatchOperationsConsistency.selector, CoolVault.withdraw.selector);
-        registerCallTrigger(this.assertionBatchOperationsConsistency.selector, CoolVault.redeem.selector);
+        registerFnCallTrigger(this.assertionBatchOperationsConsistency.selector, CoolVault.deposit.selector);
+        registerFnCallTrigger(this.assertionBatchOperationsConsistency.selector, CoolVault.mint.selector);
+        registerFnCallTrigger(this.assertionBatchOperationsConsistency.selector, CoolVault.withdraw.selector);
+        registerFnCallTrigger(this.assertionBatchOperationsConsistency.selector, CoolVault.redeem.selector);
 
         // Deposit-specific assertions
-        registerCallTrigger(this.assertionDepositIncreasesBalance.selector, CoolVault.deposit.selector);
-        registerCallTrigger(this.assertionDepositerSharesIncreases.selector, CoolVault.deposit.selector);
+        registerFnCallTrigger(this.assertionDepositIncreasesBalance.selector, CoolVault.deposit.selector);
+        registerFnCallTrigger(this.assertionDepositerSharesIncreases.selector, CoolVault.deposit.selector);
 
         // Base invariant assertion - triggers on storage changes
-        registerStorageChangeTrigger(this.assertionVaultAlwaysAccumulatesAssets.selector, bytes32(uint256(2)));
+        registerTxEndTrigger(this.assertionVaultAlwaysAccumulatesAssets.selector);
     }
 
     /**
@@ -97,11 +102,11 @@ contract ERC4626OperationsAssertion is Assertion {
             totalAssetsRemoved += adopter.previewRedeem(shares);
         }
 
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         uint256 preVaultAssets = adopter.totalAssets();
         uint256 preVaultSupply = adopter.totalSupply();
 
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         uint256 postVaultAssets = adopter.totalAssets();
         uint256 postVaultSupply = adopter.totalSupply();
 
@@ -133,13 +138,13 @@ contract ERC4626OperationsAssertion is Assertion {
             (uint256 assets, address receiver) = abi.decode(inputs[i].input, (uint256, address));
 
             // Check pre-state
-            ph.forkPreTx();
+            PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
             uint256 vaultAssetPreBalance = adopter.totalAssets();
             uint256 userSharesPreBalance = adopter.balanceOf(receiver);
             uint256 expectedShares = adopter.previewDeposit(assets);
 
             // Check post-state
-            ph.forkPostTx();
+            PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
             uint256 vaultAssetPostBalance = adopter.totalAssets();
             uint256 userSharesPostBalance = adopter.balanceOf(receiver);
 
@@ -168,13 +173,13 @@ contract ERC4626OperationsAssertion is Assertion {
         PhEvm.CallInputs[] memory inputs = ph.getCallInputs(address(adopter), adopter.deposit.selector);
 
         for (uint256 i = 0; i < inputs.length; i++) {
-            ph.forkPreTx();
+            PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
             (uint256 assets,) = abi.decode(inputs[i].input, (uint256, address));
             uint256 previewPreAssets = adopter.previewDeposit(assets);
             address depositer = inputs[0].caller;
             uint256 preShares = adopter.balanceOf(depositer);
 
-            ph.forkPostTx();
+            PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
 
             uint256 postShares = adopter.balanceOf(depositer);
 
@@ -193,7 +198,7 @@ contract ERC4626OperationsAssertion is Assertion {
         // Get the assertion adopter address
         CoolVault adopter = CoolVault(ph.getAssertionAdopter());
 
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
 
         uint256 vaultAssetPostBalance = adopter.totalAssets();
         uint256 vaultSharesPostBalance = adopter.balanceOf(address(adopter));

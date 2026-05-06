@@ -1,45 +1,55 @@
 ---
 title: "credible-std Library"
-description: "Overview of the Phylax credible-std Library"
+description: "Install credible-std and understand its assertion helper functions"
 ---
 
-`credible-std` is the standard library for implementing assertions in the Credible Layer. It provides the core contracts and interfaces needed to create and manage assertions for smart contract security monitoring.
+`credible-std` is the Solidity standard library for writing, testing, and backtesting Credible Layer assertions. It provides the base assertion contract, the `ph` interface for PhEVM cheatcodes, trigger registration helpers, snapshot-read helpers, typed state-change helpers, and Forge test utilities.
 
-You can find the repository on [GitHub](https://github.com/phylaxsystems/credible-std) and the [full API reference](https://phylaxsystems.github.io/credible-std/index.html).
+For individual cheatcode signatures, see the [Cheatcodes API Reference](./cheatcodes-reference). For local assertion tests, see [Testing Assertions](./testing-assertions).
+
+<Warning>
+As of May 6, 2026, the latest `credible-std` exposes Reshiram helpers, but the v2 Reshiram spec is not live on Linea mainnet. Use Reshiram-only helpers for local or development workflows until Linea mainnet supports the spec.
+</Warning>
 
 ## Installation
 
 <Note>
-`credible-std` requires [Foundry](https://book.getfoundry.sh/getting-started/installation) to be installed on your system.
+`credible-std` is a Foundry library. Install [Foundry](https://book.getfoundry.sh/getting-started/installation) before adding it to a Solidity project.
 </Note>
 
-### Option 1: Using Forge Install (Recommended)
-
-The easiest way to install `credible-std` is to use `forge install`:
+Install the latest stable release:
 
 ```bash
-forge install credible-std=https://github.com/phylaxsystems/credible-std/
+forge install phylaxsystems/credible-std@0.4.0
 ```
 
-### Option 2: Using Git Submodules
-
-For more control over the dependency, you can add it as a git submodule:
+Install the latest development version from the default branch:
 
 ```bash
-git submodule add https://github.com/phylaxsystems/credible-std.git lib/credible-std
+forge install phylaxsystems/credible-std
 ```
 
-### Setting Up Remappings
-
-After installation, add the following to your `remappings.txt` file:
+Add the remapping to `remappings.txt`:
 
 ```bash
 credible-std/=lib/credible-std/src/
 ```
 
-### Verifying Installation
+If you use backtesting helpers, add a backtesting profile to `foundry.toml`:
 
-To verify that `credible-std` is properly installed, create a simple test file:
+```toml
+[profile.backtesting]
+src = "src"
+out = "out"
+libs = ["lib"]
+ffi = true
+gas_limit = 100000000
+test = "test"
+```
+
+## Verify the Install
+
+Create a minimal assertion that imports `Assertion`:
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -48,76 +58,223 @@ pragma solidity ^0.8.13;
 import {Assertion} from "credible-std/Assertion.sol";
 
 contract TestAssertion is Assertion {
-    function triggers() external view override {
-        // Empty for testing
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
+    function triggers() external view override {}
+}
+```
+
+Run a build:
+
+```bash
+forge build
+```
+
+If the import resolves and the contract compiles, the library and remapping are configured.
+
+## Core Contracts
+
+| Contract | Purpose |
+| --- | --- |
+| `Assertion.sol` | Base contract for assertions. Inherits `ForkUtils` and `StateChanges`, exposes trigger helpers, fork ID constructors, call matching helpers, and assertion spec registration. |
+| `Credible.sol` | Provides the inherited `ph` handle for calling the PhEVM precompile. |
+| `PhEvm.sol` | Interface for PhEVM cheatcodes, including logs, call inputs, snapshot reads, mapping tracing, ERC20 transfer data, and protection-suite helpers. |
+| `TriggerRecorder.sol` | Interface used by `Assertion` to register assertion triggers. |
+| `SpecRecorder.sol` | Defines `AssertionSpec` and records whether an assertion uses `Legacy`, `Reshiram`, or `Experimental` precompile access. |
+| `StateChanges.sol` | Typed helpers for legacy state-change arrays. |
+| `ForkUtils.sol` | Helper functions for Reshiram-style snapshot reads and ERC20 balance delta workflows. |
+| `CredibleTest.sol` | Forge test base that exposes `cl.assertion(...)`. |
+| `CredibleTestWithBacktesting.sol` | Test base for replaying historical transactions against assertions. |
+
+## Assertion Helpers
+
+`Assertion.sol` provides internal helpers for registering when assertion functions run.
+
+### Legacy Trigger Helpers
+
+Use these helpers for the launch-era trigger surface:
+
+```solidity
+function registerCallTrigger(bytes4 fnSelector) internal view;
+function registerCallTrigger(bytes4 fnSelector, bytes4 triggerSelector) internal view;
+function registerStorageChangeTrigger(bytes4 fnSelector) internal view;
+function registerStorageChangeTrigger(bytes4 fnSelector, bytes32 slot) internal view;
+function registerBalanceChangeTrigger(bytes4 fnSelector) internal view;
+```
+
+### Reshiram Trigger Helpers
+
+Use these helpers for newer trigger types:
+
+```solidity
+function registerFnCallTrigger(bytes4 fnSelector, bytes4 triggerSelector) internal view;
+function registerTxEndTrigger(bytes4 fnSelector) internal view;
+function registerErc20ChangeTrigger(bytes4 fnSelector, address token) internal view;
+function watchCumulativeOutflow(
+    address token,
+    uint256 thresholdBps,
+    uint256 windowDuration,
+    bytes4 fnSelector
+) internal view;
+function watchCumulativeInflow(
+    address token,
+    uint256 thresholdBps,
+    uint256 windowDuration,
+    bytes4 fnSelector
+) internal view;
+```
+
+`registerFnCallTrigger` pairs with `ph.context()` so an assertion can inspect the matched call's selector and call range.
+
+## Fork and Snapshot Helpers
+
+Reshiram assertions should prefer explicit snapshot IDs over deprecated fork-switching cheatcodes.
+
+Construct `ForkId` values explicitly:
+
+```solidity
+PhEvm.ForkId memory preTx = PhEvm.ForkId({forkType: 0, callIndex: 0});
+PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
+PhEvm.ForkId memory preCall = PhEvm.ForkId({forkType: 2, callIndex: callId});
+PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: callId});
+```
+
+Use `ph.loadStateAt` to read storage at those snapshots:
+
+```solidity
+function loadStateAt(bytes32 slot, PhEvm.ForkId calldata fork)
+    external view returns (bytes32 value);
+
+function loadStateAt(address target, bytes32 slot, PhEvm.ForkId calldata fork)
+    external view returns (bytes32 value);
+```
+
+For packed storage or mappings, calculate the exact slot before calling `loadStateAt`.
+
+## ERC20 Delta Helpers
+
+`ForkUtils.sol` also includes ERC20 transfer-delta helpers:
+
+```solidity
+function _reducedErc20BalanceDeltasAt(address token, PhEvm.ForkId memory fork)
+    internal view returns (PhEvm.Erc20TransferData[] memory deltas);
+
+function _transferredValueAt(address token, address from, address to, PhEvm.ForkId memory fork)
+    internal view returns (uint256 value);
+
+function _consumedBetween(uint256 beforeValue, uint256 afterValue)
+    internal pure returns (uint256 consumed);
+```
+
+Use these helpers when an assertion needs to reason about ERC20 flows within a selected transaction or call snapshot.
+
+## State Change Helpers
+
+`StateChanges.sol` converts `ph.getStateChanges(...)` from `bytes32[]` into typed arrays:
+
+```solidity
+function getStateChangesUint(address contractAddress, bytes32 slot)
+    internal view returns (uint256[] memory);
+
+function getStateChangesAddress(address contractAddress, bytes32 slot)
+    internal view returns (address[] memory);
+
+function getStateChangesBool(address contractAddress, bytes32 slot)
+    internal view returns (bool[] memory);
+
+function getStateChangesBytes32(address contractAddress, bytes32 slot)
+    internal view returns (bytes32[] memory);
+```
+
+Each helper also has overloads for mapping keys and mapping keys with slot offsets:
+
+```solidity
+function getStateChangesUint(address contractAddress, bytes32 slot, uint256 key)
+    internal view returns (uint256[] memory);
+
+function getStateChangesUint(address contractAddress, bytes32 slot, uint256 key, uint256 slotOffset)
+    internal view returns (uint256[] memory);
+```
+
+The same overload pattern exists for `Address`, `Bool`, and `Bytes32`.
+
+## Call Matching Helpers
+
+`Assertion.sol` includes helpers for querying successful calls through the Reshiram call-matching precompile:
+
+```solidity
+function _successOnlyFilter() internal pure returns (PhEvm.CallFilter memory filter);
+
+function _matchingCalls(address target, bytes4 selector, uint256 limit)
+    internal view returns (PhEvm.TriggerCall[] memory);
+```
+
+Use `_matchingCalls` when an assertion needs a bounded list of successful calls to a target selector.
+
+## Assertion Spec Helper
+
+Register the desired assertion spec in the constructor:
+
+```solidity
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+
+constructor() {
+    registerAssertionSpec(AssertionSpec.Reshiram);
+}
+```
+
+Available specs:
+
+| Spec | Meaning |
+| --- | --- |
+| `Legacy` | Standard launch precompile set. |
+| `Reshiram` | Newer precompile set with explicit snapshot access and legacy-only fork-switching selectors disabled. |
+| `Experimental` | Unrestricted access to all available precompiles. May include untested or dangerous behavior. |
+
+## Testing Helpers
+
+Use `CredibleTest` in Forge tests to register an assertion against a target contract:
+
+```solidity
+import {CredibleTest} from "credible-std/CredibleTest.sol";
+import {Test} from "forge-std/Test.sol";
+
+contract MyAssertionTest is CredibleTest, Test {
+    function testAssertion() public {
+        cl.assertion({
+            adopter: address(target),
+            createData: type(MyAssertion).creationCode,
+            fnSelector: MyAssertion.checkInvariant.selector
+        });
+
+        target.doSomething();
     }
 }
 ```
 
-If this compiles without errors, `credible-std` is properly installed and configured.
+Run assertion tests with:
 
-## Key Components
+```bash
+pcl test
+```
 
-The `credible-std` library provides several essential components for implementing assertions:
+Use `CredibleTestWithBacktesting` when you need historical transaction replay. Backtesting requires `ffi = true`, and the helper looks for `credible-std/scripts/backtesting/transaction_fetcher.sh`. Set `CREDIBLE_STD_PATH` if the script is not in a standard dependency location.
 
-### Core Contracts
+## Related Pages
 
-- `Credible.sol`: Base contract that provides access to the PhEvm precompile for assertion validation
-- `Assertion.sol`: Abstract contract for implementing assertions with trigger registration and validation logic
-- `StateChanges.sol`: Utilities for tracking and validating contract state changes with type-safe conversions
-- `TriggerRecorder.sol`: Manages assertion triggers for function calls, storage changes, and balance changes
-- `PhEvm.sol`: Interface for the PhEvm precompile that enables assertion validation
-- `CredibleTest.sol`: Testing utilities for assertion development and validation
-
-### Features
-
-1. **Trigger System**
-   - Register triggers for function calls, storage changes, and balance changes
-   - Monitor specific contract behaviors
-   - Support for multiple trigger types
-
-2. **State Change Tracking**
-   - Type-safe utilities for monitoring contract state changes
-   - Built-in conversion helpers
-   - Pre and post transaction state comparison
-   - Call stack level inspection of state changes
-   - Access to intermediate state during transaction execution
-   - Direct storage slot inspection and loading
-
-3. **Advanced Forking Capabilities**
-   - Fork to pre/post transaction states
-   - Fork to specific call execution points
-   - Granular state inspection at any call level
-
-4. **Comprehensive Call Tracing**
-   - Get all call inputs or filter by call type (CALL, STATICCALL, DELEGATECALL, CALLCODE)
-   - Avoid double-counting issues with proxy contracts
-   - Detailed call information including gas limits, values, and execution addresses
-   - Transaction log retrieval for assertion logic
-
-5. **Testing Framework**
-   - Testing utilities for assertion development and validation
-   - Integration with Forge testing framework
-
-6. **Debugging Tools**
-   - Console logging for assertion debugging
-
-For a detailed overview of currently supported use cases and examples, see our [Use Case Mappings](/credible/use-case-mappings/intro-use-case-mapping).
-
-## Solidity Integration
-
-`credible-std` is written in Solidity, making it seamlessly integrated with your existing smart contract development workflow. This means:
-
-- No context switching or learning new languages
-- Direct access to all Solidity features and tooling
-- Familiar development experience
-- Easy integration with existing contracts
-- Full compatibility with Foundry testing framework
-
-## Getting Started
-
-For installation and setup instructions, see the [PCL Quickstart Guide](/credible/pcl-quickstart).
-
----
-
-Missing a feature or cheatcode? Please [open an issue](https://github.com/phylaxsystems/credible-std/issues/new) with your feature request.
+<CardGroup cols={2}>
+  <Card title="Cheatcodes API Reference" icon="book" href="./cheatcodes-reference">
+    Full PhEVM cheatcode signatures
+  </Card>
+  <Card title="Testing Assertions" icon="flask" href="./testing-assertions">
+    How to test assertions locally
+  </Card>
+  <Card title="Backtesting Reference" icon="clock-rotate-left" href="./backtesting-reference">
+    Backtesting configuration and behavior
+  </Card>
+  <Card title="Write Your First Assertion" icon="code" href="./write-first-assertion">
+    Build a first assertion with credible-std
+  </Card>
+</CardGroup>

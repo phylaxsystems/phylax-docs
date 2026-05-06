@@ -28,7 +28,7 @@ This enables assertions to compare values across different execution points, som
 
 PhEVM implements special precompiles called [cheatcodes](/credible/glossary#cheatcodes) that provide capabilities beyond standard EVM operations:
 
-- **State forking**: `forkPreTx()`, `forkPostTx()`, `forkPreCall()`, `forkPostCall()`
+- **Snapshot reads**: `loadStateAt` with explicit `ForkId` values for pre-transaction, post-transaction, pre-call, and post-call state
 - **Call introspection**: Access to call inputs, call traces, and execution context
 - **State change tracking**: Monitor storage slot modifications during execution
 - **Log access**: Retrieve transaction logs for validation
@@ -53,4 +53,3 @@ When the Assertion Enforcer receives a transaction for validation:
 4. **Result**: If any assertion reverts, the transaction is flagged as invalid
 
 For the complete validation flow, see [Assertion Enforcer](/credible/assertion-enforcer).
-

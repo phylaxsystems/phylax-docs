@@ -11,7 +11,7 @@ This guide helps you diagnose and fix common errors when writing and testing ass
 |-------|--------------|-----------|
 | "Expected 1 assertion to be executed, but 0 were executed" | Transaction reverts or setup after `cl.assertion()` | Check trigger function, move setup before `cl.assertion()` |
 | OutOfGas error | Assertion exceeds 300k gas limit | Optimize loops, add early returns, fail fast |
-| `vm.load()` not available | Wrong cheatcode | Use `ph.load()` instead |
+| `vm.load()` not available | Wrong cheatcode | Use `ph.loadStateAt()` with a `ForkId` instead |
 | Function selector errors | Wrong selector or trigger not registered | Use `Protocol.functionName.selector`, check `triggers()` |
 | Call input double-counting | Using `getAllCallInputs()` | Use specific call type function |
 | Test contract address in error | Inline function call consumed `vm.prank()` | Store view function results before `vm.prank()` |
@@ -141,17 +141,17 @@ Use `pcl test -vvv` to see detailed gas usage per operation.
 
 **Error:** `vm.load()` is not available in assertions
 
-**Solution:** Use `ph.load()` instead:
+**Solution:** Use `ph.loadStateAt()` with an explicit `ForkId` instead:
 
 ```solidity
 // ❌ WRONG
 bytes32 data = vm.load(address, slot);
 
 // ✅ CORRECT
-bytes32 data = ph.load(address, slot);
+bytes32 data = ph.loadStateAt(target, slot, PhEvm.ForkId({forkType: 1, callIndex: 0}));
 ```
 
-The Phylax helper `ph` provides storage access, not the standard Forge `vm` cheatcode.
+The Phylax helper `ph` provides storage access, not the standard Forge `vm` cheatcode. New assertions should prefer Reshiram snapshot reads instead of legacy global fork switching.
 
 ### Constructor Limitations
 
@@ -185,10 +185,10 @@ function assertionFunction() external {
 
 ```solidity
 // ❌ WRONG
-registerCallTrigger(this.assertionFunction.selector, bytes4(0x12345678));
+registerFnCallTrigger(this.assertionFunction.selector, bytes4(0x12345678));
 
 // ✅ CORRECT
-registerCallTrigger(
+registerFnCallTrigger(
     this.assertionFunction.selector,
     Protocol.targetFunction.selector
 );
@@ -361,8 +361,8 @@ import { console } from "credible-std/console.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 function assertionFunction() external {
-    uint256 preBalance = uint256(ph.forkPreTx().load(token, balanceSlot));
-    uint256 postBalance = uint256(ph.forkPostTx().load(token, balanceSlot));
+    uint256 preBalance = uint256(ph.loadStateAt(token, balanceSlot, PhEvm.ForkId({forkType: 0, callIndex: 0})));
+    uint256 postBalance = uint256(ph.loadStateAt(token, balanceSlot, PhEvm.ForkId({forkType: 1, callIndex: 0})));
     
     console.log(string.concat("Pre: ", Strings.toString(preBalance)));
     console.log(string.concat("Post: ", Strings.toString(postBalance)));

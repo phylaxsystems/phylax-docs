@@ -3,13 +3,18 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract TwapDeviationAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     function triggers() external view override {
         // Register trigger for changes to the current price
         // We assume that the price is stored in storage slot 0
-        registerStorageChangeTrigger(this.assertionTwapDeviation.selector, bytes32(uint256(0)));
+        registerTxEndTrigger(this.assertionTwapDeviation.selector);
     }
 
     // Assert that the current price doesn't deviate more than 5% from the TWAP price
@@ -18,11 +23,11 @@ contract TwapDeviationAssertion is Assertion {
         IPool adopter = IPool(ph.getAssertionAdopter());
 
         // Get TWAP price before the transaction (our reference point)
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         uint256 preTwapPrice = adopter.twap();
 
         // Get price after the transaction
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         uint256 postPrice = adopter.price();
 
         uint256 maxDeviation = 5;

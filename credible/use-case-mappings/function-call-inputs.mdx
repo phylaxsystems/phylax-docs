@@ -14,14 +14,15 @@ description: Capture and verify function input parameters to validate that the r
 ### Required Cheatcodes
 
 - `getCallInputs(address aa, bytes4 signature)`
-- `forkPreTx()`
-- `forkPostTx()`
+- `loadStateAt(address target, bytes32 slot, ForkId fork)`
 
 ### Example Implementation
 
 Protocol:
 
 ```solidity
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+
 contract Protocol {
     mapping(address => uint256) public balances;
 
@@ -40,14 +41,18 @@ Assertion:
 
 ```solidity
 contract FunctionCallInputsAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     mapping(address => int256) public balanceChanges;
     address[] changedAddresses;
 
     function triggers() public view override {
-        registerCallTrigger(this.assertionFunctionCallInputs.selector);
+        registerTxEndTrigger(this.assertionFunctionCallInputs.selector);
     }
 
-    function assertionFunctionCallInputs() public {
+    function assertionFunctionCallInputs() public view {
         Protocol protocol = Protocol(ph.getAssertionAdopter());
         PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(protocol), Protocol.transfer.selector);
 
@@ -71,16 +76,19 @@ contract FunctionCallInputsAssertion is Assertion {
         uint256 absDiff;
 
         for (uint256 i = 0; i < changedAddresses.length; i++) {
-            ph.forkPreTx();
-            preBalance = protocol.balances(changedAddresses[i]);
-            ph.forkPostTx();
+            bytes32 balanceSlot = keccak256(abi.encode(changedAddresses[i], uint256(0)));
+            PhEvm.ForkId memory preTx = PhEvm.ForkId({forkType: 0, callIndex: 0});
+            PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
+
+            preBalance = uint256(ph.loadStateAt(address(protocol), balanceSlot, preTx));
+            uint256 postBalance = uint256(ph.loadStateAt(address(protocol), balanceSlot, postTx));
 
             if (balanceChanges[changedAddresses[i]] > 0) {
                 absDiff = uint256(balanceChanges[changedAddresses[i]]);
-                require(protocol.balances(changedAddresses[i]) == preBalance + absDiff, "Balance change mismatch");
+                require(postBalance == preBalance + absDiff, "Balance change mismatch");
             } else {
                 absDiff = uint256(balanceChanges[changedAddresses[i]] * -1);
-                require(protocol.balances(changedAddresses[i]) == preBalance - absDiff, "Balance change mismatch");
+                require(postBalance == preBalance - absDiff, "Balance change mismatch");
             }
         }
     }
@@ -94,7 +102,7 @@ contract FunctionCallInputsAssertion is Assertion {
     - Decode parameters using `abi.decode()` to reconstruct function arguments
 
 - **State verification:**
-    - Use `forkPreTx()` and `forkPostTx()` to compare states
+    - Use explicit `ForkId` values with `loadStateAt()` to compare states
     - Validate state changes match expected behavior based on inputs
 
 - **State tracking considerations:**

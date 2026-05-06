@@ -27,7 +27,7 @@ Five assertion functions for deposit/withdrawal verification:
 **Share Value Assertion:**
 - **Share Value Monotonicity**: Share value never decreases unexpectedly (with precision tolerance for rounding)
 
-Uses `ph.getCallInputs()`, `ph.forkPreTx()` / `ph.forkPostTx()`, and `registerCallTrigger()`. See the [Cheatcodes Reference](/credible/cheatcodes-reference) for details.
+Uses `ph.getCallInputs()`, `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads, and `registerFnCallTrigger()`. See the [Cheatcodes Reference](/credible/cheatcodes-reference) for details.
 
 <ass13Erc4626DepositWithdraw />
 
@@ -45,7 +45,7 @@ Four assertion functions covering all ERC4626 operations:
 - **Depositor Shares Verification**: Confirms depositor receives shares matching `previewDeposit()`
 - **Base Invariant**: Ensures vault always has at least as many assets as shares
 
-Uses both `registerCallTrigger()` and `registerStorageChangeTrigger()`.
+Uses both `registerFnCallTrigger()` and `registerTxEndTrigger()`.
 
 <ass2Erc4626Operations />
 

@@ -21,13 +21,13 @@ A targeted price deviation check on all calls could have prevented this oracle m
 ```solidity
 function assertPriceDeviation() external view {
     BeetsLP assertionAdopter = BeetsLP(ph.getAssertionAdopter());
-    ph.forkPreTx();
+    PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
     uint256 preOraclePrice = oracle.getPrice(token); // Get the price before the transaction
 
     // Using swap calls as an example, but any call that affects price should be checked
     PhEvm.CallInputs[] memory calls = ph.getCallInputs(address(assertionAdopter), assertionAdopter.swap.selector);
     for (uint256 i = 0; i < calls.length; i++) {
-        ph.forkPostCall(calls[i].id);
+        PhEvm.ForkId memory postCallFork = PhEvm.ForkId({forkType: 3, callIndex: calls[i].id});
         
         uint256 postOraclePrice = oracle.getPrice(token);
 
@@ -43,9 +43,9 @@ function assertPriceDeviation() external view {
 This assertion function detects oracle price manipulation by monitoring how each call affects prices.
 
 **How it works:**
-1. **Captures baseline**: Uses `ph.forkPreTx()` to get the oracle price before any calls
+1. **Captures baseline**: Uses `PhEvm.ForkId({forkType: 0, callIndex: 0})` with a Reshiram snapshot read to get the oracle price before any calls
 2. **Monitors each call**: Iterates through calls (like swaps) that could affect the oracle price
-3. **Checks price impact**: Uses `ph.forkPostCall()` to see how each call changed the oracle price
+3. **Checks price impact**: Uses a post-call `ForkId` with `ph.loadStateAt()` to see how each call changed the oracle price
 4. **Enforces limits**: Reverts if any single call causes >5% price deviation from the baseline
 
 Using Phylax cheatcodes allows checking the oracle price at every call in the transaction, detecting price manipulation as it happens and preventing attacks that rely on temporary price distortions.

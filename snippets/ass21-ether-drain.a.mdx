@@ -3,15 +3,20 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract EtherDrainAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     // Maximum percentage of ETH that can be drained in a single transaction (10% by default)
     uint256 public constant MAX_DRAIN_PERCENTAGE = 10;
 
     function triggers() external view override {
         // Register a trigger that activates when the ETH balance of the monitored contract changes
-        registerBalanceChangeTrigger(this.assertionEtherDrain.selector);
+        registerTxEndTrigger(this.assertionEtherDrain.selector);
     }
 
     // Combined assertion for ETH drain with whitelist logic
@@ -20,11 +25,11 @@ contract EtherDrainAssertion is Assertion {
         address exampleContract = ph.getAssertionAdopter();
 
         // Capture the ETH balance before transaction execution
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         uint256 preBalance = address(exampleContract).balance;
 
         // Capture the ETH balance after transaction execution
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         uint256 postBalance = address(exampleContract).balance;
 
         // Only check for drainage (we don't care about ETH being added)

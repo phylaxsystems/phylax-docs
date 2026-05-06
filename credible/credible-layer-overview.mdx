@@ -97,36 +97,38 @@ A simple assertion checking that pool rates don't change by more than 3x would h
 <Accordion title="View the assertion code">
 
 ```solidity
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+
 contract BatchSwapDeltaAssertion is Assertion {
     uint256 constant MAX_RATE_CHANGE_MULTIPLIER = 3e18; // 3.0x
 
-    function assertionBatchSwapRateManipulation() external {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
+    function triggers() external view override {
+        registerFnCallTrigger(this.assertionBatchSwapRateManipulation.selector, IVault.batchSwap.selector);
+    }
+
+    function assertionBatchSwapRateManipulation() external view {
         address vault = ph.getAssertionAdopter();
-        PhEvm.CallInputs[] memory batchSwapCalls = ph.getAllCallInputs(
-            vault,
-            IVault.batchSwap.selector
-        );
+        PhEvm.TriggerContext memory ctx = ph.context();
 
-        for (uint256 i = 0; i < batchSwapCalls.length; i++) {
-            // Get affected pools from swap parameters
-            bytes32[] memory uniquePoolIds = _getUniquePoolIds(swaps);
+        // Get affected pools from swap parameters
+        bytes32[] memory uniquePoolIds = _getUniquePoolIds(swaps);
 
-            for (uint256 j = 0; j < uniquePoolIds.length; j++) {
-                (address poolAddress, ) = IVault(vault).getPool(uniquePoolIds[j]);
+        for (uint256 i = 0; i < uniquePoolIds.length; i++) {
+            (address poolAddress, ) = IVault(vault).getPool(uniquePoolIds[i]);
+            PhEvm.ForkId memory preCall = PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart});
+            PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd});
 
-                // Check rate before and after the swap
-                ph.forkPreCall(callInput.id);
-                uint256 preRate = IRateProvider(poolAddress).getRate();
+            uint256 preRate = uint256(ph.loadStateAt(poolAddress, RATE_SLOT, preCall));
+            uint256 postRate = uint256(ph.loadStateAt(poolAddress, RATE_SLOT, postCall));
 
-                ph.forkPostCall(callInput.id);
-                uint256 postRate = IRateProvider(poolAddress).getRate();
-
-                // Revert if rate changed by more than 3x
-                require(
-                    (postRate * 1e18) / preRate <= MAX_RATE_CHANGE_MULTIPLIER,
-                    "BatchSwap: Extreme pool rate manipulation detected"
-                );
-            }
+            require(
+                (postRate * 1e18) / preRate <= MAX_RATE_CHANGE_MULTIPLIER,
+                "BatchSwap: Extreme pool rate manipulation detected"
+            );
         }
     }
 }

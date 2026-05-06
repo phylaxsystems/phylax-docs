@@ -15,8 +15,8 @@ Unexpected fee changes can lead to unauthorized manipulation, protocol revenue l
 
 Uses a whitelist approach to control fee changes:
 
-- `registerStorageChangeTrigger()`: Detect changes to fee storage slot
-- `ph.load()`: Retrieve new fee value after change
+- `registerTxEndTrigger()`: Detect changes to fee storage slot
+- `ph.loadStateAt()`: Retrieve new fee value after change
 - `getStateChangesUint()`: Verify all state changes for fee storage slot
 - Maintains hardcoded allowed fee values for stable pools (0.1%, 0.15%) and non-stable pools (0.25%, 0.30%)
 

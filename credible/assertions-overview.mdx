@@ -18,14 +18,12 @@ When a transaction is submitted to the network:
 ## Example: Prevent Unauthorized Ownership Changes
 
 ```solidity
-function checkOwnershipChange() external {
-    // Fork to state before transaction
-    ph.forkPreTx();
-    address ownerBefore = protocol.owner();
+function checkOwnershipChange() external view {
+    PhEvm.ForkId memory preTx = PhEvm.ForkId({forkType: 0, callIndex: 0});
+    PhEvm.ForkId memory postTx = PhEvm.ForkId({forkType: 1, callIndex: 0});
 
-    // Fork to state after transaction
-    ph.forkPostTx();
-    address ownerAfter = protocol.owner();
+    address ownerBefore = address(uint160(uint256(ph.loadStateAt(address(protocol), bytes32(uint256(0)), preTx))));
+    address ownerAfter = address(uint160(uint256(ph.loadStateAt(address(protocol), bytes32(uint256(0)), postTx))));
 
     require(ownerBefore == ownerAfter, "Owner cannot change");
 }
@@ -36,7 +34,7 @@ When a transaction tries to change the owner, this assertion runs. If the owner 
 ## What They Can Do That Regular Solidity Can't
 
 **Compare before/after states**
-Regular Solidity only sees the current state during execution. Assertions can compare values before and after a transaction using [cheatcodes](/credible/glossary#cheatcodes) like `ph.forkPreTx()` and `ph.forkPostTx()`. You can also inspect state at any point during execution using `ph.forkPreCall()` and `ph.forkPostCall()` to check individual nested calls within the transaction.
+Regular Solidity only sees the current state during execution. Assertions can compare values before and after a transaction using [cheatcodes](/credible/glossary#cheatcodes) like `ph.loadStateAt` with explicit `ForkId` snapshots. You can also inspect state around a specific matched call by combining `ph.context()` with call-scoped `ForkId` values.
 
 **Protect immutable contracts**
 You can add assertions to contracts without modifying them. No redeployment needed.

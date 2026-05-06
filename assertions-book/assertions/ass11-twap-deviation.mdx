@@ -15,9 +15,9 @@ Sudden price deviations could indicate manipulation through flash loan attacks o
 
 Monitors TWAP price changes using a two-stage approach to ensure price stability:
 
-- `ph.forkPreTx()` / `ph.forkPostTx()`: Compare post-transaction price against pre-transaction TWAP
+- `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads: Compare post-transaction price against pre-transaction TWAP
 - `getStateChangesUint()`: Track all price changes during transaction execution
-- `registerStorageChangeTrigger()`: Trigger when price storage slot changes
+- `registerTxEndTrigger()`: Trigger when price storage slot changes
 
 The assertion verifies both the final price and any intermediate price updates against the initial TWAP to detect flash loan attacks and price manipulation throughout the transaction.
 

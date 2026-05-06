@@ -3,9 +3,14 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract ERC4626DepositWithdrawAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     // Used to store the last known good share value
     uint256 private lastKnownShareValue;
 
@@ -14,17 +19,17 @@ contract ERC4626DepositWithdrawAssertion is Assertion {
 
     function triggers() external view override {
         // Register triggers for deposit operations
-        registerCallTrigger(this.assertionDepositAssets.selector, IERC4626.deposit.selector);
-        registerCallTrigger(this.assertionDepositShares.selector, IERC4626.deposit.selector);
+        registerFnCallTrigger(this.assertionDepositAssets.selector, IERC4626.deposit.selector);
+        registerFnCallTrigger(this.assertionDepositShares.selector, IERC4626.deposit.selector);
 
         // Register triggers for withdraw operations
-        registerCallTrigger(this.assertionWithdrawAssets.selector, IERC4626.withdraw.selector);
-        registerCallTrigger(this.assertionWithdrawShares.selector, IERC4626.withdraw.selector);
+        registerFnCallTrigger(this.assertionWithdrawAssets.selector, IERC4626.withdraw.selector);
+        registerFnCallTrigger(this.assertionWithdrawShares.selector, IERC4626.withdraw.selector);
 
         // Register trigger for share value monotonicity
         // This can be triggered by various operations
-        registerCallTrigger(this.assertionShareValueMonotonicity.selector, IERC4626.deposit.selector);
-        registerCallTrigger(this.assertionShareValueMonotonicity.selector, IERC4626.withdraw.selector);
+        registerFnCallTrigger(this.assertionShareValueMonotonicity.selector, IERC4626.deposit.selector);
+        registerFnCallTrigger(this.assertionShareValueMonotonicity.selector, IERC4626.withdraw.selector);
     }
 
     // Assert that deposits correctly update total assets
@@ -36,11 +41,11 @@ contract ERC4626DepositWithdrawAssertion is Assertion {
         PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(adopter), adopter.deposit.selector);
 
         // First, do a simple pre/post state check for the overall transaction
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         uint256 preTotalAssets = adopter.totalAssets();
 
         // Get post-state values
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         uint256 postTotalAssets = adopter.totalAssets();
 
         // Calculate total assets deposited across all calls
@@ -66,12 +71,12 @@ contract ERC4626DepositWithdrawAssertion is Assertion {
         PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(adopter), adopter.deposit.selector);
 
         // Get pre-state values for total assets and total supply
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         uint256 preTotalAssets = adopter.totalAssets();
         uint256 preTotalSupply = adopter.totalSupply();
 
         // Get post-state values for total assets and total supply
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         uint256 postTotalAssets = adopter.totalAssets();
         uint256 postTotalSupply = adopter.totalSupply();
 
@@ -84,9 +89,9 @@ contract ERC4626DepositWithdrawAssertion is Assertion {
             totalAssetsDeposited += assets;
 
             // Get pre and post share balances for this receiver
-            ph.forkPreTx();
+            PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
             uint256 preShareBalance = adopter.balanceOf(receiver);
-            ph.forkPostTx();
+            PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
             uint256 postShareBalance = adopter.balanceOf(receiver);
 
             totalSharesMinted += (postShareBalance - preShareBalance);
@@ -125,11 +130,11 @@ contract ERC4626DepositWithdrawAssertion is Assertion {
         PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(adopter), adopter.withdraw.selector);
 
         // First, do a simple pre/post state check for the overall transaction
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         uint256 preTotalAssets = adopter.totalAssets();
 
         // Get post-state values
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         uint256 postTotalAssets = adopter.totalAssets();
 
         // Calculate total assets withdrawn across all calls
@@ -155,12 +160,12 @@ contract ERC4626DepositWithdrawAssertion is Assertion {
         PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(adopter), adopter.withdraw.selector);
 
         // Get pre-state values for total assets and total supply
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         uint256 preTotalAssets = adopter.totalAssets();
         uint256 preTotalSupply = adopter.totalSupply();
 
         // Get post-state values for total assets and total supply
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         uint256 postTotalAssets = adopter.totalAssets();
         uint256 postTotalSupply = adopter.totalSupply();
 
@@ -173,9 +178,9 @@ contract ERC4626DepositWithdrawAssertion is Assertion {
             totalAssetsWithdrawn += assets;
 
             // Get pre and post share balances for this owner
-            ph.forkPreTx();
+            PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
             uint256 preShareBalance = adopter.balanceOf(owner);
-            ph.forkPostTx();
+            PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
             uint256 postShareBalance = adopter.balanceOf(owner);
 
             totalSharesBurned += (preShareBalance - postShareBalance);
@@ -211,11 +216,11 @@ contract ERC4626DepositWithdrawAssertion is Assertion {
         IERC4626 adopter = IERC4626(ph.getAssertionAdopter());
 
         // Create a snapshot of the state before any transactions
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         uint256 assetsPerSharePre = _calculateAssetsPerShare(adopter);
 
         // Get state after transaction
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         uint256 assetsPerSharePost = _calculateAssetsPerShare(adopter);
 
         // Allow for minimal precision/rounding errors with a small tolerance

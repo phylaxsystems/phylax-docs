@@ -3,12 +3,17 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract TimelockVerificationAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     function triggers() external view override {
         // Register trigger for changes to the timelock storage slot
-        registerStorageChangeTrigger(this.assertionTimelock.selector, bytes32(uint256(0)));
+        registerTxEndTrigger(this.assertionTimelock.selector);
     }
 
     // Verify that a timelock is working as expected after some governance action
@@ -17,7 +22,7 @@ contract TimelockVerificationAssertion is Assertion {
         IGovernance adopter = IGovernance(ph.getAssertionAdopter());
 
         // Get pre-state timelock information
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         bool preActive = adopter.timelockActive();
 
         // If timelock was already active, no need to check further
@@ -26,7 +31,7 @@ contract TimelockVerificationAssertion is Assertion {
         }
 
         // Get post-state timelock information
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
 
         // If timelock is now active, verify all parameters
         if (adopter.timelockActive()) {

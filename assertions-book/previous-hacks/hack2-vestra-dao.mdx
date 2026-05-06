@@ -30,6 +30,7 @@ This would require a way to iterate over all the stakes and sum them up, which i
 pragma solidity 0.8.28;
 
 import {Assertion} from "../lib/credible-std/Assertion.sol";
+import {AssertionSpec} from "../lib/credible-std/SpecRecorder.sol";
 
 // VestraDAO interface
 interface IVestraDAO {
@@ -48,10 +49,14 @@ interface IVestraDAO {
 }
 
 contract VestraDAOHack is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     IVestraDAO public vestraDAO = IVestraDAO(address(0xbeef));
 
     function triggers() external view override {
-        registerCallTrigger(this.assertionExample.selector, vestraDAO.unStake.selector);
+        registerFnCallTrigger(this.assertionExample.selector, vestraDAO.unStake.selector);
     }
 
     // Check that user was actively staked before unstaking
@@ -64,7 +69,7 @@ contract VestraDAOHack is Assertion {
             address from = unStakes[i].caller;
 
             // Check BEFORE the unstake that the stake was active
-            ph.forkPreCall(unStakes[i].id);
+            PhEvm.ForkId memory preCallFork = PhEvm.ForkId({forkType: 2, callIndex: unStakes[i].id});
             (,,,,,bool wasActive) = vestraDAO.stakes(from, maturity);
             require(wasActive, "User was not actively staked for this maturity");
         }

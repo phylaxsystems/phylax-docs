@@ -3,13 +3,18 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 // Assert that the sum of all positions is the same as the total supply reported by the protocol
 contract PositionSumAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     function triggers() external view override {
         // Register trigger for changes to the total supply
-        registerCallTrigger(this.assertionPositionsSum.selector, ILending.deposit.selector);
+        registerFnCallTrigger(this.assertionPositionsSum.selector, ILending.deposit.selector);
     }
 
     // Compare the sum of all updated positions to the total supply reported by the protocol
@@ -18,11 +23,11 @@ contract PositionSumAssertion is Assertion {
         ILending adopter = ILending(ph.getAssertionAdopter());
 
         // Capture the pre-state total supply
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         uint256 preStateTotalSupply = adopter.totalSupply();
 
         // Execute the transaction
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
 
         // Get the new total supply
         uint256 newTotalSupply = adopter.totalSupply();

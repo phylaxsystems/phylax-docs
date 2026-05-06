@@ -95,28 +95,30 @@ forge-std/=lib/forge-std/src/
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract ProtocolAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     // Required: Register triggers for assertion functions
     function triggers() external view override {
-        registerCallTrigger(this.assertionFunction.selector, Protocol.functionToMonitor.selector);
+        registerFnCallTrigger(this.assertionFunction.selector, Protocol.functionToMonitor.selector);
     }
 
     // Assertion function - must be public/external
-    function assertionFunction() external {
+    function assertionFunction() external view {
         // Get protocol instance
         Protocol protocol = Protocol(ph.getAssertionAdopter());
 
-        // State comparison logic
-        ph.forkPreTx();
-        // ... pre-state logic
-
-        ph.forkPostTx();
-        // ... post-state logic
+        // State comparison logic with explicit Reshiram snapshots
+        uint256 preValue = uint256(ph.loadStateAt(address(protocol), SOME_VALUE_SLOT, PhEvm.ForkId({forkType: 0, callIndex: 0})));
+        uint256 postValue = uint256(ph.loadStateAt(address(protocol), SOME_VALUE_SLOT, PhEvm.ForkId({forkType: 1, callIndex: 0})));
 
         // Require statements for invariants
-        require(condition, "Descriptive error message");
+        require(postValue >= preValue, "Descriptive error message");
     }
 }
 ```
@@ -125,10 +127,11 @@ contract ProtocolAssertion is Assertion {
 
 #### State Management
 
-- `ph.forkPreTx()` - Snapshot before transaction
-- `ph.forkPostTx()` - Snapshot after transaction
-- `ph.forkPreCall(callId)` - Snapshot before specific call
-- `ph.forkPostCall(callId)` - Snapshot after specific call
+- `PhEvm.ForkId({forkType: 0, callIndex: 0})` - Snapshot ID for state before the transaction
+- `PhEvm.ForkId({forkType: 1, callIndex: 0})` - Snapshot ID for state after the transaction
+- `PhEvm.ForkId({forkType: 2, callIndex: callId})` - Snapshot ID for state before a specific call
+- `PhEvm.ForkId({forkType: 3, callIndex: callId})` - Snapshot ID for state after a specific call
+- `ph.loadStateAt(target, slot, fork)` - Read storage at a snapshot
 
 #### Call Input Tracking
 
@@ -150,8 +153,8 @@ contract ProtocolAssertion is Assertion {
 
 #### Storage Access
 
-- `ph.load(address, bytes32)` - Read storage from an address at a specific slot
-- **Note**: Use `ph.load()` not `vm.load()` - the `vm` cheatcode is not available in assertions
+- `ph.loadStateAt(address, bytes32, fork)` - Read storage from an address at a specific snapshot
+- **Note**: Use `ph.loadStateAt()` not `vm.load()` - the `vm` cheatcode is not available in assertions
 - Useful for reading internal state variables that aren't exposed as public functions
 
 #### Console Logs
@@ -175,29 +178,20 @@ contract ProtocolAssertion is Assertion {
 ```solidity
 function triggers() external view override {
     // Single function trigger
-    registerCallTrigger(this.assertionFunction.selector, Protocol.functionToMonitor.selector);
+    registerFnCallTrigger(this.assertionFunction.selector, Protocol.functionToMonitor.selector);
 
     // Multiple functions trigger same assertion
-    registerCallTrigger(this.assertionFunction.selector, Protocol.function1.selector);
-    registerCallTrigger(this.assertionFunction.selector, Protocol.function2.selector);
+    registerFnCallTrigger(this.assertionFunction.selector, Protocol.function1.selector);
+    registerFnCallTrigger(this.assertionFunction.selector, Protocol.function2.selector);
 }
 ```
 
-#### Storage Change Triggers
+#### Transaction End Triggers
 
 ```solidity
 function triggers() external view override {
-    // Trigger on specific storage slot changes
-    registerStorageChangeTrigger(this.assertionFunction.selector, bytes32(uint256(0)));
-}
-```
-
-#### Balance Change Triggers
-
-```solidity
-function triggers() external view override {
-    // Trigger on balance changes
-    registerBalanceChangeTrigger(this.assertionFunction.selector, address(0x...));
+    // Trigger after transactions that touch the protected contract
+    registerTxEndTrigger(this.assertionFunction.selector);
 }
 ```
 
@@ -206,14 +200,11 @@ function triggers() external view override {
 #### Pre/Post State Comparison
 
 ```solidity
-function assertionStateInvariant() external {
+function assertionStateInvariant() external view {
     Protocol protocol = Protocol(ph.getAssertionAdopter());
 
-    ph.forkPreTx();
-    uint256 preValue = protocol.someValue();
-
-    ph.forkPostTx();
-    uint256 postValue = protocol.someValue();
+    uint256 preValue = uint256(ph.loadStateAt(address(protocol), SOME_VALUE_SLOT, PhEvm.ForkId({forkType: 0, callIndex: 0})));
+    uint256 postValue = uint256(ph.loadStateAt(address(protocol), SOME_VALUE_SLOT, PhEvm.ForkId({forkType: 1, callIndex: 0})));
 
     require(postValue >= preValue, "Value cannot decrease");
 }
@@ -244,15 +235,12 @@ function assertionCallValidation() external {
 #### Multi-Layered Validation
 
 ```solidity
-function assertionComplexInvariant() external {
+function assertionComplexInvariant() external view {
     Protocol protocol = Protocol(ph.getAssertionAdopter());
 
     // Layer 1: Basic state check (cheapest)
-    ph.forkPreTx();
-    uint256 preBalance = protocol.balance();
-
-    ph.forkPostTx();
-    uint256 postBalance = protocol.balance();
+    uint256 preBalance = uint256(ph.loadStateAt(address(protocol), BALANCE_SLOT, PhEvm.ForkId({forkType: 0, callIndex: 0})));
+    uint256 postBalance = uint256(ph.loadStateAt(address(protocol), BALANCE_SLOT, PhEvm.ForkId({forkType: 1, callIndex: 0})));
 
     if (postBalance < preBalance) {
         // Layer 2: Detailed analysis only if basic check fails
@@ -275,20 +263,16 @@ function assertionComplexInvariant() external {
 #### Intra-Transaction State Monitoring
 
 ```solidity
-function assertionIntraTxOracleDeviation() external {
+function assertionIntraTxOracleDeviation() external view {
     IOracle oracle = IOracle(ph.getAssertionAdopter());
 
-    // Get initial state before transaction
-    ph.forkPreTx();
-    uint256 initialPrice = oracle.price();
+    uint256 initialPrice = uint256(ph.loadStateAt(address(oracle), PRICE_SLOT, PhEvm.ForkId({forkType: 0, callIndex: 0})));
 
     // Calculate allowed deviation thresholds
     uint256 maxAllowedPrice = (initialPrice * 110) / 100; // +10%
     uint256 minAllowedPrice = (initialPrice * 90) / 100;  // -10%
 
-    // Check final state after transaction
-    ph.forkPostTx();
-    uint256 finalPrice = oracle.price();
+    uint256 finalPrice = uint256(ph.loadStateAt(address(oracle), PRICE_SLOT, PhEvm.ForkId({forkType: 1, callIndex: 0})));
     require(
         finalPrice >= minAllowedPrice && finalPrice <= maxAllowedPrice,
         "Oracle final price deviation exceeds threshold"
@@ -302,11 +286,11 @@ function assertionIntraTxOracleDeviation() external {
 
     // Check each intermediate state after each call
     for (uint256 i = 0; i < priceUpdates.length; i++) {
-        // Snapshot state after this specific call
-        ph.forkPostCall(priceUpdates[i].id);
-
-        // Check price at this point in the transaction
-        uint256 intermediatePrice = oracle.price();
+        uint256 intermediatePrice = uint256(ph.loadStateAt(
+            address(oracle),
+            PRICE_SLOT,
+            PhEvm.ForkId({forkType: 3, callIndex: priceUpdates[i].id})
+        ));
         require(
             intermediatePrice >= minAllowedPrice && intermediatePrice <= maxAllowedPrice,
             "Oracle intra-tx price deviation exceeds threshold"
@@ -600,10 +584,10 @@ PhEvm.CallInputs[] memory calls = ph.getCallInputs(target, selector);
 
 ```solidity
 // ❌ WRONG: Using wrong selector or bytes signature
-registerCallTrigger(this.assertionFunction.selector, bytes4(0x12345678));
+registerFnCallTrigger(this.assertionFunction.selector, bytes4(0x12345678));
 
 // ✅ CORRECT: Use actual name of function selector
-registerCallTrigger(this.assertionFunction.selector, Protocol.targetFunction.selector);
+registerFnCallTrigger(this.assertionFunction.selector, Protocol.targetFunction.selector);
 ```
 
 ### Missing Error Messages

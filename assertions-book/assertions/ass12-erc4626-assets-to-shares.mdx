@@ -15,7 +15,7 @@ Any violation could allow unauthorized share minting that dilutes existing holde
 
 Verifies the fundamental ERC4626 share-to-asset relationship using a basic approach:
 
-- `registerStorageChangeTrigger()`: Trigger when total supply storage slot changes
+- `registerTxEndTrigger()`: Trigger when total supply storage slot changes
 - Verify total assets are sufficient to back all outstanding shares
 - Ensure share value is preserved and users can withdraw their assets
 

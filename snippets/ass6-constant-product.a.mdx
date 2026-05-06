@@ -3,6 +3,7 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 // Aerodrome style pool interface
 
@@ -11,11 +12,15 @@ interface IAmm {
 }
 
 contract ConstantProductAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     function triggers() external view override {
         // Register triggers for both reserve slots for each assertion
         // This ensures we catch any modifications to either reserve
-        registerStorageChangeTrigger(this.assertionConstantProduct.selector, bytes32(uint256(0)));
-        registerStorageChangeTrigger(this.assertionConstantProduct.selector, bytes32(uint256(1)));
+        registerTxEndTrigger(this.assertionConstantProduct.selector);
+        registerTxEndTrigger(this.assertionConstantProduct.selector);
     }
 
     // Assert that the constant product (k = x * y) invariant is maintained
@@ -36,12 +41,12 @@ contract ConstantProductAssertion is Assertion {
         IAmm adopter = IAmm(ph.getAssertionAdopter());
 
         // Get pre-state reserves and calculate initial k
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
         (uint256 reserve0Pre, uint256 reserve1Pre) = adopter.getReserves();
         uint256 kPre = reserve0Pre * reserve1Pre;
 
         // Get post-state reserves and calculate final k
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
         (uint256 reserve0Post, uint256 reserve1Post) = adopter.getReserves();
         uint256 kPost = reserve0Post * reserve1Post;
 

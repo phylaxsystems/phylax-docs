@@ -33,9 +33,15 @@ contract MonotonicallyIncreasingValue {
 Assertion:
 
 ```solidity
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+
 contract StateChangesAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     function triggers() public view override {
-        registerCallTrigger(this.assertionStateChanges.selector);
+        registerTxEndTrigger(this.assertionStateChanges.selector);
     }
 
     function assertionStateChanges() public view {
