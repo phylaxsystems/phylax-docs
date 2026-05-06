@@ -16,10 +16,10 @@ For example, it's possible to define a whitelist of allowed implementations - an
 Monitors changes to the implementation address storage slot in proxy contracts using:
 
 - `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads: Compare implementation address before and after transaction
-- `getStateChangesAddress()`: Track all changes to the implementation slot during transaction execution  
+- `ph.loadStateAt()`: Load the implementation slot at each snapshot
 - `registerTxEndTrigger()`: Trigger when implementation address changes
 
-The assertion performs both direct pre/post comparison and verification of all intermediate state changes to detect unauthorized modifications.
+The assertion performs a direct pre/post comparison of the protected implementation slot.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 

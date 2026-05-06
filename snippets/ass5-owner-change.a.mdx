@@ -7,77 +7,44 @@ import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract OwnerChangeAssertion is Assertion {
+    bytes32 internal constant OWNER_SLOT = bytes32(uint256(0));
+    bytes32 internal constant ADMIN_SLOT = bytes32(uint256(1));
+
     constructor() {
         registerAssertionSpec(AssertionSpec.Reshiram);
     }
 
     function triggers() external view override {
-        // Register triggers for changes to both owner and admin storage slots
         registerTxEndTrigger(this.assertionOwnerChange.selector);
         registerTxEndTrigger(this.assertionAdminChange.selector);
     }
 
-    // Assert that the owner address doesn't change during the state transition
-    function assertionOwnerChange() external {
-        // Get the assertion adopter address
-        IOwnership adopter = IOwnership(ph.getAssertionAdopter());
-
-        // Get pre-state owner
+    /// @notice Checks that the owner slot is unchanged across the transaction.
+    function assertionOwnerChange() external view {
+        address adopter = ph.getAssertionAdopter();
         PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        address preOwner = adopter.owner();
-
-        // Get post-state owner
         PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
-        address postOwner = adopter.owner();
 
-        // Verify owner hasn't changed after the transaction
-        // Fail early if the owner has changed
+        address preOwner = _loadAddressAt(adopter, OWNER_SLOT, preFork);
+        address postOwner = _loadAddressAt(adopter, OWNER_SLOT, postFork);
+
         require(preOwner == postOwner, "Owner changed");
-
-        // Get all state changes for the owner slot
-        // This checks if the owner address has changed throughout the callstack
-        address[] memory changes = getStateChangesAddress(
-            address(adopter),
-            bytes32(uint256(0)) // First storage slot for owner address
-        );
-
-        // Additional check: verify no changes take place in the owner slot throughout the callstack
-        for (uint256 i = 0; i < changes.length; i++) {
-            require(changes[i] == preOwner, "Unauthorized owner change detected");
-        }
     }
 
-    // Assert that the admin address doesn't change during the state transition
-    function assertionAdminChange() external {
-        // Get the assertion adopter address
-        IOwnership adopter = IOwnership(ph.getAssertionAdopter());
-
-        // Get pre-state admin
+    /// @notice Checks that the admin slot is unchanged across the transaction.
+    function assertionAdminChange() external view {
+        address adopter = ph.getAssertionAdopter();
         PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        address preAdmin = adopter.admin();
-
-        // Get post-state admin
         PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
-        address postAdmin = adopter.admin();
 
-        // Get all state changes for the admin slot
-        address[] memory changes = getStateChangesAddress(
-            address(adopter),
-            bytes32(uint256(1)) // Second storage slot for admin address
-        );
+        address preAdmin = _loadAddressAt(adopter, ADMIN_SLOT, preFork);
+        address postAdmin = _loadAddressAt(adopter, ADMIN_SLOT, postFork);
 
-        // Verify admin hasn't changed after the transaction
         require(preAdmin == postAdmin, "Admin changed");
-
-        // Additional check: verify no changes take place in the admin slot throughout the callstack
-        for (uint256 i = 0; i < changes.length; i++) {
-            require(changes[i] == preAdmin, "Unauthorized admin change detected");
-        }
     }
-}
 
-interface IOwnership {
-    function owner() external view returns (address);
-    function admin() external view returns (address);
+    function _loadAddressAt(address target, bytes32 slot, PhEvm.ForkId memory fork) internal view returns (address) {
+        return address(uint160(uint256(ph.loadStateAt(target, slot, fork))));
+    }
 }
 ```

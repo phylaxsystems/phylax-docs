@@ -16,7 +16,7 @@ Incorrect harvest implementations could lead to loss of user funds, price per sh
 Implements multi-layered approach to verify harvest operations:
 
 - `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads: Capture vault balance and price per share before/after harvest
-- `getStateChangesUint()`: Monitor all balance changes during transaction execution
+- `ph.loadStateAt()`: Read balance and price-per-share slots before and after the harvest call
 - `registerFnCallTrigger()`: Trigger on harvest function calls
 - Ensures balance hasn't decreased (can stay same if harvested recently)
 - Confirms price per share hasn't decreased
@@ -34,5 +34,5 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 ## Related Patterns
 - [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
-- [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
+- [ERC20 Cumulative Outflow Breaker](/assertions-book/assertions/ass20-erc20-drain)
 - [Price Within Ticks](/assertions-book/assertions/ass15-price-within-ticks)

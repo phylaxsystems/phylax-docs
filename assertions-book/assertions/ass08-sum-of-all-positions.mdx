@@ -22,7 +22,7 @@ Since direct iteration over all positions isn't currently supported, this assert
 
 Uses these cheatcodes:
 - `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads: Capture total supply before and after transaction
-- `ph.getCallInputs()`: Track function calls that modify positions
+- `ph.context()` and `ph.callinputAt()`: Inspect the triggered position-modifying call
 - `registerFnCallTrigger()`: Trigger on position-modifying functions
 
 Check the [Modified Keys](/credible/use-case-mappings/unsupported-use-cases/modified-keys) use case for details on what direct position iteration would look like.

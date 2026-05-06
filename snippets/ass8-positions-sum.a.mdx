@@ -6,65 +6,41 @@ import {Assertion} from "credible-std/Assertion.sol";
 import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
-// Assert that the sum of all positions is the same as the total supply reported by the protocol
 contract PositionSumAssertion is Assertion {
+    bytes32 internal constant TOTAL_SUPPLY_SLOT = bytes32(uint256(0));
+
     constructor() {
         registerAssertionSpec(AssertionSpec.Reshiram);
     }
 
     function triggers() external view override {
-        // Register trigger for changes to the total supply
         registerFnCallTrigger(this.assertionPositionsSum.selector, ILending.deposit.selector);
     }
 
-    // Compare the sum of all updated positions to the total supply reported by the protocol
-    function assertionPositionsSum() external {
-        // Get the assertion adopter address
-        ILending adopter = ILending(ph.getAssertionAdopter());
+    /// @notice Checks that a deposit call increases stored total supply by the deposited amount.
+    function assertionPositionsSum() external view {
+        address adopter = ph.getAssertionAdopter();
+        PhEvm.TriggerContext memory ctx = ph.context();
+        PhEvm.ForkId memory preCall = PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart});
+        PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd});
 
-        // Capture the pre-state total supply
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        uint256 preStateTotalSupply = adopter.totalSupply();
+        uint256 preTotalSupply = uint256(ph.loadStateAt(adopter, TOTAL_SUPPLY_SLOT, preCall));
+        uint256 postTotalSupply = uint256(ph.loadStateAt(adopter, TOTAL_SUPPLY_SLOT, postCall));
+        (, uint256 amount) = abi.decode(_stripSelector(ph.callinputAt(ctx.callStart)), (address, uint256));
 
-        // Execute the transaction
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        require(postTotalSupply == preTotalSupply + amount, "Positions sum does not match total supply");
+    }
 
-        // Get the new total supply
-        uint256 newTotalSupply = adopter.totalSupply();
-
-        // Calculate the expected change in total supply
-        uint256 expectedTotalSupplyChange = newTotalSupply - preStateTotalSupply;
-
-        // Track the actual sum of position changes
-        uint256 positionChangesSum = 0;
-
-        // Get deposit function call inputs
-        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(adopter), adopter.deposit.selector);
-
-        // Process deposit function calls
-        for (uint256 i = 0; i < callInputs.length; i++) {
-            // Decode the function call input
-            (, uint256 amount) = abi.decode(callInputs[i].input, (address, uint256));
-
-            // Add the deposit amount to the position changes sum
-            positionChangesSum += amount;
+    function _stripSelector(bytes memory data) internal pure returns (bytes memory) {
+        bytes memory stripped = new bytes(data.length - 4);
+        for (uint256 i = 4; i < data.length; i++) {
+            stripped[i - 4] = data[i];
         }
-
-        // Note: In a complete implementation, you would also check for withdraw calls
-        // and other functions that modify positions. Ideally, you would have separate
-        // assertion functions for each type of call to make the code more maintainable
-        // and easier to understand.
-
-        // Verify that the sum of position changes equals the change in total supply
-        require(positionChangesSum == expectedTotalSupplyChange, "Positions sum does not match total supply");
+        return stripped;
     }
 }
 
-// We use a simple lending contract as an example
-// Adjust accordingly to the interface of your protocol
 interface ILending {
-    function totalSupply() external view returns (uint256);
-    function balanceOf(address account) external view returns (uint256);
     function deposit(address user, uint256 amount) external;
 }
 ```

@@ -7,6 +7,9 @@ import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract ERC4626AssetsSharesAssertion is Assertion {
+    bytes32 internal constant TOTAL_ASSETS_SLOT = bytes32(uint256(0));
+    bytes32 internal constant TOTAL_SUPPLY_SLOT = bytes32(uint256(1));
+
     constructor() {
         registerAssertionSpec(AssertionSpec.Reshiram);
     }
@@ -15,26 +18,15 @@ contract ERC4626AssetsSharesAssertion is Assertion {
         registerTxEndTrigger(this.assertionAssetsShares.selector);
     }
 
-    // Assert that the total assets are sufficient to back all shares
+    /// @notice Checks that stored total assets are sufficient to back stored total shares.
     function assertionAssetsShares() external view {
-        // Get the assertion adopter address
-        IERC4626 adopter = IERC4626(ph.getAssertionAdopter());
+        address vault = ph.getAssertionAdopter();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
 
-        uint256 totalAssets = adopter.totalAssets();
-        uint256 totalSupply = adopter.totalSupply();
+        uint256 totalAssets = uint256(ph.loadStateAt(vault, TOTAL_ASSETS_SLOT, postFork));
+        uint256 totalSupply = uint256(ph.loadStateAt(vault, TOTAL_SUPPLY_SLOT, postFork));
 
-        // Calculate how many assets are needed to back all shares
-        uint256 requiredAssets = adopter.convertToAssets(totalSupply);
-
-        // The total assets should be at least what's needed to back all shares
-        require(totalAssets >= requiredAssets, "Not enough assets to back all shares");
+        require(totalAssets >= totalSupply, "Not enough assets to back all shares");
     }
-}
-
-interface IERC4626 {
-    function totalAssets() external view returns (uint256);
-    function totalSupply() external view returns (uint256);
-    function convertToShares(uint256 assets) external view returns (uint256);
-    function convertToAssets(uint256 shares) external view returns (uint256);
 }
 ```

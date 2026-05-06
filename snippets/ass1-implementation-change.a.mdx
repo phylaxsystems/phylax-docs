@@ -7,47 +7,30 @@ import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract ImplementationChangeAssertion is Assertion {
+    bytes32 internal constant IMPLEMENTATION_SLOT = bytes32(uint256(0));
+
     constructor() {
         registerAssertionSpec(AssertionSpec.Reshiram);
     }
 
     function triggers() external view override {
-        // Register trigger for changes to the implementation address storage slot
-        // The implementation address is typically stored in the first storage slot (slot 0)
         registerTxEndTrigger(this.implementationChange.selector);
     }
 
-    // Assert that the implementation contract address doesn't change
-    // during the state transition
-    function implementationChange() external {
-        // Get the assertion adopter address
-        IImplementation adopter = IImplementation(ph.getAssertionAdopter());
-
-        // Get pre-state implementation
+    /// @notice Checks that the implementation slot is unchanged across the transaction.
+    function implementationChange() external view {
+        address adopter = ph.getAssertionAdopter();
         PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        address preImpl = adopter.implementation();
-
-        // Get post-state implementation
         PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
-        address postImpl = adopter.implementation();
 
-        // Get all state changes for the implementation slot
-        address[] memory changes = getStateChangesAddress(
-            address(adopter),
-            bytes32(uint256(0)) // First storage slot for implementation address
-        );
+        address preImpl = _loadAddressAt(adopter, IMPLEMENTATION_SLOT, preFork);
+        address postImpl = _loadAddressAt(adopter, IMPLEMENTATION_SLOT, postFork);
 
-        // Verify implementation hasn't changed
         require(preImpl == postImpl, "Implementation changed");
-
-        // Additional check: verify no unauthorized changes to implementation slot
-        for (uint256 i = 0; i < changes.length; i++) {
-            require(changes[i] == preImpl, "Unauthorized implementation change detected");
-        }
     }
-}
 
-interface IImplementation {
-    function implementation() external view returns (address);
+    function _loadAddressAt(address target, bytes32 slot, PhEvm.ForkId memory fork) internal view returns (address) {
+        return address(uint160(uint256(ph.loadStateAt(target, slot, fork))));
+    }
 }
 ```

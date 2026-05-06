@@ -7,53 +7,34 @@ import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract TimelockVerificationAssertion is Assertion {
+    bytes32 internal constant TIMELOCK_DELAY_SLOT = bytes32(uint256(0));
+    bytes32 internal constant TIMELOCK_ACTIVE_SLOT = bytes32(uint256(1));
+
     constructor() {
         registerAssertionSpec(AssertionSpec.Reshiram);
     }
 
     function triggers() external view override {
-        // Register trigger for changes to the timelock storage slot
         registerTxEndTrigger(this.assertionTimelock.selector);
     }
 
-    // Verify that a timelock is working as expected after some governance action
-    function assertionTimelock() external {
-        // Get the assertion adopter address
-        IGovernance adopter = IGovernance(ph.getAssertionAdopter());
-
-        // Get pre-state timelock information
+    /// @notice Checks that an activated timelock uses a bounded delay.
+    function assertionTimelock() external view {
+        address adopter = ph.getAssertionAdopter();
         PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        bool preActive = adopter.timelockActive();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
 
-        // If timelock was already active, no need to check further
+        bool preActive = uint256(ph.loadStateAt(adopter, TIMELOCK_ACTIVE_SLOT, preFork)) != 0;
         if (preActive) {
             return;
         }
 
-        // Get post-state timelock information
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
+        bool postActive = uint256(ph.loadStateAt(adopter, TIMELOCK_ACTIVE_SLOT, postFork)) != 0;
+        if (postActive) {
+            uint256 delay = uint256(ph.loadStateAt(adopter, TIMELOCK_DELAY_SLOT, postFork));
 
-        // If timelock is now active, verify all parameters
-        if (adopter.timelockActive()) {
-            // Verify timelock delay is within acceptable bounds
-            bool minDelayCorrect = adopter.timelockDelay() >= 1 days;
-            bool maxDelayCorrect = adopter.timelockDelay() <= 2 weeks;
-
-            // Require all parameters to be correct
-            require(minDelayCorrect && maxDelayCorrect, "Timelock parameters invalid");
+            require(delay >= 1 days && delay <= 2 weeks, "Timelock parameters invalid");
         }
     }
-}
-
-interface IGovernance {
-    struct Timelock {
-        uint256 timelockDelay;
-        bool isActive;
-    }
-
-    function timelockActive() external view returns (bool);
-    function timelockDelay() external view returns (uint256);
-    function activateTimelock() external;
-    function setTimelock(uint256 _delay) external;
 }
 ```

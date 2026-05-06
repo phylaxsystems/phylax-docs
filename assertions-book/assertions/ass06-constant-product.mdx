@@ -16,7 +16,7 @@ The constant product formula is fundamental to many AMM designs - any deviation 
 Monitors the product of reserves (k) in AMM pools to ensure it remains constant after transactions using:
 
 - `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads: Compare reserve product before and after transaction
-- `getStateChanges()`: Monitor reserve changes throughout transaction callstack
+- `ph.loadStateAt()`: Load reserve slots before and after the transaction
 - Direct validation that k = reserve0 * reserve1 remains unchanged
 
 The assertion verifies both initial/final states and detects potential manipulations during transaction execution.
@@ -31,6 +31,6 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 ## Related Patterns
 - [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations)
-- [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
+- [ERC20 Cumulative Outflow Breaker](/assertions-book/assertions/ass20-erc20-drain)
 - [Panic State Validation](/assertions-book/assertions/ass17-panic-state-validation)
-- [Intra Transaction Oracle Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation)
+- [ERC20 Cumulative Inflow Breaker](/assertions-book/assertions/ass22-erc20-inflow-breaker)

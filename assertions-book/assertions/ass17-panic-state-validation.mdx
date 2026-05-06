@@ -16,7 +16,7 @@ Improper handling of pause states can lead to fund lockups, unauthorized access,
 Monitors protocol balance and pause state to ensure proper emergency behavior using a multi-layered approach:
 
 - `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads: Capture protocol state before and after transaction
-- `getStateChangesUint()`: Track all state changes during transaction
+- `ph.loadStateAt()`: Read the pause and balance slots at pre-transaction and post-transaction snapshots
 - `registerFnCallTrigger()`: Monitor all function calls to the contract
 - Verify protocol balance can only decrease when paused (allowing withdrawals)
 - Detect unauthorized modifications during pause periods

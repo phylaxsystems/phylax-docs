@@ -1,6 +1,6 @@
 ---
 title: Assertion Pattern Catalog
-description: Reference catalog of reusable assertion patterns organized by security category
+description: Reference catalog of reusable V2 assertion patterns organized by security category
 ---
 
 Use this page as a reference catalog when you already know the class of risk you want to cover and need a matching assertion pattern. If you want to understand a historical exploit first, use the [hack case studies](../previous-hacks/prev-hacks-index).
@@ -33,13 +33,11 @@ Use this page as a reference catalog when you already know the class of risk you
 
 - [**Tokens Borrowed Invariant**](/assertions-book/assertions/ass19-tokens-borrowed-invariant): Enforces that the relationship between borrowed tokens and collateral remains within safe protocol limits, preventing critical invariant violations.
 
-## Oracle Security
+## Circuit Breakers
 
-- [**Oracle Liveness Validation**](/assertions-book/assertions/ass10-oracle-validation): Verifies that oracle data is fresh and updated within an acceptable time window, preventing the use of stale or manipulated price data.
+- [**ERC20 Cumulative Outflow Breaker**](/assertions-book/assertions/ass20-erc20-drain): Uses the Reshiram `watchCumulativeOutflow` trigger to limit ERC20 outflows over a rolling window.
 
-- [**TWAP Deviation**](/assertions-book/assertions/ass11-twap-deviation): Ensures the time-weighted average price doesn't deviate excessively from previous values, detecting price manipulation attempts or oracle failures.
-
-- [**Intra-Transaction Oracle Deviation**](/assertions-book/assertions/ass28-intra-tx-oracle-deviation): Monitors price oracle readings during a transaction to detect excessive deviations that might indicate flash loan attacks or price manipulation.
+- [**ERC20 Cumulative Inflow Breaker**](/assertions-book/assertions/ass22-erc20-inflow-breaker): Uses the Reshiram `watchCumulativeInflow` trigger to limit suspicious ERC20 inflows over a rolling window.
 
 ## Vault & ERC4626 Security
 
@@ -52,13 +50,6 @@ Use this page as a reference catalog when you already know the class of risk you
 ## Emergency & Special Mode Protection
 
 - [**Panic State Validation**](/assertions-book/assertions/ass17-panic-state-validation): Validates critical protocol state variables during panic or emergency modes, ensuring fallback mechanisms work correctly when normal operations are suspended.
-
-
-## Fund Protection
-
-- [**ERC20 Drain**](/assertions-book/assertions/ass20-erc20-drain): Prevents excessive token outflows in a single transaction, mitigating the impact of potential exploits by limiting how quickly funds can be drained.
-
-- [**Ether Drain**](/assertions-book/assertions/ass21-ether-drain): Monitors and limits ETH outflows from contracts, protecting against unauthorized withdrawals that could deplete protocol reserves.
 
 ---
 

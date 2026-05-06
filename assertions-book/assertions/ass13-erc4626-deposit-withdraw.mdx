@@ -4,7 +4,6 @@ description: Ensure that ERC4626 operations maintain correct accounting
 ---
 
 import ass13Erc4626DepositWithdraw from "/snippets/ass13-erc4626-deposit-withdraw.a.mdx";
-import ass2Erc4626Operations from "/snippets/ass2-erc4626-operations.a.mdx";
 
 ## When to Use This Pattern
 
@@ -12,42 +11,17 @@ Ensures ERC4626 operations maintain correct accounting for both assets and share
 
 Any discrepancy between preview functions and actual operations could lead to users receiving incorrect amounts, potentially resulting in value loss.
 
-## Pattern Variant 1: Deposit and Withdraw
+## What This Pattern Checks
 
-Five assertion functions for deposit/withdrawal verification:
+Checks ERC4626 share-price safety around deposit and withdraw calls:
 
-**Deposit Assertions:**
-- **Asset Accounting**: Total vault assets increase by exact deposit amount
-- **Share Accounting**: Depositors receive correct shares
-
-**Withdrawal Assertions:**
-- **Asset Accounting**: Total vault assets decrease by exact withdrawal amount  
-- **Share Accounting**: Correct shares burned
-
-**Share Value Assertion:**
-- **Share Value Monotonicity**: Share value never decreases unexpectedly (with precision tolerance for rounding)
-
-Uses `ph.getCallInputs()`, `PhEvm.ForkId({forkType: 0, callIndex: 0})` / `PhEvm.ForkId({forkType: 1, callIndex: 0})` with Reshiram snapshot reads, and `registerFnCallTrigger()`. See the [Cheatcodes Reference](/credible/cheatcodes-reference) for details.
+- `registerAssertionSpec(AssertionSpec.Reshiram)`: Registers the assertion as a Reshiram assertion.
+- `registerFnCallTrigger()`: Runs the assertion around `deposit` and `withdraw` calls.
+- `ph.context()`: Reads the current call frame.
+- `PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart})` / `PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd})`: Reads pre-call and post-call snapshots.
+- `ph.loadStateAt()`: Loads total assets and total supply at each snapshot.
 
 <ass13Erc4626DepositWithdraw />
-
-## Pattern Variant 2: Full ERC4626 Operation Coverage
-
-Use this approach when your protocol:
-- Uses mint/redeem in addition to deposit/withdraw
-- Handles multiple operations in a single transaction
-- Needs validation against preview functions
-
-Four assertion functions covering all ERC4626 operations:
-
-- **Batch Operations Consistency**: Validates deposit, mint, withdraw, and redeem in a single transaction. Uses preview functions for expected value calculation.
-- **Deposit Balance Verification**: Confirms vault assets increase by exact deposit amount
-- **Depositor Shares Verification**: Confirms depositor receives shares matching `previewDeposit()`
-- **Base Invariant**: Ensures vault always has at least as many assets as shares
-
-Uses both `registerFnCallTrigger()` and `registerTxEndTrigger()`.
-
-<ass2Erc4626Operations />
 
 <Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
 

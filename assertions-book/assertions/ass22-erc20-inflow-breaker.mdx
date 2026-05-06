@@ -1,0 +1,41 @@
+---
+title: 'ERC20 Cumulative Inflow Breaker'
+description: 'Limit cumulative ERC20 inflows with a Reshiram circuit-breaker trigger'
+---
+
+import ass22ERC20InflowBreaker from "/snippets/ass22-erc20-inflow-breaker.a.mdx";
+
+## When to Use This Pattern
+
+Use this pattern when unexpected inflows can distort protocol accounting, prices, or risk controls. It applies to lending vault donations, AMM reserve stuffing, bridged-asset accounting, staking receipt-token systems, and other protocols where excessive token inflow over a short window is suspicious.
+
+This is a V2 Reshiram circuit-breaker pattern. The rolling-window accounting is handled by the trigger/precompile machinery, not by assertion-authored storage.
+
+## What This Pattern Checks
+
+Registers a percentage-based cumulative inflow limit:
+
+- `registerAssertionSpec(AssertionSpec.Reshiram)`: Registers the assertion as a Reshiram assertion.
+- `watchCumulativeInflow(token, thresholdBps, windowDuration, assertFn)`: Watches ERC20 inflow over a rolling window.
+- `ph.inflowContext()`: Reads the token context inside the triggered assertion.
+- Reverts when cumulative inflow breaches the configured threshold.
+
+The assertion does not manually store balances or rolling counters. The Reshiram circuit-breaker trigger is responsible for tracking the window and invoking the assertion when the limit is exceeded.
+
+<Warning>
+As of May 6, 2026, the v2 Reshiram spec is not live on Linea mainnet. Treat this pattern as a local, development, or forward-looking example until Linea mainnet supports the spec.
+</Warning>
+
+For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+
+## Assertion Pattern
+
+<ass22ERC20InflowBreaker />
+
+<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+
+## Related Patterns
+
+- [ERC20 Cumulative Outflow Breaker](/assertions-book/assertions/ass20-erc20-drain)
+- [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
+- [Sum of All Positions](/assertions-book/assertions/ass08-sum-of-all-positions)

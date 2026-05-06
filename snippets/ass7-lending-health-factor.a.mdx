@@ -7,105 +7,57 @@ import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract LendingHealthFactorAssertion is Assertion {
+    bytes32 internal constant HEALTH_FACTOR_SLOT = bytes32(uint256(0));
+    uint256 internal constant MIN_HEALTH_FACTOR = 1e18;
+
     constructor() {
         registerAssertionSpec(AssertionSpec.Reshiram);
     }
 
     function triggers() external view override {
-        // Register triggers for each function that should maintain healthy positions
-        registerFnCallTrigger(this.assertionSupply.selector, IMorpho.supply.selector);
-        registerFnCallTrigger(this.assertionBorrow.selector, IMorpho.borrow.selector);
-        registerFnCallTrigger(this.assertionWithdraw.selector, IMorpho.withdraw.selector);
-        registerFnCallTrigger(this.assertionRepay.selector, IMorpho.repay.selector);
+        registerFnCallTrigger(this.assertionOperationSafety.selector, IMorpho.supply.selector);
+        registerFnCallTrigger(this.assertionOperationSafety.selector, IMorpho.borrow.selector);
+        registerFnCallTrigger(this.assertionOperationSafety.selector, IMorpho.withdraw.selector);
+        registerFnCallTrigger(this.assertionOperationSafety.selector, IMorpho.repay.selector);
     }
 
-    // Check that supply operation maintains healthy positions
-    function assertionSupply() external {
-        // Get the assertion adopter address
-        IMorpho adopter = IMorpho(ph.getAssertionAdopter());
+    /// @notice Checks that the touched account remains healthy after a lending operation.
+    function assertionOperationSafety() external view {
+        PhEvm.TriggerContext memory ctx = ph.context();
+        PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd});
+        (uint256 marketId,) = abi.decode(_stripSelector(ph.callinputAt(ctx.callStart)), (uint256, uint256));
+        address account = _matchingCaller(ctx.selector);
+        bytes32 healthSlot = _healthFactorSlot(marketId, account);
+        uint256 healthFactor = uint256(ph.loadStateAt(ph.getAssertionAdopter(), healthSlot, postCall));
 
-        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(adopter), adopter.supply.selector);
-        for (uint256 i = 0; i < callInputs.length; i++) {
-            (uint256 marketId,) = abi.decode(callInputs[i].input, (uint256, uint256));
-            address user = callInputs[i].caller;
-
-            IMorpho.MarketParams memory marketParams = adopter.idToMarketParams(marketId);
-
-            require(adopter._isHealthy(marketParams, marketId, user), "Supply operation resulted in unhealthy position");
-        }
+        require(healthFactor >= MIN_HEALTH_FACTOR, "Operation resulted in unhealthy position");
     }
 
-    // Check that borrow operation maintains healthy positions
-    function assertionBorrow() external {
-        // Get the assertion adopter address
-        IMorpho adopter = IMorpho(ph.getAssertionAdopter());
-
-        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(adopter), adopter.borrow.selector);
-        for (uint256 i = 0; i < callInputs.length; i++) {
-            (uint256 marketId,) = abi.decode(callInputs[i].input, (uint256, uint256));
-            address user = callInputs[i].caller;
-
-            IMorpho.MarketParams memory marketParams = adopter.idToMarketParams(marketId);
-
-            require(adopter._isHealthy(marketParams, marketId, user), "Borrow operation resulted in unhealthy position");
-        }
+    function _matchingCaller(bytes4 selector) internal view returns (address) {
+        PhEvm.TriggerCall[] memory calls = ph.matchingCalls(ph.getAssertionAdopter(), selector, _successfulCalls(), 1);
+        require(calls.length == 1, "missing triggered call");
+        return calls[0].caller;
     }
 
-    // Check that withdraw operation maintains healthy positions
-    function assertionWithdraw() external {
-        // Get the assertion adopter address
-        IMorpho adopter = IMorpho(ph.getAssertionAdopter());
-
-        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(adopter), adopter.withdraw.selector);
-        for (uint256 i = 0; i < callInputs.length; i++) {
-            (uint256 marketId,) = abi.decode(callInputs[i].input, (uint256, uint256));
-            address user = callInputs[i].caller;
-
-            IMorpho.MarketParams memory marketParams = adopter.idToMarketParams(marketId);
-
-            require(
-                adopter._isHealthy(marketParams, marketId, user), "Withdraw operation resulted in unhealthy position"
-            );
-        }
+    function _successfulCalls() internal pure returns (PhEvm.CallFilter memory filter) {
+        filter.callType = 1;
+        filter.successOnly = true;
     }
 
-    // Check that repay operation maintains healthy positions
-    function assertionRepay() external {
-        // Get the assertion adopter address
-        IMorpho adopter = IMorpho(ph.getAssertionAdopter());
+    function _healthFactorSlot(uint256 marketId, address account) internal pure returns (bytes32) {
+        return keccak256(abi.encode(account, keccak256(abi.encode(marketId, HEALTH_FACTOR_SLOT))));
+    }
 
-        PhEvm.CallInputs[] memory callInputs = ph.getCallInputs(address(adopter), adopter.repay.selector);
-        for (uint256 i = 0; i < callInputs.length; i++) {
-            (uint256 marketId,) = abi.decode(callInputs[i].input, (uint256, uint256));
-            address user = callInputs[i].caller;
-
-            IMorpho.MarketParams memory marketParams = adopter.idToMarketParams(marketId);
-
-            require(adopter._isHealthy(marketParams, marketId, user), "Repay operation resulted in unhealthy position");
+    function _stripSelector(bytes memory data) internal pure returns (bytes memory) {
+        bytes memory stripped = new bytes(data.length - 4);
+        for (uint256 i = 4; i < data.length; i++) {
+            stripped[i - 4] = data[i];
         }
+        return stripped;
     }
 }
 
-// We use Morpho as an example, but this could be any lending protocol
 interface IMorpho {
-    struct MarketParams {
-        uint256 marketId;
-    }
-
-    struct Position {
-        uint256 supplyShares;
-        uint128 borrowShares;
-        uint128 collateral;
-    }
-
-    function idToMarketParams(uint256) external view returns (MarketParams memory);
-    function position(uint256, address) external view returns (Position memory);
-    function _isHealthy(MarketParams memory marketParams, uint256 marketId, address borrower)
-        external
-        view
-        returns (bool);
-
-    // Functions used in triggers
     function supply(uint256 marketId, uint256 amount) external;
     function borrow(uint256 marketId, uint256 amount) external;
     function withdraw(uint256 marketId, uint256 amount) external;

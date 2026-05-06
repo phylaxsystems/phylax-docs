@@ -6,58 +6,36 @@ import {Assertion} from "credible-std/Assertion.sol";
 import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
-// Inspired by https://github.com/beefyfinance/beefy-contracts/blob/master/forge/test/vault/ChainVaultsTest.t.sol#L77-L110
 contract BeefyHarvestAssertion is Assertion {
+    bytes32 internal constant BALANCE_SLOT = bytes32(uint256(0));
+    bytes32 internal constant PRICE_PER_SHARE_SLOT = bytes32(uint256(1));
+
     constructor() {
         registerAssertionSpec(AssertionSpec.Reshiram);
     }
 
     function triggers() external view override {
-        // Register trigger for harvest function calls
         registerFnCallTrigger(this.assertionHarvestIncreasesBalance.selector, IBeefyVault.harvest.selector);
     }
 
-    // Assert that the balance of the vault doesn't decrease after a harvest
-    // and that the price per share doesn't decrease
-    function assertionHarvestIncreasesBalance() external {
-        // Get the assertion adopter address
-        IBeefyVault adopter = IBeefyVault(ph.getAssertionAdopter());
+    /// @notice Checks that a harvest does not reduce vault balance or price per share.
+    function assertionHarvestIncreasesBalance() external view {
+        address vault = ph.getAssertionAdopter();
+        PhEvm.TriggerContext memory ctx = ph.context();
+        PhEvm.ForkId memory preCall = PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart});
+        PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd});
 
-        // Check pre-harvest state
-        PhEvm.ForkId memory preFork = PhEvm.ForkId({forkType: 0, callIndex: 0});
-        uint256 preBalance = adopter.balance();
-        uint256 prePricePerShare = adopter.getPricePerFullShare();
+        uint256 preBalance = uint256(ph.loadStateAt(vault, BALANCE_SLOT, preCall));
+        uint256 postBalance = uint256(ph.loadStateAt(vault, BALANCE_SLOT, postCall));
+        uint256 prePricePerShare = uint256(ph.loadStateAt(vault, PRICE_PER_SHARE_SLOT, preCall));
+        uint256 postPricePerShare = uint256(ph.loadStateAt(vault, PRICE_PER_SHARE_SLOT, postCall));
 
-        // Check post-harvest state
-        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
-        uint256 postBalance = adopter.balance();
-        uint256 postPricePerShare = adopter.getPricePerFullShare();
-
-        // Balance should not decrease after harvest (can stay the same if harvested recently)
         require(postBalance >= preBalance, "Harvest decreased balance");
-
-        // Price per share should increase or stay the same
         require(postPricePerShare >= prePricePerShare, "Price per share decreased after harvest");
-
-        // Get all state changes to the balance slot
-        uint256[] memory balanceChanges = getStateChangesUint(
-            address(adopter),
-            bytes32(uint256(0)) // First storage slot for balance
-        );
-
-        // Verify that all intermediate balance changes are valid
-        // Each balance change should be >= the previous balance in the sequence
-        uint256 lastBalance = preBalance;
-        for (uint256 i = 0; i < balanceChanges.length; i++) {
-            require(balanceChanges[i] >= lastBalance, "Invalid balance decrease detected during harvest");
-            lastBalance = balanceChanges[i];
-        }
     }
 }
 
 interface IBeefyVault {
-    function balance() external view returns (uint256);
-    function getPricePerFullShare() external view returns (uint256);
     function harvest(bool badHarvest) external;
 }
 ```

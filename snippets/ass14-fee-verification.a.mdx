@@ -6,55 +6,35 @@ import {Assertion} from "credible-std/Assertion.sol";
 import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
-// Check that fee invariants are maintained
 contract AmmFeeVerificationAssertion is Assertion {
+    bytes32 internal constant FEE_SLOT = bytes32(uint256(1));
+    bytes32 internal constant STABLE_SLOT = bytes32(uint256(2));
+
+    uint256 private constant STABLE_POOL_FEE_1 = 1;
+    uint256 private constant STABLE_POOL_FEE_2 = 15;
+    uint256 private constant NON_STABLE_POOL_FEE_1 = 25;
+    uint256 private constant NON_STABLE_POOL_FEE_2 = 30;
+
     constructor() {
         registerAssertionSpec(AssertionSpec.Reshiram);
     }
 
-    // Hardcoded whitelist of allowed fee values
-    uint256 private constant STABLE_POOL_FEE_1 = 1; // 0.1%
-    uint256 private constant STABLE_POOL_FEE_2 = 15; // 0.15%
-    uint256 private constant NON_STABLE_POOL_FEE_1 = 25; // 0.25%
-    uint256 private constant NON_STABLE_POOL_FEE_2 = 30; // 0.30%
-
     function triggers() external view override {
-        // Register trigger for changes to the fee storage slot
-        registerTxEndTrigger(this.assertFeeVerification.selector); // Assuming fee is in slot 1
+        registerTxEndTrigger(this.assertFeeVerification.selector);
     }
 
-    // Verify that any fee change is to an allowed value
+    /// @notice Checks that the post-transaction fee is one of the allowed values.
     function assertFeeVerification() external view {
-        // Get the assertion adopter address
-        IPool adopter = IPool(ph.getAssertionAdopter());
+        address pool = ph.getAssertionAdopter();
+        PhEvm.ForkId memory postFork = PhEvm.ForkId({forkType: 1, callIndex: 0});
 
-        // Get the new fee value and pool type
-        bool isStable = adopter.stable();
-        uint256 newFee = uint256(ph.loadStateAt(address(adopter), bytes32(uint256(1)), PhEvm.ForkId({forkType: 1, callIndex: 0})));
-
-        // Check if the new fee is in the whitelist
+        bool isStable = uint256(ph.loadStateAt(pool, STABLE_SLOT, postFork)) != 0;
+        uint256 newFee = uint256(ph.loadStateAt(pool, FEE_SLOT, postFork));
         bool isAllowed = isStable
             ? (newFee == STABLE_POOL_FEE_1 || newFee == STABLE_POOL_FEE_2)
             : (newFee == NON_STABLE_POOL_FEE_1 || newFee == NON_STABLE_POOL_FEE_2);
 
         require(isAllowed, "Fee change to unauthorized value");
-
-        // If the simple check passes, verify no unauthorized changes in the callstack
-        uint256[] memory changes = getStateChangesUint(address(adopter), bytes32(uint256(1)));
-
-        // Check each change against the whitelist
-        for (uint256 i = 0; i < changes.length; i++) {
-            isAllowed = isStable
-                ? (changes[i] == STABLE_POOL_FEE_1 || changes[i] == STABLE_POOL_FEE_2)
-                : (changes[i] == NON_STABLE_POOL_FEE_1 || changes[i] == NON_STABLE_POOL_FEE_2);
-            require(isAllowed, "Unauthorized fee change detected in callstack");
-        }
     }
-}
-
-// Aerodrome style interface
-interface IPool {
-    function fee() external view returns (uint256);
-    function stable() external view returns (bool);
 }
 ```
