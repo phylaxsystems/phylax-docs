@@ -28,8 +28,9 @@ if [[ -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]]; then
   unset npm_config_prefix
   # shellcheck source=/dev/null
   . "${NVM_DIR:-$HOME/.nvm}/nvm.sh"
-  nvm use "$required_node" >/dev/null
-  run_mint "$@"
+  if nvm use "$required_node" >/dev/null 2>&1; then
+    run_mint "$@"
+  fi
 fi
 
 cat <<EOF >&2
@@ -39,10 +40,12 @@ Current Node: $(node -v 2>/dev/null || echo "not found")
 
 If you use nvm:
   source "\$HOME/.nvm/nvm.sh"
+  nvm install $required_node
   nvm use $required_node
+  corepack enable
   pnpm dev
 
-Supported shortcuts after this change:
+Supported shortcuts:
   pnpm dev
   npm run dev
   npm start

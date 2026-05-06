@@ -4,9 +4,18 @@ This repository contains the official documentation for Phylax's products.
 
 ## Requirements
 
-- Install `mise`
-- Install node, pnpm via `mise install`
-- Install `mintlify CLI` via `pnpm add -g mint`
+- Install Node.js 24.x
+- Enable Corepack so the repository uses the pinned pnpm version:
+
+```bash
+corepack enable
+```
+
+- Install dependencies:
+
+```bash
+pnpm install
+```
 
 ## Documentation Structure
 
@@ -44,8 +53,8 @@ We welcome contributions to improve our documentation! Here are some ways you ca
    - If adding new pages, add them to `docs.json` to include them in the navigation
    - For code snippets, ensure they are properly referenced from the assertions-examples repo
 4. Test your changes:
-   - Run `mint dev` to preview locally
-   - Check for broken links using `mint check-links`
+   - Run `pnpm dev` to preview locally
+   - Check for broken links using `pnpm broken-links`
 5. Commit your changes with a clear commit message
 6. Push to your fork and create a pull request
 
