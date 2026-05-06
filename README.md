@@ -30,7 +30,7 @@ Each example demonstrates real-world patterns and best practices. The book also 
 
 ## Code Snippet Integration
 
-The documentation integrates code snippets from the [assertions-examples](https://github.com/phylaxsystems/assertions-examples) repository through:
+The documentation integrates Assertions Book code snippets from [`credible-std`](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book) through:
 
 1. Automated GitHub Actions
 2. Storage in `/snippets`
@@ -51,7 +51,7 @@ We welcome contributions to improve our documentation! Here are some ways you ca
 3. Make your changes:
    - Create or modify `.mdx` files in the appropriate directory
    - If adding new pages, add them to `docs.json` to include them in the navigation
-   - For code snippets, ensure they are properly referenced from the assertions-examples repo
+   - For Assertions Book code snippets, update `credible-std/examples/assertions-book/assertions/src` first, then import them into `/snippets`
 4. Test your changes:
    - Run `pnpm dev` to preview locally
    - Check for broken links using `pnpm broken-links`

@@ -31,7 +31,7 @@ contract ERC4626DepositWithdrawAssertion is Assertion {
         _assertSharePriceNotReduced(ctx.callStart, ctx.callEnd, "ERC4626: withdrawal diluted shares");
     }
 
-    function _assertSharePriceNotReduced(uint64 callStart, uint64 callEnd, string memory reason) internal view {
+    function _assertSharePriceNotReduced(uint256 callStart, uint256 callEnd, string memory reason) internal view {
         address vault = ph.getAssertionAdopter();
         PhEvm.ForkId memory preCall = PhEvm.ForkId({forkType: 2, callIndex: callStart});
         PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: callEnd});

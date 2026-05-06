@@ -1,6 +1,6 @@
 ---
 title: "credible-std Library"
-description: "Install credible-std and understand its assertion helper functions"
+description: "Reference for credible-std contracts, helpers, specs, and testing utilities"
 ---
 
 `credible-std` is the Solidity standard library for writing, testing, and backtesting Credible Layer assertions. It provides the base assertion contract, the `ph` interface for PhEVM cheatcodes, trigger registration helpers, snapshot-read helpers, typed state-change helpers, and Forge test utilities.
@@ -11,31 +11,18 @@ For individual cheatcode signatures, see the [Cheatcodes API Reference](./cheatc
 As of May 6, 2026, the latest `credible-std` exposes Reshiram helpers, but the v2 Reshiram spec is not live on Linea mainnet. Use Reshiram-only helpers for local or development workflows until Linea mainnet supports the spec.
 </Warning>
 
-## Installation
+## Package and Configuration
 
-<Note>
-`credible-std` is a Foundry library. Install [Foundry](https://book.getfoundry.sh/getting-started/installation) before adding it to a Solidity project.
-</Note>
+`credible-std` is distributed as a Foundry library.
 
-Install the latest stable release:
+| Item | Value |
+| --- | --- |
+| Repository | `phylaxsystems/credible-std` |
+| Stable dependency | `phylaxsystems/credible-std@0.4.0` |
+| Development dependency | `phylaxsystems/credible-std` |
+| Foundry remapping | `credible-std/=lib/credible-std/src/` |
 
-```bash
-forge install phylaxsystems/credible-std@0.4.0
-```
-
-Install the latest development version from the default branch:
-
-```bash
-forge install phylaxsystems/credible-std
-```
-
-Add the remapping to `remappings.txt`:
-
-```bash
-credible-std/=lib/credible-std/src/
-```
-
-If you use backtesting helpers, add a backtesting profile to `foundry.toml`:
+Backtesting helpers require `ffi = true` in the relevant Foundry profile:
 
 ```toml
 [profile.backtesting]
@@ -46,33 +33,6 @@ ffi = true
 gas_limit = 100000000
 test = "test"
 ```
-
-## Verify the Install
-
-Create a minimal assertion that imports `Assertion`:
-
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
-
-import {Assertion} from "credible-std/Assertion.sol";
-
-contract TestAssertion is Assertion {
-    constructor() {
-        registerAssertionSpec(AssertionSpec.Reshiram);
-    }
-
-    function triggers() external view override {}
-}
-```
-
-Run a build:
-
-```bash
-forge build
-```
-
-If the import resolves and the contract compiles, the library and remapping are configured.
 
 ## Core Contracts
 
@@ -233,34 +193,21 @@ Available specs:
 | `Reshiram` | Newer precompile set with explicit snapshot access and legacy-only fork-switching selectors disabled. |
 | `Experimental` | Unrestricted access to all available precompiles. May include untested or dangerous behavior. |
 
-## Testing Helpers
+## Testing Contracts
 
-Use `CredibleTest` in Forge tests to register an assertion against a target contract:
+`CredibleTest` is the base contract for local Forge tests. It exposes `cl.assertion(...)`, which registers an assertion against a target contract for the next transaction in a test.
 
 ```solidity
-import {CredibleTest} from "credible-std/CredibleTest.sol";
-import {Test} from "forge-std/Test.sol";
-
-contract MyAssertionTest is CredibleTest, Test {
-    function testAssertion() public {
-        cl.assertion({
-            adopter: address(target),
-            createData: type(MyAssertion).creationCode,
-            fnSelector: MyAssertion.checkInvariant.selector
-        });
-
-        target.doSomething();
-    }
+interface VmEx {
+    function assertion(
+        address adopter,
+        bytes calldata createData,
+        bytes4 fnSelector
+    ) external;
 }
 ```
 
-Run assertion tests with:
-
-```bash
-pcl test
-```
-
-Use `CredibleTestWithBacktesting` when you need historical transaction replay. Backtesting requires `ffi = true`, and the helper looks for `credible-std/scripts/backtesting/transaction_fetcher.sh`. Set `CREDIBLE_STD_PATH` if the script is not in a standard dependency location.
+`CredibleTestWithBacktesting` extends the local test base for historical transaction replay. It looks for `credible-std/scripts/backtesting/transaction_fetcher.sh`; `CREDIBLE_STD_PATH` overrides the default dependency lookup path.
 
 ## Related Pages
 

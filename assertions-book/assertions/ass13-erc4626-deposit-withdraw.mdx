@@ -1,15 +1,15 @@
 ---
-title: ERC4626 Vault Operations
-description: Ensure that ERC4626 operations maintain correct accounting
+title: ERC4626 Deposit and Withdraw Share Price
+description: Reference pattern for checking ERC4626 deposit and withdraw calls against share-price dilution
 ---
 
 import ass13Erc4626DepositWithdraw from "/snippets/ass13-erc4626-deposit-withdraw.a.mdx";
 
 ## When to Use This Pattern
 
-Ensures ERC4626 operations maintain correct accounting for both assets and shares, preventing share calculation errors and fund loss. Critical for yield aggregators (Yearn, Aave, Compound), lending protocols with ERC4626 interest-bearing tokens, liquidity pools using ERC4626 for LP tokens, and staking protocols with ERC4626 staking tokens.
+Use this pattern when ERC4626 deposit or withdraw calls must not dilute existing or remaining shares. It applies to yield aggregators, lending protocols with ERC4626 interest-bearing tokens, liquidity pools using ERC4626 shares, and staking protocols with ERC4626 receipt tokens.
 
-Any discrepancy between preview functions and actual operations could lead to users receiving incorrect amounts, potentially resulting in value loss.
+This pattern checks share-price monotonicity around matched deposit and withdraw calls. It does not cover mint/redeem entry points or batch-wide preview-function validation.
 
 ## What This Pattern Checks
 
@@ -21,11 +21,13 @@ Checks ERC4626 share-price safety around deposit and withdraw calls:
 - `PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart})` / `PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd})`: Reads pre-call and post-call snapshots.
 - `ph.loadStateAt()`: Loads total assets and total supply at each snapshot.
 
+## Assertion Pattern
+
 <ass13Erc4626DepositWithdraw />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/credible-std/tree/master/src/protection).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
 
-- [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares) — simple base invariant check
-- [Harvest Increases Balance](/assertions-book/assertions/ass18-harvest-increases-balance) — yield operation validation
+- [ERC4626 Assets to Shares](./ass12-erc4626-assets-to-shares): simple base invariant check
+- [Harvest Increases Balance](./ass18-harvest-increases-balance): yield operation validation

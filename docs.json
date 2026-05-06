@@ -243,11 +243,23 @@
                 ]
               },
               {
+                "group": "Oracle Security",
+                "pages": [
+                  "assertions-book/assertions/ass10-oracle-validation",
+                  "assertions-book/assertions/ass11-twap-deviation",
+                  "assertions-book/assertions/ass28-intra-tx-oracle-deviation"
+                ]
+              },
+              {
                 "group": "Circuit Breakers",
                 "pages": [
                   "assertions-book/assertions/ass20-erc20-drain",
                   "assertions-book/assertions/ass22-erc20-inflow-breaker"
                 ]
+              },
+              {
+                "group": "Native Asset Protection",
+                "pages": ["assertions-book/assertions/ass21-ether-drain"]
               },
               {
                 "group": "Vault and ERC4626 Security",
