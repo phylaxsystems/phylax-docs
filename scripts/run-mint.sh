@@ -33,6 +33,15 @@ if [[ -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]]; then
   fi
 fi
 
+homebrew_node="/opt/homebrew/opt/node@$required_node/bin/node"
+if [[ -x "$homebrew_node" ]]; then
+  homebrew_major="$("$homebrew_node" -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo "")"
+  if [[ "$homebrew_major" == "$required_node" ]]; then
+    export PATH="/opt/homebrew/opt/node@$required_node/bin:$PATH"
+    run_mint "$@"
+  fi
+fi
+
 cat <<EOF >&2
 This repo requires Node $required_node.x to run Mintlify commands.
 
@@ -42,6 +51,12 @@ If you use nvm:
   source "\$HOME/.nvm/nvm.sh"
   nvm install $required_node
   nvm use $required_node
+  corepack enable
+  pnpm dev
+
+If you use Homebrew:
+  brew install node@$required_node
+  export PATH="/opt/homebrew/opt/node@$required_node/bin:\$PATH"
   corepack enable
   pnpm dev
 
