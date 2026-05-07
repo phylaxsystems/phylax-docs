@@ -1,29 +1,29 @@
 ---
-title: 'ERC20 Drain'
-description: 'Prevent tokens from being drained from a contract'
+title: 'ERC20 Cumulative Outflow Breaker'
+description: 'Limit cumulative ERC20 outflows with a Reshiram circuit-breaker trigger'
 ---
 
 import ass20ERC20Drain from "/snippets/ass20-erc20-drain.a.mdx";
 
 ## When to Use This Pattern
 
-Monitors and limits token outflows to prevent catastrophic asset loss during exploits, creating a delay window for emergency response. Critical for lending protocols with token reserves (Compound, Aave, Morpho), liquidity pools and DEXs, treasury management systems and DAOs, yield aggregators, and cross-chain bridges holding tokens in escrow.
+Monitors and limits cumulative token outflows to prevent catastrophic asset loss during exploits, creating a response window for protocol operators. Use it for lending reserves, vault custody, bridge escrows, treasuries, liquidity pools, and other contracts where rapid ERC20 withdrawals are a critical risk.
 
-By limiting outflow rates, protocols gain valuable time to respond to security incidents and activate circuit breakers, even if complete prevention isn't possible.
+This is a V2 Reshiram circuit-breaker pattern. The rolling-window accounting is handled by the trigger/precompile machinery, not by assertion-authored storage.
 
 ## What This Pattern Checks
 
-Implements percentage-based limit on token outflows in a single transaction:
+Registers a percentage-based cumulative outflow limit:
 
-- `forkPreTx()` / `forkPostTx()`: Capture token balance before and after transaction
-- `registerCallTrigger()`: Trigger on every transaction without specifying particular function signature
-- Calculate percentage of tokens withdrawn in transaction
-- Revert if withdrawal percentage exceeds configured threshold
+- `registerAssertionSpec(AssertionSpec.Reshiram)`: Registers the assertion as a Reshiram assertion.
+- `watchCumulativeOutflow(token, thresholdBps, windowDuration, assertFn)`: Watches ERC20 outflow over a rolling window.
+- `ph.outflowContext()`: Reads the token context inside the triggered assertion.
+- Reverts when cumulative outflow breaches the configured threshold.
 
-The assertion ensures normal protocol operations continue unimpeded while blocking suspicious large withdrawals and maintaining token outflows within reasonable operational parameters.
+The assertion does not manually store balances or rolling counters. The Reshiram circuit-breaker trigger is responsible for tracking the window and invoking the assertion when the limit is exceeded.
 
 <Warning>
-This assertion is meant to be an example of monitoring token outflows. Due to the nature of how assertions work, only the owner of a contract can enable assertions on it. Since ERC20 tokens are contracts that track balances, but you don't physically store the tokens in your own contract, you cannot directly control balance changes in the token contract itself. This assertion would need to be implemented by the protocol contract owner to monitor their own contract's token balances.
+As of May 6, 2026, the v2 Reshiram spec is not live on Linea mainnet. Treat this pattern as a local, development, or forward-looking example until Linea mainnet supports the spec.
 </Warning>
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
@@ -32,10 +32,11 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass20ERC20Drain />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
 
+- [ERC20 Cumulative Inflow Breaker](/assertions-book/assertions/ass22-erc20-inflow-breaker)
 - [Ether Drain](/assertions-book/assertions/ass21-ether-drain)
 - [Ownership Change](/assertions-book/assertions/ass05-ownership-change)
 - [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)

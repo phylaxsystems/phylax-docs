@@ -74,9 +74,15 @@ A rounding direction that's safe for individual operations may not be safe for m
 A withdrawal proportionality assertion could have prevented this attack by ensuring that active balance decreases are proportional to shares burned:
 
 ```solidity
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+
 contract BunniWithdrawalInvariantAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     function triggers() external view override {
-        registerCallTrigger(
+        registerFnCallTrigger(
             this.assertionWithdrawalProportionality.selector,
             IBunniHub.withdraw.selector
         );
@@ -97,13 +103,13 @@ contract BunniWithdrawalInvariantAssertion is Assertion {
                 abi.decode(withdrawals[i].input, (PoolId, uint256, address, uint256));
             
             // Get pool state before withdrawal
-            ph.forkPreCall(withdrawals[i].id);
+            PhEvm.ForkId memory preCallFork = PhEvm.ForkId({forkType: 2, callIndex: withdrawals[i].id});
             uint256 totalSupplyBefore = hub.bunniTokenOfPool(poolId).totalSupply();
             uint256 activeBalance0Before = hub.getPoolBalance(poolId, 0);
             uint256 activeBalance1Before = hub.getPoolBalance(poolId, 1);
             
             // Get pool state after withdrawal
-            ph.forkPostCall(withdrawals[i].id);
+            PhEvm.ForkId memory postCallFork = PhEvm.ForkId({forkType: 3, callIndex: withdrawals[i].id});
             uint256 totalSupplyAfter = hub.bunniTokenOfPool(poolId).totalSupply();
             // Assuming `getPoolBalance` function exists for simplicity
             uint256 activeBalance0After = hub.getPoolBalance(poolId, 0);

@@ -67,7 +67,7 @@ The code below is **conceptual pseudo code** to illustrate the invariant that sh
 ```solidity
 // CONCEPTUAL - getModifiedAccounts() is not a real cheatcode
 function assertionNoUnsafeDebt() external view {
-    ph.forkPostTx();
+    PhEvm.ForkId memory postFork = _postTx();
 
     // Get all accounts that were modified in this tx
     // NOTE: This cheatcode does not exist - this is conceptual

@@ -17,8 +17,8 @@ Malicious actors often attempt to extract all available ETH in a single transact
 
 Implements tiered protection strategy to detect rapid ETH draining:
 
-- `forkPreTx()` / `forkPostTx()`: Capture contract's ETH balance and whitelist balances before/after transaction
-- `registerBalanceChangeTrigger()`: Trigger when ETH balances change
+- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Capture contract's ETH balance and whitelist balances before/after transaction
+- `registerTxEndTrigger()`: Trigger when ETH balances change
 - For small withdrawals (below threshold): Allow regardless of destination
 - For large withdrawals (above threshold): Require destination to be whitelisted address
 - If no whitelist defined, block all large withdrawals as safety measure
@@ -31,9 +31,9 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass21EtherDrain />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
-- [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
+- [ERC20 Cumulative Outflow Breaker](/assertions-book/assertions/ass20-erc20-drain)
 - [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)
 - [Ownership Change](/assertions-book/assertions/ass05-ownership-change)

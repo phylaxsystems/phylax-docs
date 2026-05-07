@@ -3,42 +3,33 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
-// Assert that the total supply of assets is always greater than or equal to the total borrowed assets
 contract TokensBorrowedInvariant is Assertion {
-    // Use specific storage slots for the protocol
-    bytes32 private constant TOTAL_SUPPLY_SLOT = bytes32(uint256(0)); // Slot 0
-    bytes32 private constant TOTAL_BORROW_SLOT = bytes32(uint256(1)); // Slot 1
+    bytes32 internal constant TOTAL_SUPPLY_SLOT = bytes32(uint256(0));
+    bytes32 internal constant TOTAL_BORROW_SLOT = bytes32(uint256(1));
 
-    function triggers() external view override {
-        // Register triggers for changes to either storage slot with the main assertion function
-        registerStorageChangeTrigger(this.assertBorrowedInvariant.selector, TOTAL_SUPPLY_SLOT);
-        registerStorageChangeTrigger(this.assertBorrowedInvariant.selector, TOTAL_BORROW_SLOT);
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
     }
 
-    // Check the invariant whenever supply or borrow values change
-    function assertBorrowedInvariant() external {
-        // Get the assertion adopter address
-        IMorpho adopter = IMorpho(ph.getAssertionAdopter());
+    function triggers() external view override {
+        registerTxEndTrigger(this.assertBorrowedInvariant.selector);
+    }
 
-        // Check the state after the transaction to ensure the invariant holds
-        ph.forkPostTx();
+    /// @notice Checks that total supplied assets cover total borrowed assets after the transaction.
+    function assertBorrowedInvariant() external view {
+        address market = ph.getAssertionAdopter();
+        PhEvm.ForkId memory postFork = _postTx();
 
-        // Get the current protocol state
-        uint256 totalSupplyAsset = adopter.totalSupplyAsset();
-        uint256 totalBorrowedAsset = adopter.totalBorrowedAsset();
+        uint256 totalSupplyAsset = uint256(ph.loadStateAt(market, TOTAL_SUPPLY_SLOT, postFork));
+        uint256 totalBorrowedAsset = uint256(ph.loadStateAt(market, TOTAL_BORROW_SLOT, postFork));
 
-        // Ensure the core invariant is maintained
         require(
             totalSupplyAsset >= totalBorrowedAsset,
             "INVARIANT VIOLATION: Total supply of assets is less than total borrowed assets"
         );
     }
-}
-
-interface IMorpho {
-    function totalSupplyAsset() external view returns (uint256);
-    function totalBorrowedAsset() external view returns (uint256);
 }
 ```

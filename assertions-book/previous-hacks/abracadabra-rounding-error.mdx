@@ -46,21 +46,26 @@ The key invariant is: **when no assets are owed (elastic = 0), there should be n
 pragma solidity 0.8.28;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 
 interface ICauldronV4 {
     function totalBorrow() external view returns (uint128 elastic, uint128 base);
 }
 
 contract AbracadabraRebaseInvariantAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     function triggers() external view override {
         // Trigger on any storage change to the cauldron
-        registerStorageChangeTrigger(this.assertionNoDebtSharesIfNoDebt.selector);
+        registerTxEndTrigger(this.assertionNoDebtSharesIfNoDebt.selector);
     }
 
     function assertionNoDebtSharesIfNoDebt() external view {
         ICauldronV4 cauldron = ICauldronV4(ph.getAssertionAdopter());
 
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = _postTx();
         (uint128 elastic, uint128 base) = cauldron.totalBorrow();
 
         // Core invariant: if no debt exists, no shares should exist

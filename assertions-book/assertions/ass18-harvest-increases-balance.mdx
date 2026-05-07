@@ -15,9 +15,9 @@ Incorrect harvest implementations could lead to loss of user funds, price per sh
 
 Implements multi-layered approach to verify harvest operations:
 
-- `forkPreTx()` / `forkPostTx()`: Capture vault balance and price per share before/after harvest
-- `getStateChangesUint()`: Monitor all balance changes during transaction execution
-- `registerCallTrigger()`: Trigger on harvest function calls
+- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Capture vault balance and price per share before/after harvest
+- `ph.loadStateAt()`: Read balance and price-per-share slots before and after the harvest call
+- `registerFnCallTrigger()`: Trigger on harvest function calls
 - Ensures balance hasn't decreased (can stay same if harvested recently)
 - Confirms price per share hasn't decreased
 - Prevents manipulation through multiple harvest calls
@@ -30,9 +30,9 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass18HarvestIncreasesBalance />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
 - [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
-- [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
+- [ERC20 Cumulative Outflow Breaker](/assertions-book/assertions/ass20-erc20-drain)
 - [Price Within Ticks](/assertions-book/assertions/ass15-price-within-ticks)

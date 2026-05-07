@@ -1,4 +1,4 @@
-name: Import Assertion Examples
+name: Import Credible Std Assertion Examples
 
 on:
   # Option 1: Run when PRs are merged to main
@@ -20,7 +20,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  import-assertion-examples:
+  import-credible-std-examples:
     # For PR events, only run when merged
     if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
@@ -31,19 +31,19 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Create temporary directory and clone assertion-examples repository
+      - name: Create temporary directory and clone credible-std repository
         run: |
           # Create temporary directory
           TEMP_DIR=$(mktemp -d)
           echo "TEMP_DIR=$TEMP_DIR" >> $GITHUB_ENV
 
           # Clone into temporary directory using organization token
-          git clone --depth 1 https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/phylaxsystems/assertion-examples.git "$TEMP_DIR/assertion-examples"
+          git clone --depth 1 https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/phylaxsystems/credible-std.git "$TEMP_DIR/credible-std"
 
           echo "Directory structure:"
-          find "$TEMP_DIR/assertion-examples" -type d | sort
+          find "$TEMP_DIR/credible-std/examples/assertions-book" -type d | sort
           echo "Solidity files found:"
-          find "$TEMP_DIR/assertion-examples" -name "*.sol" | sort
+          find "$TEMP_DIR/credible-std/examples/assertions-book" -name "*.sol" | sort
 
       - name: Create directories if they don't exist
         run: mkdir -p snippets
@@ -51,7 +51,7 @@ jobs:
       - name: Copy and convert Solidity files to MDX
         run: |
           # Use the specific path to target only .sol files in assertions/src
-          ASSERTIONS_PATH="$TEMP_DIR/assertion-examples/assertions/src"
+          ASSERTIONS_PATH="$TEMP_DIR/credible-std/examples/assertions-book/assertions/src"
 
           # Check if the directory exists
           if [ ! -d "$ASSERTIONS_PATH" ]; then
@@ -77,23 +77,29 @@ jobs:
           ls -la snippets/*.mdx || echo "No MDX files generated"
 
       - name: Create Pull Request
+        if: github.event_name != 'workflow_dispatch' || inputs.dry_run == false
         id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GH_TOKEN }}
-          commit-message: Import assertion examples from phylaxsystems/assertion-examples
-          title: Update assertion examples
+          commit-message: Import assertion examples from phylaxsystems/credible-std
+          title: Update credible-std assertion examples
           body: |
-            This PR automatically imports assertion examples from the [phylaxsystems/assertion-examples](https://github.com/phylaxsystems/assertion-examples) repository.
+            This PR automatically imports Assertions Book examples from
+            [phylaxsystems/credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).
 
             The import was triggered by ${{ github.event_name == 'workflow_dispatch' && 'manual workflow run' || 'PR merge to main' }}.
-          branch: update-assertion-examples
+          branch: update-credible-std-examples
           delete-branch: true
           base: main
           reviewers: czepluch
 
+      - name: Show dry-run diff
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == true
+        run: git diff -- snippets
+
       - name: Show pull request details
-        if: steps.cpr.outputs.pull-request-operation != 'none'
+        if: steps.cpr.outputs.pull-request-operation != '' && steps.cpr.outputs.pull-request-operation != 'none'
         run: |
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"

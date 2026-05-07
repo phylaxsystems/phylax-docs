@@ -84,21 +84,27 @@ Create `assertions/src/OwnableAssertion.a.sol`:
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 import {Ownable} from "../../src/Ownable.sol";
 
 contract OwnableAssertion is Assertion {
-    function triggers() external view override {
-        registerCallTrigger(this.assertionOwnershipChange.selector, Ownable.transferOwnership.selector);
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
     }
 
-    function assertionOwnershipChange() external {
+    function triggers() external view override {
+        registerFnCallTrigger(this.assertionOwnershipChange.selector, Ownable.transferOwnership.selector);
+    }
+
+    function assertionOwnershipChange() external view {
         Ownable ownable = Ownable(ph.getAssertionAdopter());
 
-        ph.forkPreTx();
-        address preOwner = ownable.owner();
+        PhEvm.ForkId memory preTx = _preTx();
+        PhEvm.ForkId memory postTx = _postTx();
 
-        ph.forkPostTx();
-        address postOwner = ownable.owner();
+        address preOwner = address(uint160(uint256(ph.loadStateAt(address(ownable), bytes32(uint256(0)), preTx))));
+        address postOwner = address(uint160(uint256(ph.loadStateAt(address(ownable), bytes32(uint256(0)), postTx))));
 
         require(postOwner == preOwner, "Ownership has changed");
     }
@@ -117,7 +123,12 @@ In general: **if an assertion reverts, the transaction is blocked.** This preven
 
 ```solidity
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 contract OwnableAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
 ```
 
 The `Assertion` base class provides [cheatcodes](./glossary#cheatcodes) via the `ph` namespace.
@@ -126,7 +137,7 @@ The `Assertion` base class provides [cheatcodes](./glossary#cheatcodes) via the 
 
 ```solidity
 function triggers() external view override {
-    registerCallTrigger(this.assertionOwnershipChange.selector, Ownable.transferOwnership.selector);
+    registerFnCallTrigger(this.assertionOwnershipChange.selector, Ownable.transferOwnership.selector);
 }
 ```
 
@@ -143,22 +154,22 @@ See [Triggers](./triggers) for more trigger types and optimization.
 **Assertion logic:**
 
 ```solidity
-function assertionOwnershipChange() external {
+function assertionOwnershipChange() external view {
     Ownable ownable = Ownable(ph.getAssertionAdopter());
 
-    ph.forkPreTx();
-    address preOwner = ownable.owner();
+    PhEvm.ForkId memory preTx = _preTx();
+    PhEvm.ForkId memory postTx = _postTx();
 
-    ph.forkPostTx();
-    address postOwner = ownable.owner();
+    address preOwner = address(uint160(uint256(ph.loadStateAt(address(ownable), bytes32(uint256(0)), preTx))));
+    address postOwner = address(uint160(uint256(ph.loadStateAt(address(ownable), bytes32(uint256(0)), postTx))));
 
     require(postOwner == preOwner, "Ownership has changed");
 }
 ```
 
 - `ph.getAssertionAdopter()`: Returns the protected contract's address
-- `ph.forkPreTx()`: Switches to state before the transaction
-- `ph.forkPostTx()`: Switches to state after the transaction
+- `PhEvm.ForkId`: Identifies the pre-transaction and post-transaction snapshots
+- `ph.loadStateAt()`: Reads the protected contract's owner slot at the requested snapshot
 - The `require` blocks the transaction if ownership changed
 
 ### Best Practices
@@ -166,7 +177,7 @@ function assertionOwnershipChange() external {
 1. **Single responsibility**: Each assertion should verify one property
 2. **Use triggers efficiently**: Only run assertions when relevant functions are called
 3. **Return early**: Check simple conditions before complex logic
-4. **Use `forkPreCall`/`forkPostCall`**: For checking state around specific nested calls within a transaction, not just the overall transaction
+4. **Use explicit `ForkId`s**: For checks around a matched call, use `ph.context()` and construct `PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart})` or `PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd})`.
 
 ## Step 3: Test the Assertion
 

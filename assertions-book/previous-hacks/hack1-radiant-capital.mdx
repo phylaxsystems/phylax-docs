@@ -27,6 +27,7 @@ It's a good example of how a simple assertion can be used to prevent disastrous 
 pragma solidity 0.8.28;
 
 import {Assertion} from "../lib/credible-std/Assertion.sol";
+import {AssertionSpec} from "../lib/credible-std/SpecRecorder.sol";
 
 interface ILendingPoolAddressesProvider {
     function owner() external view returns (address);
@@ -36,39 +37,43 @@ interface ILendingPoolAddressesProvider {
 
 // Radiant Lending Pool on Arbitrum that got hacked and drained
 contract LendingPoolAddressesProviderAssertions is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     ILendingPoolAddressesProvider public lendingPoolAddressesProvider =
         ILendingPoolAddressesProvider(0x091d52CacE1edc5527C99cDCFA6937C1635330E4); //arbitrum
 
     function triggers() external view override {
         // Trigger on any storage change to catch ownership modifications
-        registerStorageChangeTrigger(this.assertionOwnerChange.selector);
-        registerStorageChangeTrigger(this.assertionEmergencyAdminChange.selector);
-        registerStorageChangeTrigger(this.assertionPoolAdminChange.selector);
+        registerTxEndTrigger(this.assertionOwnerChange.selector);
+        registerTxEndTrigger(this.assertionEmergencyAdminChange.selector);
+        registerTxEndTrigger(this.assertionPoolAdminChange.selector);
     }
 
     // Check if the owner has changed
     function assertionOwnerChange() external view {
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = _preTx();
         address prevOwner = lendingPoolAddressesProvider.owner();
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = _postTx();
         address newOwner = lendingPoolAddressesProvider.owner();
         require(prevOwner == newOwner, "Owner has changed");
     }
 
     // Check if the emergency admin has changed
     function assertionEmergencyAdminChange() external view {
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = _preTx();
         address prevEmergencyAdmin = lendingPoolAddressesProvider.getEmergencyAdmin();
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = _postTx();
         address newEmergencyAdmin = lendingPoolAddressesProvider.getEmergencyAdmin();
         require(prevEmergencyAdmin == newEmergencyAdmin, "Emergency admin has changed");
     }
 
     // Check if the pool admin has changed
     function assertionPoolAdminChange() external view {
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = _preTx();
         address prevPoolAdmin = lendingPoolAddressesProvider.getPoolAdmin();
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = _postTx();
         address newPoolAdmin = lendingPoolAddressesProvider.getPoolAdmin();
         require(prevPoolAdmin == newPoolAdmin, "Pool admin has changed");
     }

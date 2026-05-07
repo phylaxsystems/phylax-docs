@@ -22,37 +22,39 @@ This means:
 
 Different triggers provide different guarantees and should be chosen based on the specific invariant you're trying to enforce.
 
-### Storage Change Triggers
+### Function Call Triggers
 
-Storage change triggers are ideal when you need to monitor specific storage slots for changes, regardless of what function caused the change. This is useful when:
-
-- You want to check if a specific value is changed by any transaction
-- You don't care which functions trigger the changes
-- You need to catch all modifications to a particular storage slot
-
-**Example:**
-```solidity
-function triggers() external view override {
-    // Register trigger for changes to the owner storage slot
-    registerStorageChangeTrigger(this.assertOwnerChange.selector, bytes32(uint256(0))); // Assuming owner in slot 0
-}
-```
-
-### Call Input Triggers
-
-Call input triggers are useful when you need to monitor specific function calls. This is ideal when:
+Use `registerFnCallTrigger` when an assertion should run once for each successful call to a specific function. This is the preferred trigger for call-scoped checks because the assertion can read `ph.context()` and construct `PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart})` / `PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd})` snapshots for the matched call.
 
 - You only want to run assertions when specific functions are called
 - You need to verify behavior of particular protocol operations
-- You want to check function parameters and their effects
+- You need call-scoped state reads or call metadata
 
 **Example:**
 ```solidity
 function triggers() external view override {
-    // Register our assertion function to be called when transferOwnership is called
-    registerCallTrigger(this.assertionOwnershipChange.selector, Ownable.transferOwnership.selector);
+    registerFnCallTrigger(this.assertionOwnershipChange.selector, Ownable.transferOwnership.selector);
 }
 ```
+
+### Transaction End Triggers
+
+Use `registerTxEndTrigger` when an assertion should run after any transaction that touches the protected contract. This is the preferred trigger for transaction-wide invariants where the relevant mutation can happen through multiple functions or indirect calls.
+
+- You need broad coverage across many entry points
+- You only need transaction-scoped `ForkId` snapshots
+- Function-specific triggers could miss an unexpected mutation path
+
+**Example:**
+```solidity
+function triggers() external view override {
+    registerTxEndTrigger(this.assertAccountingInvariant.selector);
+}
+```
+
+<Warning>
+Legacy `registerCallTrigger`, `registerStorageChangeTrigger`, and `registerBalanceChangeTrigger` helpers remain documented for older assertions, but new assertions should prefer `registerFnCallTrigger` and `registerTxEndTrigger`.
+</Warning>
 
 ## Best Practices
 
@@ -60,8 +62,8 @@ function triggers() external view override {
 
 Consider what state changes your assertion monitors:
 
-- **Use storage triggers** when monitoring specific storage slots
-- **Use call triggers** when monitoring specific function calls
+- **Use function call triggers** when monitoring specific functions
+- **Use transaction end triggers** for transaction-wide invariants
 - Consider the trade-off between coverage and efficiency
 
 ### Optimize for Performance

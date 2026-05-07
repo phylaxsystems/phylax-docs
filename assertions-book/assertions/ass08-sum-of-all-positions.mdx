@@ -21,9 +21,9 @@ Since direct iteration over all positions isn't currently supported, this assert
 4. Verify that the new total supply equals the pre-state total supply plus the sum of position changes
 
 Uses these cheatcodes:
-- `ph.forkPreTx()` / `ph.forkPostTx()`: Capture total supply before and after transaction
-- `ph.getCallInputs()`: Track function calls that modify positions
-- `registerCallTrigger()`: Trigger on position-modifying functions
+- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Capture total supply before and after transaction
+- `ph.context()` and `ph.callinputAt()`: Inspect the triggered position-modifying call
+- `registerFnCallTrigger()`: Trigger on position-modifying functions
 
 Check the [Modified Keys](/credible/use-case-mappings/unsupported-use-cases/modified-keys) use case for details on what direct position iteration would look like.
 
@@ -33,7 +33,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass8PositionsSum />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
 - [Lending Health Factor](/assertions-book/assertions/ass07-lending-health-factor): Ensures user balances are consistent across different views

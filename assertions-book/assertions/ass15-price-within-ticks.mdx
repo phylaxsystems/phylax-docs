@@ -15,8 +15,8 @@ If attackers could push prices outside valid tick ranges, they could execute tra
 
 Implements focused tick integrity verification:
 
-- `ph.forkPreTx()` / `ph.forkPostTx()`: Capture tick state before and after transaction
-- `registerStorageChangeTrigger()`: Monitor changes to tick-related storage slots
+- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Capture tick state before and after transaction
+- `registerTxEndTrigger()`: Monitor changes to tick-related storage slots
 - Verify ticks stay within global bounds (-887272 to 887272)
 - Ensure ticks align with pool's tick spacing requirements
 
@@ -28,7 +28,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass15PriceWithinTicks />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
 - [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations)

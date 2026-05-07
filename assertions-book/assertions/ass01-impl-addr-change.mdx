@@ -15,11 +15,11 @@ For example, it's possible to define a whitelist of allowed implementations - an
 
 Monitors changes to the implementation address storage slot in proxy contracts using:
 
-- `ph.forkPreTx()` / `ph.forkPostTx()`: Compare implementation address before and after transaction
-- `getStateChangesAddress()`: Track all changes to the implementation slot during transaction execution  
-- `registerStorageChangeTrigger()`: Trigger when implementation address changes
+- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Compare implementation address before and after transaction
+- `ph.loadStateAt()`: Load the implementation slot at each snapshot
+- `registerTxEndTrigger()`: Trigger when implementation address changes
 
-The assertion performs both direct pre/post comparison and verification of all intermediate state changes to detect unauthorized modifications.
+The assertion performs a direct pre/post comparison of the protected implementation slot.
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
 
@@ -27,7 +27,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass1ImplAddrChange />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
 - [Owner Change](/assertions-book/assertions/ass05-ownership-change)

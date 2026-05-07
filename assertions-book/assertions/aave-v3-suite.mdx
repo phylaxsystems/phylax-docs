@@ -49,7 +49,7 @@ The bug can be found in the [BorrowLogic.sol](https://github.com/phylaxsystems/a
 These assertions provide unique value beyond pure Solidity capabilities:
 
 - **Cross-transaction validation**: Verify invariants across multiple operations
-- **Oracle security**: Detect price manipulation and consistency issues
+- **Price consistency**: Detect manipulated or inconsistent pricing inputs
 - **Complex state relationships**: Validate accounting integrity
 - **Proxy/delegatecall resilience**: Use event logs for robust verification
 
@@ -75,12 +75,12 @@ These demonstrate assertion capabilities but could be implemented in Solidity:
   - Virtual balance sanity checks
   - Liquidity index integrity verification
 
-#### Oracle Security
+#### Price Consistency
 
-- **[OracleAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/OracleAssertions.a.sol)** - Price manipulation detection:
+- **[OracleAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/OracleAssertions.a.sol)** - Price consistency checks:
   - Borrow/supply/liquidation price deviation monitoring (5% max)
   - Price consistency validation across transactions
-  - Oracle manipulation attack prevention
+  - Manipulated pricing input detection
 
 #### Flashloan Protection
 

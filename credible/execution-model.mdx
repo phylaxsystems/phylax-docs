@@ -138,8 +138,8 @@ The `fnSelector` parameter specifies which assertion function to run, but trigge
 ```solidity
 // In assertion contract
 function triggers() external view override {
-    registerCallTrigger(this.assertDeposit.selector, Protocol.deposit.selector);
-    registerCallTrigger(this.assertWithdraw.selector, Protocol.withdraw.selector);
+    registerFnCallTrigger(this.assertDeposit.selector, Protocol.deposit.selector);
+    registerFnCallTrigger(this.assertWithdraw.selector, Protocol.withdraw.selector);
 }
 ```
 
@@ -172,4 +172,3 @@ To verify triggers work correctly with real transactions, use [backtesting](/cre
     Common errors
   </Card>
 </CardGroup>
-

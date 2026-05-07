@@ -13,13 +13,15 @@ description: Access the value of a storage variable at a specific address. Even 
 
 ### Required Cheatcodes
 
-- `load(address target, bytes32 slot)` - Reads the raw storage value at the given slot for the specified contract address
+- `loadStateAt(address target, bytes32 slot, ForkId fork)` - Reads the raw storage value at the given slot for the specified contract address and snapshot
 
 ### Example Implementation
 
 Protocol:
 
 ```solidity
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+
 contract Protocol {
     // This variable is stored in slot 0
     address owner;
@@ -34,23 +36,28 @@ Assertion:
 
 ```solidity
 contract StorageLookupAssertion is Assertion {
-    function triggers() public view override {
-        registerCallTrigger(this.assertionStorageLookup.selector);
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
     }
 
-    function assertionStorageLookup() public {
+    function triggers() public view override {
+        registerTxEndTrigger(this.assertionStorageLookup.selector);
+    }
+
+    function assertionStorageLookup() public view {
         Protocol protocol = Protocol(ph.getAssertionAdopter());
         // Define a whitelist of allowed owner addresses
         address[] memory whitelist = new address[](2);
         whitelist[0] = address(0x1);
         whitelist[1] = address(0x2);
 
-        // Read owner from storage slot 0
-        // Complex casting is needed because load() returns bytes32
+        // Read owner from storage slot 0 at the post-transaction snapshot.
+        // Complex casting is needed because loadStateAt() returns bytes32.
         // 1. Convert bytes32 to uint256
         // 2. Convert uint256 to uint160 (address size)
         // 3. Cast to address type
-        address owner = address(uint160(uint256(ph.load(address(protocol), bytes32(uint256(0))))));
+        PhEvm.ForkId memory postTx = _postTx();
+        address owner = address(uint160(uint256(ph.loadStateAt(address(protocol), bytes32(uint256(0)), postTx))));
 
         // Verify the owner is in the whitelist
         for (uint256 i = 0; i < whitelist.length; i++) {

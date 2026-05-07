@@ -15,7 +15,7 @@ Any violation could allow unauthorized share minting that dilutes existing holde
 
 Verifies the fundamental ERC4626 share-to-asset relationship using a basic approach:
 
-- `registerStorageChangeTrigger()`: Trigger when total supply storage slot changes
+- `registerTxEndTrigger()`: Trigger when total supply storage slot changes
 - Verify total assets are sufficient to back all outstanding shares
 - Ensure share value is preserved and users can withdraw their assets
 
@@ -27,8 +27,8 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass12Erc4626AssetsShares />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
 
-- [ERC4626 Vault Operations](/assertions-book/assertions/ass13-erc4626-deposit-withdraw) — deposit, withdraw, mint, redeem with batch handling
+- [ERC4626 Deposit and Withdraw Share Price](./ass13-erc4626-deposit-withdraw): deposit and withdraw share-price checks

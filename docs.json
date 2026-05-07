@@ -251,6 +251,17 @@
                 ]
               },
               {
+                "group": "Circuit Breakers",
+                "pages": [
+                  "assertions-book/assertions/ass20-erc20-drain",
+                  "assertions-book/assertions/ass22-erc20-inflow-breaker"
+                ]
+              },
+              {
+                "group": "Native Asset Protection",
+                "pages": ["assertions-book/assertions/ass21-ether-drain"]
+              },
+              {
                 "group": "Vault and ERC4626 Security",
                 "pages": [
                   "assertions-book/assertions/ass12-erc4626-assets-to-shares",
@@ -261,13 +272,6 @@
               {
                 "group": "Emergency and Special Mode Protection",
                 "pages": ["assertions-book/assertions/ass17-panic-state-validation"]
-              },
-              {
-                "group": "Fund Protection",
-                "pages": [
-                  "assertions-book/assertions/ass20-erc20-drain",
-                  "assertions-book/assertions/ass21-ether-drain"
-                ]
               }
             ]
           }

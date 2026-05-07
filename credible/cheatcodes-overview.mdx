@@ -9,10 +9,10 @@ Cheatcodes are specialized testing and assertion utilities in the Phylax Credibl
 
 Cheatcodes enable functionality that would be impossible or impractical with standard Solidity:
 
-- **Forking blockchain state**: Access the state of the blockchain before and after a transaction, enabling pre/post comparisons
+- **Snapshot state access**: Access blockchain state before or after a transaction or call with explicit `ForkId` snapshots
 - **Callstack introspection**: Inspect call traces and execution flow in ways not possible with standard EVM tools
 - **State change tracking**: Monitor specific storage slots and track how they change during transaction execution
-- **Triggering assertions**: Define precise conditions for when assertions should execute (specific function calls, storage changes, or balance changes)
+- **Triggering assertions**: Define precise conditions for when assertions should execute with `onFnCall` and `onTxEnd` triggers
 
 ## Why Cheatcodes Exist
 
@@ -42,11 +42,15 @@ Use cheatcodes when you need to:
 New to assertions? Check out [What are Assertions?](/credible/assertions-overview) to understand how cheatcodes fit into the bigger picture of writing security rules.
 </Note>
 
-## State Forking Guidance
+## Snapshot Read Guidance
 
 Not all assertions require checking both pre- and post-state. Understanding when to use each makes assertions more efficient.
 
-**Default behavior:** If neither `ph.forkPreTx()` nor `ph.forkPostTx()` are called, assertions execute against post-transaction state by default.
+<Warning>
+As of May 6, 2026, the v2 Reshiram spec is not live on Linea mainnet. Treat Reshiram-only precompile and trigger examples as local, development, or forward-looking references until Linea mainnet supports the spec.
+</Warning>
+
+Prefer Reshiram snapshot reads for new assertions. Use explicit `PhEvm.ForkId` values with `ph.loadStateAt()` for transaction-wide comparisons, or `ph.context()` with call-scoped `ForkId` values inside an `onFnCall` assertion.
 
 ### When to Use Pre-State
 

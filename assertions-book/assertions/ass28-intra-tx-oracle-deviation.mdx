@@ -15,9 +15,9 @@ Intra-transaction price manipulations can lead to flash loan attacks, theft of f
 
 Implements approach to verify oracle price updates using both pre/post state comparison and intra-transaction inspection:
 
-- `forkPreTx()` / `forkPostTx()`: Capture oracle price before and after transaction, compare for deviations
+- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Capture oracle price before and after transaction, compare for deviations
 - `getCallInputs()`: Monitor all price update function calls within transaction
-- `registerCallTrigger()`: Trigger when oracle price update is detected
+- `registerFnCallTrigger()`: Trigger when oracle price update is detected
 - Verify each update's price parameter against initial price
 - Enforce no price update can deviate more than maximum allowed percentage
 
@@ -29,7 +29,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass28IntraTxOracleDeviation />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
 - [Oracle Validation](/assertions-book/assertions/ass10-oracle-validation)

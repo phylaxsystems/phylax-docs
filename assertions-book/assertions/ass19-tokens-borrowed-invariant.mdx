@@ -15,8 +15,8 @@ Violating this invariant could lead to protocol insolvency, loss of user funds, 
 
 Implements straightforward verification that total tokens borrowed never exceed total tokens deposited:
 
-- `ph.forkPostTx()`: Capture protocol state after transaction to verify invariant holds
-- `registerStorageChangeTrigger()`: Trigger on storage slots tracking supply and borrow totals
+- `_postTx()`: Capture protocol state after transaction to verify invariant holds
+- `registerTxEndTrigger()`: Trigger on storage slots tracking supply and borrow totals
 - Check total supply of assets (tokens deposited) and total borrowed assets
 - Assert total supply ≥ total borrowed assets
 
@@ -28,9 +28,9 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass19TokensBorrowedInvariant />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
 - [Liquidation Health Factor](/assertions-book/assertions/ass16-liquidation-health-factor)
-- [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
+- [ERC20 Cumulative Outflow Breaker](/assertions-book/assertions/ass20-erc20-drain)
 - [Lending Health Factor](/assertions-book/assertions/ass07-lending-health-factor)

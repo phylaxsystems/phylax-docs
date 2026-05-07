@@ -16,8 +16,8 @@ Focuses on core lending operations (supply, borrow, withdraw, repay) while allow
 Monitors health factors of positions during specific lending operations using:
 
 - `getCallInputs()`: Track all function calls to specified protocol functions
-- `registerCallTrigger()`: Trigger on lending operations (supply, borrow, withdraw, repay)
-- `forkPostTx()`: Verify health factor after each operation (used by default if no pre-state specified)
+- `registerFnCallTrigger()`: Trigger on lending operations (supply, borrow, withdraw, repay)
+- `_postTx()`: Verify health factor after each operation (used by default if no pre-state specified)
 
 The assertion checks each lending operation individually to ensure positions affected by these operations remain healthy.
 
@@ -27,7 +27,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass07LendingHealthFactor/>
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 <Info>
 **Extending Assertions:** When new functions are added to the protocol that should maintain healthy positions, you can create a new assertion file (e.g., `LendingHealthFactorExtendedAssertion.sol`) that follows the same pattern. This allows you to:
@@ -38,6 +38,6 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 ## Related Patterns
 - [Full Aave Assertion Suite](/assertions-book/assertions/aave-v3-suite)
-- [ERC20 Drain](/assertions-book/assertions/ass20-erc20-drain)
+- [ERC20 Cumulative Outflow Breaker](/assertions-book/assertions/ass20-erc20-drain)
 - [Panic State Validation](/assertions-book/assertions/ass17-panic-state-validation)
 - [Owner Change](/assertions-book/assertions/ass05-ownership-change)

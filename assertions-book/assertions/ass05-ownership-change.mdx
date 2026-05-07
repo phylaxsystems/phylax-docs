@@ -15,9 +15,9 @@ For example, in the [Radiant Capital hack](/assertions-book/previous-hacks/hack1
 
 Monitors changes to the owner address storage slot in contracts using:
 
-- `ph.forkPreTx()` / `ph.forkPostTx()`: Compare owner address before and after transaction
-- `getStateChangesAddress()`: Track all changes to the owner address slot during transaction execution
-- `registerStorageChangeTrigger()`: Trigger when owner address changes
+- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Compare owner address before and after transaction
+- `ph.loadStateAt()`: Load the owner and admin slots at each snapshot
+- `registerTxEndTrigger()`: Trigger when owner address changes
 
 The assertion performs both direct pre/post comparison and verification of all intermediate state changes to detect unauthorized ownership modifications.
 
@@ -27,7 +27,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass5OwnerChange />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
 - [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)

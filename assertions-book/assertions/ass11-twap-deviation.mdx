@@ -15,9 +15,9 @@ Sudden price deviations could indicate manipulation through flash loan attacks o
 
 Monitors TWAP price changes using a two-stage approach to ensure price stability:
 
-- `ph.forkPreTx()` / `ph.forkPostTx()`: Compare post-transaction price against pre-transaction TWAP
+- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Compare post-transaction price against pre-transaction TWAP
 - `getStateChangesUint()`: Track all price changes during transaction execution
-- `registerStorageChangeTrigger()`: Trigger when price storage slot changes
+- `registerTxEndTrigger()`: Trigger when price storage slot changes
 
 The assertion verifies both the final price and any intermediate price updates against the initial TWAP to detect flash loan attacks and price manipulation throughout the transaction.
 
@@ -27,7 +27,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass11TwapDeviation />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
 - [Intra-tx Oracle Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation)

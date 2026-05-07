@@ -15,8 +15,8 @@ Timelocks provide a buffer against malicious governance actions - without proper
 
 Verifies timelock integrity by comparing timelock state and parameters before and after transactions:
 
-- `forkPreTx()` / `forkPostTx()`: Compare timelock state before and after transaction
-- `registerStorageChangeTrigger()`: Monitor changes to timelock storage slot
+- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Compare timelock state before and after transaction
+- `registerTxEndTrigger()`: Monitor changes to timelock storage slot
 - Ensures timelock delay is within acceptable bounds (1 day to 2 weeks)
 - Confirms timelock activation follows proper procedures
 
@@ -28,7 +28,7 @@ For more information about cheatcodes, see the [Cheatcodes Documentation](/credi
 
 <ass9TimelockVerification />
 
-<Note>Full examples with tests available in the [Phylax Assertion Examples Repository](https://github.com/phylaxsystems/assertion-examples/blob/main/assertions/).</Note>
+<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
 
 ## Related Patterns
 - [Owner Change](/assertions-book/assertions/ass05-ownership-change)

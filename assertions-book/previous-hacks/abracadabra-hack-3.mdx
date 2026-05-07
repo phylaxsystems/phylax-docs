@@ -48,6 +48,7 @@ Assertions flip this model. Rather than validating each execution path, you vali
 pragma solidity 0.8.28;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 interface ICauldronV4 {
@@ -69,10 +70,14 @@ interface IOracle {
 }
 
 contract AbracadabraCookSolvencyAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     uint256 constant COLLATERIZATION_RATE_PRECISION = 1e5;
 
     function triggers() public view override {
-        registerCallTrigger(
+        registerFnCallTrigger(
             this.assertUserSolvency.selector,
             ICauldronV4.cook.selector
         );
@@ -90,11 +95,11 @@ contract AbracadabraCookSolvencyAssertion is Assertion {
         address caller = calls[0].caller;
 
         // Get borrow amount before transaction
-        ph.forkPreTx();
+        PhEvm.ForkId memory preFork = _preTx();
         uint256 borrowPartBefore = cauldron.userBorrowPart(caller);
 
         // Get borrow amount after transaction
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = _postTx();
         uint256 borrowPartAfter = cauldron.userBorrowPart(caller);
 
         // Only check if borrow increased

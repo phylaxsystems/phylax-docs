@@ -3,9 +3,14 @@
 pragma solidity ^0.8.13;
 
 import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
 import {PhEvm} from "credible-std/PhEvm.sol";
 
 contract PriceWithinTicksAssertion is Assertion {
+    constructor() {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
     // Uniswap V3 tick bounds
     int24 constant MIN_TICK = -887272;
     int24 constant MAX_TICK = 887272;
@@ -13,7 +18,7 @@ contract PriceWithinTicksAssertion is Assertion {
     function triggers() external view override {
         // Register trigger for changes to the tick storage slot
         // Assumes tick is stored in slot0 of the pool contract
-        registerStorageChangeTrigger(this.priceWithinTicks.selector, bytes32(uint256(0)));
+        registerTxEndTrigger(this.priceWithinTicks.selector);
     }
 
     // Check that the price is within the tick bounds and that the tick is divisible by the tick spacing
@@ -22,7 +27,7 @@ contract PriceWithinTicksAssertion is Assertion {
         IUniswapV3Pool adopter = IUniswapV3Pool(ph.getAssertionAdopter());
 
         // Get post-swap state
-        ph.forkPostTx();
+        PhEvm.ForkId memory postFork = _postTx();
         (, int24 postTick,,,,,) = adopter.slot0();
         int24 spacing = adopter.tickSpacing();
 
