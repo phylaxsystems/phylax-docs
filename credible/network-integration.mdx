@@ -44,6 +44,31 @@ Networks provide the following integration surfaces:
 - **Assertion data access**: the enforcer fetches assertion bytecode from Assertion DA
 - **Operational monitoring**: incidents and status are surfaced via the Phylax platform
 
+## Edge Cases to Scope
+
+Network integrations should explicitly define how enforcement interacts with transaction paths that do not behave like ordinary sequencer-selected mempool transactions.
+
+### Forced inclusion paths
+
+Some rollups have L1-originated transactions or forced inclusion mechanisms with protocol-level liveness guarantees. These paths may bypass normal transaction filtering if they are not handled separately.
+
+Before production rollout, define:
+
+- Whether the network has forced inclusion, L1 deposit, or delayed inbox paths
+- Where the Credible Layer can preflight those transactions before execution
+- What the network does when preflight returns unsafe, unknown, or timeout
+- How much delay budget exists before forced inclusion must proceed
+- Which application-layer mitigations protocols can execute during that window
+- What incident metadata is sent to affected protocols
+
+Forced-inclusion handling is network-specific. It should be documented as part of the network integration rather than treated as a generic platform guarantee.
+
+### Repeated invalid traffic
+
+When an invalid transaction is dropped before inclusion, it may not pay gas. Networks should define ingress protections for repeated invalid submissions so an attacker cannot cheaply force repeated assertion validation work.
+
+Common controls include exact invalid-transaction caching, broader short-lived fingerprints for repeated attempts against the same assertion and target surface, peer or sender rate limits, and clear TTLs for any broad match.
+
 ## Operational Expectations
 
 - The enforcer runs alongside the block builder and does not change consensus rules
@@ -55,6 +80,7 @@ Networks provide the following integration surfaces:
 - Identify the block-building hook for transaction validation
 - Configure access to registry data and assertion bytecode
 - Ensure the enforcer respects staged vs enforced assertions as set by protocol teams
+- Define handling for forced inclusion, timeout, and repeated invalid-traffic cases
 - Set up monitoring and incident review workflows
 
 ## Integration Requirements (Public)

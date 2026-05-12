@@ -9,6 +9,10 @@ Backtesting runs your assertions against actual historical transactions from a s
 If you're looking for the reference documentation on all configuration parameters, see the [Backtesting Reference](/credible/backtesting-reference).
 </Note>
 
+<Note>
+Backtesting is a development-time validation tool. Running a backtest does not deploy assertions, change the on-chain registry, or affect production enforcement.
+</Note>
+
 ## How It Works
 
 Backtesting operates in two phases:
@@ -117,7 +121,7 @@ BacktestingTypes.BacktestingResults memory results = executeBacktestForTransacti
 ```
 
 This is particularly useful for:
-- Debugging potential false positives reported during staging (see [Testing Strategy](/credible/testing-strategy))
+- Debugging potential false positives reported during staging (see [How to Plan Assertion Testing](/credible/testing-strategy))
 - Quick validation of assertion behavior on a specific transaction
 - Investigating incidents without needing to know the block number
 

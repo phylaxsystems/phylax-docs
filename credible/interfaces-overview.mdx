@@ -32,6 +32,20 @@ flowchart LR
 | Enforcer ↔ Registry | Registry events + schema | Network + contracts maintainers |
 | Enforcer ↔ Assertion DA | Bytecode storage API | DA + enforcer maintainers |
 
+## Product and Protocol Boundaries
+
+The Credible Layer combines protocol components with Phylax-operated product surfaces. This boundary matters when evaluating trust, availability, and operational ownership.
+
+| Component | Purpose | Layer |
+| --- | --- | --- |
+| Credible Layer contracts | On-chain registry, protocol admin authority, assertion windows, and timelocks | Core protocol |
+| Assertion Enforcer | Executes active assertions and returns inclusion decisions during block production | Network enforcement |
+| Assertion DA | Stores assertion bytecode and source code for enforcers and public verification | Phylax-operated storage today |
+| `pcl` CLI | Builds, tests, authenticates, and submits assertion releases | Local developer tooling |
+| Backtesting | Replays assertions against historical transactions before promotion | Phylax-operated development service |
+| Staging | Runs assertions against live network activity without dropping transactions | Phylax-operated validation environment |
+| Platform | Manages releases, incidents, audit logs, collaborators, alerts, and project metadata | Phylax product |
+
 ## Guidance
 
 - Keep interface changes backward compatible when possible
@@ -42,5 +56,5 @@ flowchart LR
 
 - [Architecture Overview](/credible/architecture-overview)
 - [Trust Model & Guarantees](/credible/trust-model)
-- [Platform Integration Overview](/credible/dapp-integration)
+- [How to Plan a Platform Integration](/credible/dapp-integration)
 - [Network Integration Overview](/credible/network-integration)

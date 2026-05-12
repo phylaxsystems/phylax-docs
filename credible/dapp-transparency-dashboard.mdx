@@ -1,6 +1,6 @@
 ---
 title: 'Transparency Dashboard'
-description: 'Browse and analyze all projects and their active assertions'
+description: 'Browse and analyze public projects and their active assertions'
 ---
 
 The Transparency Dashboard is a public interface that displays projects registered on the Credible Layer, their linked contracts, and the assertions protecting them.
@@ -14,12 +14,13 @@ For a high-level view of how the platform interfaces with the rest of the system
 
 ### Browse Projects
 
-View all projects and their details:
+View public projects and their details:
 - Project names, descriptions, and target chains
 - Linked contract addresses
 - Active assertions protecting each contract
 - Assertion implementation details, trigger conditions, and parameters
 - Recent public events related to contracts and assertions being added or removed
+- Limited public invalidation records, when available
 
 ### Search / Filter
 
@@ -31,8 +32,8 @@ View all projects and their details:
 1. Click the "Transparency" tab in the navigation bar
 2. Browse projects
 
-<Frame caption="Explorer">
-  <img src="/images/explorer_screenshot_dapp.png" alt="Explorer" />
+<Frame caption="Phylax Explorer projects page">
+  <img src="/images/explorer_screenshot_dapp.png" alt="Phylax Explorer projects page showing public projects" />
 </Frame>
 
 ## Use Cases
@@ -55,12 +56,15 @@ Public views can show:
 - Active assertion posture
 - Public project events
 - Limited invalidation metadata
+- Aggregate invalidation history, such as a reference ID and timestamp
 
 Private project views are required for:
 - Full invalidating transaction payloads
 - Execution traces and assertion traces
 - Staging invalidations
 - Notification and project management settings
+
+Detailed invalidation data is intentionally private by default. A rejected transaction can reveal information about an attempted exploit or an assertion's exact failure path, so full traces and payloads are scoped to project managers and approved collaborators.
 
 ## Why Users Trust Protected Protocols
 

@@ -53,10 +53,10 @@ Authentication links your wallet address with your `pcl` session, allowing you t
    - Only contracts where your wallet is authorized can be added
    - The platform verifies admin access via the network's admin verifier (often owner-based)
 
-5. Review and click "Save and publish"
+5. Review and click "Create Project"
 
 <Frame caption="Creating a project in the platform">
-  <img src="/images/create_project_dapp.webp" alt="Creating a Project" />
+  <img src="/images/create_project_dapp.webp" alt="Create project form in the Phylax platform" />
 </Frame>
 
 <Note>
@@ -126,7 +126,7 @@ After deployment, manage assertions through your project dashboard:
 
 | Error | Solution |
 |-------|----------|
-| "Contract ownership verification failed" | Ensure your wallet passes the admin verifier (often `owner()`) or request [Manual Verification](/credible/manual-verification) if available |
+| "Contract ownership verification failed" | Ensure your wallet passes the admin verifier (often `owner()`) or [request manual verification](/credible/manual-verification) if available |
 | "Assertion already exists" | Use a different name or update the existing assertion |
 | "Authentication expired" | Run `pcl auth login` to refresh |
 

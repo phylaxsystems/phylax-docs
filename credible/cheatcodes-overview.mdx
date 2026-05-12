@@ -13,6 +13,7 @@ Cheatcodes enable functionality that would be impossible or impractical with sta
 - **Callstack introspection**: Inspect call traces and execution flow in ways not possible with standard EVM tools
 - **State change tracking**: Monitor specific storage slots and track how they change during transaction execution
 - **Triggering assertions**: Define precise conditions for when assertions should execute with `onFnCall` and `onTxEnd` triggers
+- **Cumulative flow tracking**: Register circuit-breaker triggers for ERC20 inflows or outflows over rolling windows
 
 ## Why Cheatcodes Exist
 
@@ -36,6 +37,7 @@ Use cheatcodes when you need to:
 - **Compare state changes**: Check if values changed correctly (e.g., "balance decreased by exactly the withdrawal amount")
 - **Validate call patterns**: Ensure functions were called in the correct order or with expected parameters
 - **Monitor storage**: Track changes to specific storage slots that represent critical protocol state
+- **Limit cumulative flows**: Trigger checks after ERC20 inflows or outflows exceed configured rolling-window thresholds
 - **Optimize performance**: Use triggers to run assertions only when relevant state changes occur
 
 <Note>
