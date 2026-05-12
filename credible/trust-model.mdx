@@ -1,11 +1,11 @@
 ---
 title: 'Trust Model & Guarantees'
-description: 'What the Credible Layer guarantees, what it does not, and the operational assumptions'
+description: 'Credible Layer enforcement guarantees, scope, and operational model'
 ---
 
 This page summarizes the Credible Layer trust model in plain language.
 
-## What We Guarantee
+## Core Guarantees
 
 - **Deterministic enforcement**: given the same on-chain state and assertion code, enforcement
   results are deterministic
@@ -13,31 +13,24 @@ This page summarizes the Credible Layer trust model in plain language.
   blocks by networks running the enforcer
 - **Transparent rules**: assertions are public Solidity code and can be audited by anyone
 
-## What We Do Not Guarantee
+## Scope of Guarantees
 
-- **Assertion correctness**: teams are responsible for writing accurate assertions
-- **Complete coverage**: only behaviors covered by assertions are enforced
-- **Off-chain security**: custodial, UI, or off-chain service risks are out of scope
-- **Network-wide enforcement by default**: assertions only affect networks and environments where the enforcer is integrated and the assertion is active
+- **Assertion-defined coverage**: enforcement applies to the behaviors captured by active assertions
+- **Protocol-authored rules**: protocol teams define and maintain the rules that protect their contracts
+- **Integrated environments**: enforcement applies on networks and environments where the enforcer is integrated and the assertion is active
+- **On-chain coordination**: the State Oracle contracts remain the source of truth for assertion lifecycle state and timelocks
 
-## Operational Assumptions
+## Operational Model
 
 - The network runs the Assertion Enforcer during block building
 - The enforcer can access registry data (from on-chain events) and assertion bytecode
 - The network follows its normal transaction validity rules alongside enforcement
 - Production assertions are admitted with bounded triggers and resource limits before they become part of the active execution set
+- Network integrations define continuity behavior for maintenance windows and degraded components
 
-## Failure Modes (High Level)
+## Assurance Practices
 
-- **Enforcer unavailable**: the network continues normal operation without enforcement until the
-  enforcer is restored. This is a fail-open model: a Credible Layer outage should not halt the chain, but protected protocols temporarily lose enforcement.
-- **Registry misconfiguration**: assertions may not apply to intended contracts
-- **DA connectivity issues**: new assertions may be delayed until bytecode is reachable
-- **Incorrect assertion logic**: a false positive can block honest production transactions, while an incomplete assertion can miss the intended failure mode
-
-## Operational Controls
-
-Teams reduce these risks by validating assertions locally, backtesting against historical transactions, running assertions in staging, and promoting to production only after sufficient review. See [How to Plan Assertion Testing](/credible/testing-strategy) for the recommended workflow.
+Teams build confidence by validating assertions locally, backtesting against historical transactions, running assertions in staging, and promoting to production only after sufficient review. See [How to Plan Assertion Testing](/credible/testing-strategy) for the recommended workflow.
 
 ## Next Steps
 

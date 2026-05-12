@@ -41,7 +41,7 @@ Use `vm.assume()` to filter out invalid inputs that would cause the test to fail
 1. **Set reasonable bounds** - Use `vm.assume()` to constrain inputs to valid ranges
 2. **Test multiple parameters** - Fuzz multiple inputs simultaneously to catch interaction bugs
 3. **Use meaningful ranges** - Consider the actual values your protocol will encounter
-4. **Check for reverts** - Ensure assertions don't false-positive on valid edge cases
+4. **Check valid edge cases** - Ensure assertions pass for valid edge cases
 
 ## Running Fuzz Tests
 

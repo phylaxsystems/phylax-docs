@@ -144,7 +144,7 @@ The PCL testing interface that extends Forge's testing capabilities with additio
 Learn more about testing assertions in the [Testing Guide](/credible/testing-assertions).
 
 ### Backtesting
-A testing method that runs assertions against historical blockchain transactions from a specified block range. Backtesting helps ensure assertions work correctly with real transactions and don't trigger false positives on legitimate protocol operations. It is a useful tool for testing assertions before deployment.
+A testing method that runs assertions against historical blockchain transactions from a specified block range. Backtesting helps ensure assertions behave as expected with real transaction patterns before deployment.
 
 Learn more: [Backtesting](/credible/backtesting)
 
@@ -154,7 +154,7 @@ Learn more: [Backtesting](/credible/backtesting)
 The ability to run complex security rules outside the main blockchain execution, providing significant efficiency gains compared to on-chain validation.
 
 ### Forced Inclusion Transactions
-Special transactions that may have protocol-level inclusion guarantees, such as L1->L2 deposits. These require network-specific handling because the normal block-building rejection path may not be sufficient.
+Special transactions that may have protocol-level inclusion guarantees, such as L1->L2 deposits. Network integrations define the validation policy for these transaction paths.
 
 ### Circuit Breaker
 An assertion pattern that limits how much value can flow into or out of a protected contract over a rolling window. Circuit breakers are useful when the goal is to reduce exploit velocity or contain blast radius rather than block one specific function call.

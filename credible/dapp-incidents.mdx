@@ -110,7 +110,7 @@ See [Integrations](/credible/dapp-integrations) for setup instructions.
 
 The public explorer includes a limited invalidations view for transparency. Detailed transaction payloads, traces, and project-specific incident evidence are only available to project managers and collaborators with access.
 
-By default, invalidation details are private to the project team. This prevents potentially exploitable details from being exposed to unrelated users while still allowing the project team to debug false positives and investigate true positives.
+Detailed invalidation evidence is scoped to the project team so they can triage with full payloads and traces while public views remain concise.
 
 ### Staging vs. Production
 
@@ -122,7 +122,7 @@ By default, invalidation details are private to the project team. This prevents 
 ## Use Cases
 
 - Monitor when assertions prevent violations for your projects
-- Understand attack patterns and attempted exploits targeting your protocol
+- Review attempted invalid transactions targeting your protocol
 - Tune assertions based on staging invalidations before production promotion
 - Add or refine assertions based on incident data
 

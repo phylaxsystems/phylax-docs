@@ -155,7 +155,7 @@
                   "credible/use-case-mappings/state-changes",
                   "credible/use-case-mappings/call-frame-context",
                   {
-                    "group": "Unsupported",
+                    "group": "Alternative Patterns",
                     "pages": [
                       "credible/use-case-mappings/unsupported-use-cases/modified-keys"
                     ]

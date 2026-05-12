@@ -112,7 +112,7 @@ contract FunctionCallInputsAssertion is Assertion {
     - Consider all functions that modify relevant state variables
     - Account for complex state dependencies between function calls
 
-- **State reconstruction limitations:**
+- **State reconstruction considerations:**
     - Manual tracking required for parameter-dependent storage slots (i.e. keys of mappings)
     - No direct access to intermediate call frame states
     - Order guarantees only within same function calls, not across different functions
@@ -122,7 +122,7 @@ contract FunctionCallInputsAssertion is Assertion {
 - Balance mappings of tokens or deposits/withdrawals
 - Ownership changes
 
-## Known Limitations
+## Implementation Considerations
 
 1. **Parameter-dependent Storage Access**
     - Storage slots that depend on function parameters lack automated tracking
