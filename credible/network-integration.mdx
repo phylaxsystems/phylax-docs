@@ -44,30 +44,29 @@ Networks provide the following integration surfaces:
 - **Assertion data access**: the enforcer fetches assertion bytecode from Assertion DA
 - **Operational monitoring**: incidents and status are surfaced via the Phylax platform
 
-## Edge Cases to Scope
+## Integration Policy Decisions
 
-Network integrations should explicitly define how enforcement interacts with transaction paths that do not behave like ordinary sequencer-selected mempool transactions.
+Network integrations should define how enforcement is applied across the network's transaction paths and traffic management layers.
 
-### Forced inclusion paths
+### L1-originated transaction paths
 
-Some rollups have L1-originated transactions or forced inclusion mechanisms with protocol-level liveness guarantees. These paths may bypass normal transaction filtering if they are not handled separately.
+Some rollups include L1-originated transaction paths, deposits, or delayed inboxes alongside ordinary sequencer-selected transactions. The integration policy should specify how assertion validation fits into each path.
 
 Before production rollout, define:
 
-- Whether the network has forced inclusion, L1 deposit, or delayed inbox paths
-- Where the Credible Layer can preflight those transactions before execution
-- What the network does when preflight returns unsafe, unknown, or timeout
-- How much delay budget exists before forced inclusion must proceed
-- Which application-layer mitigations protocols can execute during that window
+- Which L1-originated, deposit, or delayed inbox paths the network supports
+- Where assertion validation runs for those transactions
+- How validation results are routed into sequencing or block-building policy
+- Which application-layer response options protocols can use during the validation window
 - What incident metadata is sent to affected protocols
 
-Forced-inclusion handling is network-specific. It should be documented as part of the network integration rather than treated as a generic platform guarantee.
+L1-originated transaction policy is network-specific and should be documented as part of the integration.
 
-### Repeated invalid traffic
+### Ingress traffic management
 
-When an invalid transaction is dropped before inclusion, it may not pay gas. Networks should define ingress protections for repeated invalid submissions so an attacker cannot cheaply force repeated assertion validation work.
+Networks can pair assertion validation with ingress-level caching and rate-limit policies for repeated invalid submissions.
 
-Common controls include exact invalid-transaction caching, broader short-lived fingerprints for repeated attempts against the same assertion and target surface, peer or sender rate limits, and clear TTLs for any broad match.
+Common controls include exact invalid-transaction caching, broader short-lived fingerprints for repeated attempts against the same assertion and target surface, peer or sender budgets, and clear TTLs for any broad match.
 
 ## Operational Expectations
 
@@ -80,7 +79,7 @@ Common controls include exact invalid-transaction caching, broader short-lived f
 - Identify the block-building hook for transaction validation
 - Configure access to registry data and assertion bytecode
 - Ensure the enforcer respects staged vs enforced assertions as set by protocol teams
-- Define handling for forced inclusion, timeout, and repeated invalid-traffic cases
+- Define validation policy for L1-originated transactions and repeated invalid submissions
 - Set up monitoring and incident review workflows
 
 ## Integration Requirements (Public)

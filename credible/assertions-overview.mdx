@@ -69,11 +69,11 @@ Assertions run [off-chain](/credible/glossary#off-chain-execution) with higher g
 
 Assertion functions are limited to 300,000 gas per execution. If an assertion exceeds this limit, the transaction is dropped.
 
-This is a security measure: assertion gas usage can vary depending on the transaction being validated. Without this limit, an attacker could craft a transaction that causes the assertion to exceed gas limits, bypassing the protection. By dropping transactions that cause assertions to run out of gas, the system remains secure.
+This bound keeps validation predictable under adversarial inputs. Transactions that exhaust the assertion gas budget are treated as invalid, preserving the enforcement invariant.
 
 Stay mindful of gas consumption:
 - Use [triggers](/credible/triggers) to run assertions only when needed
-- Be aware that some cheatcodes like `getCallInputs()` have variable gas costs due to unknown input lengths
+- Account for variable gas costs in cheatcodes such as `getCallInputs()`, where input lengths can vary
 - Optimize your assertion logic to stay within the gas limit
 - Test with realistic data volumes - see [Gas Limits in Testing](/credible/testing-assertions#gas-limits)
 

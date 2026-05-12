@@ -22,7 +22,7 @@ As a [sidecar](/credible/glossary#sidecar), the Assertion Enforcer:
 - **Operates independently** from the main L2 infrastructure
 - **Integrates alongside block builders** without changing core protocol rules
 - **Scales separately** from the main network components
-- **Fails open** so the network can continue producing blocks without Credible Layer enforcement if the enforcer is unavailable
+- **Preserves network continuity** by keeping block production policy under the network operator's integration
 
 This design allows networks to adopt the Credible Layer without modifying their core infrastructure.
 
@@ -106,13 +106,13 @@ The Assertion Enforcer integrates with block builders to ensure only valid trans
 
 The Assertion Enforcer is designed to keep the synchronous block-building path small. In the common case, the block builder pays for routing work such as metadata collection, assertion selection, checkpoint creation, and work submission. Assertion execution itself can run separately from that serial path, depending on the network integration.
 
-The important performance constraint is that assertion workers must keep up with the transaction workload. If assertion execution falls behind, the system needs bounded backpressure, a publication boundary, or another network-specific policy. This is why assertions should use fine-grained triggers, deterministic gas or runtime limits, and bounded execution surfaces.
+The important performance constraint is keeping assertion work bounded and predictable for the transaction workload. Network integrations use bounded queues, publication policies, fine-grained triggers, deterministic gas or runtime limits, and bounded execution surfaces to keep validation predictable.
 
 The enforcer also avoids network fetches on the transaction hot path. Assertion bytecode is fetched after deployment events and cached before validation.
 
-## Assertion Admission and Resource Limits
+## Production Admission and Resource Limits
 
-The enforcer should not treat published assertions as an unbounded execution surface. A network-integrated deployment should only execute assertions that are active for the relevant environment and admitted through the configured registry and review process.
+Production execution uses the active assertion set admitted through the configured registry and review process.
 
 Production assertion admission should account for:
 
@@ -124,7 +124,7 @@ Production assertion admission should account for:
 - Historical backtesting and staging behavior
 - Suitability for common acceleration paths, such as compact trace summaries or native helper functions
 
-These controls protect the network from assertion griefing: broad, expensive, mutable, or useless assertions consuming block-building resources. They also help protocol teams understand which assertions are safe to promote from staging to production.
+These controls keep block-building resources predictable and help protocol teams understand which assertions are ready to promote from staging to production.
 
 ## Operational Expectations (Public)
 
@@ -132,14 +132,6 @@ These controls protect the network from assertion griefing: broad, expensive, mu
 - **Deterministic**: Results are based on on-chain state and assertion code only
 - **Staging support**: Networks can validate assertions before enforcing them in production
 - **Transparent outcomes**: Incidents are visible in the platform and dashboard
-
-## Forced Inclusion Transactions
-
-Forced inclusion transactions, such as L1 to L2 deposits, require network-specific handling because they may have protocol-level inclusion guarantees. A normal block-building rejection path may not be enough for those transactions.
-
-<Note>
-Forced-inclusion handling depends on the network integration and is not a generic public guarantee of every Credible Layer deployment.
-</Note>
 
 ## Assertion Caching
 
@@ -157,6 +149,6 @@ This caching strategy keeps assertion data retrieval out of the block-production
     High-level integration for networks and sequencers
   </Card>
   <Card title="Trust Model" icon="shield-check" href="/credible/trust-model">
-    Guarantees, assumptions, and failure modes
+    Guarantees, scope, and operational model
   </Card>
 </CardGroup>

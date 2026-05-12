@@ -88,9 +88,9 @@ class RollupBoostProxy,AssertionEnforcer rollupBoost
 
 ## L1-Originated Transactions
 
-OP Stack networks should scope how assertion enforcement applies to L1-originated transactions and forced inclusion paths. These transactions may have protocol-level liveness guarantees that differ from ordinary sequencer-selected mempool transactions.
+OP Stack networks can define an L1-originated transaction validation policy alongside the ordinary sequencer-selected transaction path.
 
-An integration should define where preflight validation runs, what happens on unsafe, unknown, or timeout results, and how much delay budget exists before the L1-originated transaction must proceed. See [Network Integration Overview](/credible/network-integration#forced-inclusion-paths) for the general checklist.
+An integration should specify where assertion validation runs, how validation results are reported to sequencing components, and what metadata is sent to the platform. See [Network Integration Overview](/credible/network-integration#l1-originated-transaction-paths) for the general checklist.
 
 ## Transaction Flow
 

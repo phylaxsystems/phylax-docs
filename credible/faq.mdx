@@ -205,12 +205,12 @@ You can inspect public assertion posture on the transparency dashboard. Some pro
 **Learn More:**
 - [Architecture - Abstract Overview](/credible/architecture-overview#abstract-overview)
 
-### How are forced included transactions handled for OP Stack Rollups?
+### How are L1-originated transactions handled for OP Stack rollups?
 
-Forced-inclusion handling is network-specific because L1 to L2 deposits may have protocol-level inclusion guarantees. A normal block-building rejection path may not be enough for those transactions, so OP Stack integrations need explicit handling for the deposit path.
+OP Stack integrations define a validation policy for L1-originated deposits as part of the network integration. The policy specifies where assertion validation runs, how results are routed to sequencing components, and which incident metadata is sent to affected protocols.
 
 **Learn More:**
-- [Assertion Enforcer - Forced Inclusion Transactions](/credible/assertion-enforcer#forced-inclusion-transactions)
+- [Network Integration Overview - L1-originated transaction paths](/credible/network-integration#l1-originated-transaction-paths)
 - [Glossary - Forced Inclusion Transactions](/credible/glossary#forced-inclusion-transactions)
 
 ### Does the Credible Layer introduce new trust assumptions or centralization points?
