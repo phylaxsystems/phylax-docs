@@ -1,0 +1,18 @@
+# Require newly resolved package versions to be at least 10 days old.
+# pnpm expects this value in minutes: 10 days * 24 hours * 60 minutes.
+minimumReleaseAge: 14400
+
+# Keep installs on the package manager version that supports these protections.
+packageManagerStrictVersion: true
+
+# Do not let transitive dependencies resolve through git URLs or tarballs.
+# This blocks the GitHub optional-dependency route used in the reported attack.
+blockExoticSubdeps: true
+
+# Dependency install scripts must be reviewed explicitly. Mintlify currently
+# needs sharp's install check; Puppeteer's browser download is not needed here.
+strictDepBuilds: true
+dangerouslyAllowAllBuilds: false
+allowBuilds:
+  sharp: true
+  puppeteer: false
