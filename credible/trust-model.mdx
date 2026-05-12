@@ -18,6 +18,7 @@ This page summarizes the Credible Layer trust model in plain language.
 - **Assertion correctness**: teams are responsible for writing accurate assertions
 - **Complete coverage**: only behaviors covered by assertions are enforced
 - **Off-chain security**: custodial, UI, or off-chain service risks are out of scope
+- **Network-wide enforcement by default**: assertions only affect networks and environments where the enforcer is integrated and the assertion is active
 
 ## Operational Assumptions
 
@@ -28,9 +29,14 @@ This page summarizes the Credible Layer trust model in plain language.
 ## Failure Modes (High Level)
 
 - **Enforcer unavailable**: the network continues normal operation without enforcement until the
-  enforcer is restored
+  enforcer is restored. This is a fail-open model: a Credible Layer outage should not halt the chain, but protected protocols temporarily lose enforcement.
 - **Registry misconfiguration**: assertions may not apply to intended contracts
 - **DA connectivity issues**: new assertions may be delayed until bytecode is reachable
+- **Incorrect assertion logic**: a false positive can block honest production transactions, while an incomplete assertion can miss the intended failure mode
+
+## Operational Controls
+
+Teams reduce these risks by validating assertions locally, backtesting against historical transactions, running assertions in staging, and promoting to production only after sufficient review. See [Testing Strategy](/credible/testing-strategy) for the recommended workflow.
 
 ## Next Steps
 

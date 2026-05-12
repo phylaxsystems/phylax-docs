@@ -3,14 +3,14 @@ title: 'Deploy Assertions with the Platform'
 description: 'Create projects and deploy assertions to protect your contracts'
 ---
 
-This guide walks you through creating a project in the [Phylax platform](https://app.phylax.systems) and deploying assertions to protect your smart contracts.
+This guide shows you how to create a project in the [Phylax platform](https://app.phylax.systems), create a release with `pcl apply`, and deploy assertions to protect your smart contracts.
 
 **Prerequisites**:
 - [pcl installed](/credible/credible-install)
 - Smart contracts deployed on a supported chain
 - An assertion [written](/credible/write-first-assertion) and [tested](/credible/testing-assertions)
 
-**What you'll accomplish**: Create a project, link your contracts, and deploy assertions to production.
+**What you'll accomplish**: Create a project, link your contracts, create a pending release, and deploy assertions to staging or production.
 
 <Note>
 New to the platform? See the [Platform Overview](/credible/dapp-overview) to understand its features.
@@ -71,7 +71,7 @@ Configure your `credible.toml` and create a release with `pcl apply`:
 pcl apply
 ```
 
-This reads your `credible.toml` configuration, builds the assertion contracts, and creates a release on the platform. See [Apply Assertions](/credible/apply-assertions) for detailed instructions on configuring `credible.toml` and using `pcl apply`.
+This reads your `credible.toml` configuration, builds the assertion contracts, previews the requested changes, and creates a pending release on the platform after you confirm. See [Apply Assertions](/credible/apply-assertions) for detailed instructions on configuring `credible.toml` and using `pcl apply`.
 
 ## Step 4: Deploy the Assertion
 
@@ -83,7 +83,7 @@ After applying via `pcl`, complete deployment in the platform:
 
 3. Find your assertion and click "Proceed to Review"
 
-4. Select the target contract to protect
+4. Review the release diff
 
 5. Review assertion details:
    - Assertion name and parameters
@@ -102,6 +102,10 @@ After applying via `pcl`, complete deployment in the platform:
 
 <Note>
 Adding an assertion is not immediate. The deployment transaction registers it in the on-chain [State Oracle](./credible-layer-contracts#state-oracle), and the State Oracle enforces a configured [timelock](./glossary#timelock) before the assertion becomes staged or enforced.
+</Note>
+
+<Note>
+Projects are managed in the platform, but the deployment transaction should be signed by the protocol admin, also called the manager wallet, that controls assertion lifecycle operations for the protected contracts. Use a multisig or governance-controlled wallet where appropriate.
 </Note>
 
 <Note>

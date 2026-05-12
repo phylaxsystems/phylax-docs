@@ -10,9 +10,12 @@ Projects are the organizational unit in the [Phylax platform](https://app.phylax
 A project groups together:
 - One or more smart contract addresses
 - Assertions that protect those contracts
+- Pending and deployed releases
+- Staging and production invalidations
+- Notification settings and project events
 - Project metadata (name, description, target chain)
 
-Projects enable you to manage all your protocol's assertions from a single interface.
+Projects enable you to manage all your protocol's assertions from a single interface. The project itself is an off-chain organizing layer; the on-chain [State Oracle](/credible/credible-layer-contracts#state-oracle) remains the source of truth for which assertions are active for each protected contract.
 
 ## Creating a Project
 
@@ -60,7 +63,7 @@ Once created, you can manage your project through the project dashboard:
 
 ### Deploy Assertions
 - Deploy assertions to your project via `pcl apply`
-- Link assertions to specific contracts through the platform
+- Review release changes through the platform
 - View all active assertions protecting your contracts
 
 <Frame caption="Deploying an Assertion">
@@ -79,8 +82,11 @@ Here you can update the project name, description, and delete the project.
 **Transfer Project Ownership:**
 You can transfer projects and contracts (including their associated assertions) to other wallets. This allows you to transfer project ownership while maintaining all linked assertions and contracts.
 
+**Protocol admin / manager wallet:**
+The wallet that signs assertion lifecycle transactions can be separate from the day-to-day platform account. Use this separation when your team wants project collaborators to review releases and incidents without requiring routine access to the multisig or governance wallet that controls deployment.
+
 **Integrations:**
-Setup integrations to receive notifications when incidents occur. For now you can setup Slack.
+Set up integrations to receive notifications when incidents occur. For now, you can set up Slack.
 
 <Frame caption="Project Settings">
   <img src="/images/project_settings.png" alt="Project Settings" />
@@ -97,7 +103,7 @@ The project dashboard provides a unified view of your project's security:
 - **Recent Incidents**: View detailed incidents for your project (see [Incidents](/credible/dapp-incidents#project-incidents-manager-view))
 - **Project Settings**: Update project details and manage contracts
 
-<Frame caption="Projct dashboard view for the project owner">
+<Frame caption="Project dashboard view for the project owner">
   <img src="/images/project_dashboard_with_incident.png" alt="Project Dashboard with Incident" />
 </Frame>
 

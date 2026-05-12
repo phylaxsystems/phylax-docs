@@ -3,7 +3,7 @@ title: 'Transparency Dashboard'
 description: 'Browse and analyze all projects and their active assertions'
 ---
 
-The Transparency Dashboard is a public interface that displays all projects registered on the Credible Layer, their linked contracts, and the assertions protecting them.
+The Transparency Dashboard is a public interface that displays projects registered on the Credible Layer, their linked contracts, and the assertions protecting them.
 
 <Note>
 For a high-level view of how the platform interfaces with the rest of the system, see
@@ -19,11 +19,11 @@ View all projects and their details:
 - Linked contract addresses
 - Active assertions protecting each contract
 - Assertion implementation details, trigger conditions, and parameters
-- Recent events related to contracts and assertions being added or removed
+- Recent public events related to contracts and assertions being added or removed
 
 ### Search / Filter
 
-- You can search for projects at any time using the search bar in the top right corner of hitting `cmd/ctrl + k`
+- You can search for projects at any time using the search bar in the top right corner or by hitting `cmd/ctrl + k`
 - You can filter projects by network
 
 ## Accessing the Transparency Dashboard
@@ -46,10 +46,26 @@ View all projects and their details:
 - Learn from existing assertion implementations
 - Copy and adapt assertion patterns for your own protocol
 
+## Visibility Boundaries
+
+The public explorer is designed to make assertion posture reviewable without exposing private incident evidence.
+
+Public views can show:
+- Projects and protected contracts
+- Active assertion posture
+- Public project events
+- Limited invalidation metadata
+
+Private project views are required for:
+- Full invalidating transaction payloads
+- Execution traces and assertion traces
+- Staging invalidations
+- Notification and project management settings
+
 ## Why Users Trust Protected Protocols
 
 - **Public registry**: Assertions and protected contracts are visible on-chain
-- **Transparent enforcement**: Dropped transactions surface as incidents
+- **Transparent enforcement**: Dropped transactions surface as limited public invalidation records and detailed private project incidents
 - **Auditable rules**: Assertions are published Solidity, not opaque policy
 
 ## Next Steps
@@ -62,7 +78,7 @@ View all projects and their details:
     Create your own project
   </Card>
   <Card title="Incidents" icon="warning" href="/credible/dapp-incidents">
-    Learn more about incident removal events
+    Learn more about invalidations
   </Card>
   <Card title="Writing Assertions" icon="code" href="/credible/write-first-assertion">
     Learn how to write assertions

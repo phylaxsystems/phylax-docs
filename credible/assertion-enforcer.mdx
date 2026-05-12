@@ -22,7 +22,7 @@ As a [sidecar](/credible/glossary#sidecar), the Assertion Enforcer:
 - **Operates independently** from the main L2 infrastructure
 - **Integrates alongside block builders** without changing core protocol rules
 - **Scales separately** from the main network components
-- **Fails gracefully** without affecting L2 operations
+- **Fails open** so the network can continue producing blocks without Credible Layer enforcement if the enforcer is unavailable
 
 This design allows networks to adopt the Credible Layer without modifying their core infrastructure.
 
@@ -102,6 +102,14 @@ The Assertion Enforcer integrates with block builders to ensure only valid trans
 - The block builder or sequencer receives clear valid/invalid signals
 - Block production continues normally with validated transactions
 
+## Performance Model
+
+The Assertion Enforcer is designed to keep the synchronous block-building path small. In the common case, the block builder pays for routing work such as metadata collection, assertion selection, checkpoint creation, and work submission. Assertion execution itself can run separately from that serial path, depending on the network integration.
+
+The important performance constraint is that assertion workers must keep up with the transaction workload. If assertion execution falls behind, the system needs bounded backpressure, a publication boundary, or another network-specific policy. This is why assertions should use fine-grained triggers, deterministic gas or runtime limits, and bounded execution surfaces.
+
+The enforcer also avoids network fetches on the transaction hot path. Assertion bytecode is fetched after deployment events and cached before validation.
+
 ## Operational Expectations (Public)
 
 - **Non-invasive**: Runs alongside existing block builders without changing consensus rules
@@ -111,10 +119,10 @@ The Assertion Enforcer integrates with block builders to ensure only valid trans
 
 ## Forced Inclusion Transactions
 
-Forced inclusion transactions (such as L1→L2 deposits) require special handling since they must be included regardless of assertion results. The Credible Layer has mitigation pathways for these scenarios.
+Forced inclusion transactions, such as L1 to L2 deposits, require network-specific handling because they may have protocol-level inclusion guarantees. A normal block-building rejection path may not be enough for those transactions.
 
 <Note>
-We have developed a solution for forced inclusion transactions and are actively implementing it. Ask us about it!
+Forced-inclusion handling depends on the network integration and is not a generic public guarantee of every Credible Layer deployment.
 </Note>
 
 ## Assertion Caching
@@ -124,7 +132,7 @@ To ensure high-performance validation, the Assertion Enforcer maintains an inter
 - **On deployment**: When an assertion is deployed on-chain, the Assertion Enforcer detects the event and fetches bytecode from [Assertion DA](/credible/assertion-da)
 - **During validation**: Assertions are loaded from cache. No network requests occur on the hot path.
 
-This caching strategy ensures validation latency doesn't impact block production times.
+This caching strategy keeps assertion data retrieval out of the block-production hot path.
 
 ## Learn More
 
