@@ -1,78 +1,89 @@
 ---
-title: 'Manual Verification'
-description: 'How to authorize a protocol admin when contracts lack owner interfaces'
+title: 'How to Request Manual Verification'
+description: 'Request protocol admin authorization when contracts lack supported owner interfaces'
 ---
 
-# Manual Verification
+This guide shows you how to prepare a manual verification request when your contracts are immutable or do not expose a supported admin interface such as `owner()`.
 
-Manual verification is the fallback path for protocols whose contracts are immutable or do not expose an admin interface (like `owner()`). In this flow, Phylax verifies off-chain evidence that the requesting team controls the protocol and then registers the selected protocol admin in the on-chain State Oracle registry.
+<Note>
+Manual verification is the fallback path. If your target contracts expose a supported owner interface, use the normal [Ownership Verification](/credible/ownership-verification) and [deployment](/credible/deploy-assertions-dapp) flow instead.
+</Note>
 
-## Definitions
+## Prerequisites
 
-| Term | Definition |
-| --- | --- |
-| Assertion Group | A smart contract that follows the Assertion Interface and is deployed as EVM bytecode. It is associated with a target smart contract (assertion adopter). |
-| Protocol Admin (Manager) | The smart contract or EOA that has permission to deploy, update, and remove assertions for one or more target contracts. |
-| Protocol | A group of deployed smart contracts maintained by a company, DAO, or other entity. |
-| State Oracle (Registry) | The Credible Layer contract that is the source of truth for protocol admins, assertions, and the target contracts they are attached to. |
+- The target contracts do not pass automatic owner-based verification.
+- You can identify the contract addresses that need a protocol admin.
+- You have selected the smart contract or EOA that should manage assertions for those contracts.
+- You can provide evidence that the requesting team controls the protocol.
+- You can provide public proof that the organization wants to use the Credible Layer, if required.
+- You are willing to share identity or authorization evidence when needed.
 
-## How protocol admin authority is determined
+## Step 1: Confirm Automatic Verification Does Not Apply
 
-There are two ways a protocol admin can be authorized:
+Check whether the target contracts expose a supported ownership interface. The common automatic path expects an `owner()` function:
 
-### 1) Owner interfaces (automatic)
+```solidity
+interface IOwnable {
+    function owner() external view returns (address);
+}
+```
 
-If the target contract exposes an `owner()` interface, the registry can verify the admin on-chain and authorize that address as the protocol admin.
+If your contracts expose this interface, use [Ownership Verification](/credible/ownership-verification). If they are immutable or use a different ownership architecture, continue with manual verification.
 
-### 2) Manual verification (fallback)
+## Step 2: Choose the Protocol Admin Address
 
-When on-chain verification is not possible, Phylax can authorize a protocol team to define a protocol admin address through manual verification. This requires trust in Phylax as a verifier, since Phylax updates the registry with the chosen admin address after reviewing evidence.
+Choose the smart contract or EOA that should be allowed to deploy, update, and remove assertions for the target contracts.
 
-## Manual verification eligibility
+<Note>
+Managing assertions is a sensitive role. We recommend using hardware wallets and multisig accounts for protocol admin addresses.
+</Note>
 
-A protocol must satisfy **all** of the following criteria:
+## Step 3: Prepare Code-Control Evidence
 
-- Control over protocol code
-- Sufficient evidence that the requesting party is authorized to act for the protocol, assessed in a good-faith, case-by-case review
-- Consent to sharing identity, if required
+Prepare evidence that the requesting party controls the active, official protocol codebase. Useful signals include:
 
-Manual verification is provided at Phylax's discretion and may be declined for any reason. Approval is not guaranteed.
+- Ability to merge pull requests to the active, official repo
+- Permission to manage collaborators in the GitHub organization
+- Ability to commit and merge a pull request to a default branch
 
-## Verification methods
+## Step 4: Prepare Proof of Protocol Intent
 
-**Control over protocol code**
-- Must be able to merge PRs to the active, official repo
-- Must have permissions to manage collaborators in the GitHub org
-- Must be able to commit and merge a PR to a default branch
+Prepare strong public signals that the organization wants to use the Credible Layer and that the selected protocol admin address reflects the organization's intent.
 
+Non-exhaustive examples:
 
-**Proof of intent and alignment**
-
-Phylax will look for strong public signals that the organization wants to use the Credible Layer and that the selected admin address reflects the org's intent. Non-exhaustive examples:
-- Proof of control (e.g., signature) from an emergency council or admin multisig
-- Posting a GitHub commit hash on the official X account
-- Posting a GitHub commit hash in an official Discord
+- A signature from an emergency council or admin multisig
+- A GitHub commit hash posted from the official X account
+- A GitHub commit hash posted in an official Discord
 - Consent to being recorded on a video call for posterity
 
-## Manual verification will not be offered if
+## Step 5: Submit the Request for Review
 
-- The protocol is fully anonymous
-- The team refuses to provide public proofs
-- The Phylax team does not believe it is authorizing the rightful protocol maintainer/owner
+Share the target contracts, selected protocol admin address, code-control evidence, and proof of protocol intent with Phylax for review.
 
-## After manual verification is approved
+Phylax reviews manual verification requests in good faith on a case-by-case basis. Approval is not guaranteed, and Phylax may decline a request for any reason.
 
-- The selected protocol admin address is added to the State Oracle registry
-- The protocol admin is associated with a specific set of contract addresses and can deploy assertions for those contracts
-- A 5-day timelock begins before the admin can add assertions, giving the protocol time to react or cancel if needed
+Manual verification will not be offered if:
 
-## Opt-out / Blacklist
+- The protocol is fully anonymous.
+- The team refuses to provide public proofs.
+- Phylax does not believe it is authorizing the rightful protocol maintainer or owner.
 
-**Protocols can request manual verification specifically to be blacklisted: we still verify control, but instead of adding them to the registry, we add their contracts to an opt-out registry that blocks additions from everyone except a provided escape-hatch address.**
+## Step 6: Verify the Result
 
-- Any protocol that wants to opt out can add themselves to an opt-out registry after manual verification confirms control
-- This opt-out registry prevents Phylax from adding the specified contracts to the registry (no assertions can be attached to those contracts)
-- The only entity that can re-enable registration is an address provided by the platform at the time of blacklisting. This escape hatch allows protocols to opt out of Phylax while preserving the option to opt back in later
+If manual verification is approved:
+
+- The selected protocol admin address is added to the State Oracle registry.
+- The protocol admin is associated with the approved contract addresses.
+- A 5-day timelock begins before the admin can add assertions, giving the protocol time to react or cancel if needed.
+
+Before deploying assertions, confirm that the registered admin address and contract set match the approved request.
+
+## Opt Out of Registry Additions
+
+Protocols can also request manual verification to opt out of registry additions. Phylax still verifies control, but instead of adding the protocol admin to the registry, Phylax adds the contracts to an opt-out registry.
+
+The opt-out registry blocks assertion additions for those contracts. The only entity that can re-enable registration is an address provided by the platform at the time of blacklisting. This escape hatch allows protocols to opt out while preserving the option to opt back in later.
 
 ## Related docs
 

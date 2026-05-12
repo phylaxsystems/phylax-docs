@@ -25,6 +25,7 @@ This page summarizes the Credible Layer trust model in plain language.
 - The network runs the Assertion Enforcer during block building
 - The enforcer can access registry data (from on-chain events) and assertion bytecode
 - The network follows its normal transaction validity rules alongside enforcement
+- Production assertions are admitted with bounded triggers and resource limits before they become part of the active execution set
 
 ## Failure Modes (High Level)
 
@@ -36,7 +37,7 @@ This page summarizes the Credible Layer trust model in plain language.
 
 ## Operational Controls
 
-Teams reduce these risks by validating assertions locally, backtesting against historical transactions, running assertions in staging, and promoting to production only after sufficient review. See [Testing Strategy](/credible/testing-strategy) for the recommended workflow.
+Teams reduce these risks by validating assertions locally, backtesting against historical transactions, running assertions in staging, and promoting to production only after sufficient review. See [How to Plan Assertion Testing](/credible/testing-strategy) for the recommended workflow.
 
 ## Next Steps
 

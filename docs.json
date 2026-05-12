@@ -58,6 +58,7 @@
                 "group": "Test and Operate",
                 "pages": [
                   "credible/testing-assertions",
+                  "credible/testing-strategy",
                   "credible/fuzz-testing",
                   "credible/backtesting",
                   "credible/ci-cd-integration",
@@ -110,7 +111,6 @@
                   "credible/development-effort",
                   "credible/cheatcodes-overview",
                   "credible/triggers",
-                  "credible/testing-strategy",
                   "credible/execution-model"
                 ]
               }

@@ -110,6 +110,22 @@ The important performance constraint is that assertion workers must keep up with
 
 The enforcer also avoids network fetches on the transaction hot path. Assertion bytecode is fetched after deployment events and cached before validation.
 
+## Assertion Admission and Resource Limits
+
+The enforcer should not treat published assertions as an unbounded execution surface. A network-integrated deployment should only execute assertions that are active for the relevant environment and admitted through the configured registry and review process.
+
+Production assertion admission should account for:
+
+- Protected protocol surface and trigger conditions
+- Expected trigger frequency
+- Maximum gas or runtime budget
+- Expected read footprint
+- Deterministic behavior and read-only execution
+- Historical backtesting and staging behavior
+- Suitability for common acceleration paths, such as compact trace summaries or native helper functions
+
+These controls protect the network from assertion griefing: broad, expensive, mutable, or useless assertions consuming block-building resources. They also help protocol teams understand which assertions are safe to promote from staging to production.
+
 ## Operational Expectations (Public)
 
 - **Non-invasive**: Runs alongside existing block builders without changing consensus rules
