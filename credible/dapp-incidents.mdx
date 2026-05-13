@@ -3,7 +3,7 @@ title: 'Incidents'
 description: 'View incidents prevented by the Credible Layer'
 ---
 
-Incidents show when transactions were dropped because they violated assertions protecting contracts. This happens when a transaction that interacted with an assertion-protected contract was dropped by the [Enforcer](/credible/glossary#assertion-enforcer) because it caused an assertion to revert.
+Incidents group invalidating transactions: transactions that violated assertions protecting contracts. In production, the [Enforcer](/credible/glossary#assertion-enforcer) drops those transactions before settlement. In staging, the platform records that the transaction would have been dropped, but the transaction still lands on the live network because staging is observe-only.
 
 <Note>
 For the end-to-end flow, see the incident lifecycle diagram in
@@ -12,7 +12,7 @@ For the end-to-end flow, see the incident lifecycle diagram in
 
 ## How Incidents Are Grouped
 
-An incident represents the invalidation of an assertion over a one-hour time period. Multiple dropped transactions can belong to the same incident if they violate the same assertion within that window.
+An incident represents the invalidation of an assertion over a one-hour time period. Multiple invalidating transactions can belong to the same incident if they violate the same assertion within that window.
 
 **Why group transactions into incidents?**
 
@@ -108,13 +108,22 @@ See [Integrations](/credible/dapp-integrations) for setup instructions.
 
 ## Public Transparency Incidents
 
-The Transparency dashboard includes a public incidents list with limited metadata for visibility.
-Detailed transaction and trace views are only available to project managers.
+The public explorer includes a limited invalidations view for transparency. Detailed transaction payloads, traces, and project-specific incident evidence are only available to project managers and collaborators with access.
+
+Detailed invalidation evidence is scoped to the project team so they can triage with full payloads and traces while public views remain concise.
+
+### Staging vs. Production
+
+| Environment | What an invalidation means | User impact |
+| --- | --- | --- |
+| Staging | The transaction would have violated an assertion under production enforcement | The transaction is recorded for review but is not dropped |
+| Production | The transaction violated an enforced assertion | The transaction is dropped before settlement |
 
 ## Use Cases
 
 - Monitor when assertions prevent violations for your projects
-- Understand attack patterns and attempted exploits targeting your protocol
+- Review attempted invalid transactions targeting your protocol
+- Tune assertions based on staging invalidations before production promotion
 - Add or refine assertions based on incident data
 
 <Warning>

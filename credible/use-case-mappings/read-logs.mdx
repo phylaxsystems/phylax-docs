@@ -3,6 +3,8 @@ title: Read Logs
 description: Capture and verify logs as a signal for changes in the state of the contract.
 ---
 
+Read log mappings describe how assertions can inspect emitted events and use them as signals for state changes during a transaction.
+
 ## Status
 
 - [x] Supported
@@ -113,7 +115,7 @@ contract ReadLogsAssertion is Assertion {
     - Consider all functions that modify relevant state variables
     - Account for complex state dependencies between function calls
 
-- **State reconstruction limitations:**
+- **State reconstruction considerations:**
     - Manual tracking required for parameter-dependent storage slots (i.e. keys of mappings)
     - No direct access to intermediate call frame states
     - Order guarantees only within same function calls, not across different functions
@@ -124,7 +126,7 @@ contract ReadLogsAssertion is Assertion {
 - Ownership changes
 - Whenever a log is emitted, which represents a state change, it can be used to reconstruct the expected behavior
 
-## Known Limitations
+## Implementation Considerations
 
 1. **Parameter-dependent Storage Access**
     - Storage slots that depend on event parameters lack automated tracking

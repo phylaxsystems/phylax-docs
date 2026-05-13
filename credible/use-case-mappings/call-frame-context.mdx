@@ -3,6 +3,8 @@ title: Call Frame Context
 description: Gain fine-grained context about a call frame in order to improve the precision of assertions by allowing to access pre and post call frame states.
 ---
 
+Call frame context mappings describe how assertions can use matched call context and call-scoped snapshots to validate state around a specific function call.
+
 ## Status
 
 - [x] Supported
@@ -112,9 +114,9 @@ contract CallFrameContextAssertion is Assertion {
 - **Oracle price updates:** Verify each price update doesn't exceed deviation limits (see [Intra-TX Oracle Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation))
 - **Rate provider validation:** Check rate changes before and after swaps (see [Balancer V2 Stable Rate Exploit](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit))
 
-## Known Limitations
+## Implementation Considerations
 
-- **Recursive function calls:** Recursive calls will compound state changes similar to transaction-level execution. Users should ensure no recursive function calls are possible if precise call frame tracking is required.
+- **Recursive function calls:** Recursive calls compound state changes similar to transaction-level execution. Account for recursive call paths when precise call frame tracking is required.
 
 ## Related Use Cases
 

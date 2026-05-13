@@ -5,6 +5,8 @@ description: 'Understanding Credible Layer assertions'
 
 An [assertion](/credible/glossary#assertion) is a function that checks if a transaction violates a rule. If the rule is violated, the transaction is dropped during block building and never enters a block.
 
+Assertions are most useful when they describe an invalid effect, not every possible path that could produce it. A protocol may not know whether a future failure comes from an oracle issue, signer compromise, integration bug, rounding error, or governance action, but it can still define the state transition that should not be allowed.
+
 ## How Assertions Work
 
 When a transaction is submitted to the network:
@@ -33,11 +35,17 @@ When a transaction tries to change the owner, this assertion runs. If the owner 
 
 ## What They Can Do That Regular Solidity Can't
 
+**Enforce effects instead of hooks**
+Contract-level checks usually protect the code paths where they were added. Assertions can protect based on the resulting transaction effects, such as balance deltas, storage changes, nested calls, or debt changes. This helps cover paths that were not anticipated when the protocol contracts were originally written.
+
 **Compare before/after states**
 Regular Solidity only sees the current state during execution. Assertions can compare values before and after a transaction using [cheatcodes](/credible/glossary#cheatcodes) like `ph.loadStateAt` with explicit `ForkId` snapshots. You can also inspect state around a specific matched call by combining `ph.context()` with call-scoped `ForkId` values.
 
 **Protect immutable contracts**
 You can add assertions to contracts without modifying them. No redeployment needed.
+
+**Keep policy separate from protocol mechanics**
+Assertions let teams review security rules separately from accounting, settlement, permissioning, and integration logic. This can make it easier to audit what the rule is meant to prevent and to update the rule without upgrading the protected contract.
 
 **Check across multiple contracts**
 An assertion can read and validate state across multiple contracts in a single check, even if those contracts are in different protocols.
@@ -61,11 +69,11 @@ Assertions run [off-chain](/credible/glossary#off-chain-execution) with higher g
 
 Assertion functions are limited to 300,000 gas per execution. If an assertion exceeds this limit, the transaction is dropped.
 
-This is a security measure: assertion gas usage can vary depending on the transaction being validated. Without this limit, an attacker could craft a transaction that causes the assertion to exceed gas limits, bypassing the protection. By dropping transactions that cause assertions to run out of gas, the system remains secure.
+This bound keeps validation predictable under adversarial inputs. Transactions that exhaust the assertion gas budget are treated as invalid, preserving the enforcement invariant.
 
 Stay mindful of gas consumption:
 - Use [triggers](/credible/triggers) to run assertions only when needed
-- Be aware that some cheatcodes like `getCallInputs()` have variable gas costs due to unknown input lengths
+- Account for variable gas costs in cheatcodes such as `getCallInputs()`, where input lengths can vary
 - Optimize your assertion logic to stay within the gas limit
 - Test with realistic data volumes - see [Gas Limits in Testing](/credible/testing-assertions#gas-limits)
 

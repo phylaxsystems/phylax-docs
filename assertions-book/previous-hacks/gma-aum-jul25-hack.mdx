@@ -1,6 +1,9 @@
 ---
 title: GMX v1 AUM Manipulation Hack
+description: Explanation of the GMX v1 AUM manipulation exploit and assertion patterns that could have constrained it.
 ---
+
+This case study explains how the GMX v1 AUM manipulation attack worked and which assertion patterns could have constrained the invalid state transition.
 
 ## What Happened
 
@@ -24,7 +27,7 @@ The critical vulnerability chain:
 
 ### Normal AUM Calculation
 GMX calculates its total value using this formula:
-```
+```text
 AUM = Physical Tokens + Stablecoins + Unrealized Trading Profits + Fees
 ```
 

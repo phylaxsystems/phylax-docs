@@ -3,9 +3,9 @@ title: 'Platform Overview'
 description: 'Overview of the Phylax platform and its role in the Credible Layer stack'
 ---
 
-The [Phylax platform](https://app.phylax.systems) is the interface for managing assertions and monitoring incidents. Protocol teams use it to create projects, link contracts, and deploy assertions to protect their contracts. When deploying assertions, teams choose between Staging (for testing) or Production (for active protection). Users, investors, and researchers use it to review which assertions protect specific protocols.
+The [Phylax platform](https://app.phylax.systems) is the interface for managing assertions and monitoring invalidations. Protocol teams use it to create projects, link contracts, review releases, deploy assertions, and inspect events that would violate those assertions. When deploying assertions, teams choose between Staging (for testing) or Production (for active protection). Users, auditors, and researchers use the public explorer to review which assertions protect specific protocols.
 
-When you create a project and deploy assertions through the platform, those assertions are deployed on-chain. The platform is the control surface, but the on-chain [State Oracle](./credible-layer-contracts#state-oracle) contracts are the source of truth for which assertions are attached to which contracts and when they become active.
+When you create a project and deploy assertions through the platform, the project remains an off-chain organizing layer. The on-chain [State Oracle](./credible-layer-contracts#state-oracle) contracts are the source of truth for which assertion IDs are attached to which contract addresses and when those assertions become active.
 
 Adding an assertion or removing one is not instantaneous. Both operations pass through a configured timelock enforced by the State Oracle contracts before the change takes effect.
 
@@ -13,7 +13,7 @@ Adding an assertion or removing one is not instantaneous. Both operations pass t
 
 ### Transparency Dashboard
 
-The [Transparency Dashboard](/credible/dapp-transparency-dashboard) provides public visibility into all projects and their assertions. Browse, search, and review which protocols are protected and how.
+The [Transparency Dashboard](/credible/dapp-transparency-dashboard) provides public visibility into projects and their assertions. Browse, search, and review which protocols are protected and how.
 
 ### Projects
 
@@ -21,10 +21,10 @@ The [Projects](/credible/dapp-projects) interface enables protocol teams to crea
 
 ### Incidents
 
-The [Incidents](/credible/dapp-incidents) page tracks assertion violations that were prevented, showing when transactions were dropped and which assertions caught them.
+The [Incidents](/credible/dapp-incidents) page tracks invalidations: transactions that violated assertions in production, or would have violated assertions in staging. Production invalidations correspond to transactions that were dropped before settlement. Staging invalidations are observe-only records that help teams tune assertions before promotion.
 
-<Frame caption="Phylax platform landing page">
-  <img src="/images/landing_view_transparency.png" alt="Landing Page" />
+<Frame caption="Phylax Explorer projects page">
+  <img src="/images/explorer_screenshot_dapp.png" alt="Phylax Explorer projects page showing public projects" />
 </Frame>
 
 ## Authentication
@@ -37,16 +37,17 @@ Authentication is required to create and manage projects. Open the platform at [
 
 ## Key Features
 
-- **Public Transparency**: All projects and assertions are publicly visible
-- **Unified Management**: Manage all assertions for your protocol from one interface
-- **Incident Monitoring**: Track when assertions prevent violations
-- **Verifiable Security**: Users can verify protection before interacting with protocols
+- **Public transparency**: Browse public projects, protected contracts, and assertion posture
+- **Release review**: Inspect assertion changes before signing on-chain deployment transactions
+- **Unified management**: Manage assertion releases, project metadata, and notification settings from one interface
+- **Invalidation monitoring**: Track assertion failures in staging and production
+- **Verifiable security**: Users can verify protection before interacting with protocols
 
 ## Getting Started
 
 <CardGroup cols={2}>
   <Card title="Transparency Dashboard" icon="search" href="/credible/dapp-transparency-dashboard">
-    Browse and search all projects and assertions
+    Browse and search public projects and assertions
   </Card>
   <Card title="Projects" icon="folder" href="/credible/dapp-projects">
     Create and manage your protocol projects
@@ -55,7 +56,7 @@ Authentication is required to create and manage projects. Open the platform at [
     Step-by-step guide to deploying assertions
   </Card>
   <Card title="Incidents" icon="warning" href="/credible/dapp-incidents">
-    Track assertion violations that were prevented
+    Track production drops and staging invalidations
   </Card>
   <Card title="Quickstart" icon="play" href="/credible/pcl-quickstart">
     Get started with pcl
@@ -66,10 +67,10 @@ Authentication is required to create and manage projects. Open the platform at [
   <Card title="Ownership Verification" icon="shield-check" href="/credible/ownership-verification">
     Understand ownership requirements
   </Card>
-  <Card title="Manual Verification" icon="shield-check" href="/credible/manual-verification">
+  <Card title="Request Manual Verification" icon="shield-check" href="/credible/manual-verification">
     Fallback process for immutable contracts
   </Card>
-  <Card title="Platform Integration Overview" icon="diagram-project" href="/credible/dapp-integration">
+  <Card title="Plan a Platform Integration" icon="diagram-project" href="/credible/dapp-integration">
     High-level adoption flow for protocol teams
   </Card>
 </CardGroup>

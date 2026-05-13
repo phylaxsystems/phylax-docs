@@ -86,6 +86,12 @@ class RollupBoostProxy,AssertionEnforcer rollupBoost
 - The Assertion DA serves assertion bytecode to the Block Builder, ensuring up-to-date enforcement.
 - `pcl` and the platform provide interfaces for assertion development, submission and management.
 
+## L1-Originated Transactions
+
+OP Stack networks can define an L1-originated transaction validation policy alongside the ordinary sequencer-selected transaction path.
+
+An integration should specify where assertion validation runs, how validation results are reported to sequencing components, and what metadata is sent to the platform. See [Network Integration Overview](/credible/network-integration#l1-originated-transaction-paths) for the general checklist.
+
 ## Transaction Flow
 
 ![Transaction Flow](/images/tx-flow-credible.png "OP Stack transaction flow with assertion execution detail")

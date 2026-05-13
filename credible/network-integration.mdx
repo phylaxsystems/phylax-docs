@@ -44,6 +44,30 @@ Networks provide the following integration surfaces:
 - **Assertion data access**: the enforcer fetches assertion bytecode from Assertion DA
 - **Operational monitoring**: incidents and status are surfaced via the Phylax platform
 
+## Integration Policy Decisions
+
+Network integrations should define how enforcement is applied across the network's transaction paths and traffic management layers.
+
+### L1-originated transaction paths
+
+Some rollups include L1-originated transaction paths, deposits, or delayed inboxes alongside ordinary sequencer-selected transactions. The integration policy should specify how assertion validation fits into each path.
+
+Before production rollout, define:
+
+- Which L1-originated, deposit, or delayed inbox paths the network supports
+- Where assertion validation runs for those transactions
+- How validation results are routed into sequencing or block-building policy
+- Which application-layer response options protocols can use during the validation window
+- What incident metadata is sent to affected protocols
+
+L1-originated transaction policy is network-specific and should be documented as part of the integration.
+
+### Ingress traffic management
+
+Networks can pair assertion validation with ingress-level caching and rate-limit policies for repeated invalid submissions.
+
+Common controls include exact invalid-transaction caching, broader short-lived fingerprints for repeated attempts against the same assertion and target surface, peer or sender budgets, and clear TTLs for any broad match.
+
 ## Operational Expectations
 
 - The enforcer runs alongside the block builder and does not change consensus rules
@@ -55,6 +79,7 @@ Networks provide the following integration surfaces:
 - Identify the block-building hook for transaction validation
 - Configure access to registry data and assertion bytecode
 - Ensure the enforcer respects staged vs enforced assertions as set by protocol teams
+- Define validation policy for L1-originated transactions and repeated invalid submissions
 - Set up monitoring and incident review workflows
 
 ## Integration Requirements (Public)

@@ -38,11 +38,11 @@ There are several key advantages:
 ### How does the Credible Layer differ from other security approaches?
 The Credible Layer offers several key advantages:
 
-1. **Deterministic Prevention**: Binary enforcement with zero false positives rather than AI/heuristic guessing
+1. **Deterministic prevention**: Binary enforcement based on protocol-authored assertions rather than opaque scoring
 2. **Pre-execution Protection**: Stop hacks during sequencing rather than detecting after damage
 3. **Network-Native Security**: Protocol-controlled rules enforced by the network itself, without relying on external execution services
 4. **Transparent Enforcement**: Public, verifiable Solidity rules rather than opaque algorithms
-5. **Instant Deployment**: Add new protections without contract modifications, downtime, or governance votes
+5. **No contract modifications**: Add new protections without changing the protected contract; activation still follows the configured assertion lifecycle and timelocks
 
 **Learn More:**
 - [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
@@ -56,19 +56,22 @@ While audits provide point-in-time code reviews, the Credible Layer offers conti
 - [Assertions Book](/assertions-book/assertions-book-intro)
 
 ### What is the transparency dashboard?
-The transparency dashboard is a tool that allows anyone to view and browse all assertions deployed by different protocols.
-It is a useful tool for end users as they can verify the security guarantees of any protocol, while devs can use it to copy assertions from protocols with similar contracts.
+The transparency dashboard is a tool that allows anyone to view public projects and their active assertion posture.
+It is useful for end users because they can review what protections a protocol has made visible, while developers can use it to learn from assertions used by protocols with similar contracts.
 
 **Learn More:**
 - [Deploy Assertions](/credible/deploy-assertions-dapp)
 - [Glossary - Transparency Dashboard](/credible/glossary#transparency-dashboard)
 
 ### Is the Credible Layer a SaaS protocol?
-No. We are a permissionless protocol that enables hack definition and prevention. Enforcement does not rely on external execution services, and protocols do not need to trust third parties beyond the network itself.
+No. The Credible Layer is a protocol with a product surface around it: the platform and `pcl` help teams author, review, deploy, and monitor assertions, while the on-chain registry remains the source of truth for active assertion state.
+
+Access to assertion management is still gated by authorization. Only verified protocol admins can attach assertions to protected contracts, and supported networks may have onboarding or availability constraints.
 
 **Learn More:**
 - [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
 - [Architecture](/credible/architecture-overview)
+- [Ownership Verification](/credible/ownership-verification)
 
 ---
 
@@ -175,7 +178,7 @@ Editing an assertion is straightforward:
 Yes, you can copy and adapt assertions from other protocols and use them to protect your own protocol.
 You should make sure that the assertions are compatible with your protocol.
 It will make the most sense to copy assertions for standard libraries and interfaces.
-You will be able to see all assertions deployed by other protocols on the transparency dashboard.
+You can inspect public assertion posture on the transparency dashboard. Some project and invalidation details are only visible to project managers and collaborators.
 
 **Learn More:**
 - [Assertions Book](/assertions-book/assertions-book-intro)
@@ -202,11 +205,12 @@ You will be able to see all assertions deployed by other protocols on the transp
 **Learn More:**
 - [Architecture - Abstract Overview](/credible/architecture-overview#abstract-overview)
 
-### How are forced included transactions handled for OP Stack Rollups?
+### How are L1-originated transactions handled for OP Stack rollups?
 
-The solution is currently in development. Ask us about it!
+OP Stack integrations define a validation policy for L1-originated deposits as part of the network integration. The policy specifies where assertion validation runs, how results are routed to sequencing components, and which incident metadata is sent to affected protocols.
 
 **Learn More:**
+- [Network Integration Overview - L1-originated transaction paths](/credible/network-integration#l1-originated-transaction-paths)
 - [Glossary - Forced Inclusion Transactions](/credible/glossary#forced-inclusion-transactions)
 
 ### Does the Credible Layer introduce new trust assumptions or centralization points?
@@ -228,10 +232,12 @@ The Credible Layer simply lets protocol teams define assertions that can prevent
 
 ### Does the Credible Layer slow down the network?
 
-No. We have performed worst-case stress tests, using the most inefficient operations available (hashing), to execute assertions worth 1bn gas per block without slowing down the block time. This is because the Credible Layer heavily parallelizes execution and can fully utilize CPU cores compared to standard serial execution of transactions.
+The Credible Layer is designed to keep assertion overhead bounded and off the serial block-building path where the network integration supports that model. The hot path should mainly pay for tracing, assertion routing, checkpointing, and work submission, while assertion execution can run in parallel worker capacity.
+
+The practical requirement is that assertion workers keep up with the transaction workload. If assertion execution falls behind, the integration needs bounded backpressure, publication-boundary waiting, or another network-specific policy.
 
 **Learn More:**
-- [Architecture - PhEVM](/credible/architecture-overview#phevm-phylax-evm)
+- [Assertion Enforcer - Performance Model](/credible/assertion-enforcer#performance-model)
 - [Architecture](/credible/architecture-overview)
 
 ### How do you extend the validation logic of the sequencer to the platform?
@@ -256,12 +262,13 @@ This way, we ensure that no malicious third party reduces functionality by writi
 - [Ownership Verification](/credible/ownership-verification)
 - [Deploy Assertions](/credible/deploy-assertions-dapp)
 
-### My protocol doesn't support the owner interface, can I still use the Credible Layer?
+### My protocol doesn't support the owner interface. Can I still use the Credible Layer?
 
-We are working on more authentication techniques to service protocols with non-traditional ownership architectures. Reach out!
+Yes, but you may need manual verification. If your contracts are immutable or do not expose an admin interface such as `owner()`, Phylax can verify off-chain evidence that your team controls the protocol and then register the selected protocol admin for the specific contracts.
 
 **Learn More:**
 - [Ownership Verification](/credible/ownership-verification)
+- [How to Request Manual Verification](/credible/manual-verification)
 
 ### How can you write rules for immutable contracts?
 

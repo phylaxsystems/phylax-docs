@@ -119,7 +119,7 @@ BacktestingTypes.BacktestingResults memory results = executeBacktest(
 
 Executes a backtest for a single transaction specified by its hash. This is useful for:
 - Testing assertions against specific known transactions (such as historical exploits)
-- Debugging potential false positives reported during staging (see [Testing Strategy](/credible/testing-strategy) for more on the staging workflow)
+- Debugging staging findings (see [How to Plan Assertion Testing](/credible/testing-strategy) for more on the staging workflow)
 - Quickly validating assertion behavior on a problematic transaction without specifying a block range
 
 ```solidity
@@ -218,13 +218,13 @@ struct BacktestingResults {
 
 **Interpreting Results:**
 
-The `assertionFailures` field indicates how many transactions triggered assertion reverts. Since backtesting runs against historical transactions, non-zero values most commonly indicate false positives in your assertion logic rather than actual exploits.
+The `assertionFailures` field indicates how many transactions triggered assertion reverts. Since backtesting runs against historical transactions, review non-zero values to confirm whether they represent expected assertion behavior, logic that needs tuning, or a known exploit window.
 
 ```solidity
 // Check results
 if (results.assertionFailures > 0) {
     console.log("Assertion failures detected:", results.assertionFailures);
-    console.log("Review assertion logic for false positives or gas issues");
+    console.log("Review assertion logic, expected behavior, or gas usage");
 }
 
 // Log detailed results
@@ -235,7 +235,7 @@ console.log("Assertion failures:", results.assertionFailures);
 ```
 
 **Common Causes of Assertion Failures:**
-- **False positives:** Assertion logic incorrectly flags legitimate protocol behavior (most common)
+- **Assertion tuning needed:** Assertion logic flags legitimate protocol behavior
 - **Gas limit exceeded:** Assertion ran out of gas (300k limit) during complex operations
 - **Assertion bugs:** Logic errors in the assertion code
 - **Known exploits:** If testing against historical exploit blocks, failures may be expected

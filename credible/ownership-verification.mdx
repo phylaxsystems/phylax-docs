@@ -6,7 +6,7 @@ description: 'Understand how the Credible Layer determines who is allowed to man
 The Credible Layer uses admin verifier modules to determine who can deploy assertions for a contract. Most deployments use owner-based verification by default. This design will continue to expand with additional ownership patterns.
 
 <Note>
-This page explains the ownership model. If your contracts do not fit the default verifier and you need the process for getting approved, use [Manual Verification](./manual-verification).
+This page explains the ownership model. If your contracts do not fit the default verifier and you need the process for getting approved, use [How to Request Manual Verification](./manual-verification).
 </Note>
 
 ## Current Implementation
@@ -36,7 +36,7 @@ High-level requirements and signals include:
 
 After approval, the protocol admin address is added to the registry and a timelock begins before assertions can be deployed. Protocols can also opt out of registry additions if they do not want assertions attached to their contracts.
 
-See [Manual Verification](./manual-verification) for the full process and requirements.
+See [How to Request Manual Verification](./manual-verification) for the full process and requirements.
 
 ## Future Development
 

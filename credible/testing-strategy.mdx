@@ -1,12 +1,14 @@
 ---
-title: 'Testing Strategy'
-description: 'Where to invest testing effort: deploy to staging early, iterate with real transactions'
+title: 'How to Plan Assertion Testing'
+description: 'Plan local testing, backtesting, staging, and production promotion for assertions'
 ---
+
+This guide shows you how to allocate assertion testing effort across local tests, backtesting, staging, and production promotion.
 
 <Check>
 **Summary**
 - Local testing validates core logic; staging validates real-world behavior
-- Deploy to staging early to catch false positives and edge cases
+- Deploy to staging early to observe behavior against real transaction flow
 - Real transactions expose scenarios that are difficult to predict locally
 - Use backtesting to debug specific transactions with the smallest feedback loop
 </Check>
@@ -68,11 +70,13 @@ Backtesting serves two distinct purposes in the development workflow:
 
 Before deploying to staging, run a quick backtest against recent transactions:
 
-- Verifies no obvious false positives on normal protocol operations
+- Verifies expected behavior on normal protocol operations
 - Catches trigger mismatches (assertion not running when expected)
 - Identifies gas issues with realistic transaction complexity
 
 Keep block ranges small (10-100 blocks) for this sanity check. The goal is quick verification, not comprehensive coverage.
+
+For production promotion, expect a broader historical review. The exact window depends on protocol risk, transaction volume, network requirements, and the assertions being promoted. At minimum, include representative high-volume periods, known incident windows when applicable, and enough normal activity to measure assertion behavior on normal transactions.
 
 ### 2. Debugging Staging Issues
 
@@ -112,8 +116,8 @@ Once local tests pass and backtesting shows no obvious issues, [deploy to stagin
 
 Check the [platform dashboard](https://app.phylax.systems) regularly for assertion execution status and enable [incident notifications](/credible/dapp-integrations) to get alerted via Slack or PagerDuty. Look for:
 
-- False positives on legitimate operations
-- Unexpected assertion behavior or edge cases
+- Unexpected invalidations on legitimate operations
+- Assertion behavior that needs tuning before production
 
 Staging runs assertions but does NOT drop transactions, so you can observe behavior without risk.
 
@@ -142,8 +146,10 @@ The goal is sufficient transaction diversity, not a specific timeframe. As the d
 
 Before promoting to production, verify:
 
-- No false positives observed on legitimate transactions
+- Expected behavior observed on legitimate transactions
 - Sufficient transaction diversity to build confidence
+- Historical backtesting covers the relevant protocol surfaces and known risky periods
+- Trigger frequency, runtime, and gas usage fit the network's production limits
 - You understand how the assertion behaves across different scenarios
 
 <Warning>
@@ -156,7 +162,7 @@ Moving to production means transactions that violate your assertion will be drop
 
 **Skipping backtesting entirely:** A quick backtest catches obvious issues before staging and is essential for debugging staging discoveries.
 
-**Deploying directly to production:** Always validate in staging first. The cost of a false positive in production can be high.
+**Deploying directly to production:** Always validate in staging first. Production should only use assertions that have passed staging review.
 
 **Expecting immediate feedback:** Edge cases may take weeks to surface in staging. Be patient and let real usage patterns emerge.
 

@@ -3,6 +3,8 @@ title: 'High-Level Overview'
 description: 'High-level overview of the Credible Layer system that explains how exploit prevention works, without requiring deep technical knowledge.'
 ---
 
+This explanation describes how the Credible Layer prevents invalid transactions before execution and why that model matters for protocol teams and networks.
+
 ## Introduction
 
 Phylax's real-time security system detects and pre-emptively removes exploits before losses can be realized.
@@ -15,7 +17,7 @@ Phylax's real-time security system detects and pre-emptively removes exploits be
 
 At a glance:
 
-- **Security rules** are defined by the protocol team and deployed on-chain as [assertions](/credible/glossary#assertion)
+- **Security rules** are defined by the protocol team as [assertions](/credible/glossary#assertion), with assertion IDs registered on-chain and bytecode served through [Assertion DA](/credible/assertion-da)
 - **The network** validates every transaction against relevant assertions before adding them to blocks
 - **Invalid transactions** are [dropped](/credible/glossary#drop). If an assertion fails, the transaction never executes
 
@@ -146,7 +148,7 @@ Once assertions are defined, they need to be deployed to protect your contracts.
 
 ![Submitting assertions for enforcement](/images/overview-step-2.png)
 
-The [Phylax platform](https://app.phylax.systems) submits assertions to the Credible Layer smart contracts, which deploy them on-chain. These contracts are the source of truth and supply the network with the relevant assertions when a transaction interacts with a protected contract.
+The [Phylax platform](https://app.phylax.systems) creates releases and submits assertion changes to the Credible Layer smart contracts. Those contracts are the source of truth for which assertion IDs protect which contract addresses and when changes become active. Assertion bytecode is stored in [Assertion DA](/credible/assertion-da) and fetched by the enforcer before validation.
 
 #### How Enforcement Works
 
@@ -168,7 +170,7 @@ Each contract that has assertions is checked by the sidecar, which simulates the
 4. If all assertions pass, the transaction is included in the block
 5. If any assertion fails, the transaction is dropped
 
-This validation process never exceeds the time to produce a block. The Credible Layer adapts to each network's architecture while maintaining the same security guarantees.
+The validation path is designed to keep assertion lookup and execution bounded for each network integration. The Credible Layer adapts to each network's architecture while preserving the same core model: protocol-authored assertions inform the block inclusion decision.
 
 For the full technical flow, see [Architecture](/credible/architecture-overview).
 

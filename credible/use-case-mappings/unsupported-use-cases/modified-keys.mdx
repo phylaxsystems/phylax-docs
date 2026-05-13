@@ -1,7 +1,10 @@
 ---
-title: Modified Keys
-description: Get the modified keys of a mapping
+title: Modified Key Discovery
+description: Discover mapping keys through transaction inputs and emitted logs
 ---
+
+Modified key discovery describes how to identify mapping keys that changed during a transaction by using transaction inputs, emitted logs, and explicit storage-slot knowledge.
+
 ## Status
 
 - [ ] Supported
@@ -44,7 +47,7 @@ function assertionUseCase() public {
 - Check invariants about total balances
 - Check invariants about balances of specific addresses
 
-## Workarounds
+## Implementation Patterns
 
 - Use `FunctionCallInputs` to get the inputs of the function call and retrieve the modified keys.
 - Use `getLogs` to get the logs of the transaction and retrieve the modified keys.

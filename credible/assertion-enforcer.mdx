@@ -22,7 +22,7 @@ As a [sidecar](/credible/glossary#sidecar), the Assertion Enforcer:
 - **Operates independently** from the main L2 infrastructure
 - **Integrates alongside block builders** without changing core protocol rules
 - **Scales separately** from the main network components
-- **Fails gracefully** without affecting L2 operations
+- **Preserves network continuity** by keeping block production policy under the network operator's integration
 
 This design allows networks to adopt the Credible Layer without modifying their core infrastructure.
 
@@ -102,20 +102,36 @@ The Assertion Enforcer integrates with block builders to ensure only valid trans
 - The block builder or sequencer receives clear valid/invalid signals
 - Block production continues normally with validated transactions
 
+## Performance Model
+
+The Assertion Enforcer is designed to keep the synchronous block-building path small. In the common case, the block builder pays for routing work such as metadata collection, assertion selection, checkpoint creation, and work submission. Assertion execution itself can run separately from that serial path, depending on the network integration.
+
+The important performance constraint is keeping assertion work bounded and predictable for the transaction workload. Network integrations use bounded queues, publication policies, fine-grained triggers, deterministic gas or runtime limits, and bounded execution surfaces to keep validation predictable.
+
+The enforcer also avoids network fetches on the transaction hot path. Assertion bytecode is fetched after deployment events and cached before validation.
+
+## Production Admission and Resource Limits
+
+Production execution uses the active assertion set admitted through the configured registry and review process.
+
+Production assertion admission should account for:
+
+- Protected protocol surface and trigger conditions
+- Expected trigger frequency
+- Maximum gas or runtime budget
+- Expected read footprint
+- Deterministic behavior and read-only execution
+- Historical backtesting and staging behavior
+- Suitability for common acceleration paths, such as compact trace summaries or native helper functions
+
+These controls keep block-building resources predictable and help protocol teams understand which assertions are ready to promote from staging to production.
+
 ## Operational Expectations (Public)
 
 - **Non-invasive**: Runs alongside existing block builders without changing consensus rules
 - **Deterministic**: Results are based on on-chain state and assertion code only
 - **Staging support**: Networks can validate assertions before enforcing them in production
 - **Transparent outcomes**: Incidents are visible in the platform and dashboard
-
-## Forced Inclusion Transactions
-
-Forced inclusion transactions (such as L1→L2 deposits) require special handling since they must be included regardless of assertion results. The Credible Layer has mitigation pathways for these scenarios.
-
-<Note>
-We have developed a solution for forced inclusion transactions and are actively implementing it. Ask us about it!
-</Note>
 
 ## Assertion Caching
 
@@ -124,7 +140,7 @@ To ensure high-performance validation, the Assertion Enforcer maintains an inter
 - **On deployment**: When an assertion is deployed on-chain, the Assertion Enforcer detects the event and fetches bytecode from [Assertion DA](/credible/assertion-da)
 - **During validation**: Assertions are loaded from cache. No network requests occur on the hot path.
 
-This caching strategy ensures validation latency doesn't impact block production times.
+This caching strategy keeps assertion data retrieval out of the block-production hot path.
 
 ## Learn More
 
@@ -133,6 +149,6 @@ This caching strategy ensures validation latency doesn't impact block production
     High-level integration for networks and sequencers
   </Card>
   <Card title="Trust Model" icon="shield-check" href="/credible/trust-model">
-    Guarantees, assumptions, and failure modes
+    Guarantees, scope, and operational model
   </Card>
 </CardGroup>

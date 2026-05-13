@@ -3,14 +3,14 @@ title: 'Deploy Assertions with the Platform'
 description: 'Create projects and deploy assertions to protect your contracts'
 ---
 
-This guide walks you through creating a project in the [Phylax platform](https://app.phylax.systems) and deploying assertions to protect your smart contracts.
+This guide shows you how to create a project in the [Phylax platform](https://app.phylax.systems), create a release with `pcl apply`, and deploy assertions to protect your smart contracts.
 
 **Prerequisites**:
 - [pcl installed](/credible/credible-install)
 - Smart contracts deployed on a supported chain
 - An assertion [written](/credible/write-first-assertion) and [tested](/credible/testing-assertions)
 
-**What you'll accomplish**: Create a project, link your contracts, and deploy assertions to production.
+**What you'll accomplish**: Create a project, link your contracts, create a pending release, and deploy assertions to staging or production.
 
 <Note>
 New to the platform? See the [Platform Overview](/credible/dapp-overview) to understand its features.
@@ -53,10 +53,10 @@ Authentication links your wallet address with your `pcl` session, allowing you t
    - Only contracts where your wallet is authorized can be added
    - The platform verifies admin access via the network's admin verifier (often owner-based)
 
-5. Review and click "Save and publish"
+5. Review and click "Create Project"
 
 <Frame caption="Creating a project in the platform">
-  <img src="/images/create_project_dapp.webp" alt="Creating a Project" />
+  <img src="/images/create_project_dapp.webp" alt="Create project form in the Phylax platform" />
 </Frame>
 
 <Note>
@@ -71,7 +71,7 @@ Configure your `credible.toml` and create a release with `pcl apply`:
 pcl apply
 ```
 
-This reads your `credible.toml` configuration, builds the assertion contracts, and creates a release on the platform. See [Apply Assertions](/credible/apply-assertions) for detailed instructions on configuring `credible.toml` and using `pcl apply`.
+This reads your `credible.toml` configuration, builds the assertion contracts, previews the requested changes, and creates a pending release on the platform after you confirm. See [Apply Assertions](/credible/apply-assertions) for detailed instructions on configuring `credible.toml` and using `pcl apply`.
 
 ## Step 4: Deploy the Assertion
 
@@ -83,7 +83,7 @@ After applying via `pcl`, complete deployment in the platform:
 
 3. Find your assertion and click "Proceed to Review"
 
-4. Select the target contract to protect
+4. Review the release diff
 
 5. Review assertion details:
    - Assertion name and parameters
@@ -105,6 +105,10 @@ Adding an assertion is not immediate. The deployment transaction registers it in
 </Note>
 
 <Note>
+Projects are managed in the platform, but the deployment transaction should be signed by the protocol admin, also called the manager wallet, that controls assertion lifecycle operations for the protected contracts. Use a multisig or governance-controlled wallet where appropriate.
+</Note>
+
+<Note>
 The same model applies when you remove an assertion later. Removal is also scheduled through the State Oracle contracts and only takes effect after that configured timelock expires.
 </Note>
 
@@ -122,7 +126,7 @@ After deployment, manage assertions through your project dashboard:
 
 | Error | Solution |
 |-------|----------|
-| "Contract ownership verification failed" | Ensure your wallet passes the admin verifier (often `owner()`) or request [Manual Verification](/credible/manual-verification) if available |
+| "Contract ownership verification failed" | Ensure your wallet passes the admin verifier (often `owner()`) or [request manual verification](/credible/manual-verification) if available |
 | "Assertion already exists" | Use a different name or update the existing assertion |
 | "Authentication expired" | Run `pcl auth login` to refresh |
 

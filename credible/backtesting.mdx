@@ -3,10 +3,14 @@ title: Backtesting
 description: Test assertions against historical blockchain transactions
 ---
 
-Backtesting runs your assertions against actual historical transactions from a specified block range. This helps ensure your assertions work correctly with real transaction patterns and don't trigger false positives on legitimate protocol operations.
+Backtesting runs your assertions against actual historical transactions from a specified block range. This helps ensure your assertions behave as expected with real transaction patterns before deployment.
 
 <Note>
 If you're looking for the reference documentation on all configuration parameters, see the [Backtesting Reference](/credible/backtesting-reference).
+</Note>
+
+<Note>
+Backtesting is a development-time validation tool. Running a backtest does not deploy assertions, change the on-chain registry, or affect production enforcement.
 </Note>
 
 ## How It Works
@@ -102,7 +106,7 @@ See the [Balancer V2 Rate Manipulation Exploit](/assertions-book/previous-hacks/
 
 ### Testing a Single Transaction by Hash
 
-For debugging false positives or validating against a specific transaction, use `executeBacktestForTransaction`:
+For debugging a staging finding or validating against a specific transaction, use `executeBacktestForTransaction`:
 
 ```solidity
 bytes32 txHash = 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef;
@@ -117,7 +121,7 @@ BacktestingTypes.BacktestingResults memory results = executeBacktestForTransacti
 ```
 
 This is particularly useful for:
-- Debugging potential false positives reported during staging (see [Testing Strategy](/credible/testing-strategy))
+- Debugging staging findings (see [How to Plan Assertion Testing](/credible/testing-strategy))
 - Quick validation of assertion behavior on a specific transaction
 - Investigating incidents without needing to know the block number
 
@@ -226,7 +230,7 @@ See [CI/CD Integration](/credible/ci-cd-integration#foundry-profile-configuratio
 1. **Start small** - Test with 10-20 blocks first to verify your setup
 2. **Use paid RPC providers** - For block ranges over 1,000
 3. **Check assertion failures** - Ensure `results.assertionFailures == 0`
-4. **Run before deployment** - Catch false positives on real transactions
+4. **Run before deployment** - Validate behavior on real transactions
 5. **Run manually** - Exclude from CI/CD to avoid long test runs
 6. **Debug with single transactions** - Use `executeBacktestForTransaction` to investigate specific failures
 
