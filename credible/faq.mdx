@@ -206,12 +206,12 @@ You can inspect public assertion posture in Phylax Explorer. Some project and in
 **Learn More:**
 - [Architecture - Abstract Overview](/credible/architecture-overview#abstract-overview)
 
-### How are L1-originated transactions handled for OP Stack rollups?
+### How are externally originated transactions handled?
 
-OP Stack integrations define a validation policy for L1-originated deposits as part of the network integration. The policy specifies where assertion validation runs, how results are routed to sequencing components, and which invalidation metadata is sent to affected protocols.
+Network integrations define validation policy for transactions that do not enter through ordinary user RPC flow, such as bridge-originated actions, delayed queues, scheduled system transactions, or forced-inclusion-style paths. The policy specifies where assertion validation runs, how results are routed into sequencing or block-building components, what timeout behavior applies, and which invalidation context is sent to affected protocols.
 
 **Learn More:**
-- [Network Integration Overview - L1-originated transaction paths](/credible/network-integration#l1-originated-transaction-paths)
+- [Network Integration Overview - Transaction Source Coverage](/credible/network-integration#transaction-source-coverage)
 - [Glossary - Forced Inclusion Transactions](/credible/glossary#forced-inclusion-transactions)
 
 ### Does the Credible Layer introduce new trust assumptions or centralization points?
@@ -243,15 +243,13 @@ The practical requirement is that assertion workers keep up with the transaction
 
 ### How do you extend the validation logic of the sequencer to the platform?
 
-For OP stack chains, Flashbots introduced a piece of software that enables a sequencer to have an external block-builder that implements custom block-building logic, without changing the sequencer itself. This is also what powers Flashblocks.
+The exact implementation depends on the network architecture. The shared model is that the network adds an enforcement hook around block building, sequencing, preflight validation, or another documented inclusion boundary.
 
-For other chains, the exact implementation varries but generally follows the following architecture:
-
-Our custom block builder enables the sequencer to check each transaction against assertions defined through the platform.
-This requires no changes to contracts as it is effectively middleware.
+That hook sends candidate transaction context to the Assertion Enforcer. The enforcer selects relevant assertions, executes them, and returns a valid or invalid result that the integration applies before settlement. This requires no changes to protected contracts because assertions run as enforcement middleware around transaction inclusion.
 
 **Learn More:**
-- [Architecture - OP Stack Implementation](/credible/network-integrations/architecture-op-stack)
+- [Network Integration Overview](/credible/network-integration)
+- [Assertion Enforcer](/credible/assertion-enforcer)
 - [Glossary - Block Builder](/credible/glossary#block-builder)
 
 ### Can anyone write assertions for my contracts?

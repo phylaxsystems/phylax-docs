@@ -3,7 +3,7 @@ title: 'Invalidations'
 description: 'View assertion invalidations recorded by the Credible Layer'
 ---
 
-Invalidations are transactions that violated assertions protecting contracts. In production, the [Enforcer](/credible/glossary#assertion-enforcer) drops those transactions before settlement. In staging, the platform records that the transaction would have been dropped, but the transaction still lands on the live network because staging is observe-only.
+Invalidations are records created when a transaction violates an assertion protecting a contract. In production, the [Enforcer](/credible/glossary#assertion-enforcer) applies the network's documented enforcement policy. On enforced transaction paths, the transaction is dropped before settlement. In staging, the platform records that the transaction would have been dropped, but the transaction still lands on the live network because staging is observe-only.
 
 <Note>
 For the end-to-end flow, see the invalidation lifecycle diagram in
@@ -12,13 +12,13 @@ For the end-to-end flow, see the invalidation lifecycle diagram in
 
 ## How Invalidations Are Grouped
 
-The platform groups invalidating transactions over a one-hour time period. Multiple invalidating transactions can belong to the same invalidation group if they violate the same assertion within that window.
+The platform groups invalidating transactions over a configured time window. Multiple invalidating transactions can belong to the same invalidation group if they violate the same assertion and target surface within that window.
 
 **Why group invalidating transactions?**
 
 - An attacker may craft multiple transactions that all violate the same assertion; these can represent the same logical attack
-- One hour is a reasonable estimate for how long an attack attempt might last
-- After one hour without violations, a new invalidation likely indicates a different attempt and creates a new group
+- The grouping window reduces repeated alerts for the same attempted violation
+- After the window passes without new violations, a new invalidation likely indicates a different attempt and creates a new group
 
 This grouping ensures you receive meaningful alerts without being spammed by repeated notifications for the same security event.
 
@@ -30,7 +30,7 @@ This is our initial approach to invalidation grouping and may be refined based o
 
 <Check>Detailed project invalidations are visible only to the project manager and approved collaborators inside the project dashboard.</Check>
 
-Non-owners see public project events and limited public invalidation metadata, not detailed invalidation evidence.
+Full invalidation evidence is private by default. Project teams can opt in to share invalidation data with Phylax support or participating network security teams when they need help debugging or coordinating a response.
 
 ### Access and Navigation
 
@@ -52,6 +52,7 @@ Each row includes:
 - **Assertion Triggered**
 - **Invalid Transactions** count
 - **Environment** (staging or production)
+- **Status** when available, such as dropped, landed, pending triage, or observed in staging
 
 Click a row to open the invalidation detail view.
 
@@ -67,6 +68,7 @@ It includes:
 - **Invalidation detail card** with date, contract affected, assertion triggered, assertion group, invalid transaction count, and environment
 - **Critical warning banner** if any invalidating transaction landed on-chain
 - **Invalid Transactions** list with expandable rows and action buttons
+- **Evidence context** such as assertion inputs, result status, and the reason the assertion failed where available
 
 Each invalidating transaction includes:
 
@@ -102,20 +104,20 @@ You can also set up external alerts via webhooks:
 - **Slack Integration**: Configure Slack webhooks to receive invalidation notifications
 - **PagerDuty Integration**: Configure PagerDuty webhooks to receive invalidation notifications
 
+Invalidation alerts can represent an active exploit attempt, a false positive affecting legitimate protocol activity, or an assertion that needs tuning.
+
 See [Integrations](/credible/dapp-integrations) for setup instructions.
 
 ## Public Explorer Invalidations
 
-The public explorer includes a limited invalidations view for transparency. Detailed transaction payloads, traces, and project-specific invalidation evidence are only available to project managers and collaborators with access.
-
-Detailed invalidation evidence is scoped to the project team so they can triage with full payloads and traces while public views remain concise.
+The public Explorer can show redacted aggregate invalidation history, such as a reference ID and timestamp, when that data is public. Full transaction payloads, traces, staging records, notification settings, and project-specific evidence are available only to project managers and approved collaborators.
 
 ### Staging vs. Production
 
 | Environment | What an invalidation means | User impact |
 | --- | --- | --- |
 | Staging | The transaction would have violated an assertion under production enforcement | The transaction is recorded for review but is not dropped |
-| Production | The transaction violated an enforced assertion | The transaction is dropped before settlement |
+| Production | The transaction violated an enforced assertion | The transaction is dropped before settlement on enforced paths, or handled according to the documented integration policy |
 
 ## Use Cases
 
