@@ -10,7 +10,23 @@ These pages analyze real-world hacks and demonstrate how assertions could have p
 Each analysis includes:
 - Detailed explanation of the attack mechanism
 - Root cause analysis of the vulnerability
-- Specific assertion code that would have prevented the exploit
+- Specific assertion patterns, and code examples where they have been implemented and tested
+
+## Cross-Chain, Runtime, and Operational Risk
+
+Recent incidents show that protocol risk often comes from external dependencies, bridge configuration, operational controls, and asset-flow assumptions rather than only from a bug in the protected contract itself. Runtime assertions are useful in these cases because they can enforce outcome-based limits around what state should never be reached.
+
+### [KelpDAO / rsETH LayerZero Configuration Incident](kelpdao-rseth-layerzero-configuration)
+**Attack Type:** Cross-chain Configuration + Message Verification Failure
+**Loss:** Reported $290M USD
+**Root Cause:** Reported compromise or misuse of cross-chain verification infrastructure, with public dispute over whether KelpDAO's rsETH LayerZero configuration was the direct cause
+**Prevention:** Cross-chain inflow circuit breakers, backing/supply parity assertions, and message-security configuration assertions
+
+### [Drift Admin Takeover](drift-security-council-takeover)
+**Attack Type:** Operational Security + Administrative Takeover
+**Loss:** Reported $280M+ USD
+**Root Cause:** Reported misrepresented approvals and durable nonce abuse enabled takeover of emergency administrative powers
+**Prevention:** Admin role-graph assertions, high-impact action allowlists, and protocol outflow circuit breakers
 
 ## Access Control & Administrative Vulnerabilities
 

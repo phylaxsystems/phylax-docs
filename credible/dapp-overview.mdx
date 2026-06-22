@@ -15,9 +15,14 @@ Adding an assertion or removing one is not instantaneous. Both operations pass t
 
 ### Phylax Explorer
 
-The [Phylax Explorer](/credible/dapp-explorer) is the public diligence surface for registered projects. It shows available protection summaries, watched actions, protected contracts, assertion triggers, operational risk cards, deployed-vs-audited code context, evidence links, and raw data views where those fields are available. Protection summaries are generated each time the project team creates a new release.
+The **[Phylax Explorer](/credible/dapp-explorer)** is the public dashboard that displays the security and operational risk posture of protocols that have opted into runtime enforcement. Users can find the following:
 
-Explorer does not turn protocol security into a score. It makes verifiable evidence easier to inspect and compare.
+- Summaries of the actions protected by circuit breakers and assertions
+- Scenarios the assertions prevent
+- Summaries of what each assertion or circuit breaker does and the failure modes they prevent
+- If the protocol is governed by an admin multisig wallet, documentation of the breakdown of roles on the admin wallet, its signer threshold, and the time delay required when making changes
+- Documentation of whether each contract is upgradeable or not
+- Whether the current deployed protocol has meaningfully diverged from the code at the time of audit
 
 ### Projects
 
@@ -42,7 +47,7 @@ Authentication is required to create and manage projects. Open the platform at [
 ## Key Features
 
 - **Public diligence**: Browse public projects, protected contracts, and assertion posture
-- **Protection summaries**: Review release-generated plain-English summaries of protected actions, circuit breakers, triggers, and unsafe conditions
+- **Protection summaries**: Review release-generated summaries of protected actions, circuit breakers, assertion behavior, and failure modes
 - **Operational risk cards**: Inspect verifiable properties such as admin roles, signer thresholds, timelocks, role segregation, and upgradeability when available
 - **Deployed-vs-audited code context**: See whether current deployed implementation code appears to differ from the most recent known audited code when metadata is available
 - **Evidence links and raw data**: Inspect project-provided GitHub, audit, formal verification, and raw evidence views

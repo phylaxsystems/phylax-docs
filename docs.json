@@ -196,6 +196,8 @@
                 "group": "Hack Case Studies",
                 "pages": [
                   "assertions-book/previous-hacks/prev-hacks-index",
+                  "assertions-book/previous-hacks/kelpdao-rseth-layerzero-configuration",
+                  "assertions-book/previous-hacks/drift-security-council-takeover",
                   "assertions-book/previous-hacks/balancer-v2-stable-rate-exploit",
                   "assertions-book/previous-hacks/bybit-safe-ui",
                   "assertions-book/previous-hacks/gma-aum-jul25-hack",

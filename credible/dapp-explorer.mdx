@@ -3,41 +3,20 @@ title: 'Phylax Explorer'
 description: 'Browse public protocol protection posture, evidence, and invalidation data'
 ---
 
-Phylax Explorer is the public interface for evaluating registered protocols, their protected contracts, active assertions, operational posture, and supporting evidence.
+The **[Phylax Explorer](/credible/dapp-explorer)** is the public dashboard that displays the security and operational risk posture of protocols that have opted into runtime enforcement. Users can find the following:
+
+- Summaries of the actions protected by circuit breakers and assertions
+- Scenarios the assertions prevent
+- Summaries of what each assertion or circuit breaker does and the failure modes they prevent
+- If the protocol is governed by an admin multisig wallet, documentation of the breakdown of roles on the admin wallet, its signer threshold, and the time delay required when making changes
+- Documentation of whether each contract is upgradeable or not
+- Whether the current deployed protocol has meaningfully diverged from the code at the time of audit
+- All public audits uploaded by the protocol team
 
 <Note>
 For a high-level view of how the platform interfaces with the rest of the system, see
 [Interface Overview](/credible/interfaces-overview).
 </Note>
-
-## What Explorer Shows
-
-Explorer helps users answer four questions:
-
-- **What is protected?** Explorer summarizes protected contracts, watched actions, active protections, assertion triggers, and unsafe conditions the protocol is trying to prevent.
-- **How is the protocol operated?** Explorer surfaces verifiable operational properties such as admin roles, signer thresholds, timelocks, role segregation, and upgradeability when those properties are available.
-- **Has deployed code changed since audit?** Explorer can show whether the currently deployed implementation appears to differ from the most recent known audited code when project metadata supports that comparison.
-- **What evidence supports the claim?** Explorer can show project-provided GitHub, audit, and formal verification links so reviewers can inspect the underlying evidence.
-
-Explorer does not assign a high-level security score. It shows the facts and evidence that are available.
-
-Protection summaries are generated every time the project team creates a new release, so the public Explorer view can reflect the latest submitted protection changes after the release is created.
-
-## Project Data
-
-Public project views can include:
-
-- Project name, description, and target chain
-- Linked contract addresses
-- Active assertions protecting each contract
-- Release-generated plain-English summaries of protections, watched actions, protected contracts, and unsafe conditions
-- Assertion implementation details, triggers, and parameters
-- Operational risk cards for verifiable posture properties
-- Deployed-vs-audited code context when the project has supplied the required metadata
-- GitHub, audit, and formal verification links
-- Raw data views for technical review
-- Recent public events related to contracts and assertions being added or removed
-- Limited public invalidation records, when available
 
 ### Search / Filter
 
@@ -75,22 +54,17 @@ The public explorer is designed to make assertion posture reviewable without exp
 Public views can show:
 - Projects and protected contracts
 - Active assertion posture
-- Protection summaries and assertion triggers
+- Summaries of protected actions, assertion behavior, circuit breakers, failure modes, and assertion triggers
 - Operational risk properties where verifiable
 - Deployed-vs-audited code context where available
 - GitHub, audit, and formal verification links
-- Raw data views
-- Public project events
-- Limited invalidation metadata
 - Aggregate invalidation history, such as a reference ID and timestamp
 
-Private project views are required for:
+Information that is only available to the team behind the project:
 - Full invalidating transaction payloads
 - Execution traces and assertion traces
 - Staging invalidations
 - Notification and project management settings
-
-Detailed invalidation evidence is scoped to project managers and approved collaborators. Public views keep Explorer useful for posture review while private views retain the full payloads and traces needed for triage.
 
 ## Why Users Trust Protected Protocols
 
