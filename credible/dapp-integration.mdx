@@ -12,7 +12,7 @@ If you are ready to execute deployment, use [Deploy Assertions with the Platform
 Use it before deployment to identify the contracts, assertions, admins, and environments involved in the rollout.
 
 <Note>
-Project creation and assertion deployment require authorization for the target contracts. Depending on the contract and network, authorization can happen through an on-chain admin verifier such as `owner()` or through [manual verification](/credible/manual-verification).
+Project creation and assertion deployment require authorization for the target contracts. Depending on the contract and network, authorization can happen through an on-chain admin verifier such as `owner()` or, for rollup contracts only, through [manual verification](/credible/manual-verification).
 </Note>
 
 ## Adoption Workflow
@@ -21,7 +21,7 @@ Teams follow the same underlying steps. The CLI is used to author and deploy ass
 is used to manage deployments and monitoring.
 
 - **CLI authoring**: write assertions locally and create a release with `pcl apply`
-- **Platform management**: link contracts, stage or deploy, and monitor incidents
+- **Platform management**: link contracts, stage or deploy, and monitor invalidations
 
 ## End-to-End Flow
 
@@ -36,14 +36,14 @@ flowchart LR
   Platform --> Registry[On-Chain Registry]
   Registry --> Enforcer[Assertion Enforcer]
   Enforcer --> Outcome[Block Inclusion Decision]
-  Outcome --> Incidents[Incidents + Dashboard]
+  Outcome --> Invalidations[Invalidations + Explorer]
 ```
 
 ## What You Control
 
 - Which assertions protect which contracts
 - Staging vs production deployments
-- Incident notification routing and monitoring
+- Invalidation notification routing and monitoring
 
 ## Coverage Planning
 
@@ -60,7 +60,7 @@ This map helps the protocol team decide which assertions belong in the first rel
 
 ## Authorization Requirements
 
-Before assertions can be deployed for a contract, the platform needs to determine which protocol admin can manage that contract's assertion lifecycle. The common path is owner-based verification. If your contracts do not expose a supported ownership interface, use [How to Request Manual Verification](/credible/manual-verification) to understand the fallback process.
+Before assertions can be deployed for a contract, the platform needs to determine which protocol admin can manage that contract's assertion lifecycle. The common path is owner-based verification. If your rollup contracts do not expose a supported ownership interface, use [How to Request Manual Verification](/credible/manual-verification) to understand the fallback process. Manual verification is not available for Ethereum mainnet contracts.
 
 ## Deployment Modes
 
@@ -72,14 +72,14 @@ Learn more about ownership checks in [Ownership Verification](/credible/ownershi
 ## What Users Can Verify
 
 - Which assertions are active for a protocol
-- On-chain registry entries and transparency views
-- Incident history for protected contracts
+- On-chain registry entries and Explorer views
+- Invalidation history for protected contracts
 
 ## What Successful Rollout Looks Like
 
 - Assertions cover critical protocol invariants and admin operations
 - Staging assertions are validated before moving to production
-- Teams review incidents and iterate on coverage over time
+- Teams review invalidations and iterate on coverage over time
 
 ## Next Steps
 

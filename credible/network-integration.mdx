@@ -42,7 +42,7 @@ Networks provide the following integration surfaces:
   transaction
 - **Registry access**: the enforcer consumes registry data (indexed from on-chain events) to discover which assertions apply
 - **Assertion data access**: the enforcer fetches assertion bytecode from Assertion DA
-- **Operational monitoring**: incidents and status are surfaced via the Phylax platform
+- **Operational monitoring**: invalidations and status are surfaced via the Phylax platform
 
 ## Integration Policy Decisions
 
@@ -58,7 +58,7 @@ Before production rollout, define:
 - Where assertion validation runs for those transactions
 - How validation results are routed into sequencing or block-building policy
 - Which application-layer response options protocols can use during the validation window
-- What incident metadata is sent to affected protocols
+- What invalidation metadata is sent to affected protocols
 
 L1-originated transaction policy is network-specific and should be documented as part of the integration.
 
@@ -80,14 +80,14 @@ Common controls include exact invalid-transaction caching, broader short-lived f
 - Configure access to registry data and assertion bytecode
 - Ensure the enforcer respects staged vs enforced assertions as set by protocol teams
 - Define validation policy for L1-originated transactions and repeated invalid submissions
-- Set up monitoring and incident review workflows
+- Set up monitoring and invalidation review workflows
 
 ## Integration Requirements (Public)
 
 - **Block-building hook** that can query the enforcer before inclusion
 - **Registry access** for assertion discovery (on-chain events indexed locally)
 - **DA access** for assertion bytecode retrieval
-- **Incident visibility** through the Phylax platform
+- **Invalidation visibility** through the Phylax platform
 
 ## Next Steps
 

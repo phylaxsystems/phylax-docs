@@ -6,7 +6,7 @@ description: 'Understand how the Credible Layer determines who is allowed to man
 The Credible Layer uses admin verifier modules to determine who can deploy assertions for a contract. Most deployments use owner-based verification by default. This design will continue to expand with additional ownership patterns.
 
 <Note>
-This page explains the ownership model. If your contracts do not fit the default verifier and you need the process for getting approved, use [How to Request Manual Verification](./manual-verification).
+This page explains the ownership model. If your rollup contracts do not fit the default verifier and you need the process for getting approved, use [How to Request Manual Verification](./manual-verification). Manual verification is not available for Ethereum mainnet contracts.
 </Note>
 
 ## Current Implementation
@@ -27,7 +27,9 @@ Managing assertions is a sensitive role. We recommend using hardware wallets and
 
 ## Manual Verification (Overview)
 
-If your contracts are immutable or don't expose an admin interface, you may be able to request manual verification. In this path, Phylax validates that the requesting team controls the protocol and then registers a protocol admin (manager) address for the specific contracts in the State Oracle registry.
+If your contracts are deployed on a supported rollup and are immutable or don't expose an admin interface, you may be able to request manual verification. In this path, Phylax validates that the requesting team controls the protocol and then registers a protocol admin (manager) address for the specific contracts in the State Oracle registry.
+
+Manual verification is not available for Ethereum mainnet contracts because enforcement works differently on L1 and L2 blockchains.
 
 High-level requirements and signals include:
 - Demonstrated control over the protocol codebase (e.g., ability to merge to the official repo and manage collaborators)

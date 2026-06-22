@@ -1,16 +1,21 @@
 ---
 title: 'How to Request Manual Verification'
-description: 'Request protocol admin authorization when contracts lack supported owner interfaces'
+description: 'Request protocol admin authorization for rollup contracts that lack supported owner interfaces'
 ---
 
-This guide shows you how to prepare a manual verification request when your contracts are immutable or do not expose a supported admin interface such as `owner()`.
+This guide shows you how to prepare a manual verification request when your rollup contracts are immutable or do not expose a supported admin interface such as `owner()`.
 
 <Note>
 Manual verification is the fallback path. If your target contracts expose a supported owner interface, use the normal [Ownership Verification](/credible/ownership-verification) and [deployment](/credible/deploy-assertions-dapp) flow instead.
 </Note>
 
+<Warning>
+Manual verification is only available for contracts deployed on rollups. It is not available for Ethereum mainnet contracts because enforcement works differently on L1 and L2 blockchains.
+</Warning>
+
 ## Prerequisites
 
+- The target contracts are deployed on a supported rollup, not Ethereum mainnet.
 - The target contracts do not pass automatic owner-based verification.
 - You can identify the contract addresses that need a protocol admin.
 - You have selected the smart contract or EOA that should manage assertions for those contracts.
@@ -28,7 +33,7 @@ interface IOwnable {
 }
 ```
 
-If your contracts expose this interface, use [Ownership Verification](/credible/ownership-verification). If they are immutable or use a different ownership architecture, continue with manual verification.
+If your contracts expose this interface, use [Ownership Verification](/credible/ownership-verification). If they are rollup contracts that are immutable or use a different ownership architecture, continue with manual verification. Manual verification is not available for Ethereum mainnet contracts.
 
 ## Step 2: Choose the Protocol Admin Address
 
@@ -65,6 +70,7 @@ Phylax reviews manual verification requests in good faith on a case-by-case basi
 
 Manual verification will not be offered if:
 
+- The target contracts are deployed on Ethereum mainnet.
 - The protocol is fully anonymous.
 - The team refuses to provide public proofs.
 - The submitted evidence is insufficient to verify the rightful protocol maintainer or owner.

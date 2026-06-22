@@ -43,7 +43,7 @@ To create a new project:
 <Note>
 Only authorized admins can create a project for a contract. Most deployments use owner-based verification by default. See [Ownership Verification](/credible/ownership-verification) for details.
 
-For contracts that don't pass the default verifier, you may be able to [request manual verification](/credible/manual-verification).
+For rollup contracts that don't pass the default verifier, you may be able to [request manual verification](/credible/manual-verification). Manual verification is not available for Ethereum mainnet contracts.
 </Note>
 
 ## Managing Projects
@@ -55,7 +55,7 @@ Once created, you can manage your project through the project dashboard:
 - View project metadata
 - See all assertions
 - See project events in the audit log, including assertion, contract, release, notification, collaborator, and invalidation activity
-- See all [incidents](/credible/dapp-incidents)
+- See all [invalidations](/credible/dapp-invalidations)
 
 ### Add or Remove Contracts
 - Add new contract addresses to your project
@@ -84,14 +84,14 @@ Here you can update the project name, description, and delete the project.
 You can transfer projects and contracts (including their associated assertions) to other wallets. This allows you to transfer project ownership while maintaining all linked assertions and contracts.
 
 **Protocol admin / manager wallet:**
-The wallet that signs assertion lifecycle transactions can be separate from the day-to-day platform account. Use this separation when your team wants project collaborators to review releases and incidents without requiring routine access to the multisig or governance wallet that controls deployment.
+The wallet that signs assertion lifecycle transactions can be separate from the day-to-day platform account. Use this separation when your team wants project collaborators to review releases and invalidations without requiring routine access to the multisig or governance wallet that controls deployment.
 
 **Access controls:**
 Admins can invite collaborators by email or wallet address. Use roles to separate review work from deployment authority:
 
 | Role | Typical permissions |
 | --- | --- |
-| Viewer | View incidents and project information without making changes |
+| Viewer | View invalidations and project information without making changes |
 | Editor | Create releases and configure notifications |
 | Admin | Manage members, settings, and the protocol manager wallet |
 
@@ -99,7 +99,7 @@ Admins can invite collaborators by email or wallet address. Use roles to separat
 Detailed invalidation evidence is scoped to project members. Admins can opt in to share invalidations or transactions dropped by the node operator with Phylax support and network teams for customer support and debugging.
 
 **Integrations:**
-Set up integrations to receive notifications when incidents occur, including Slack and PagerDuty where available.
+Set up integrations to receive notifications when invalidations occur, including Slack and PagerDuty where available.
 
 <Frame caption="Project settings">
   <img src="/images/project_settings.png" alt="Project settings showing analytics sharing controls and integration options" />
@@ -113,7 +113,7 @@ The project dashboard provides a unified view of your project's security:
 - **Assertion Deployment**: Deploy or remove assertions for your project
 - **Ready for Deployment**: Assertions submitted via `pcl` that need to be linked and deployed
 - **Assertion Status**: Monitor execution status and any triggered violations. Status shows whether assertions are marked for enforcement/staging or enforced/staged
-- **Recent Incidents**: View detailed incidents for your project (see [Incidents](/credible/dapp-incidents#project-incidents-manager-view))
+- **Recent Invalidations**: View detailed invalidations for your project (see [Invalidations](/credible/dapp-invalidations#project-invalidations-manager-view))
 - **Audit Log**: Review project changes, assertion lifecycle events, collaborator changes, release activity, and invalidations over time
 - **Project Settings**: Update project details and manage contracts
 
@@ -133,7 +133,7 @@ Audit log entries can include:
 - Production and staging release events
 - Protocol manager changes
 - Collaborator role changes
-- Invalidations and incident-related activity
+- Invalidation-related activity
 
 <Frame caption="Project audit log">
   <img src="/images/project_audit_log.png" alt="Project audit log showing timestamped project, assertion, contract, manager, and invalidation events" />

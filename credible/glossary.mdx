@@ -54,8 +54,8 @@ Learn more: [Assertion Enforcer](/credible/assertion-enforcer)
 ### Platform
 The [Phylax platform](https://app.phylax.systems) is the web application interface for interacting with the Credible Layer. It allows protocol teams and end-users to deploy, manage, and view assertions and projects.
 
-### Transparency Dashboard
-A public interface for browsing projects, protected contracts, active assertions, and limited invalidation metadata. Detailed project management data, staging invalidations, transaction payloads, and traces are only available in private project views.
+### Phylax Explorer
+A public interface for browsing projects, protected contracts, active assertions, protection summaries, operational risk cards, deployed-vs-audited code context, evidence links, raw data views, and limited invalidation metadata where available. Detailed project management data, staging invalidations, transaction payloads, and traces are only available in private project views.
 
 ### Sidecar
 A software architecture pattern where a component runs alongside the main application without changing core protocol rules. The Credible Layer operates as a sidecar to the network's block builder, intercepting and validating transactions during the block building process.
@@ -164,10 +164,10 @@ The ability to inspect the rules and registry state behind a protocol's Credible
 
 ## Prevention
 
-### Incident
-A security event representing the invalidation of an assertion over a one-hour time period. Multiple dropped transactions can belong to the same incident if they violate the same assertion within that window. This grouping treats repeated attempts to exploit the same vulnerability as a single logical attack.
+### Invalidation
+A transaction that violated an assertion protecting a contract. In production, the transaction is dropped before settlement. In staging, the platform records that the transaction would have been dropped, but the transaction still lands on the live network because staging is observe-only.
 
-Learn more: [Incidents](/credible/dapp-incidents)
+Learn more: [Invalidations](/credible/dapp-invalidations)
 
 ### Revert
 What happens at the EVM/Solidity level when an assertion function detects that a transaction violates the rules defined in the assertion. When an assertion reverts, it signals that the transaction would result in an undesired state. The sidecar detects this revert and notifies the sequencer that the transaction should be dropped.

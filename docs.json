@@ -12,6 +12,14 @@
     {
       "source": "/credible/store-submit-assertions",
       "destination": "/credible/apply-assertions"
+    },
+    {
+      "source": "/credible/dapp-transparency-dashboard",
+      "destination": "/credible/dapp-explorer"
+    },
+    {
+      "source": "/credible/dapp-incidents",
+      "destination": "/credible/dapp-invalidations"
     }
   ],
   "navigation": {
@@ -120,9 +128,9 @@
             "group": "Platform",
             "pages": [
               "credible/dapp-overview",
-              "credible/dapp-transparency-dashboard",
+              "credible/dapp-explorer",
               "credible/dapp-projects",
-              "credible/dapp-incidents",
+              "credible/dapp-invalidations",
               "credible/faq"
             ]
           },
