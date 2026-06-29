@@ -129,6 +129,7 @@
             "pages": [
               "credible/dapp-overview",
               "credible/dapp-explorer",
+              "credible/explorer-security-posture",
               "credible/dapp-projects",
               "credible/dapp-invalidations",
               "credible/faq"

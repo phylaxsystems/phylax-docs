@@ -14,7 +14,7 @@ A project groups together:
 - Staging and production invalidations
 - Notification settings and project events
 - Collaborators and role-based access
-- Project metadata (name, description, target chain)
+- Project metadata, including name, description, target chain, repository links, and supporting security evidence links where available
 
 Projects enable you to manage all your protocol's assertions from a single interface. The project itself is an off-chain organizing layer; the on-chain [State Oracle](/credible/credible-layer-contracts#state-oracle) remains the source of truth for which assertions are active for each protected contract.
 
@@ -105,14 +105,46 @@ Set up integrations to receive notifications when invalidations occur, including
   <img src="/images/project_settings.png" alt="Project settings showing analytics sharing controls and integration options" />
 </Frame>
 
+### Security Evidence Links
+
+Protocol teams can keep project evidence up to date so Explorer can show a more complete public project page.
+
+Useful evidence includes:
+
+- public repository links
+- audit report links
+- audit scope or commit references, where available
+- formal verification links, where applicable
+- protected-contract labels
+- assertion names and descriptions
+
+This metadata helps reviewers understand what is protected, which code was reviewed, and whether deployed code appears to match known audited code.
+
+## Preparing a Project for Public Review
+
+Before sharing a project page with partners, auditors, investors, or users, review the following:
+
+1. Confirm the project name, description, networks, and repository links are current.
+2. Confirm protected contracts are labeled clearly.
+3. Review active assertions and make sure their summaries describe the protected actions and unsafe conditions.
+4. Add or update audit report links and audit scope information where available.
+5. Review operational risk cards for signer thresholds, timelocks, upgradeability, admin control, and role segregation.
+6. Review deployed-vs-audited code context after contract upgrades or new audit reports, where supported.
+7. Check whether any fields are inconclusive or stale before relying on the Explorer page for review.
+
+Explorer is most useful when the project's evidence is current. If a protocol upgrades contracts, adds assertions, removes assertions, changes governance authority, or publishes a new audit, review the project metadata.
+
 ## Project Dashboard
 
 The project dashboard provides a unified view of your project's security:
 
 - **Active Assertions**: See all assertions currently protecting your contracts
+- **Assertion Summaries**: Review descriptions of protected actions, unsafe conditions, and reviewer-facing explanations where available
 - **Assertion Deployment**: Deploy or remove assertions for your project
 - **Ready for Deployment**: Assertions submitted via `pcl` that need to be linked and deployed
 - **Assertion Status**: Monitor execution status and any triggered violations. Status shows whether assertions are marked for enforcement/staging or enforced/staged
+- **Operational Risk**: Review signer thresholds, timelocks, upgradeability, admin control, and role segregation where evidence is available
+- **Audit Context**: Review audit coverage and deployed-vs-audited code context where supported
 - **Recent Invalidations**: View detailed invalidations for your project (see [Invalidations](/credible/dapp-invalidations#project-invalidations-manager-view))
 - **Audit Log**: Review project changes, assertion lifecycle events, collaborator changes, release activity, and invalidations over time
 - **Project Settings**: Update project details and manage contracts

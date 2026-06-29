@@ -136,7 +136,7 @@ Production execution uses the active assertion set admitted through the configur
 
 Production assertion admission should account for:
 
-- Protected protocol surface and trigger conditions
+- Protected protocol areas and trigger conditions
 - Expected trigger frequency
 - Maximum gas or runtime budget
 - Expected read footprint
@@ -159,7 +159,7 @@ Common controls include:
 - Timeout behavior with clear inclusion-policy consequences
 - Staging and backtesting requirements before production promotion
 
-Ingress filtering can also reduce repeated invalid submissions. When a transaction invalidates, the integration can record short-lived fingerprints for exact replays or repeated attempts against the same assertion and target surface. Broad fingerprints should use conservative TTLs and thresholds.
+Ingress filtering can also reduce repeated invalid submissions. When a transaction invalidates, the integration can record short-lived fingerprints for exact replays or repeated attempts against the same assertion and target contract or function. Broad fingerprints should use conservative TTLs and thresholds.
 
 ## Operational Expectations (Public)
 

@@ -7,6 +7,8 @@ The [Phylax platform](https://app.phylax.systems) is the interface for managing 
 
 Public users, allocators, auditors, and researchers use [Phylax Explorer](/credible/dapp-explorer) to review what a protocol has protected, how those protections work, which operational properties are visible, whether deployed code appears to differ from known audited code, and what evidence supports the protocol's public security posture.
 
+The platform also includes public Explorer views that help protocols explain their security setup. These views can show assertion summaries, assertion triggers, operational risk cards, public audits, and deployed-vs-audited code context where evidence is available.
+
 When you create a project and deploy assertions through the platform, the project remains an off-chain organizing layer. The on-chain [State Oracle](./credible-layer-contracts#state-oracle) contracts are the source of truth for which assertion IDs are attached to which contract addresses and when those assertions become active.
 
 Adding an assertion or removing one is not instantaneous. Both operations pass through a configured timelock enforced by the State Oracle contracts before the change takes effect.
@@ -23,6 +25,10 @@ The **[Phylax Explorer](/credible/dapp-explorer)** is the public dashboard that 
 - If the protocol is governed by an admin multisig wallet, documentation of the breakdown of roles on the admin wallet, its signer threshold, and the time delay required when making changes
 - Documentation of whether each contract is upgradeable or not
 - Whether the current deployed protocol has meaningfully diverged from the code at the time of audit
+
+### Security Posture Evidence
+
+Explorer can organize assertion summaries, operational risk cards, and deployed-vs-audited code checks into one public project view. This helps protocol teams show what is protected, what evidence is available, and what still needs review.
 
 ### Projects
 
@@ -46,11 +52,11 @@ Authentication is required to create and manage projects. Open the platform at [
 
 ## Key Features
 
-- **Public diligence**: Browse public projects, protected contracts, and assertion posture
+- **Public project review**: Browse public projects, protected contracts, and assertion posture
 - **Protection summaries**: Review release-generated summaries of protected actions, circuit breakers, assertion behavior, and failure modes
 - **Operational risk cards**: Inspect verifiable properties such as admin roles, signer thresholds, timelocks, role segregation, and upgradeability when available
 - **Deployed-vs-audited code context**: See whether current deployed implementation code appears to differ from the most recent known audited code when metadata is available
-- **Evidence links and raw data**: Inspect project-provided GitHub, audit, formal verification, and raw evidence views
+- **Evidence links**: Review project-provided GitHub, audit, and formal verification links
 - **Release review**: Inspect assertion changes before signing on-chain deployment transactions
 - **Unified management**: Manage assertion releases, project metadata, and notification settings from one interface
 - **Invalidation monitoring**: Track assertion failures in staging and production
@@ -61,6 +67,9 @@ Authentication is required to create and manage projects. Open the platform at [
 <CardGroup cols={2}>
   <Card title="Phylax Explorer" icon="search" href="/credible/dapp-explorer">
     Browse public projects, assertions, evidence, and operational posture
+  </Card>
+  <Card title="Security Posture in Explorer" icon="shield-check" href="/credible/explorer-security-posture">
+    Understand assertion summaries, risk cards, and audit context
   </Card>
   <Card title="Projects" icon="folder" href="/credible/dapp-projects">
     Create and manage your protocol projects

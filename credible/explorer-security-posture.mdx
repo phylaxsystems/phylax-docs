@@ -1,0 +1,74 @@
+---
+title: 'Security Posture in Phylax Explorer'
+description: 'How Explorer shows assertion summaries, operational risk cards, and deployed-vs-audited code context'
+---
+
+Phylax Explorer helps reviewers understand what a protocol has protected and what evidence is available. Instead of asking users to find assertion code, audit reports, repository links, governance settings, and contract metadata in different places, Explorer puts the available project information in one public view.
+
+Explorer does not score protocols and does not claim that a protocol is safe. It shows facts that users can inspect: which assertions are active, which actions they check, which unsafe conditions they are meant to prevent, how admin authority is configured, and whether deployed code appears to match known audited code.
+
+<Note>
+Public Explorer views are for review. Some transaction payloads, traces, staging data, and project-management controls are only available to project members.
+</Note>
+
+## Assertion Summaries
+
+Explorer displays plain-English summaries for approved assertions. These summaries are generated when the project team creates a new release.
+
+An assertion summary can include:
+
+- **Protected action**: the action the assertion is meant to block, limit, or fail when the rule is violated
+- **Unsafe condition**: the failure mode the assertion is designed to prevent
+- **Reviewer explanation**: a short explanation of why the protection matters, when available
+- **Triggers**: the conditions that cause the assertion to run
+- **Protected contracts**: the contracts the assertion is attached to
+
+Assertion summaries explain what the project says it is protecting. They are not a replacement for reviewing assertion source code, protocol contracts, or audit reports.
+
+## Operational Risk Cards
+
+Explorer can show operational risk cards for properties that can be checked from project data or on-chain evidence. These cards help reviewers understand who can change the system and how sensitive authority is configured.
+
+Operational risk cards may include:
+
+- **Signer threshold**: whether privileged ownership appears to use a threshold, such as an M-of-N multisig
+- **Timelocks**: whether critical actions appear delayed by an on-chain timelock
+- **Upgradeable**: whether deployed logic appears changeable and who appears able to change it
+- **Admin controlled**: whether privileged roles appear able to pause, upgrade, move funds, or change critical parameters
+- **Role segregation**: whether sensitive powers appear separated across roles or concentrated in one account or authority path
+
+Cards can show known values, finding counts, stale values, or **Inconclusive** when evidence is unavailable. Where available, reviewers can expand findings to inspect contract-level assessments and the evidence used.
+
+Operational risk cards do not decide whether a configuration is safe for every protocol. A multisig threshold, timelock, upgrade path, or admin role may be appropriate in one protocol and unacceptable in another. Explorer makes the configuration easier to review.
+
+## Deployed-vs-Audited Code Context
+
+Explorer can show deployed-vs-audited code context when audit evidence and deployed-code information are available.
+
+A drift check compares the commit identified by approved audit evidence with the commit resolved for currently deployed code. Results can include:
+
+- **No drift**: the audited commit and deployed commit appear to match
+- **Drift**: the audited commit and deployed commit appear to differ
+- **Inconclusive**: Explorer could not resolve one side of the comparison with enough confidence
+
+A drift check is not a new audit. **No drift** means the resolved commit comparison matched; it does not mean the protocol is risk-free. **Drift** means deployed code appears different from the audited commit; it does not say whether the difference is exploitable.
+
+Protocol teams should keep audit links, repository links, and deployment evidence current, especially after upgrades or new audit reports.
+
+## Project Evidence
+
+Protocol teams should keep project metadata current, including:
+
+- public repository links
+- audit report links
+- audit scope or commit references, where available
+- formal verification materials, where applicable
+- project descriptions
+- protected-contract labels
+- assertion names and descriptions
+
+Explorer is only as useful as the evidence connected to the project. Review project metadata whenever contracts are upgraded, assertions are deployed or removed, governance authority changes, or a new audit is published.
+
+<Warning>
+Explorer is not a certification, audit replacement, insurance product, or guarantee that a protocol cannot fail.
+</Warning>

@@ -3,15 +3,20 @@ title: 'Phylax Explorer'
 description: 'Browse public protocol protection posture, evidence, and invalidation data'
 ---
 
-The **[Phylax Explorer](/credible/dapp-explorer)** is the public dashboard that displays the security and operational risk posture of protocols that have opted into runtime enforcement. Users can find the following:
+The **[Phylax Explorer](/credible/dapp-explorer)** is the public dashboard for projects that have opted into runtime enforcement. It shows what a protocol has protected, which evidence the team has added, and what invalidation information is public.
 
-- Summaries of the actions protected by circuit breakers and assertions
-- Scenarios the assertions prevent
-- Summaries of what each assertion or circuit breaker does and the failure modes they prevent
-- If the protocol is governed by an admin multisig wallet, documentation of the breakdown of roles on the admin wallet, its signer threshold, and the time delay required when making changes
-- Documentation of whether each contract is upgradeable or not
-- Whether the current deployed protocol has meaningfully diverged from the code at the time of audit
-- All public audits uploaded by the protocol team
+Explorer can show:
+
+- Project names, descriptions, and target chains
+- Linked contract addresses
+- Active assertions protecting each contract
+- Plain-English assertion summaries, when available
+- Protected actions and unsafe conditions for approved assertions
+- Assertion implementation details, trigger conditions, and parameters
+- Operational risk cards, such as signer thresholds, timelocks, admin control, role segregation, and upgradeability, when evidence is available
+- Deployed-vs-audited code context, when audit and deployment evidence are available
+- Public audits uploaded by the protocol team
+- Limited public invalidation records, when available
 
 <Note>
 For a high-level view of how the platform interfaces with the rest of the system, see
@@ -22,6 +27,23 @@ For a high-level view of how the platform interfaces with the rest of the system
 
 - You can search for projects at any time using the search bar in the top right corner or by hitting `cmd/ctrl + k`
 - You can filter projects by network
+
+## Security Posture Evidence
+
+Explorer is designed to help users inspect protocol security information without reducing it to a score.
+
+For each public project, Explorer can show the protections that are active, the contracts they apply to, the actions they check, and the unsafe conditions they are meant to prevent. Where supporting evidence is available, Explorer can also show admin and upgrade information, audit links, and deployed-vs-audited code context.
+
+Use this view to answer questions such as:
+
+- Which contracts are protected?
+- Which assertions are active?
+- What actions cause each assertion to run?
+- What failure modes are the assertions designed to block?
+- Who appears to control upgrades or sensitive operations?
+- Does the deployed code appear to match known audited code?
+
+For more detail, see [Security Posture in Phylax Explorer](/credible/explorer-security-posture).
 
 ## Accessing Explorer
 
@@ -35,12 +57,17 @@ For a high-level view of how the platform interfaces with the rest of the system
 ## Use Cases
 
 **For Allocators and Risk Teams**
-- Review which controls a protocol has made visible
-- Compare protection coverage, operational posture, implementation history, and evidence across protocols
+- Review which controls a protocol has listed publicly
+- Compare protected contracts, active assertions, upgrade information, audit context, and evidence across protocols
 
 **For Users and Security Researchers**
 - Verify which assertions protect a protocol before interacting
-- Inspect raw evidence and public invalidation metadata when available
+- Review public evidence and invalidation metadata when available
+
+**For Protocol Teams**
+- Show users, partners, and investors what protections are active
+- Explain assertion coverage without requiring every reviewer to read source code first
+- Keep project metadata, audit links, and repository context current
 
 **For Developers**
 - Browse assertions from protocols with similar contracts
@@ -69,7 +96,7 @@ Information that is only available to the team behind the project:
 ## Why Users Trust Protected Protocols
 
 - **Public registry**: Assertions and protected contracts are visible on-chain
-- **Transparent enforcement**: Dropped transactions surface as limited public invalidation records and detailed private project invalidations
+- **Transparent enforcement**: Dropped transactions appear as limited public invalidation records and detailed private project invalidations
 - **Auditable rules**: Assertions are published Solidity, not opaque policy
 
 ## Next Steps
