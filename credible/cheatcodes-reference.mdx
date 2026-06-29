@@ -11,7 +11,7 @@ This reference lists the Credible Layer cheatcodes exposed through `credible-std
 
 Cheatcodes are grouped by API status:
 
-- **Legacy precompiles**: launch-era APIs that remain part of the legacy assertion APIs.
+- **Legacy precompiles**: existing precompiles from before the Reshiram update. They remain available for legacy assertions.
 - **Reshiram precompiles**: newer APIs based on explicit `ForkId` snapshot reads, call context, richer log and call inspection, and protection-suite helpers.
 - **Deprecated cheatcodes**: legacy fork-switching APIs. Do not use them in new assertions.
 
@@ -33,7 +33,7 @@ enum AssertionSpec {
 
 | Spec | Availability |
 | --- | --- |
-| `Legacy` | Standard launch precompile set. Reshiram-only precompiles are unavailable. |
+| `Legacy` | Standard pre-Reshiram precompile set. Reshiram-only precompiles are unavailable. |
 | `Reshiram` | Reshiram precompiles plus the non-deprecated shared APIs. Legacy-only fork-switching selectors are unavailable. |
 | `Experimental` | Unrestricted access to all available precompiles. May include untested or dangerous behavior. |
 
@@ -121,7 +121,7 @@ Use `id` with call-scoped APIs such as `PhEvm.ForkId({forkType: 2, callIndex: id
 
 ## Legacy Precompiles
 
-Legacy precompiles are the standard launch-era cheatcodes. Some are still useful, but prefer the Reshiram equivalents when you need explicit snapshot selection or call-scoped behavior.
+Legacy precompiles are the standard cheatcodes from before the Reshiram update. Some are still useful, but prefer the Reshiram equivalents when you need explicit snapshot selection or call-scoped behavior.
 
 ### `getLogs`
 

@@ -1,13 +1,13 @@
 ---
 title: 'Platform Overview'
-description: 'Overview of the Phylax platform, Explorer, and invalidation monitoring'
+description: 'Overview of the Phylax platform, The Phylax Explorer, and invalidation monitoring'
 ---
 
 The [Phylax platform](https://app.phylax.systems) is the interface for managing assertions, reviewing protocol protection posture, and monitoring invalidations. Protocol teams use it to create projects, link contracts, review releases, deploy assertions, add evidence links, and inspect events that would violate those assertions. When deploying assertions, teams choose between Staging for testing and Production for active protection.
 
-Public users, allocators, auditors, and researchers use [Phylax Explorer](/credible/dapp-explorer) to review what a protocol has protected, how those protections work, which operational properties are visible, whether deployed code appears to differ from known audited code, and what evidence supports the protocol's public security posture.
+Public users, allocators, auditors, and researchers use [The Phylax Explorer](/credible/dapp-explorer) to review what a protocol has protected, how those protections work, which operational properties are visible, whether deployed code appears to differ from known audited code, and what evidence supports the protocol's public security posture.
 
-The platform also includes public Explorer views that help protocols explain their security setup. These views can show assertion summaries, assertion triggers, operational risk cards, public audits, and deployed-vs-audited code context where evidence is available.
+The platform also includes views in The Phylax Explorer that help protocols explain their security setup. These views can show assertion summaries, assertion triggers, operational risk cards, public audits, and deployed-vs-audited code context where evidence is available.
 
 When you create a project and deploy assertions through the platform, the project remains an off-chain organizing layer. The on-chain [State Oracle](./credible-layer-contracts#state-oracle) contracts are the source of truth for which assertion IDs are attached to which contract addresses and when those assertions become active.
 
@@ -15,9 +15,9 @@ Adding an assertion or removing one is not instantaneous. Both operations pass t
 
 ## Core Components
 
-### Phylax Explorer
+### The Phylax Explorer
 
-The **[Phylax Explorer](/credible/dapp-explorer)** is the public dashboard that displays the security and operational risk posture of protocols that have opted into runtime enforcement. Users can find the following:
+**[The Phylax Explorer](/credible/dapp-explorer)** is the public dashboard that displays the security and operational risk posture of protocols that have opted into runtime enforcement. Users can find the following:
 
 - Summaries of the actions protected by circuit breakers and assertions
 - Scenarios the assertions prevent
@@ -28,7 +28,7 @@ The **[Phylax Explorer](/credible/dapp-explorer)** is the public dashboard that 
 
 ### Security Posture Evidence
 
-Explorer can organize assertion summaries, operational risk cards, and deployed-vs-audited code checks into one public project view. This helps protocol teams show what is protected, what evidence is available, and what still needs review.
+The Phylax Explorer can organize assertion summaries, operational risk cards, and deployed-vs-audited code checks into one public project view. This helps protocol teams show what is protected, what evidence is available, and what still needs review.
 
 ### Projects
 
@@ -38,8 +38,8 @@ The [Projects](/credible/dapp-projects) interface enables protocol teams to crea
 
 The [Invalidations](/credible/dapp-invalidations) page tracks transactions that violated assertions in production, or would have violated assertions in staging. Production invalidations correspond to transactions that were dropped before settlement. Staging invalidations are observe-only records that help teams tune assertions before promotion.
 
-<Frame caption="Phylax Explorer projects page">
-  <img src="/images/explorer_screenshot_dapp.png" alt="Phylax Explorer projects page showing public projects" />
+<Frame caption="The Phylax Explorer projects page">
+  <img src="/images/explorer_screenshot_dapp.png" alt="The Phylax Explorer projects page showing public projects" />
 </Frame>
 
 ## Authentication
@@ -65,10 +65,10 @@ Authentication is required to create and manage projects. Open the platform at [
 ## Getting Started
 
 <CardGroup cols={2}>
-  <Card title="Phylax Explorer" icon="search" href="/credible/dapp-explorer">
+  <Card title="The Phylax Explorer" icon="search" href="/credible/dapp-explorer">
     Browse public projects, assertions, evidence, and operational posture
   </Card>
-  <Card title="Security Posture in Explorer" icon="shield-check" href="/credible/explorer-security-posture">
+  <Card title="Security Posture in The Phylax Explorer" icon="shield-check" href="/credible/explorer-security-posture">
     Understand assertion summaries, risk cards, and audit context
   </Card>
   <Card title="Projects" icon="folder" href="/credible/dapp-projects">
