@@ -3,7 +3,7 @@ title: 'pcl CLI Reference'
 description: 'Reference documentation for `pcl` commands, options, configuration, and environment variables'
 ---
 
-`pcl` is the Credible CLI for building, testing, verifying, deploying, and downloading Credible Layer assertions.
+`pcl` is the Credible Layer CLI for local assertion development and platform operations. Use it to build and test assertions, manage projects and releases, inspect incidents, configure access and integrations, and prepare on-chain actions for an authorized wallet to sign.
 
 <Note>
 New to `pcl`? Start with the [Quickstart Tutorial](/credible/pcl-quickstart) to learn the workflow.
@@ -11,12 +11,12 @@ New to `pcl`? Start with the [Quickstart Tutorial](/credible/pcl-quickstart) to 
 
 ## Version
 
-This reference matches `pcl 1.3.3`.
+This reference matches `pcl 1.5.1`.
 
 ```bash
-pcl 1.3.3
-Commit: 864b0db687c83c4010bc4ca3fee379607a19b094
-Build Timestamp: 2026-04-30T16:20:59.647643000Z
+pcl 1.5.1
+Commit: 0fae3961ac27
+Build Timestamp: 2026-07-02T13:02:52Z
 Default Platform URL: https://app.phylax.systems
 ```
 
@@ -30,11 +30,62 @@ pcl [OPTIONS] COMMAND
 
 | Option | Description |
 |--------|-------------|
-| `-j, --json` | Emit JSON output where supported |
+| `-j, --json` | Emit strict JSON for programmatic consumers |
+| `--toon` | Emit compact TOON output for agents |
+| `--llms` | Print the CLI-native agent guide and exit |
 | `-h, --help` | Print help |
 | `-V, --version` | Print version |
 
 ## Commands
+
+### Platform workflow commands
+
+| Command | Description |
+|---------|-------------|
+| `pcl incidents` | List, inspect, export, and retry incidents |
+| `pcl projects` | List, inspect, create, update, save, or delete projects |
+| `pcl assertions` | List, inspect, and manage assertions |
+| `pcl search` | Search and inspect platform-wide metadata |
+| `pcl account` | Inspect and manage current account onboarding state |
+| `pcl contracts` | List or manage project contracts and assertion adopters |
+| `pcl releases` | List, inspect, create, preview, check, retry, deploy, or remove releases |
+| `pcl deployments` | Inspect deployments and confirm deployed assertions |
+| `pcl access` | Manage members, roles, and invitations |
+| `pcl integrations` | Manage Slack and PagerDuty integrations |
+| `pcl protocol-manager` | Manage project protocol-manager settings |
+| `pcl events` | Inspect project events and audit logs |
+
+<Note>
+The CLI prepares release deployment, release removal, and protocol-manager calldata, but it does not sign on-chain transactions. An authorized wallet must sign, and the resulting state must be confirmed afterward.
+</Note>
+
+### Operator and automation commands
+
+| Command | Description |
+|---------|-------------|
+| `pcl doctor` | Diagnose configuration, authentication, and platform reachability |
+| `pcl whoami` | Show the current local identity and token state |
+| `pcl workflows` | Show built-in, agent-friendly workflow recipes |
+| `pcl export` | Export investigation data as resumable artifacts |
+| `pcl artifacts` | Manage generated artifacts |
+| `pcl requests` | Inspect local API request logs |
+| `pcl schema` | Inspect machine-readable command and request-body schemas |
+| `pcl llms` | Print the CLI-native agent usage guide |
+| `pcl jobs` | Inspect and resume local CLI jobs |
+| `pcl api` | Discover and call the platform API when a workflow command is unavailable |
+| `pcl completions` | Generate shell completion scripts |
+
+Use the built-in recipes for common multi-step operations:
+
+```bash
+pcl workflows list
+pcl workflows show deploy-release
+pcl workflows show incident-investigation
+pcl workflows show invite-member
+pcl workflows show protocol-manager-transfer
+```
+
+### Assertion development and configuration commands
 
 | Command | Description |
 |---------|-------------|
@@ -45,6 +96,8 @@ pcl [OPTIONS] COMMAND
 | [`pcl build`](#build) | Build contracts using Phorge |
 | [`pcl verify`](#verify) | Verify assertions locally before deployment |
 | [`pcl download`](#download) | Download assertion source code for a protocol |
+
+Run `pcl COMMAND --help` for the authoritative subcommands and options in your installed version. Use `pcl schema list` for machine-readable workflow schemas.
 
 ## `test`
 
@@ -111,7 +164,10 @@ pcl apply [OPTIONS]
 |--------|-------------|
 | `--root ROOT` | Project root directory. Default: `.` |
 | `-c, --config CONFIG` | Path to `credible.toml`, relative to root or absolute. Default: `assertions/credible.toml` |
-| `--json` | Emit machine-readable output for this command |
+| `--dry-run` | Build and verify the release payload without calling the API |
+| `-j, --json` | Emit strict JSON for this command |
+| `--toon` | Emit compact TOON output for agents |
+| `--llms` | Print the CLI-native agent guide and exit |
 | `--yes` | Apply without interactive confirmation |
 | `--auto-approve` | Alias for `--yes` |
 | `-u, --api-url API_URL` | Base URL for the platform API. Default: `https://app.phylax.systems` |
@@ -130,6 +186,7 @@ pcl apply [OPTIONS]
 pcl apply
 pcl apply --root ./my-project
 pcl apply --root ./my-project -c path/to/credible.toml
+pcl apply --dry-run
 pcl apply --yes
 pcl apply --json --yes
 ```
@@ -146,7 +203,10 @@ pcl auth [OPTIONS] COMMAND
 
 | Command | Description |
 |---------|-------------|
+| `ensure` | Ensure authentication is usable or return a login challenge |
 | `login` | Login to PCL |
+| `poll` | Poll a pending device-login session once |
+| `refresh` | Refresh authentication or return a login challenge |
 | `logout` | Logout from PCL |
 | `status` | Check current authentication status |
 | `help` | Print help |
@@ -155,7 +215,10 @@ pcl auth [OPTIONS] COMMAND
 
 | Option | Description |
 |--------|-------------|
-| `-u, --auth-url AUTH_URL` | Base URL for the authentication service. Default: `https://app.phylax.systems` |
+| `-u, --auth-url AUTH_URL` | Base URL for authentication. Falls back to `PCL_AUTH_URL`, then `PCL_API_URL`, then the production app URL |
+| `-j, --json` | Emit strict JSON for this command |
+| `--toon` | Emit compact TOON output for agents |
+| `--llms` | Print the CLI-native agent guide and exit |
 | `-h, --help` | Print help |
 
 ## `config`
@@ -337,7 +400,7 @@ args = ["0x75634113D6A2fbfF5e65151ce1572195bE1d001A", "42"]
 | Variable | Used by | Description | Default |
 |----------|---------|-------------|---------|
 | `PCL_AUTH_URL` | `pcl auth` | Base URL for the authentication service | `https://app.phylax.systems` |
-| `PCL_API_URL` | `pcl apply`, `pcl download` | Base URL for the platform API | `https://app.phylax.systems` |
+| `PCL_API_URL` | Platform workflow commands, `pcl apply`, and `pcl download` | Base URL for the platform API | `https://app.phylax.systems` |
 
 ## Configuration File
 
