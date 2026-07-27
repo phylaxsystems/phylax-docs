@@ -8,7 +8,7 @@ description: "Reference for credible-std contracts, helpers, specs, and testing 
 For individual cheatcode signatures, see the [Cheatcodes API Reference](./cheatcodes-reference). For local assertion tests, see [Testing Assertions](./testing-assertions).
 
 <Warning>
-As of May 6, 2026, the latest `credible-std` exposes Reshiram helpers, but the v2 Reshiram spec is not live on Linea mainnet. Use Reshiram-only helpers for local or development workflows until Linea mainnet supports the spec.
+The current Phylax app and Linea deployment support the V1 assertion specification. `pcl` warns when an assertion uses the V2 Reshiram specification. Use Reshiram-only helpers for local or development workflows until the target deployment supports V2.
 </Warning>
 
 ## Package and Configuration
@@ -18,7 +18,7 @@ As of May 6, 2026, the latest `credible-std` exposes Reshiram helpers, but the v
 | Item | Value |
 | --- | --- |
 | Repository | `phylaxsystems/credible-std` |
-| Stable dependency | `phylaxsystems/credible-std@0.4.0` |
+| Stable dependency | `phylaxsystems/credible-std@0.6.0` |
 | Development dependency | `phylaxsystems/credible-std` |
 | Foundry remapping | `credible-std/=lib/credible-std/src/` |
 

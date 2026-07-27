@@ -10,7 +10,7 @@ This guide helps you diagnose and fix common errors when writing and testing ass
 | Error | Likely Cause | Quick Fix |
 |-------|--------------|-----------|
 | "Expected 1 assertion to be executed, but 0 were executed" | Transaction reverts or setup after `cl.assertion()` | Check trigger function, move setup before `cl.assertion()` |
-| OutOfGas error | Assertion exceeds 300k gas limit | Optimize loops, add early returns, fail fast |
+| OutOfGas error | Assertion exceeds the default 3,000,000 gas limit | Optimize loops, add early returns, fail fast |
 | `vm.load()` not available | Wrong cheatcode | Use `ph.loadStateAt()` with a `ForkId` instead |
 | Function selector errors | Wrong selector or trigger not registered | Use `Protocol.functionName.selector`, check `triggers()` |
 | Call input double-counting | Using `getAllCallInputs()` | Use specific call type function |
@@ -110,7 +110,7 @@ These errors occur when the assertion executes but fails due to issues in the as
 
 ### Gas Limit Exceeded
 
-Assertions have a **300k gas limit** per assertion function. If exceeded, the assertion reverts with `OutOfGas` - causing the transaction to be dropped even if there's no actual violation.
+Assertion execution has a default **3,000,000 gas limit**. Node operators can configure this limit. If an assertion exceeds the active limit, it reverts with `OutOfGas`—causing the transaction to be dropped even if there's no actual violation.
 
 **Symptoms:**
 

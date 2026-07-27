@@ -46,7 +46,6 @@ The current implementation is operated by Phylax Systems with a highly available
 - **Storage**: Off-chain server stores assertion bytecode and source code
 - **Access**: Publicly accessible for transparency and verification
 - **Integration**: Works with [`pcl`](/credible/glossary#pcl-cli) and the [Phylax platform](https://app.phylax.systems). See the [Architecture Overview](/credible/architecture-overview) for details.
-- **Roadmap**: Decentralization planned for 2026
 
 ## How It Works
 
@@ -64,7 +63,7 @@ Only authorized admins can deploy, modify, or remove assertions for their contra
 
 Assertion Enforcers fetch assertions from Assertion DA upon on-chain deployment:
 
-1. **On-Chain Deployment Event**: When an assertion is deployed on-chain, the `addAssertion` event is emitted
+1. **On-Chain Deployment Event**: When an assertion is deployed on-chain, the `AssertionAdded` event is emitted
 2. **Fetch Bytecode**: Assertion Enforcers detect the event and fetch the assertion bytecode from Assertion DA using the assertion ID
 3. **Cache Internally**: Store assertion bytecode in internal cache for future use
 

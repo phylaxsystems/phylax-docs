@@ -21,7 +21,7 @@ targetContract: 0x5fd84259d66Cd46123540766Be93DFE6D43130D7
 
 ### `endBlock`
 
-The last block in the range to test. The tool runs on the block range from `endBlock - blockRange` to `endBlock`.
+The last block in the range to test. When `endBlock` is greater than `blockRange`, the first tested block is `endBlock - blockRange + 1`.
 
 ```solidity
 endBlock: 31336940  // Test up to this block
@@ -29,7 +29,7 @@ endBlock: 31336940  // Test up to this block
 
 ### `blockRange`
 
-Number of blocks to test, counting backwards from `endBlock`. The tool will test blocks from `endBlock - blockRange` to `endBlock`.
+Number of blocks to test, including `endBlock`. When `endBlock` is greater than `blockRange`, the tool tests from `endBlock - blockRange + 1` through `endBlock`.
 
 ```solidity
 blockRange: 100  // Tests blocks 31336841 to 31336940 if endBlock is 31336940
@@ -57,7 +57,7 @@ assertionSelector: MyAssertion.assertionBatchAccountHealth.selector
 
 ### `rpcUrl`
 
-The RPC endpoint URL to use for fetching blockchain data. Can also be set via the `RPC_URL` environment variable.
+The RPC endpoint URL to use for fetching blockchain data. To read it from an environment variable, pass the value with `vm.envString`.
 
 ```solidity
 rpcUrl: "https://sepolia.optimism.io"

@@ -67,7 +67,7 @@ Assertions run [off-chain](/credible/glossary#off-chain-execution) with higher g
 
 **Gas Limit**
 
-Assertion functions are limited to 300,000 gas per execution. If an assertion exceeds this limit, the transaction is dropped.
+Assertion execution has a default limit of 3,000,000 gas. Node operators can configure this limit. If an assertion exceeds the active limit, the transaction is dropped.
 
 This bound keeps validation predictable under adversarial inputs. Transactions that exhaust the assertion gas budget are treated as invalid, preserving the enforcement invariant.
 
