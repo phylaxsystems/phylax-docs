@@ -24,10 +24,14 @@ Authenticate through `pcl`:
 pcl auth login
 ```
 
-1. `pcl` displays a device code and verification URL.
-2. Press Enter to open the URL in your browser, or open it manually.
-3. Authenticate via wallet, email, Google, or GitHub and approve the request.
-4. Wait for `pcl` to confirm authentication.
+1. A login link appears in your terminal
+2. Open it in your browser
+3. Authenticate via wallet, email, Google, or GitHub
+4. Enter the login code from the CLI
+
+<Frame caption="Authentication with pcl auth login">
+  <img src="/images/pcl_auth_login.webp" alt="Authentication with pcl auth login" />
+</Frame>
 
 <Note>
 Authentication links your wallet address with your `pcl` session, allowing you to manage projects that your wallet owns.
@@ -35,24 +39,28 @@ Authentication links your wallet address with your `pcl` session, allowing you t
 
 ## Step 2: Create a Project
 
-1. Open **Projects**, then click **Create a Project**.
+1. Navigate to the "Projects" tab or click "Create a Project"
 
 2. Enter project details:
    - **Project Name**: Your protocol name
-   - **Description**: Optional context about your project
-   - **Profile Image**: Optional PNG, JPEG, WebP, or SVG up to 5 MB
-   - **Network**: Confirm the displayed network
-   - **Visibility**: Enable **Hide the project from the Phylax Explorer** for a private project
+   - **Project Description**: What your project does
+   - **Target Chain**: Where your contracts are deployed
 
-3. Click **Continue**.
+3. Click "Continue to contract selection"
 
-4. In the new project, open **Contracts** and add contract addresses:
+4. Add contract addresses:
    - Enter each contract you want to protect
    - Only contracts where your wallet is authorized can be added
    - The platform verifies admin access via the network's admin verifier (often owner-based)
 
+5. Review and click "Create Project"
+
+<Frame caption="Creating a project in the platform">
+  <img src="/images/create_project_dapp.webp" alt="Create project form in the Phylax platform" />
+</Frame>
+
 <Note>
-Only authorized admins can add a contract to a project. See [Ownership Verification](/credible/ownership-verification) for details on verification methods.
+Only authorized admins can create a project for a contract. See [Ownership Verification](/credible/ownership-verification) for details on verification methods.
 </Note>
 
 ## Step 3: Apply Your Assertions
@@ -71,18 +79,26 @@ After applying via `pcl`, complete deployment in the platform:
 
 1. Navigate to your project
 
-2. Open **Releases**
+2. Click the "Deployment" tab
 
-3. Select the latest release marked **Needs Review** for the configured environment
+3. Find your assertion and click "Proceed to Review"
 
-4. Review the release diff and checks
+4. Review the release diff
 
 5. Review assertion details:
    - Assertion name and parameters
    - Target contract address
    - Trigger conditions
 
-6. Click **Deploy to Staging** or **Deploy to Production**, as shown for the release, and sign the transaction. The environment was selected in `credible.toml` when the release was created.
+6. Choose environment:
+   - **Staging**: For testing (assertions run but don't block transactions)
+   - **Production**: For active protection (assertions block violating transactions)
+
+7. Click "Deploy" and sign the transaction
+
+<Frame caption="Deploying an assertion in the platform">
+  <img src="/images/deploy_assertion_trimmed.webp" alt="Deploying Assertion" />
+</Frame>
 
 <Note>
 Adding an assertion is not immediate. The deployment transaction registers it in the on-chain [State Oracle](./credible-layer-contracts#state-oracle), and the State Oracle enforces a configured [timelock](./glossary#timelock) before the assertion becomes staged or enforced.
@@ -102,7 +118,7 @@ After deployment, manage assertions through your project dashboard:
 
 - **View Active Assertions**: See all assertions protecting your contracts
 - **Monitor Status**: Check assertion execution and triggered violations
-- **View Invalidations**: View transactions invalidated by assertions
+- **View Incidents**: View incidents that were prevented by assertions
 - **Update Assertions**: Submit new versions as your protocol evolves
 - **Remove Assertions**: Request removal when needed; the assertion remains active until the State Oracle timelock finishes
 
@@ -124,6 +140,12 @@ You've deployed an assertion to protect your protocol:
 4. **Deploy**: Complete deployment in the platform and sign transaction
 5. **Monitor**: Track assertion status in your dashboard
 
+## Video Walkthrough
+
+Full walkthrough from authentication to deployment:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/MrDVLp5UDZ0?si=tdgQEJ3Tkps2LwJA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 ## Next Steps
 
 <CardGroup cols={2}>
@@ -133,7 +155,7 @@ You've deployed an assertion to protect your protocol:
   <Card title="Test Assertions" icon="flask" href="/credible/testing-assertions">
     Test your assertions before deployment
   </Card>
-  <Card title="Invalidations" icon="warning" href="/credible/dapp-invalidations">
+  <Card title="Incidents" icon="warning" href="/credible/dapp-incidents">
     Monitor prevented violations
   </Card>
   <Card title="Ownership Verification" icon="shield-check" href="/credible/ownership-verification">

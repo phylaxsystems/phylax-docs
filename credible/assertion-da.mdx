@@ -77,7 +77,7 @@ The complete flow from assertion development to enforcement involves multiple st
 
 1. **Development**: Write and test assertions locally using `pcl`
 2. **Apply**: Run `pcl apply` to create a release on the platform. The platform stores assertion bytecode in Assertion DA and returns the assertion ID
-3. **Deployment**: Review the release for the contracts and environment configured in `credible.toml`, then sign the transaction to deploy it on-chain
+3. **Deployment**: Review the assertion in the platform, link it to specific contract addresses, choose Staging or Production environment, and sign the transaction to deploy it on-chain
 4. **Marked for Enforcement/Staging**: After the deployment transaction is accepted on-chain, the State Oracle timelock begins. During that period, the assertion is marked for enforcement (production) or marked for staging (staging environment)
 5. **Enforced/Staged**: After the timelock expires, Assertion Enforcers fetch assertions from Assertion DA and execute them during block production. Assertions become enforced or staged
 
@@ -115,7 +115,7 @@ The protocol intentionally omits bytecode validation because:
 
 <CardGroup cols={2}>
   <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
-    Learn how to create and deploy an assertion release
+    Learn how to deploy assertions with pcl apply
   </Card>
   <Card title="CLI Reference" icon="terminal" href="/credible/cli-reference">
     Complete reference for pcl commands

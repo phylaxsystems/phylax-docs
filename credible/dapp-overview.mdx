@@ -11,17 +11,17 @@ Adding an assertion or removing one is not instantaneous. Both operations pass t
 
 ## Core Components
 
-### Phylax Explorer
+### Transparency Dashboard
 
-The [Phylax Explorer](/credible/dapp-explorer) provides public visibility into projects and their assertions. Browse, search, and review which protocols are protected and how.
+The [Transparency Dashboard](/credible/dapp-transparency-dashboard) provides public visibility into projects and their assertions. Browse, search, and review which protocols are protected and how.
 
 ### Projects
 
 The [Projects](/credible/dapp-projects) interface enables protocol teams to create and manage projects, link contract addresses, and associate assertions with their contracts.
 
-### Invalidations
+### Incidents
 
-The [Invalidations](/credible/dapp-invalidations) page tracks transactions that violated assertions in production, or would have violated assertions in staging. Production invalidations correspond to transactions that were dropped before settlement. Staging invalidations are observe-only records that help teams tune assertions before promotion.
+The [Incidents](/credible/dapp-incidents) page tracks invalidations: transactions that violated assertions in production, or would have violated assertions in staging. Production invalidations correspond to transactions that were dropped before settlement. Staging invalidations are observe-only records that help teams tune assertions before promotion.
 
 <Frame caption="Phylax Explorer projects page">
   <img src="/images/explorer_screenshot_dapp.png" alt="Phylax Explorer projects page showing public projects" />
@@ -29,7 +29,7 @@ The [Invalidations](/credible/dapp-invalidations) page tracks transactions that 
 
 ## Authentication
 
-To use project management features, sign in to the platform. For CLI operations such as `pcl apply`, authenticate [`pcl`](/credible/cli-reference#auth) through the same account. The platform supports authentication via wallet, email, Google, or GitHub.
+To use project management features, you need to authenticate through [`pcl`](/credible/cli-reference#auth). The platform supports authentication via wallet, email, Google, or GitHub.
 
 <Note>
 Authentication is required to create and manage projects. Open the platform at [app.phylax.systems](https://app.phylax.systems), then use the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-1-authenticate) for the step-by-step authentication flow.
@@ -46,7 +46,7 @@ Authentication is required to create and manage projects. Open the platform at [
 ## Getting Started
 
 <CardGroup cols={2}>
-  <Card title="Phylax Explorer" icon="search" href="/credible/dapp-explorer">
+  <Card title="Transparency Dashboard" icon="search" href="/credible/dapp-transparency-dashboard">
     Browse and search public projects and assertions
   </Card>
   <Card title="Projects" icon="folder" href="/credible/dapp-projects">
@@ -55,7 +55,7 @@ Authentication is required to create and manage projects. Open the platform at [
   <Card title="Deploy Assertions" icon="rocket" href="/credible/deploy-assertions-dapp">
     Step-by-step guide to deploying assertions
   </Card>
-  <Card title="Invalidations" icon="warning" href="/credible/dapp-invalidations">
+  <Card title="Incidents" icon="warning" href="/credible/dapp-incidents">
     Track production drops and staging invalidations
   </Card>
   <Card title="Quickstart" icon="play" href="/credible/pcl-quickstart">

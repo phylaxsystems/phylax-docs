@@ -1,9 +1,9 @@
 ---
-title: 'Invalidation Notifications'
-description: 'Configure Slack and PagerDuty to receive real-time invalidation notifications'
+title: 'Incident Notifications'
+description: 'Configure Slack and PagerDuty to receive real-time incident notifications'
 ---
 
-Set up Slack and PagerDuty integrations to receive notifications when [assertion invalidations](/credible/dapp-invalidations) occur in your Credible Layer projects.
+Set up Slack and PagerDuty integrations to receive notifications when [assertion incidents](/credible/dapp-incidents) occur in your Credible Layer projects.
 
 <Note>
 Looking for the high-level adoption flow? See [How to Plan a Platform Integration](/credible/dapp-integration).
@@ -15,13 +15,17 @@ Looking for the high-level adoption flow? See [How to Plan a Platform Integratio
 2. Go to **Settings** in the navigation bar
 3. Select **Slack** or **PagerDuty** from the "Integrations" section
 
+<Frame caption="Adding Notification Integration">
+  <img src="/images/add-notification-integration-credible-dapp.webp" alt="Adding Notification Integration" />
+</Frame>
+
 ## Slack Integration
 
-The Slack integration sends formatted invalidation notifications to a channel of your choice using Slack's Incoming Webhooks.
+The Slack integration sends formatted incident notifications to a channel of your choice using Slack's Incoming Webhooks.
 
 <Steps>
 <Step title="Create a Slack App">
-1. In the Credible Layer Slack settings, click **Connect to Slack**
+1. In the Credible Layer Settings page, click **Create a Slack App**
 2. This opens Slack's app creation page with a pre-filled manifest. No manual configuration needed
 3. Select the workspace where you want to receive notifications
 4. Click **Create**
@@ -31,7 +35,7 @@ The Slack integration sends formatted invalidation notifications to a channel of
 1. In your newly created Slack app, go to **Features → Incoming Webhooks**
 2. Toggle **Activate Incoming Webhooks** to **On**
 3. Click **Add New Webhook to Workspace**
-4. Select the channel where you want invalidation notifications
+4. Select the channel where you want incident notifications
 5. Click **Allow**
 </Step>
 
@@ -59,7 +63,7 @@ Copy this URL.
 
 ## PagerDuty Integration
 
-The PagerDuty integration creates PagerDuty incidents when assertion invalidations occur, using the Events API v2.
+The PagerDuty integration creates incidents in PagerDuty when assertion violations occur, using the Events API v2.
 
 <Steps>
 <Step title="Create a PagerDuty Service Integration">
@@ -75,7 +79,7 @@ The PagerDuty integration creates PagerDuty incidents when assertion invalidatio
 After adding the integration, you'll see the **Integration Key** (also called Routing Key). This is a 32-character alphanumeric string. Copy this key.
 
 <Tip>
-Click **Connect to PagerDuty** in the Credible Layer settings to open PagerDuty's integration guide.
+Click the **PagerDuty Integration Guide** button in the Credible Layer Settings page for direct access to PagerDuty's official documentation.
 </Tip>
 </Step>
 
@@ -86,28 +90,28 @@ Click **Connect to PagerDuty** in the Credible Layer settings to open PagerDuty'
 </Step>
 
 <Step title="Test the Integration">
-1. After saving, click **Send Test Invalidation**
-2. Verify the PagerDuty incident appears in your PagerDuty service
+1. After saving, click **Send Test Notification**
+2. Verify the incident appears in your PagerDuty service
 </Step>
 </Steps>
 
 ## What Gets Notified
 
-Both integrations send notifications when [assertion invalidations](/credible/dapp-invalidations) occur. Notifications include:
+Both integrations send notifications when [assertion incidents](/credible/dapp-incidents) occur. Notifications include:
 
 - Project name and affected contract
 - Network/chain information
 - Transaction details (hash, block number)
 - Assertion violation reason
-- Direct link to view the invalidation in the dashboard
+- Direct link to view the incident in the dashboard
 
-## How Invalidations Are Grouped
+## How Incidents Are Grouped
 
-You receive one notification per invalidation group, not per transaction. An invalidation group contains transactions that violate the same assertion for the same assertion adopter, chain, and environment within a 60-minute window.
+You receive one notification per incident, not per transaction. An incident is defined as an assertion being invalidated within a one-hour time window.
 
-If an attacker crafts multiple transactions that all violate the same assertion, they are grouped together within that window. After 60 minutes without violations, a new invalidation creates a new group.
+If an attacker crafts multiple transactions that all violate the same assertion, these are grouped into a single incident since they represent the same logical attack. After one hour without violations, a new invalidation creates a new incident.
 
-This prevents notification spam while ensuring you're alerted to distinct security events. See [Invalidations](/credible/dapp-invalidations#how-invalidations-are-grouped) for more details.
+This prevents notification spam while ensuring you're alerted to distinct security events. See [Incidents](/credible/dapp-incidents#how-incidents-are-grouped) for more details.
 
 <Note>
 This grouping logic is our initial approach and may be refined based on user feedback.
@@ -136,19 +140,19 @@ Removing an integration stops all notifications but does not delete historical d
 | Slack webhook URL rejected | Ensure the URL starts with `https://hooks.slack.com/services/` |
 | PagerDuty key rejected | Verify the key is exactly 32 alphanumeric characters |
 | Test notification not received | Check that the integration is correctly configured in Slack/PagerDuty |
-| No notifications on invalidations | Verify the integration shows as "configured" in Settings |
+| No notifications on incidents | Verify the integration shows as "configured" in Settings |
 
 ## Security
 
 - Webhook URLs and routing keys are stored securely and never displayed in full after saving
-- Project admins and editors can configure integrations
+- Only project managers can configure integrations
 - Test notifications are rate-limited to prevent abuse
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Invalidations" icon="warning" href="/credible/dapp-invalidations">
-    Learn about invalidation monitoring
+  <Card title="Incidents" icon="warning" href="/credible/dapp-incidents">
+    Learn about incident monitoring
   </Card>
   <Card title="Projects" icon="folder" href="/credible/dapp-projects">
     Manage your projects
