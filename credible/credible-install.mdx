@@ -12,21 +12,20 @@ description: 'This page explains how to install the Phylax Credible Layer (`pcl`
 The fastest and easiest way to install `pcl` is using Brew:
 
 ```bash
-brew tap phylaxsystems/pcl
-brew install phylax
+brew install phylax/pcl/phylax
 ```
 
 This will install the `pcl` binary.
 
 ### Option 2: Install with Cargo
 
-Another convenient way to install `pcl` is using Cargo. It does require a couple of pre-requisites though:
+Another way to install `pcl` is using Cargo. It requires:
 
-- **Rust Stable** (version 1.81 or later) or **Rust Nightly** (version 1.80 or later)
+- **rustup**
 - **Git**
 
 ```bash
-cargo +nightly install --git https://github.com/phylaxsystems/credible-sdk --locked pcl
+cargo +nightly-2026-01-07 install --git https://github.com/phylaxsystems/pcl --locked pcl
 ```
 
 <Note>
@@ -40,18 +39,18 @@ This will install the `pcl` binary in your Cargo installation directory (typical
 This option is recommended if you want more control over the build process or prefer to build from source.
 
 Prerequisites:
-- **Rust Stable** (version 1.81 or later) or **Rust Nightly** (version 1.80 or later)
+- **rustup**
 - **Git**
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/phylaxsystems/credible-sdk
-   cd credible-sdk
+   git clone https://github.com/phylaxsystems/pcl
+   cd pcl
    ```
 
 2. Build the CLI:
    ```bash
-   cargo build --release --bin pcl
+   cargo build --release --package pcl
    ```
 
 <Note>
