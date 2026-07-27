@@ -154,7 +154,7 @@ When backtesting completes, transactions are categorized into different result t
 - Your assertion reverted when validating this transaction
 - **Most Common Causes:**
   - **False positive:** Your assertion logic incorrectly flags legitimate protocol behavior (most common)
-  - **Gas limit exceeded:** Assertion ran out of gas (300k limit)
+  - **Gas limit exceeded:** Assertion ran out of gas (3,000,000 by default)
   - **Assertion bug:** Logic error in your assertion code
   - **Known exploit:** If testing against a historical exploit block, this is expected behavior
 - **Recommended Action:**

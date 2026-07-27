@@ -18,7 +18,7 @@ Use this page for short answers. If you are trying to complete a task, go to the
 ### What is the Phylax Credible Layer?
 The Credible Layer is a network extension that enables developers to link security rules to their smart contracts on-chain.
 
-These rules are defined in Solidity, executed off-chain, and enforced by the network during block building. Since these rules are verifiable, apps can turn implicit security assumptions into an explicit security posture using our transparency dashboard so that users can trust the apps they use.
+These rules are defined in Solidity, executed off-chain, and enforced by the network during block building. Since these rules are verifiable, apps can turn implicit security assumptions into an explicit security posture using Phylax Explorer so that users can inspect the protections behind the apps they use.
 
 **Learn More:**
 - [Credible Layer Overview](/credible/credible-layer-overview) - Non-technical introduction
@@ -55,13 +55,13 @@ While audits provide point-in-time code reviews, the Credible Layer offers conti
 - [Writing Assertions Guide](/credible/write-first-assertion)
 - [Assertions Book](/assertions-book/assertions-book-intro)
 
-### What is the transparency dashboard?
-The transparency dashboard is a tool that allows anyone to view public projects and their active assertion posture.
+### What is Phylax Explorer?
+Phylax Explorer is the public interface for viewing public projects and their active assertion posture.
 It is useful for end users because they can review what protections a protocol has made visible, while developers can use it to learn from assertions used by protocols with similar contracts.
 
 **Learn More:**
 - [Deploy Assertions](/credible/deploy-assertions-dapp)
-- [Glossary - Transparency Dashboard](/credible/glossary#transparency-dashboard)
+- [Glossary - Phylax Explorer](/credible/glossary#phylax-explorer)
 
 ### Is the Credible Layer a SaaS protocol?
 No. The Credible Layer is a protocol with a product surface around it: the platform and `pcl` help teams author, review, deploy, and monitor assertions, while the on-chain registry remains the source of truth for active assertion state.
@@ -146,7 +146,7 @@ considered invalid and is dropped before it can be included in a block.
 
 **Learn More:**
 - [Assertion Enforcer](/credible/assertion-enforcer)
-- [Incidents](/credible/dapp-incidents)
+- [Invalidations](/credible/dapp-invalidations)
 
 ### What are cheatcodes and how do they help?
 
@@ -178,11 +178,11 @@ Editing an assertion is straightforward:
 Yes, you can copy and adapt assertions from other protocols and use them to protect your own protocol.
 You should make sure that the assertions are compatible with your protocol.
 It will make the most sense to copy assertions for standard libraries and interfaces.
-You can inspect public assertion posture on the transparency dashboard. Some project and invalidation details are only visible to project managers and collaborators.
+You can inspect public assertion posture in Phylax Explorer. Some project and invalidation details are only visible to project managers and collaborators.
 
 **Learn More:**
 - [Assertions Book](/assertions-book/assertions-book-intro)
-- [Transparency Dashboard](/credible/dapp-transparency-dashboard)
+- [Phylax Explorer](/credible/dapp-explorer)
 
 ---
 

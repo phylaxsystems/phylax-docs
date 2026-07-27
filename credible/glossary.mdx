@@ -54,7 +54,7 @@ Learn more: [Assertion Enforcer](/credible/assertion-enforcer)
 ### Platform
 The [Phylax platform](https://app.phylax.systems) is the web application interface for interacting with the Credible Layer. It allows protocol teams and end-users to deploy, manage, and view assertions and projects.
 
-### Transparency Dashboard
+### Phylax Explorer
 A public interface for browsing projects, protected contracts, active assertions, and limited invalidation metadata. Detailed project management data, staging invalidations, transaction payloads, and traces are only available in private project views.
 
 ### Sidecar
@@ -164,10 +164,10 @@ The ability to inspect the rules and registry state behind a protocol's Credible
 
 ## Prevention
 
-### Incident
-A security event representing the invalidation of an assertion over a one-hour time period. Multiple dropped transactions can belong to the same incident if they violate the same assertion within that window. This grouping treats repeated attempts to exploit the same vulnerability as a single logical attack.
+### Invalidation
+A transaction that violated an assertion protecting a contract. The platform groups transactions that violate the same assertion for the same assertion adopter, chain, and environment within a 60-minute window.
 
-Learn more: [Incidents](/credible/dapp-incidents)
+Learn more: [Invalidations](/credible/dapp-invalidations)
 
 ### Revert
 What happens at the EVM/Solidity level when an assertion function detects that a transaction violates the rules defined in the assertion. When an assertion reverts, it signals that the transaction would result in an undesired state. The sidecar detects this revert and notifies the sequencer that the transaction should be dropped.
@@ -186,7 +186,7 @@ The process of creating a release on the platform using `pcl apply`. This comman
 Learn more: [Apply Assertions](/credible/apply-assertions) | [pcl Reference](/credible/cli-reference#apply)
 
 ### Deployment
-The process of reviewing an assertion, linking it to a contract, and signing the transaction to deploy it on-chain. Deployment includes choosing whether to deploy to Staging or Production environment. The deployment transaction must succeed for the assertion to be deployed on-chain.
+The process of reviewing a release for the environment configured in `credible.toml` and signing its on-chain deployment transaction. The deployment transaction must succeed for the assertions in the release to be deployed on-chain.
 
 ### Staging
 A mirrored chain environment used for testing assertions without affecting production. Assertions run on staging to observe behavior, but transactions are not dropped if they break assertion rules. This allows protocol teams to test assertions safely before deploying to production.

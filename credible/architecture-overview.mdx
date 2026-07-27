@@ -77,13 +77,13 @@ flowchart LR
 
 The diagram shows two main flows:
 
-**Development Flow**: Developers use [`pcl`](/credible/apply-assertions) to develop, test, and deploy assertions. Running `pcl apply` compiles assertion code and creates a release on the [Phylax platform](https://app.phylax.systems), which handles storing it in [Assertion DA](/credible/assertion-da). The platform deploys assertions to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts) so they can be enforced by the network.
+**Development Flow**: Developers use [`pcl`](/credible/apply-assertions) to develop and test assertions. Running `pcl apply` compiles assertion code and creates a release on the [Phylax platform](https://app.phylax.systems), which handles storing it in [Assertion DA](/credible/assertion-da). An authorized protocol manager then reviews the release and signs its deployment transaction to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts).
 
 **Runtime Flow**: The block builder or sequencer sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer uses its registry snapshot (from on-chain events) and cached assertion bytecode (from [Assertion DA](/credible/assertion-da)) to execute relevant assertions via [PhEVM](/credible/phevm). Valid transactions are included in blocks; invalid transactions are dropped.
 
 ### How It Works
 
-1. **Assertion Deployment**: Developers write assertions and deploy them via `pcl apply`, which creates a release on the platform. The platform stores assertion bytecode in Assertion DA and deploys on-chain
+1. **Assertion Deployment**: Developers write assertions and create a release with `pcl apply`. The platform stores assertion bytecode in Assertion DA, and an authorized protocol manager signs the on-chain deployment
 2. **Transaction Validation**: The network sends transactions to the Assertion Enforcer during block production
 3. **Assertion Execution**: The Assertion Enforcer simulates each transaction and validates it against relevant assertions using PhEVM
 4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the block builder or sequencer
@@ -128,17 +128,17 @@ flowchart LR
 The Assertion Enforcer is integrated with the block builder. During block production, the block builder invokes the Assertion Enforcer to validate transactions before including them.
 </Note>
 
-## Incident Lifecycle (Public View)
+## Invalidation Lifecycle (Public View)
 
-When an assertion is violated, the incident is recorded and exposed for transparency and alerts.
+When an assertion is violated, the invalidation is recorded and exposed for transparency and alerts.
 
 ```mermaid
 ---
-title: Incident Lifecycle
+title: Invalidation Lifecycle
 ---
 flowchart LR
     ENFORCER["Assertion Enforcer"] --> PLATFORM["Phylax Platform"]
-    PLATFORM --> DASH["Transparency Dashboard"]
+    PLATFORM --> DASH["Phylax Explorer"]
     PLATFORM --> ALERTS["Slack/PagerDuty Alerts"]
 
     classDef enforcer fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff

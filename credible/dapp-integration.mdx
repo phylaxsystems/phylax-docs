@@ -21,7 +21,7 @@ Teams follow the same underlying steps. The CLI is used to author and deploy ass
 is used to manage deployments and monitoring.
 
 - **CLI authoring**: write assertions locally and create a release with `pcl apply`
-- **Platform management**: link contracts, stage or deploy, and monitor incidents
+- **Platform management**: link contracts, stage or deploy, and monitor invalidations
 
 ## End-to-End Flow
 
@@ -36,7 +36,7 @@ flowchart LR
   Platform --> Registry[On-Chain Registry]
   Registry --> Enforcer[Assertion Enforcer]
   Enforcer --> Outcome[Block Inclusion Decision]
-  Outcome --> Incidents[Incidents + Dashboard]
+  Outcome --> Invalidations[Invalidations + Explorer]
 ```
 
 ## What You Control
@@ -79,7 +79,7 @@ Learn more about ownership checks in [Ownership Verification](/credible/ownershi
 
 - Assertions cover critical protocol invariants and admin operations
 - Staging assertions are validated before moving to production
-- Teams review incidents and iterate on coverage over time
+- Teams review invalidations and iterate on coverage over time
 
 ## Next Steps
 
