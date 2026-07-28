@@ -3,7 +3,7 @@ title: 'Assertion Enforcer'
 description: 'The sidecar component that orchestrates assertion validation during block production'
 ---
 
-The Assertion Enforcer is a sidecar component that validates transactions against [assertions](/credible/glossary#assertion) during block production. It operates alongside the network's [sequencer](/credible/glossary#sequencer) or [block builder](/credible/glossary#block-builder), intercepting transactions and determining which should be included in blocks.
+The Assertion Enforcer is a sidecar component that validates transactions against [assertions](/credible/glossary#assertion) during block production. It operates alongside the network's [sequencer](/credible/glossary#sequencer) or [block builder](/credible/glossary#block-builder), reporting which candidate transactions violate active assertions.
 
 ## Role in the System
 
@@ -12,8 +12,8 @@ The Assertion Enforcer operates inside the block production pipeline:
 1. Receives candidate transactions from the block builder or sequencer
 2. Identifies which assertions apply to each transaction
 3. Invokes [PhEVM](/credible/phevm) to execute assertions against transaction states
-4. Returns validation results (valid/invalid) to the network
-5. Only valid transactions are included in blocks
+4. Returns validation results to the network
+5. The network integration applies its inclusion policy to those results
 
 ## Sidecar Architecture
 
@@ -96,10 +96,10 @@ flowchart LR
 
 ## Block Building Integration
 
-The Assertion Enforcer integrates with block builders to ensure only valid transactions enter blocks:
+The Assertion Enforcer integrates with block builders so that the network can apply assertion-validation results during block production:
 
-- Transactions that would violate assertions are dropped before block inclusion
-- The block builder or sequencer receives clear valid/invalid signals
+- The block builder or sequencer receives validation results for candidate transactions
+- The network integration determines how those results affect inclusion
 - Block production continues normally with validated transactions
 
 ## Performance Model
@@ -129,7 +129,7 @@ These controls keep block-building resources predictable and help protocol teams
 ## Operational Expectations (Public)
 
 - **Non-invasive**: Runs alongside existing block builders without changing consensus rules
-- **Deterministic**: Results are based on on-chain state and assertion code only
+- **Deterministic**: Given the same state, transaction, and assertion code, validation results are deterministic
 - **Staging support**: Networks can validate assertions before enforcing them in production
 - **Transparent outcomes**: Incidents are visible in the platform and dashboard
 

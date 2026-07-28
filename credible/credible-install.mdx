@@ -17,65 +17,6 @@ brew install phylax/pcl/phylax
 
 This will install the `pcl` binary.
 
-### Option 2: Install with Cargo
-
-Another way to install `pcl` is using Cargo. It requires:
-
-- **rustup**
-- **Git**
-
-```bash
-cargo +nightly-2026-01-07 install --git https://github.com/phylaxsystems/pcl --locked pcl
-```
-
-<Note>
-If above command fails, try updating Rust with `rustup update` and try again.
-</Note>
-
-This will install the `pcl` binary in your Cargo installation directory (typically `~/.cargo/bin` on Unix-like systems). Make sure this directory is in your PATH.
-
-### Option 3: Build from Source
-
-This option is recommended if you want more control over the build process or prefer to build from source.
-
-Prerequisites:
-- **rustup**
-- **Git**
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/phylaxsystems/pcl
-   cd pcl
-   ```
-
-2. Build the CLI:
-   ```bash
-   cargo build --release --package pcl
-   ```
-
-<Note>
-If above command fails, try updating Rust with `rustup update` and try again.
-</Note>
-
-3. The compiled binary will be available in the `target/release` directory.
-
-4. (Optional) Add the binary to your PATH for easier access:
-   ```bash
-   # System-wide installation (requires admin privileges)
-   cp target/release/pcl /usr/local/bin/
-   
-   # Or for a user-local installation
-   cp target/release/pcl ~/.local/bin/
-   ```
-
-   You can place the binary in any directory that's in your PATH. Choose a location that works best for your system configuration.
-
-   Alternatively, you can create an alias in your shell configuration file (like `.bashrc`, `.zshrc`, etc.) that points to the absolute path of the binary:
-   ```bash
-   # Add to your shell config file
-   alias pcl="/path/to/pcl/target/release/pcl"
-   ```
-
 ## Verifying Installation
 
 To verify that `pcl` is installed correctly, run:

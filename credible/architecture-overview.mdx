@@ -53,9 +53,9 @@ flowchart LR
         PhEVM["PhEVM"]
     end
 
-    CLI -->|"Apply"| PLATFORM
+    CLI -->|"Create release"| PLATFORM
     PLATFORM -->|"Store"| DA
-    PLATFORM -->|"Deploy"| REGISTRY
+    PLATFORM -->|"Coordinate lifecycle"| REGISTRY
 
     VALIDATOR -->|"Candidate Tx"| PhEVM
     PhEVM -->|"Valid/Invalid"| VALIDATOR
@@ -77,17 +77,17 @@ flowchart LR
 
 The diagram shows two main flows:
 
-**Development Flow**: Developers use [`pcl`](/credible/apply-assertions) to develop, test, and deploy assertions. Running `pcl apply` compiles assertion code and creates a release on the [Phylax platform](https://app.phylax.systems), which handles storing it in [Assertion DA](/credible/assertion-da). The platform deploys assertions to the on-chain [Credible Layer Contracts](/credible/credible-layer-contracts) so they can be enforced by the network.
+**Development Flow**: Developers use [`pcl`](/credible/apply-assertions) to develop, test, and prepare assertions for deployment. Running `pcl apply` compiles assertion code and creates a release on the [Phylax platform](https://app.phylax.systems), which handles storing it in [Assertion DA](/credible/assertion-da). An on-chain lifecycle action, such as `pcl deploy` or the platform deployment flow, then activates the release through the [Credible Layer Contracts](/credible/credible-layer-contracts).
 
-**Runtime Flow**: The block builder or sequencer sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer uses its registry snapshot (from on-chain events) and cached assertion bytecode (from [Assertion DA](/credible/assertion-da)) to execute relevant assertions via [PhEVM](/credible/phevm). Valid transactions are included in blocks; invalid transactions are dropped.
+**Runtime Flow**: The block builder or sequencer sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer uses its registry snapshot (from on-chain events) and cached assertion bytecode (from [Assertion DA](/credible/assertion-da)) to execute relevant assertions via [PhEVM](/credible/phevm). The network integration applies its inclusion policy to the resulting validation report.
 
 ### How It Works
 
-1. **Assertion Deployment**: Developers write assertions and deploy them via `pcl apply`, which creates a release on the platform. The platform stores assertion bytecode in Assertion DA and deploys on-chain
+1. **Assertion Release and Activation**: Developers write assertions and create a release with `pcl apply`. The platform stores the artifact in Assertion DA; a separate on-chain lifecycle action activates it
 2. **Transaction Validation**: The network sends transactions to the Assertion Enforcer during block production
 3. **Assertion Execution**: The Assertion Enforcer simulates each transaction and validates it against relevant assertions using PhEVM
 4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the block builder or sequencer
-5. **Security Enforcement**: Only valid transactions are included in blocks, preventing security violations before they reach the blockchain
+5. **Network Policy**: The network integration uses the validation result when deciding whether to include the transaction
 
 ## Transaction Flow
 
@@ -170,7 +170,7 @@ For details on the assertion validation process, see [Assertion Enforcer](/credi
 
 ### Assertion Enforcer
 
-The [Assertion Enforcer](/credible/assertion-enforcer) is a sidecar that orchestrates transaction validation. It identifies which assertions apply to incoming transactions, invokes PhEVM to execute them, and makes inclusion/exclusion decisions based on the results.
+The [Assertion Enforcer](/credible/assertion-enforcer) is a sidecar that orchestrates transaction validation. It identifies which assertions apply to incoming transactions and invokes PhEVM to execute them. The network integration applies its inclusion policy to the resulting validation report.
 
 ### PhEVM (Phylax EVM)
 

@@ -14,7 +14,7 @@ Assertion DA is managed by the platform. When you run [`pcl apply`](/credible/cl
 Assertion DA serves two primary functions:
 
 1. **Persistent Storage**: Maintains EVM bytecode of assertions in an accessible location
-2. **Integrity Verification**: Validates that on-chain assertion IDs match the Keccak256 hash of the actual assertion bytecode
+2. **Integrity Verification**: Binds an assertion ID to its deployable creation data
 
 ## Key Concepts
 
@@ -22,18 +22,18 @@ Before diving into how Assertion DA works, it's important to understand two key 
 
 ### Assertion ID
 
-The assertion ID is deterministically derived from the assertion bytecode:
+The assertion ID is deterministically derived from deployable creation data:
 
 ```
-Assertion ID = Keccak256(Deployable_Assertion_EVM_Bytecode)
+Assertion ID = Keccak256(Creation_Bytecode ++ Encoded_Constructor_Arguments)
 ```
 
-Where `Deployable_Assertion_EVM_Bytecode` is the flattened smart contract code and the constructor arguments.
+The bytecode and encoded constructor arguments are stored separately in Assertion DA and combined to reconstruct the deployment data.
 
 This ensures:
 - Each unique assertion has a unique identifier
 - Assertion integrity can be verified by recomputing the hash
-- Not compilable bytecode will fail execution deterministically, so no validation is needed at submission time
+- Submission compiles the Solidity source in a Dockerized `solc` environment before the artifact is stored
 
 ### Assertion DA Prover Signature
 
@@ -55,7 +55,7 @@ When you create a release using [`pcl apply`](/credible/cli-reference#apply), th
 
 1. `pcl apply` compiles assertion contracts to EVM bytecode
 2. The platform uploads flattened source code and compiler options to Assertion DA
-3. An assertion ID (Keccak256 hash of the bytecode) and DA prover signature are generated
+3. An assertion ID (the Keccak256 hash of creation bytecode plus encoded constructor arguments) and DA prover signature are generated
 
 Only authorized admins can deploy, modify, or remove assertions for their contracts. This is enforced on-chain by the Credible Layer smart contracts, which verify administrative authority (such as owner-based checks) before allowing assertion management operations. The on-chain State Oracle contracts also enforce the configured timelock for both adding and removing assertions. Ownership verification will be expanded and improved in future versions to support additional ownership patterns. See [Ownership Verification](/credible/ownership-verification) for details.
 
@@ -94,18 +94,15 @@ For a detailed view of how these components interact, see the [System Architectu
 - **Flexibility**: Enables future improvements without base layer changes
 - **Additional Metadata**: Supports metadata that wouldn't be feasible on-chain, such as instant source code verification for transparency and auditing
 
-### Why No On-Chain Bytecode Validation?
+### Why Compilation Happens Off-Chain
 
-The protocol intentionally omits bytecode validation because:
-- [PhEVM](/credible/glossary#phevm-phylax-evm) execution is deterministic
-- Not compilable bytecode will consistently fail execution
-- This allows Assertion Enforcers to safely discard invalid assertions without verification overhead
+Assertion DA compiles submitted Solidity source off-chain, then the on-chain lifecycle uses the resulting deployment-data hash and availability signature. This keeps compilation and artifact storage outside the State Oracle while binding the on-chain assertion identifier to the exact creation data that enforcers later retrieve.
 
 ## Security Considerations
 
 **Availability**: The highly available infrastructure ensures consistent uptime. Assertion Enforcers cache assertion bytecode locally, so existing enforced assertions continue operating even during potential downtime. Only new assertion deployments require Assertion DA connectivity.
 
-**Integrity**: The Keccak256 hash verification ensures assertions haven't been modified. Each assertion ID uniquely corresponds to its bytecode.
+**Integrity**: The Keccak256 hash verification ensures assertions haven't been modified. Each assertion ID uniquely corresponds to its creation bytecode and encoded constructor arguments.
 
 **Transparency**: Assertions can be retrieved via Assertion DA, enabling users and auditors to verify security measures.
 
