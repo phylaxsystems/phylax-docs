@@ -57,6 +57,29 @@ Restart your agent after installation if it does not discover the new skills in 
 
 Use the skill name in your request so the intended workflow is unambiguous.
 
+## Start with a high-level prompt
+
+You can describe the intended outcome and let the skills determine the required `pcl` workflow. Include the protocol, target environment, authoritative sources, release contents, and verification boundary.
+
+For example:
+
+```text
+Use the Agentic PCL skills to deploy an Aave V3 Horizon project end to end on
+staging.
+
+Find and verify the authoritative deployed contract addresses on-chain. Create
+credible.toml using the latest reviewed Aave V3 assertions. Create the platform
+project and release. Verify that the release is correct, then set the project
+profile image from the specified official brand asset and deploy it.
+
+RPC: <RPC URL or secure location>
+Signer: <keystore or secure credential location>
+Project branding: <official asset source and requested profile image>
+
+Do not print, copy, or commit signing credentials. Ask for clarification if
+sources conflict or any requested project metadata is ambiguous.
+```
+
 ## Orient the agent with the installed CLI
 
 Current versions of `pcl` expose machine-readable guidance for agents. Include this instruction in your prompt:
