@@ -1,0 +1,91 @@
+---
+title: 'Agentic PCL'
+description: 'Use an AI coding agent to create, test, and deploy Credible Layer assertion projects with pcl'
+---
+
+This guide shows you how to equip an AI coding agent to operate `pcl`, from creating an assertion project through deploying it with the Phylax platform.
+
+Phylax publishes reusable instructions in the [agent-skills repository](https://github.com/phylaxsystems/agent-skills). These skills give compatible agents the project structure, safety boundaries, and `pcl` workflows needed to complete a task instead of relying on a large one-off prompt.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- [`pcl` installed](./credible-install)
+- An agent that supports the [Agent Skills format](https://agentskills.io), such as Codex or Claude Code
+- A local protocol repository the agent can inspect and edit
+- Clearly defined protocol invariants
+
+For deployment, you also need a target chain, an RPC endpoint, and access to the protocol manager wallet.
+
+Authenticate with the platform for your target network before starting the agent. See [How to Deploy Projects Through Agentic PCL](./agentic-pcl-deploy#1-authenticate-manually) for the Linea and Ethereum commands.
+
+<Warning>
+An agent can edit code, create platform resources, and broadcast on-chain transactions. Review its plan and local changes before authorizing remote mutations. Require a successful dry run and explicit approval before any production deployment.
+</Warning>
+
+## Install the Phylax agent skills
+
+Install the two PCL workflow skills from GitHub:
+
+<CodeGroup>
+
+```bash Codex
+npx github:phylaxsystems/agent-skills install pcl-assertion-workflow --agent codex
+npx github:phylaxsystems/agent-skills install deploy-credible-assertions --agent codex
+```
+
+```bash Claude Code
+npx github:phylaxsystems/agent-skills install pcl-assertion-workflow --agent claude-code
+npx github:phylaxsystems/agent-skills install deploy-credible-assertions --agent claude-code
+```
+
+</CodeGroup>
+
+The [agent-skills repository](https://github.com/phylaxsystems/agent-skills) also includes focused skills for invariant design, assertion implementation, testing, backtesting, trigger optimization, and troubleshooting.
+
+<Note>
+Restart your agent after installation if it does not discover the new skills in the current session.
+</Note>
+
+## Choose the workflow
+
+| Goal | Skill | What the agent should do |
+| --- | --- | --- |
+| Create an assertion project | `pcl-assertion-workflow` | Inspect the protocol, create the assertion project structure, configure dependencies, and run local tests |
+| Deploy through the platform | `deploy-credible-assertions` | Use the existing authentication, check RPC configuration, create or resolve the platform project, create a release, and activate it on-chain |
+
+Use the skill name in your request so the intended workflow is unambiguous.
+
+## Orient the agent with the installed CLI
+
+Current versions of `pcl` expose machine-readable guidance for agents. Include this instruction in your prompt:
+
+```text
+Before acting, inspect the installed pcl version, its machine-readable agent
+guide, and the help for the relevant workflow command. Treat the installed CLI
+as the source of truth. Prefer top-level workflow commands, structured JSON
+output, and the next actions returned by pcl.
+```
+
+This prevents the agent from inventing flags or relying on a workflow from another `pcl` version.
+
+## Keep a human in the approval loop
+
+Authenticate with the target platform yourself before starting the deployment agent. Then give the agent autonomy for inspection, local file changes, builds, and tests. Require it to pause for:
+
+- Any choice between staging and production
+- Access to a signer or keystore
+- Platform mutations
+- On-chain broadcasts
+
+Do not paste a private key into the conversation or commit it to the repository. Prefer a Foundry keystore and provide its password through a file outside the project.
+
+<CardGroup cols={2}>
+  <Card title="Create a Project with an Agent" icon="folder-plus" href="./agentic-pcl-create-project">
+    Bootstrap and validate an assertion project locally
+  </Card>
+  <Card title="Deploy Projects Through Agentic PCL" icon="rocket" href="./agentic-pcl-deploy">
+    Create a platform project and activate a release on-chain
+  </Card>
+</CardGroup>

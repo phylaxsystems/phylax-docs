@@ -7,6 +7,15 @@ An [assertion](/credible/glossary#assertion) is a function that checks if a tran
 
 Assertions are most useful when they describe an invalid effect, not every possible path that could produce it. A protocol may not know whether a future failure comes from an oracle issue, signer compromise, integration bug, rounding error, or governance action, but it can still define the state transition that should not be allowed.
 
+## Assertion Specifications
+
+- **Legacy (V1)** exposes the original PhEVM precompiles, including mutable fork switching with `forkPreTx`, `forkPostTx`, and `forkPostCall`.
+- **Reshiram (V2)** replaces mutable fork switching with immutable `ForkId` snapshot reads and adds newer transaction and call inspection precompiles.
+
+<Warning>
+Do not use Reshiram features on Linea yet. The current Linea deployment supports only Legacy (V1); wait until Linea is upgraded to support Reshiram (V2).
+</Warning>
+
 ## How Assertions Work
 
 When a transaction is submitted to the network:

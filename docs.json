@@ -12,6 +12,10 @@
     {
       "source": "/credible/store-submit-assertions",
       "destination": "/credible/apply-assertions"
+    },
+    {
+      "source": "/credible/accelerate-with-ai",
+      "destination": "/credible/agentic-pcl"
     }
   ],
   "navigation": {
@@ -41,8 +45,15 @@
                 "group": "Set Up and Evaluate",
                 "pages": [
                   "credible/evaluate-credible-layer",
-                  "credible/credible-install",
-                  "credible/accelerate-with-ai"
+                  "credible/credible-install"
+                ]
+              },
+              {
+                "group": "Agentic PCL",
+                "pages": [
+                  "credible/agentic-pcl",
+                  "credible/agentic-pcl-create-project",
+                  "credible/agentic-pcl-deploy"
                 ]
               },
               {
