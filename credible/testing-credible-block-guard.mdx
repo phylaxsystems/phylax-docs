@@ -29,16 +29,40 @@ RPC_PORT=9545 FAIL_OPEN_THRESHOLD=5 ./examples/credible-block/script/test-credib
 
 ## Test your upgraded contract
 
-Your target and registry must be deployed or upgraded on the fresh Anvil chain started by the script. In most cases, provide commands that perform those deployments, then identify:
+The runner always starts a fresh Anvil node. It cannot test an address from a live network or another Anvil instance. Instead, give it commands that deploy the registry and deploy or upgrade your contract **after** Anvil starts.
+
+Prepare two commands in your protocol repository:
+
+1. A registry command that configures the marker account as an authorized builder and prints the registry address as its final line.
+2. A target command that deploys or upgrades your contract to use that registry and threshold, sets up required balances, roles, or approvals, and prints the target or proxy address as its final line.
+
+Then provide:
 
 - The guarded function call to execute
 - A read-only call that proves the action's state effect
 - The expected state before the call and after a successful call
 - The registry and fail-open threshold the target must use
 
+The script runs each command with `RPC_URL`, `REGISTRY_ADDRESS`, and `EXPECTED_THRESHOLD` available as environment variables. It runs the registry command first, then supplies its resulting `REGISTRY_ADDRESS` to the target command.
+
 The script verifies `credibleRegistry()(address)` and `failOpenBlockThreshold()(uint256)` by default. If your contract exposes different getters, pass `--registry-read-call` and `--threshold-read-call`. If it exposes no suitable getters, use `--config-assert-command` to run a contract-specific assertion that exits successfully only when the target uses the expected registry and threshold.
 
-The following runnable target-mode command uses the example contracts. Replace its deployment commands, guarded call, state read, and expected values with those for your contract:
+The command shape for your contract is:
+
+```shell
+./examples/credible-block/script/test-credible-upgrades.sh \
+  --registry-deploy-command 'cd /path/to/your-protocol && ./script/deploy-registry-to-anvil.sh' \
+  --target-deploy-command 'cd /path/to/your-protocol && ./script/upgrade-and-print-target.sh' \
+  --guarded-call 'yourGuardedFunction(uint256) 1000000' \
+  --state-read-call 'yourState()(uint256)' \
+  --state-before 0 \
+  --state-after 1000000 \
+  --expected-threshold 75
+```
+
+Replace the two command paths and the call/state values with your protocol's equivalents. `upgrade-and-print-target.sh` must leave the upgraded target or proxy address on its final output line. Choose `--expected-threshold` to match the threshold configured by that command.
+
+The following is a runnable reference implementation of that interface using the example contracts:
 
 ```shell
 ./examples/credible-block/script/test-credible-upgrades.sh \
@@ -50,7 +74,7 @@ The following runnable target-mode command uses the example contracts. Replace i
   --state-after 1
 ```
 
-Each deployment command must print the deployed contract address as its final line. The script supplies the RPC URL, accounts, registry address, and expected threshold as environment variables to those commands.
+Each deployment command must print its deployed contract address as its final line. The script also supplies `ADMIN_KEY`, `MARKER_KEY`, `GUARDED_KEY`, `MARKER_ADDRESS`, and `GUARDED_ADDRESS`; use them only in trusted local commands.
 
 ## What the script verifies
 
