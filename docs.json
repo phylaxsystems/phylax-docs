@@ -69,6 +69,7 @@
                 "group": "Test and Operate",
                 "pages": [
                   "credible/testing-assertions",
+                  "credible/testing-credible-block-guard",
                   "credible/testing-strategy",
                   "credible/fuzz-testing",
                   "credible/backtesting",
