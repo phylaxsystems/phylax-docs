@@ -49,7 +49,7 @@ New to assertions? Check out [What are Assertions?](/credible/assertions-overvie
 Not all assertions require checking both pre- and post-state. Understanding when to use each makes assertions more efficient.
 
 <Warning>
-As of May 6, 2026, the v2 Reshiram spec is not live on Linea mainnet. Treat Reshiram-only precompile and trigger examples as local, development, or forward-looking references until Linea mainnet supports the spec.
+The current Phylax app and Linea deployment support the V1 assertion specification. `pcl` warns when an assertion uses the V2 Reshiram specification. Treat Reshiram-only precompile and trigger examples as local or development references until the target deployment supports V2.
 </Warning>
 
 Prefer Reshiram snapshot reads for new assertions. Use explicit `PhEvm.ForkId` values with `ph.loadStateAt()` for transaction-wide comparisons, or `ph.context()` with call-scoped `ForkId` values inside an `onFnCall` assertion.

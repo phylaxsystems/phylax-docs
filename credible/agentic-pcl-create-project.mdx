@@ -1,0 +1,106 @@
+---
+title: 'How to Create a PCL Project with an Agent'
+description: 'Guide an AI coding agent through creating and testing a Credible Layer assertion project'
+---
+
+This guide shows you how to use the `pcl-assertion-workflow` skill to create a local assertion project in an existing protocol repository and verify it with `pcl`.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- Completed the [Agentic PCL setup](./agentic-pcl)
+- [`pcl` installed](./credible-install)
+- A Foundry-based protocol repository
+- Written definitions of the invariants you want to protect
+
+## 1. Start the agent in the protocol repository
+
+Give the agent access to the repository that contains the protocol contracts. Do not give it deployment credentials for this task; project creation and testing are local operations.
+
+Ask it to inspect the existing Foundry configuration, dependency layout, contracts, tests, and invariant documentation before proposing changes.
+
+## 2. Request the project
+
+Use a prompt like this:
+
+```text
+Use the pcl-assertion-workflow skill to create a Credible Layer assertion
+project in this repository.
+
+The invariants are defined in: <path or description>
+The protected contracts are: <contract paths or names>
+
+Before editing:
+1. Inspect the repository and current Foundry configuration.
+2. Explain which invariants are suitable for external-state assertions.
+3. Propose the smallest project structure and test plan.
+4. Ask before making any choice that changes the intended invariant.
+
+Create the assertion contracts, focused positive and negative tests, required
+Foundry profiles, remappings, and assertions/credible.toml. Run the relevant
+pcl tests and report the exact results.
+
+Do not authenticate, create platform resources, or deploy anything.
+```
+
+The explicit boundary at the end keeps project creation separate from deployment.
+
+## 3. Review the proposed invariants
+
+Before allowing implementation, confirm that each proposed assertion:
+
+- Protects a security-relevant property
+- Observes external state rather than duplicating a local `require`
+- Names the contracts and state transitions it covers
+- Has a narrow trigger strategy
+- Can be exercised by both passing and failing tests
+
+If an invariant is ambiguous, refine it before the agent writes Solidity.
+
+## 4. Review the generated project
+
+The exact structure should follow the host repository, but a typical result includes:
+
+```text
+assertions/
+├── credible.toml
+├── src/
+│   └── ExampleAssertion.a.sol
+└── test/
+    └── ExampleAssertion.t.sol
+```
+
+The agent may also update `foundry.toml`, `remappings.txt`, or dependency files. Review those changes for overlap with existing profiles and remappings.
+
+## 5. Verify the project
+
+Give the agent this verification prompt:
+
+```text
+Run the complete assertion test suite through pcl, not Forge alone. Report the
+exact command, exit status, passing and failing tests, and any warnings. Do not
+continue to deployment.
+```
+
+Review the test output and ask the agent to summarize:
+
+- Which assertion functions executed
+- Which protected calls were tested
+- How each negative test proves the assertion invalidates a transaction
+- Any invariant or execution path that remains untested
+
+<Warning>
+Passing tests do not prove that the chosen invariant is correct or complete. Review the assertion logic and threat model before moving to deployment.
+</Warning>
+
+## 6. Prepare for deployment
+
+Before handing the project to a deployment agent:
+
+- Commit or otherwise preserve the reviewed local changes
+- Confirm that `assertions/credible.toml` names every protected contract and assertion
+- Decide on staging or production
+- Identify the target chain and protocol manager wallet
+
+Continue with [How to Deploy Projects Through Agentic PCL](./agentic-pcl-deploy).

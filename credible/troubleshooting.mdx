@@ -10,7 +10,7 @@ This guide helps you diagnose and fix common errors when writing and testing ass
 | Error | Likely Cause | Quick Fix |
 |-------|--------------|-----------|
 | "Expected 1 assertion to be executed, but 0 were executed" | Transaction reverts or setup after `cl.assertion()` | Check trigger function, move setup before `cl.assertion()` |
-| OutOfGas error | Assertion exceeds 300k gas limit | Optimize loops, add early returns, fail fast |
+| OutOfGas error | Assertion exceeds the default 3,000,000 gas limit | Optimize loops, add early returns, fail fast |
 | `vm.load()` not available | Wrong cheatcode | Use `ph.loadStateAt()` with a `ForkId` instead |
 | Function selector errors | Wrong selector or trigger not registered | Use `Protocol.functionName.selector`, check `triggers()` |
 | Call input double-counting | Using `getAllCallInputs()` | Use specific call type function |
@@ -35,7 +35,7 @@ This error means your assertion never ran on the target transaction. This can oc
 - **Trigger function call fails or reverts** - The transaction may fail for various reasons. Write a test without `cl.assertion()` to isolate the issue.
 
 **Production Behavior:**
-- If an assertion reverts, the transaction is dropped and not included in the block
+- If an assertion reverts, the Enforcer returns an invalid result and the network applies its inclusion policy
 - If the assertion never executes (trigger doesn't match), the transaction proceeds normally without assertion validation
 
 **Solution (Testing):**
@@ -110,12 +110,12 @@ These errors occur when the assertion executes but fails due to issues in the as
 
 ### Gas Limit Exceeded
 
-Assertions have a **300k gas limit** per assertion function. If exceeded, the assertion reverts with `OutOfGas` - causing the transaction to be dropped even if there's no actual violation.
+Assertion execution has a default **3,000,000 gas limit**. Node operators can configure this limit. If an assertion exceeds the active limit, it reverts with `OutOfGas` and the Enforcer returns an invalid result even if there's no actual violation. The network then applies its inclusion policy.
 
 **Symptoms:**
 
 - `OutOfGas` error when running tests
-- "Unknown Revert Reason" with gas cost near 300k in backtesting results
+- "Unknown Revert Reason" with gas cost near the active assertion limit in backtesting results
 - Assertion fails consistently on complex transactions
 
 **Common Causes:**
@@ -348,7 +348,7 @@ Use `pcl test -vvv` to get detailed information:
 **What to Look For:**
 
 - Unexpected function calls between `cl.assertion()` and target function
-- Gas consumption hitting the 300k limit
+- Gas consumption hitting the active assertion limit
 - Wrong addresses in call traces (indicates `vm.prank()` issues)
 - Revert locations to identify assertion vs protocol failures
 

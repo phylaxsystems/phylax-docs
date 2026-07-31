@@ -20,7 +20,7 @@ Before deploying, authenticate with the Credible Layer:
 pcl auth login
 ```
 
-This opens a browser window where you can authenticate with your wallet, email, Google, or GitHub. Once approved, `pcl` automatically detects the authentication.
+`pcl` displays a device code and verification URL. Press Enter to open the URL in your browser, authenticate with your wallet, email, Google, or GitHub, and approve the request. `pcl` then detects the completed authentication.
 
 <Note>
 Your account must be linked to the wallet address that owns the contracts listed in `credible.toml`. The platform verifies on-chain ownership (via the admin verifier, typically `owner()`) before allowing assertion deployment. See [Ownership Verification](/credible/ownership-verification) for details.

@@ -9,8 +9,8 @@ This page summarizes the Credible Layer trust model in plain language.
 
 - **Deterministic enforcement**: given the same on-chain state and assertion code, enforcement
   results are deterministic
-- **Pre-execution protection**: transactions that violate deployed assertions are excluded from
-  blocks by networks running the enforcer
+- **Pre-execution validation**: the enforcer reports assertion failures before block inclusion;
+  enforcing network integrations can exclude those transactions
 - **Transparent rules**: assertions are public Solidity code and can be audited by anyone
 
 ## Scope of Guarantees
