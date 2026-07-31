@@ -42,6 +42,7 @@ The commands below cover the assertion development workflow documented on this p
 |---------|-------------|
 | [`pcl test`](#test) | Run tests using Phorge |
 | [`pcl apply`](#apply) | Preview and apply declarative deployment changes from `credible.toml` |
+| [`pcl deploy`](#deploy) | Create or resolve a project, create a release, and activate it on-chain |
 | [`pcl auth`](#auth) | Authenticate the CLI with your Credible Layer Platform account |
 | [`pcl config`](#config) | Manage CLI configuration |
 | [`pcl build`](#build) | Build contracts using Phorge |
@@ -135,6 +136,55 @@ pcl apply --root ./my-project
 pcl apply --root ./my-project -c path/to/credible.toml
 pcl apply --yes
 pcl apply --json --yes
+```
+
+## `deploy`
+
+Creates or resolves a platform project, verifies or sets its protocol manager, creates a release, activates the release on-chain, and confirms the deployment.
+
+```bash
+pcl deploy [OPTIONS]
+```
+
+### `deploy` Options
+
+| Option | Description |
+|--------|-------------|
+| `--root ROOT` | Project root directory. Default: `.` |
+| `-c, --config CONFIG` | Path to `credible.toml`, relative to root or absolute. Default: `assertions/credible.toml` |
+| `--yes`, `--auto-approve` | Proceed without interactive confirmations |
+| `--dry-run` | Build and verify locally, report which steps would act, and make no changes |
+| `-u, --api-url API_URL` | Base URL for the platform API. Defaults to `PCL_API_URL`, then `https://ethereum.phylax.systems` |
+| `--private-key PRIVATE_KEY` | Hex-encoded private key used to sign transactions and challenges. Can also be set with `PCL_PRIVATE_KEY` |
+| `--account ACCOUNT` | Foundry keystore name from `~/.foundry/keystores` |
+| `--keystore-password KEYSTORE_PASSWORD` | Foundry keystore password. Can also be set with `PCL_KEYSTORE_PASSWORD` |
+| `--keystore-password-file PATH` | File containing the Foundry keystore password. Can also be set with `PCL_KEYSTORE_PASSWORD_FILE` |
+| `--rpc-url RPC_URL` | RPC endpoint used to broadcast transactions. Can also be set with `PCL_RPC_URL` |
+| `--confirmations CONFIRMATIONS` | Confirmations to wait for after broadcasting. Values below the platform requirement are rejected |
+| `--tx-timeout-secs SECONDS` | Transaction confirmation timeout. Default: `300` |
+| `--project-name PROJECT_NAME` | Project name used when `credible.toml` has no `project_id`; overrides `project_name` in the file |
+| `--chain-id CHAIN_ID` | Chain ID used when creating a project. Existing project chains are read from the platform |
+| `--skip-protocol-manager` | Skip protocol-manager verification or configuration |
+| `--check-timeout-secs SECONDS` | Timeout for deployment-blocking release checks. Default: `600` |
+| `-j, --json` | Emit strict JSON output |
+| `--llms` | Print the CLI-native LLM usage guide and exit |
+| `-h, --help` | Print help |
+
+### `deploy` Behavior
+
+- `--dry-run` returns after building and verifying the local release payload. It does not authenticate, resolve a project, validate a chain, or inspect the protocol manager.
+- Without `--dry-run`, the command requires authentication, project information, an RPC endpoint, and a signer unless the relevant step is already complete or explicitly skipped.
+- If `credible.toml` has no `project_id`, provide a project name and chain ID so the command can create the project.
+- Existing projects use the chain recorded by the platform.
+- If `--yes` is omitted, the command requests confirmation before mutations and broadcasts.
+- The command observes existing state before each step so an interrupted workflow can resume.
+
+### `deploy` Examples
+
+```bash
+pcl deploy --dry-run
+pcl deploy --account protocol-manager --rpc-url https://example-rpc.invalid
+pcl deploy --project-name my-protocol --chain-id 84532 --account protocol-manager --rpc-url https://example-rpc.invalid --yes --json
 ```
 
 ## `auth`

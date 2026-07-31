@@ -31,16 +31,18 @@ Install the two PCL workflow skills from GitHub:
 <CodeGroup>
 
 ```bash Codex
-npx github:phylaxsystems/agent-skills install pcl-assertion-workflow --agent codex
-npx github:phylaxsystems/agent-skills install deploy-credible-assertions --agent codex
+npx github:phylaxsystems/agent-skills#851cd274972efa6047393eaa61a935ed56f66b3b install pcl-assertion-workflow --agent codex
+npx github:phylaxsystems/agent-skills#851cd274972efa6047393eaa61a935ed56f66b3b install deploy-credible-assertions --agent codex
 ```
 
 ```bash Claude Code
-npx github:phylaxsystems/agent-skills install pcl-assertion-workflow --agent claude-code
-npx github:phylaxsystems/agent-skills install deploy-credible-assertions --agent claude-code
+npx github:phylaxsystems/agent-skills#851cd274972efa6047393eaa61a935ed56f66b3b install pcl-assertion-workflow --agent claude-code
+npx github:phylaxsystems/agent-skills#851cd274972efa6047393eaa61a935ed56f66b3b install deploy-credible-assertions --agent claude-code
 ```
 
 </CodeGroup>
+
+The commit pin ensures that both commands install the reviewed skill versions shown in this guide.
 
 The [agent-skills repository](https://github.com/phylaxsystems/agent-skills) also includes focused skills for invariant design, assertion implementation, testing, backtesting, trigger optimization, and troubleshooting.
 

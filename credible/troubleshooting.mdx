@@ -35,7 +35,7 @@ This error means your assertion never ran on the target transaction. This can oc
 - **Trigger function call fails or reverts** - The transaction may fail for various reasons. Write a test without `cl.assertion()` to isolate the issue.
 
 **Production Behavior:**
-- If an assertion reverts, the transaction is dropped and not included in the block
+- If an assertion reverts, the Enforcer returns an invalid result and the network applies its inclusion policy
 - If the assertion never executes (trigger doesn't match), the transaction proceeds normally without assertion validation
 
 **Solution (Testing):**
@@ -110,7 +110,7 @@ These errors occur when the assertion executes but fails due to issues in the as
 
 ### Gas Limit Exceeded
 
-Assertion execution has a default **3,000,000 gas limit**. Node operators can configure this limit. If an assertion exceeds the active limit, it reverts with `OutOfGas`—causing the transaction to be dropped even if there's no actual violation.
+Assertion execution has a default **3,000,000 gas limit**. Node operators can configure this limit. If an assertion exceeds the active limit, it reverts with `OutOfGas` and the Enforcer returns an invalid result even if there's no actual violation. The network then applies its inclusion policy.
 
 **Symptoms:**
 

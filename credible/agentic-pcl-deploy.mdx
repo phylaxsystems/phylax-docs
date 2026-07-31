@@ -104,14 +104,11 @@ credible.toml.
 
 Review the result for:
 
-- The selected environment and chain
-- The project that will be created or reused
 - The protected contract addresses
 - The assertions and constructor arguments
-- The wallet expected to act as protocol manager
 - Any warnings or failed verification
 
-Do not continue if the dry run differs from your intended deployment.
+The dry run returns after building and verifying the release payload. It does not authenticate, resolve a platform project, validate a chain, or inspect the protocol manager. Confirm those values separately from your authenticated session, `credible.toml`, and deployment prompt before continuing.
 
 ## 5. Approve the deployment
 
@@ -148,7 +145,7 @@ Require the agent to report:
 Keep these identifiers with your deployment record. You can inspect the project and release through the platform or the corresponding `pcl projects` and `pcl releases` commands.
 
 <CardGroup cols={2}>
-  <Card title="pcl Reference" icon="terminal" href="./cli-reference">
+  <Card title="pcl Deploy Reference" icon="terminal" href="./cli-reference#deploy">
     Review commands, configuration, and machine output
   </Card>
   <Card title="Platform Deployment" icon="window" href="./deploy-assertions-dapp">
