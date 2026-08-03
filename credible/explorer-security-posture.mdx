@@ -1,73 +1,114 @@
 ---
 title: 'Security Posture in The Phylax Explorer'
-description: 'How The Phylax Explorer shows assertion summaries, operational risk cards, and deployed-vs-audited code context'
+description: 'How The Phylax Explorer presents release-generated protection summaries, operational authority and change paths, audit evidence, and deployed-code context'
 ---
 
-The Phylax Explorer helps reviewers understand what a protocol has protected and what evidence is available. Instead of asking users to find assertion code, audit reports, repository links, governance settings, and contract metadata in different places, The Phylax Explorer puts the available project information in one public view.
+The Phylax Explorer is a public diligence surface for protocols that use runtime enforcement. It brings together the protocol's protected actions, assertion details, operational authority, contract change paths, and supporting evidence so reviewers can evaluate the underlying facts in one place.
 
-The Phylax Explorer does not score protocols and does not claim that a protocol is safe. It shows facts that users can inspect: which assertions are active, which actions they check, which unsafe conditions they are meant to prevent, how admin authority is configured, and whether deployed code appears to match known audited code.
+The Phylax Explorer does not assign a security score or claim that a protocol is safe. Instead, it shows what can be verified and links reviewers to the contracts, accounts, assertion source code, and security documents that support each finding.
 
 <Note>
 Public views in The Phylax Explorer are for review. Some transaction payloads, traces, staging data, and project-management controls are only available to project members.
 </Note>
 
-## Assertion Summaries
+## Start with the project overview
 
-The Phylax Explorer displays plain-English summaries for approved assertions. These summaries are generated when the project team creates a new release.
+The project overview establishes the scope of the review. It identifies the network, protocol manager, public repository, protected contracts, active assertions, and available audits or security documents.
 
-An assertion summary can include:
+The overview also includes a plain-English project summary and a list of protected actions. The project team creates these summaries as part of each new release, so the description reflects the assertions included in that release rather than a static project description.
 
-- **Protected action**: the action the assertion is meant to block, limit, or fail when the rule is violated
+<Frame caption="Project overview with a release-generated protection summary">
+  <img src="/images/phylax-project-overview.png" alt="Project overview showing project information, active assertion status, protected actions, and a release-generated summary" />
+</Frame>
+
+## Understand what each assertion protects
+
+Open an assertion to review the protection at assertion level. The summary connects the assertion's intent to the deployed contracts and execution conditions that a technical reviewer can inspect.
+
+An assertion page can show:
+
 - **Unsafe condition**: the failure mode the assertion is designed to prevent
-- **Reviewer explanation**: a short explanation of why the protection matters, when available
-- **Triggers**: the conditions that cause the assertion to run
-- **Protected contracts**: the contracts the assertion is attached to
+- **Protected action**: the transaction behavior the assertion blocks when its rule is violated
+- **Linked contracts**: the contracts covered by the assertion
+- **Triggers**: the calls or state changes that cause the assertion to execute
+- **Source code**: the implementation behind the plain-English description
 
-Assertion summaries explain what the project says it is protecting. They are not a replacement for reviewing assertion source code, protocol contracts, or audit reports.
+These summaries make assertion behavior easier to assess, but they do not replace review of the assertion source code, protocol contracts, or audit reports.
 
-## Operational Risk Cards
+<Frame caption="Review an assertion summary, linked contracts, and triggers">
+  <video controls playsInline preload="metadata" aria-label="Assertion summary walkthrough" style={{ width: "100%" }}>
+    <source src="/images/agentic-summaries.mp4" type="video/mp4" />
+  </video>
+</Frame>
 
-The Phylax Explorer can show operational risk cards for properties that can be checked from project data or on-chain evidence. These cards help reviewers understand who can change the system and how sensitive authority is configured.
+## Review operational authority and change paths
 
-Operational risk cards may include:
+The **Operational Risk** section describes how the reviewed contracts can change. It begins with a project-level finding and four summaries that answer:
 
-- **Signer threshold**: whether privileged ownership appears to use a threshold, such as an M-of-N multisig
-- **Timelocks**: whether critical actions appear delayed by an on-chain timelock
-- **Upgradeable**: whether deployed logic appears changeable and who appears able to change it
-- **Admin controlled**: whether privileged roles appear able to pause, upgrade, move funds, or change critical parameters
-- **Role segregation**: whether sensitive powers appear separated across roles or concentrated in one account or authority path
+- **Who holds change power?** The authority mechanisms that control the reviewed paths, such as multisig wallets.
+- **What is the fewest approval count?** The lowest signer threshold among the reviewed paths.
+- **How soon can a change execute?** The shortest enforced waiting period found across those paths.
+- **Can another route avoid protections?** Whether an alternate path can bypass approvals or delays used elsewhere.
 
-Cards can show known values, finding counts, stale values, or **Inconclusive** when evidence is unavailable. Where available, reviewers can expand findings to inspect contract-level assessments and the evidence used.
+These are project-wide summaries of the least-protected reviewed route. They should be read with the detailed evidence below them, not as independent ratings.
 
-Operational risk cards do not decide whether a configuration is safe for every protocol. A multisig threshold, timelock, upgrade path, or admin role may be appropriate in one protocol and unacceptable in another. The Phylax Explorer makes the configuration easier to review.
+<Frame caption="Review authority, approval thresholds, execution delays, and protocol change paths">
+  <video controls playsInline preload="metadata" aria-label="Operational risk walkthrough" style={{ width: "100%" }}>
+    <source src="/images/phylax-operational-risk.mp4" type="video/mp4" />
+  </video>
+</Frame>
 
-## Deployed-vs-Audited Code Context
+### Who can do what
 
-The Phylax Explorer can show deployed-vs-audited code context when audit evidence and deployed-code information are available.
+The **Who can do what** table maps each affected contract to its authority mechanism and controlling account. For a multisig-controlled route, it also shows the signer threshold and links to the authority account on the block explorer.
 
-A drift check compares the commit identified by approved audit evidence with the commit resolved for currently deployed code. Results can include:
+This separates the question of who can authorize a change from the question of what that authority can change.
 
-- **No drift**: the audited commit and deployed commit appear to match
-- **Drift**: the audited commit and deployed commit appear to differ
-- **Inconclusive**: The Phylax Explorer could not resolve one side of the comparison with enough confidence
+### How protocol changes can happen
 
-A drift check is not a new audit. **No drift** means the resolved commit comparison matched; it does not mean the protocol is risk-free. **Drift** means deployed code appears different from the audited commit; it does not say whether the difference is exploitable.
+The **How protocol changes can happen** section expands each reviewed route. A route identifies:
 
-Protocol teams should keep audit links, repository links, and deployment evidence current, especially after upgrades or new audit reports.
+- what can change, such as fees, roles, availability, authorized solvers, or contract implementation
+- which contract is affected and whether it is direct or upgradeable
+- the account or signer group that authorizes the change
+- the minimum approvals required
+- the earliest execution time, including any enforced delay
+- the contracts and accounts that make up the route
+- whether the route can execute sooner than another route protecting the same outcome
 
-## Project Evidence
+This route-level view matters because one contract can expose several administrative paths with different controls. A delayed upgrade path does not provide a guaranteed reaction period if another authority can make a comparable sensitive change immediately.
 
-Protocol teams should keep project metadata current, including:
+For example, [Lagoon](https://app.phylax.systems/projects/lagoon) shows immediate owner-controlled routes for availability, parameters, and roles alongside delayed proxy-upgrade routes. The project-level finding calls out that the immediate parameter routes can execute sooner than the one-day upgrade delay.
 
-- public repository links
-- audit report links
-- audit scope or commit references, where available
-- formal verification materials, where applicable
-- project descriptions
-- protected-contract labels
-- assertion names and descriptions
+<Frame caption="Review Lagoon's protocol change paths and route controls">
+  <video controls playsInline preload="metadata" aria-label="Lagoon protocol change paths walkthrough" style={{ width: "100%" }}>
+    <source src="/images/lagoon-op-risk.mp4" type="video/mp4" />
+  </video>
+</Frame>
 
-The Phylax Explorer is only as useful as the evidence connected to the project. Review project metadata whenever contracts are upgraded, assertions are deployed or removed, governance authority changes, or a new audit is published.
+### Contracts with no change route
+
+When the analysis finds no active material change path for a contract at the pinned block, The Phylax Explorer lists it under **Contracts with no change route**. The 0x-settler project demonstrates this distinction: contracts with reviewed owner-controlled solver routes appear separately from contracts for which no material change route was active.
+
+This is evidence about the analyzed state, not a permanent immutability guarantee. Review the pinned analysis, contract links, and any staleness warning before relying on the result.
+
+## Compare deployed and audited code
+
+When both audit evidence and deployed-code information are available, The Phylax Explorer can compare the commit identified by the audit with the commit resolved for the deployed implementation.
+
+Results can include:
+
+- **No drift**: the audited commit and resolved deployed commit appear to match
+- **Drift**: the resolved deployed code appears to differ from the audited commit
+- **Inconclusive**: one side of the comparison could not be resolved with enough confidence
+
+A drift check is not a new audit. **No drift** only means the resolved commits matched. **Drift** identifies a difference that may require review; it does not determine whether the difference is exploitable.
+
+## Inspect the supporting evidence
+
+Protocol teams can publish repository links, audit reports, audited commit references, and formal verification materials. The **Audits and security documents** table makes every public report uploaded by the project team available from the project overview.
+
+Evidence should be reviewed whenever contracts are upgraded, assertions are added or removed, governance authority changes, or a new audit is published. Operational-risk analysis can also become stale as on-chain configuration changes, so check its update warning and underlying contract links before making a decision.
 
 <Warning>
 The Phylax Explorer is not a certification, audit replacement, insurance product, or guarantee that a protocol cannot fail.

@@ -7,6 +7,8 @@ Projects are the organizational unit in the [Phylax platform](https://app.phylax
 
 ## What are Projects?
 
+Projects enable you to manage all your protocol's assertions from a single interface. The project itself is an off-chain organizing layer; the on-chain [State Oracle](/credible/credible-layer-contracts#state-oracle) remains the source of truth for which assertions are active for each protected contract.
+
 A project groups together:
 - One or more smart contract addresses
 - Assertions that protect those contracts
@@ -14,9 +16,6 @@ A project groups together:
 - Staging and production invalidations
 - Notification settings and project events
 - Collaborators and role-based access
-- Project metadata, including name, description, target chain, repository links, and supporting security evidence links where available
-
-Projects enable you to manage all your protocol's assertions from a single interface. The project itself is an off-chain organizing layer; the on-chain [State Oracle](/credible/credible-layer-contracts#state-oracle) remains the source of truth for which assertions are active for each protected contract.
 
 ## Creating a Project
 
@@ -57,21 +56,23 @@ Once created, you can manage your project through the project dashboard:
 - See project events in the audit log, including assertion, contract, release, notification, collaborator, and invalidation activity
 - See all [invalidations](/credible/dapp-invalidations)
 
-### Add or Remove Contracts
-- Add new contract addresses to your project
-- Remove contracts that are no longer active
-- Update contract information
+### Create a Release
+- Run `pcl apply` to build your assertions and create a pending release
+- Review the requested assertion changes before confirming the release
+- Open the returned release link in the platform
 
-### Deploy Assertions
-- Deploy assertions to your project via `pcl apply`
-- Review release changes through the platform
-- View all active assertions protecting your contracts
+### Deploy the Release Onchain
+- Review the release and link assertions to protected contracts
+- Choose Staging or Production
+- Sign the deployment transaction
 
-<Frame caption="Deploying an Assertion">
-  <img src="/images/deploy_assertion_trimmed.webp" alt="Deploy Assertions" />
+<Frame caption="Reviewing and deploying a release">
+  <video controls playsInline preload="metadata" aria-label="Release review and deployment walkthrough" style={{ width: "100%" }}>
+    <source src="/images/release-review.mp4" type="video/mp4" />
+  </video>
 </Frame>
 
-For detailed instructions on deploying assertions, see the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-4-deploy-the-assertion).
+For detailed instructions, see the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-4-deploy-the-assertion).
 
 ### Project Settings
 
@@ -120,37 +121,19 @@ Useful evidence includes:
 
 This metadata helps reviewers understand what is protected, which code was reviewed, and whether deployed code appears to match known audited code.
 
-## Preparing a Project for Public Review
-
-Before sharing a project page with partners, auditors, investors, or users, review the following:
-
-1. Confirm the project name, description, networks, and repository links are current.
-2. Confirm protected contracts are labeled clearly.
-3. Review active assertions and make sure their summaries describe the protected actions and unsafe conditions.
-4. Add or update audit report links and audit scope information where available.
-5. Review operational risk cards for signer thresholds, timelocks, upgradeability, admin control, and role segregation.
-6. Review deployed-vs-audited code context after contract upgrades or new audit reports, where supported.
-7. Check whether any fields are inconclusive or stale before relying on a page in The Phylax Explorer for review.
-
-The Phylax Explorer is most useful when the project's evidence is current. If a protocol upgrades contracts, adds assertions, removes assertions, changes governance authority, or publishes a new audit, review the project metadata.
-
 ## Project Dashboard
 
 The project dashboard provides a unified view of your project's security:
 
-- **Active Assertions**: See all assertions currently protecting your contracts
-- **Assertion Summaries**: Review descriptions of protected actions, unsafe conditions, and reviewer-facing explanations where available
-- **Assertion Deployment**: Deploy or remove assertions for your project
-- **Ready for Deployment**: Assertions submitted via `pcl` that need to be linked and deployed
-- **Assertion Status**: Monitor execution status and any triggered violations. Status shows whether assertions are marked for enforcement/staging or enforced/staged
-- **Operational Risk**: Review signer thresholds, timelocks, upgradeability, admin control, and role segregation where evidence is available
-- **Audit Context**: Review audit coverage and deployed-vs-audited code context where supported
-- **Recent Invalidations**: View detailed invalidations for your project (see [Invalidations](/credible/dapp-invalidations#project-invalidations-manager-view))
-- **Audit Log**: Review project changes, assertion lifecycle events, collaborator changes, release activity, and invalidations over time
-- **Project Settings**: Update project details and manage contracts
+- **Assertions**: View active and pending assertions
+- **Releases**: Review and deploy changes
+- **Operational Risk**: Review authority and change paths
+- **Evidence**: Review audits and deployed-code context
+- **Invalidations**: Inspect assertion violations
+- **Audit Log and Settings**: Review activity and manage the project
 
 <Frame caption="Project dashboard view for the project owner">
-  <img src="/images/project_dashboard_with_incident.png" alt="Project overview showing releases, contracts, active assertions, status, and network" />
+  <img src="/images/phylax-project-overview.png" alt="Project overview showing project information, active assertion status, protected actions, and linked contracts" />
 </Frame>
 
 ### Audit Log
