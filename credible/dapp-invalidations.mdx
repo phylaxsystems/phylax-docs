@@ -1,30 +1,23 @@
 ---
 title: 'Invalidations'
-description: 'View assertion invalidations recorded by the Credible Layer'
+description: 'Review invalidation events, invalidating transactions, assertion results, and replay evidence'
 ---
 
-Invalidations are records created when a transaction violates an assertion protecting a contract. In production, the [Enforcer](/credible/glossary#assertion-enforcer) applies the network's documented enforcement policy. On enforced transaction paths, the transaction is dropped before settlement. In staging, the platform records that the transaction would have been dropped, but the transaction still lands on the live network because staging is observe-only.
+An invalidation is recorded when a transaction violates an assertion protecting a contract. In production, the [Enforcer](/credible/glossary#assertion-enforcer) applies the network's documented enforcement policy. On enforced transaction paths, the transaction is rejected before settlement. In staging, the platform records that the transaction would have been rejected, but the transaction can still land on the live network because staging is observe-only.
 
 <Note>
 For the end-to-end flow, see the invalidation lifecycle diagram in
 [Architecture Overview](/credible/architecture-overview#invalidation-lifecycle-public-view).
 </Note>
 
-## How Invalidations Are Grouped
+## How invalidations are organized
 
-The platform groups invalidating transactions over a configured time window. Multiple invalidating transactions can belong to the same invalidation group if they violate the same assertion and target contract or function within that window.
+An invalidation event identifies the assertion and contract involved in a violation. An event can contain one or more invalidating transactions, allowing related attempts to be reviewed together while preserving transaction-level evidence.
 
-**Why group invalidating transactions?**
+The platform separates invalidations by environment:
 
-- An attacker may craft multiple transactions that all violate the same assertion; these can represent the same logical attack
-- The grouping window reduces repeated alerts for the same attempted violation
-- After the window passes without new violations, a new invalidation likely indicates a different attempt and creates a new group
-
-This grouping ensures you receive meaningful alerts without being spammed by repeated notifications for the same security event.
-
-<Note>
-This is our initial approach to invalidation grouping and may be refined based on user feedback.
-</Note>
+- **Production**: violations detected on enforced assertion paths
+- **Staging**: observe-only violations recorded while an assertion is being evaluated before production promotion
 
 ## Project Invalidations (Manager View)
 
@@ -32,105 +25,97 @@ This is our initial approach to invalidation grouping and may be refined based o
 
 Full invalidation evidence is private by default. Project teams can opt in to share invalidation data with Phylax support or participating network security teams when they need help debugging or coordinating a response.
 
-### Access and Navigation
+### Invalidation list
 
-- Open a project and select the **Invalidations** tab.
+Open a project and select **Invalidations**. The page shows the current assertion status, recent invalidation activity, and separate **Production** and **Staging** tabs.
 
-<Frame caption="Project view header with the Invalidations tab selected (screenshot placeholder)">
-  <img src="/images/incidents_project.png" alt="Invalidations tab" />
+Each invalidation row includes:
+
+- **Date occurred**
+- **Invalidation ID**
+- **Assertion affected**
+- **Contract affected**
+- **Network**
+- **Environment**
+
+Select a row to open the invalidation event.
+
+<Frame caption="Project invalidations organized by production and staging environment">
+  <img src="/images/all-invalidations.png" alt="Project invalidations page showing production and staging tabs with the date, invalidation ID, affected assertion, affected contract, network, and environment" />
 </Frame>
 
+### Invalidation event
 
-### Invalidations
+The invalidation event page summarizes the event and lists its invalidating transactions.
 
-The invalidations list shows recent assertion invalidations for the project, ordered by most recent.
+Event details include:
 
-Each row includes:
+- **Date occurred**
+- **Invalidation ID**
+- **Public Ref ID**, when available
+- **Assertion affected**
+- **Contract affected**
+- **Environment**
 
-- **Timestamp**
-- **Contract Affected**
-- **Assertion Triggered**
-- **Invalid Transactions** count
-- **Environment** (staging or production)
-- **Status** when available, such as dropped, landed, pending triage, or observed in staging
+The **Invalid Transactions** table lists the date, transaction hash, sender, and recipient for each transaction in the event. Select a transaction to open its replay.
 
-Click a row to open the invalidation detail view.
-
-<Frame caption="Project invalidations list view">
-  <img src="/images/incident_overview.png" alt="Invalidations overview" />
+<Frame caption="Invalidation event with event metadata and invalidating transactions">
+  <img src="/images/invalidation-event.png" alt="Invalidation event showing the date, invalidation ID, public reference ID, affected assertion, affected contract, environment, and invalidating transaction" />
 </Frame>
 
-### Invalidation Detail and Invalidating Transactions
+### Invalidating transaction replay
 
-The invalidation detail page summarizes the invalidation group and lists invalidating transactions.
-It includes:
+The transaction replay explains what the transaction attempted, how the protocol call executed, and why the assertion rejected it.
 
-- **Invalidation detail card** with date, contract affected, assertion triggered, assertion group, invalid transaction count, and environment
-- **Critical warning banner** if any invalidating transaction landed on-chain
-- **Invalid Transactions** list with expandable rows and action buttons
-- **Evidence context** such as assertion inputs, result status, and the reason the assertion failed where available
+The replay includes:
 
-Each invalidating transaction includes:
+- **Replay overview**: transaction status, hash, sender, recipient, transaction type, nonce, gas, and network
+- **Assertion result**: assertion name, selector, adopter, and revert reason
+- **What changed**: confirmed token, vault, Safe, and administrative events shown in execution order
+- **Execution evidence**: separate views of transaction execution and assertion evaluation
+- **Developer data**: raw transaction and assertion traces, including hidden internal calls when expanded
+- **Execution context**: block state, prior transactions, and block environment used for the replay
 
-- Transaction hash, to/from, value, calldata, and block number (if available)
-- **Open Debug View** to inspect the trace
-- **Copy Data as JSON** to export the transaction
+Transaction execution and assertion evaluation are shown separately. A protocol call can execute successfully during replay while the assertion evaluation rejects the transaction because the resulting state violates the assertion.
 
-<Frame caption="Invalidation detail with invalidating transactions"> 
-  <img src="/images/incident_tx_details.png" alt="Invalidation details" />
+<Frame caption="Review an invalidating transaction, classified changes, execution evidence, and developer data">
+  <video controls playsInline preload="metadata" aria-label="Invalidating transaction replay walkthrough" style={{ width: "100%" }}>
+    <source src="/images/invalidations.mp4" type="video/mp4" />
+  </video>
 </Frame>
 
-### Debug Trace View
+### Real-time updates and alerts
 
-The debug trace view opens from an invalidating transaction.
+New invalidations stream into the project list while it is open. Project teams can also configure external notifications:
 
-- **Transaction Attributes** panel with copy-all action
-- **Execution Context** panel (block environment + previous transactions)
-- **Transaction Trace** panel with status: pending, in progress, completed, failed, or skipped
+- **Slack**: receive invalidation notifications through a Slack integration
+- **PagerDuty**: send invalidation notifications to an incident-response workflow
 
-<Frame caption="Debug trace start">
-  <img src="/images/incident_trace.png" alt="Invalidation trace start" />
-</Frame>
-
-<Frame caption="Debug trace cont.">
-  <img src="/images/incident_trace_2.png" alt="Invalidation trace continued" />
-</Frame>
-
-### Real-Time Updates and Alerts
-
-When a project manager is viewing the invalidations list, new invalidations stream into the list in real time.
-You can also set up external alerts via webhooks:
-
-- **Slack Integration**: Configure Slack webhooks to receive invalidation notifications
-- **PagerDuty Integration**: Configure PagerDuty webhooks to receive invalidation notifications
-
-Invalidation alerts can represent an active exploit attempt, a false positive affecting legitimate protocol activity, or an assertion that needs tuning.
-
-See [Integrations](/credible/dapp-integrations) for setup instructions.
+Invalidation alerts can represent an active exploit attempt, a false positive affecting legitimate protocol activity, or an assertion that needs tuning. See [Integrations](/credible/dapp-integrations) for setup instructions.
 
 ## Invalidations in The Phylax Explorer
 
-The Phylax Explorer can show redacted aggregate invalidation history, such as a reference ID and timestamp, when that data is public. Full transaction payloads, traces, staging records, notification settings, and project-specific evidence are available only to project managers and approved collaborators.
+The Phylax Explorer can show redacted aggregate invalidation history, such as a reference ID and timestamp, when that data is public. Full transaction payloads, replay evidence, traces, staging records, notification settings, and project-specific evidence remain available only to project managers and approved collaborators.
 
-### Staging vs. Production
+## Staging vs. production
 
 | Environment | What an invalidation means | User impact |
 | --- | --- | --- |
-| Staging | The transaction would have violated an assertion under production enforcement | The transaction is recorded for review but is not dropped |
-| Production | The transaction violated an enforced assertion | The transaction is dropped before settlement on enforced paths, or handled according to the documented integration policy |
+| Staging | The transaction would have violated an assertion under production enforcement | The transaction is recorded for review but is not rejected |
+| Production | The transaction violated an enforced assertion | The transaction is rejected before settlement on enforced paths, or handled according to the documented integration policy |
 
-## Use Cases
+## Use cases
 
-- Monitor when assertions prevent violations for your projects
-- Review attempted invalid transactions targeting your protocol
-- Tune assertions based on staging invalidations before production promotion
-- Add or refine assertions based on invalidation data
+- Monitor assertion violations across production and staging
+- Review the state change and assertion result for an invalidating transaction
+- Inspect transaction execution, assertion evaluation, traces, and replay context
+- Tune assertions using staging evidence before production promotion
 
 <Warning>
 Invalidation viewing is read-only. You cannot modify or delete invalidation records.
 </Warning>
 
-## Next Steps
+## Next steps
 
 <CardGroup cols={2}>
   <Card title="Platform Overview" icon="info" href="/credible/dapp-overview">
