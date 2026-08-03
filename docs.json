@@ -20,6 +20,10 @@
     {
       "source": "/credible/dapp-incidents",
       "destination": "/credible/dapp-invalidations"
+    },
+    {
+      "source": "/credible/accelerate-with-ai",
+      "destination": "/credible/agentic-pcl"
     }
   ],
   "navigation": {
@@ -49,8 +53,15 @@
                 "group": "Set Up and Evaluate",
                 "pages": [
                   "credible/evaluate-credible-layer",
-                  "credible/credible-install",
-                  "credible/accelerate-with-ai"
+                  "credible/credible-install"
+                ]
+              },
+              {
+                "group": "Agentic PCL",
+                "pages": [
+                  "credible/agentic-pcl",
+                  "credible/agentic-pcl-create-project",
+                  "credible/agentic-pcl-deploy"
                 ]
               },
               {
@@ -66,6 +77,7 @@
                 "group": "Test and Operate",
                 "pages": [
                   "credible/testing-assertions",
+                  "credible/testing-credible-block-guard",
                   "credible/testing-strategy",
                   "credible/fuzz-testing",
                   "credible/backtesting",
@@ -166,7 +178,7 @@
                   {
                     "group": "Alternative Patterns",
                     "pages": [
-                      "credible/use-case-mappings/unsupported-use-cases/modified-keys"
+                      "credible/use-case-mappings/modified-keys"
                     ]
                   }
                 ]

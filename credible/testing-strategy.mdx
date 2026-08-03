@@ -15,7 +15,7 @@ This guide shows you how to allocate assertion testing effort across local tests
 
 ## The Testing Philosophy
 
-The most effective approach to assertion development prioritizes [staging](/credible/glossary#staging) over exhaustive local testing. In staging, assertions run against real transactions on a mirrored environment but don't drop transactions—allowing you to observe behavior safely. In [production](/credible/glossary#production), assertions actively prevent violations by dropping invalid transactions.
+The most effective approach to assertion development prioritizes [staging](/credible/glossary#staging) over exhaustive local testing. In staging, assertions run against real transactions on a mirrored environment but don't affect transaction inclusion, allowing you to observe behavior safely. In [production](/credible/glossary#production), the network applies its inclusion policy to assertion validation results.
 
 Real-world transactions reveal edge cases that would take significant effort to anticipate and mock locally.
 
@@ -45,7 +45,7 @@ Focus local testing on:
 
 - **Happy paths:** Verify assertions pass on valid transactions
 - **Known violation scenarios:** Verify assertions catch the specific violations you designed for
-- **Gas limits:** Ensure assertions stay within the 300k gas limit, especially on the happy path (which typically uses more gas since all checks run to completion)
+- **Gas limits:** Ensure assertions stay within the active gas limit—3,000,000 by default—especially on the happy path (which typically uses more gas since all checks run to completion)
 
 **What NOT to over-invest in locally:**
 - Exhaustive edge case enumeration
@@ -153,7 +153,7 @@ Before promoting to production, verify:
 - You understand how the assertion behaves across different scenarios
 
 <Warning>
-Moving to production means transactions that violate your assertion will be dropped. Ensure you have validated behavior thoroughly in staging before promoting.
+Moving to production means assertion results can affect transaction inclusion according to the network's policy. Ensure you have validated behavior thoroughly in staging before promoting.
 </Warning>
 
 ## Common Mistakes

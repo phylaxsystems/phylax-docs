@@ -1,0 +1,154 @@
+---
+title: 'How to Deploy Projects Through Agentic PCL'
+description: 'Guide an AI coding agent through creating a platform project and deploying assertions on-chain'
+---
+
+This guide shows you how to deploy a project through Agentic PCL using the `deploy-credible-assertions` skill. The agent creates or resolves a Phylax platform project, creates an assertion release, and activates it on-chain with `pcl`.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- Completed the [Agentic PCL setup](./agentic-pcl)
+- A reviewed assertion project that passes `pcl test`
+- A configured `assertions/credible.toml`
+- An authenticated `pcl` session for the target platform
+- The target chain ID and an RPC endpoint
+- Access to the protocol manager wallet through a Foundry keystore
+
+Confirm that your installed CLI supports the agentic deployment command:
+
+```bash
+pcl deploy --help
+```
+
+<Warning>
+Deployment creates remote platform state and can broadcast an on-chain transaction. Start with staging unless you explicitly intend to deploy to production, and do not approve a broadcast until you have reviewed the dry-run result.
+</Warning>
+
+## 1. Authenticate manually
+
+Complete authentication yourself before giving the agent the deployment task. The platform URL selects the target network:
+
+<CodeGroup>
+
+```bash Linea
+pcl auth login
+```
+
+```bash Ethereum
+pcl auth -u https://ethereum.phylax.systems login
+```
+
+</CodeGroup>
+
+The default `https://app.phylax.systems` platform targets Linea.
+
+After login, `pcl` remembers the selected platform and uses it as the default for subsequent platform commands. Confirm the session before starting the agent:
+
+```bash
+pcl auth status
+```
+
+## 2. Request a deployment plan
+
+Start with a prompt that provides the required choices and sets a clear approval boundary:
+
+```text
+Use the deploy-credible-assertions skill to prepare this assertion project
+for deployment.
+
+Target platform: <https://app.phylax.systems or https://ethereum.phylax.systems>
+Target chain ID: <chain-id>
+RPC: <rpc-url or where the RPC can be found>
+Environment: staging
+Signer: Foundry keystore <account-name>
+
+Inspect the repository and credible.toml, then check the installed pcl command
+surface. Confirm the existing authentication and explain every remote or
+on-chain mutation that would be required.
+
+Do not create a project, create a release, access signing credentials, or
+broadcast a transaction until I explicitly approve the deployment.
+Never print, store, or commit secrets.
+```
+
+Use `production` only when that is your deliberate deployment target.
+
+## 3. Review `credible.toml`
+
+For a new platform project, `assertions/credible.toml` needs a project name and no `project_id`:
+
+```toml
+environment = "staging"
+project_name = "my-protocol-assertions"
+
+[contracts.my_contract]
+address = "0x1234...5678"
+name = "My Contract"
+
+[[contracts.my_contract.assertions]]
+file = "src/MyAssertion.a.sol"
+```
+
+On the first approved deployment, `pcl deploy` creates the platform project and writes its `project_id` back to `credible.toml`. Review and commit that change after deployment.
+
+## 4. Require a dry run
+
+Ask the agent to build and verify the project without changing remote or on-chain state:
+
+```text
+Do a dry run of the project deployment and verify the correctness of
+credible.toml.
+```
+
+Review the result for:
+
+- The protected contract addresses
+- The assertions and constructor arguments
+- Any warnings or failed verification
+
+The dry run returns after building and verifying the release payload. It does not authenticate, resolve a platform project, validate a chain, or inspect the protocol manager. Confirm those values separately from your authenticated session, `credible.toml`, and deployment prompt before continuing.
+
+## 5. Approve the deployment
+
+After you approve the dry-run result, use a separate prompt:
+
+```text
+Deploy the project according to the credible.toml specification and broadcast
+the deployment transactions to the specified RPC endpoints.
+```
+
+The deployment workflow:
+
+1. Creates or resolves the platform project
+2. Verifies or sets the protocol manager
+3. Builds and verifies the assertions
+4. Creates or resumes the release
+5. Waits for deployment-blocking checks
+6. Broadcasts the activation transaction
+7. Confirms the deployment with the platform
+
+`pcl deploy` observes existing state before each step. If an interruption occurs, ask the agent to inspect the structured error and rerun the same command; the workflow resumes rather than intentionally creating a duplicate release.
+
+## 6. Verify the result
+
+Require the agent to report:
+
+- Project ID
+- Release ID
+- Environment
+- Transaction hash, if a transaction was broadcast
+- Deployment outcome
+- Any remaining timelock or activation step
+
+Keep these identifiers with your deployment record. You can inspect the project and release through the platform or the corresponding `pcl projects` and `pcl releases` commands.
+
+<CardGroup cols={2}>
+  <Card title="pcl Deploy Reference" icon="terminal" href="./cli-reference#deploy">
+    Review commands, configuration, and machine output
+  </Card>
+  <Card title="Platform Deployment" icon="window" href="./deploy-assertions-dapp">
+    Review the browser-assisted platform workflow
+  </Card>
+</CardGroup>

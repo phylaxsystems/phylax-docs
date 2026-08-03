@@ -1,0 +1,83 @@
+---
+title: Modified Key Discovery
+description: Reference for discovering mapping keys written during assertion execution
+---
+
+Modified key discovery returns the keys for entries in a known Solidity mapping that were written during a transaction. Use `ph.changedMappingKeys` to enumerate written keys and `ph.mappingValueDiff` to read each entry's pre- and post-transaction values.
+
+## Status
+
+- [x] Supported by the V2 Reshiram assertion specification
+- [ ] Supported by the V1 assertion specification
+
+<Warning>
+The current Phylax app and Linea deployment support the V1 assertion specification. Use these helpers for local or development workflows until the target deployment supports V2.
+</Warning>
+
+## Interface
+
+```solidity
+function changedMappingKeys(
+    address target,
+    bytes32 baseSlot
+) external view returns (bytes[] memory keys);
+
+function mappingValueDiff(
+    address target,
+    bytes32 baseSlot,
+    bytes calldata key,
+    uint256 fieldOffset
+) external view returns (bytes32 pre, bytes32 post, bool changed);
+```
+
+`baseSlot` is the mapping's declared storage slot. Each returned key is the encoded mapping-key preimage used to derive `keccak256(key ++ baseSlot)`. For a mapping whose value is a struct, set `fieldOffset` to the field's offset from the derived entry slot.
+
+## Example
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+
+contract ModifiedBalanceAssertion is Assertion {
+    bytes32 internal constant BALANCES_SLOT = bytes32(uint256(0));
+    uint256 internal immutable MAX_BALANCE;
+
+    constructor(uint256 maxBalance_) {
+        MAX_BALANCE = maxBalance_;
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
+    function triggers() external view override {
+        registerTxEndTrigger(this.assertModifiedBalances.selector);
+    }
+
+    function assertModifiedBalances() external view {
+        address target = ph.getAssertionAdopter();
+        bytes[] memory keys = ph.changedMappingKeys(target, BALANCES_SLOT);
+
+        for (uint256 i = 0; i < keys.length; i++) {
+            (, bytes32 afterValue, bool changed) =
+                ph.mappingValueDiff(target, BALANCES_SLOT, keys[i], 0);
+
+            if (!changed) continue;
+            require(uint256(afterValue) <= MAX_BALANCE, "balance exceeds limit");
+        }
+    }
+}
+```
+
+## Behavior and Constraints
+
+- Discovery is scoped to entries written by the current transaction. It includes same-value `SSTORE` operations, for which `mappingValueDiff` returns `changed` as `false`.
+- The mapping base slot and any struct field offset must be known.
+- Discovery is best effort. Custom inline assembly or precomputed hashed storage slots can prevent the runtime from recovering a key.
+- Nested mappings are not discoverable from the outer mapping slot because the outer entry hash is used as the inner base slot rather than written to storage.
+
+## Uses
+
+- Validate limits for every balance or position modified by a transaction.
+- Reconcile modified entries against aggregate accounting.
+- Apply field-specific checks to mapping values stored as structs.

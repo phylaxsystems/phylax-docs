@@ -12,70 +12,10 @@ description: 'This page explains how to install the Phylax Credible Layer (`pcl`
 The fastest and easiest way to install `pcl` is using Brew:
 
 ```bash
-brew tap phylaxsystems/pcl
-brew install phylax
+brew install phylax/pcl/phylax
 ```
 
 This will install the `pcl` binary.
-
-### Option 2: Install with Cargo
-
-Another convenient way to install `pcl` is using Cargo. It does require a couple of pre-requisites though:
-
-- **Rust Stable** (version 1.81 or later) or **Rust Nightly** (version 1.80 or later)
-- **Git**
-
-```bash
-cargo +nightly install --git https://github.com/phylaxsystems/credible-sdk --locked pcl
-```
-
-<Note>
-If above command fails, try updating Rust with `rustup update` and try again.
-</Note>
-
-This will install the `pcl` binary in your Cargo installation directory (typically `~/.cargo/bin` on Unix-like systems). Make sure this directory is in your PATH.
-
-### Option 3: Build from Source
-
-This option is recommended if you want more control over the build process or prefer to build from source.
-
-Prerequisites:
-- **Rust Stable** (version 1.81 or later) or **Rust Nightly** (version 1.80 or later)
-- **Git**
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/phylaxsystems/credible-sdk
-   cd credible-sdk
-   ```
-
-2. Build the CLI:
-   ```bash
-   cargo build --release --bin pcl
-   ```
-
-<Note>
-If above command fails, try updating Rust with `rustup update` and try again.
-</Note>
-
-3. The compiled binary will be available in the `target/release` directory.
-
-4. (Optional) Add the binary to your PATH for easier access:
-   ```bash
-   # System-wide installation (requires admin privileges)
-   cp target/release/pcl /usr/local/bin/
-   
-   # Or for a user-local installation
-   cp target/release/pcl ~/.local/bin/
-   ```
-
-   You can place the binary in any directory that's in your PATH. Choose a location that works best for your system configuration.
-
-   Alternatively, you can create an alias in your shell configuration file (like `.bashrc`, `.zshrc`, etc.) that points to the absolute path of the binary:
-   ```bash
-   # Add to your shell config file
-   alias pcl="/path/to/pcl/target/release/pcl"
-   ```
 
 ## Verifying Installation
 

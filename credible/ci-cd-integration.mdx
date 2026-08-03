@@ -38,10 +38,9 @@ jobs:
 
       - name: Install pcl
         run: |
-          LATEST_VERSION=$(curl -s https://api.github.com/repos/phylaxsystems/credible-sdk/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
-          curl -L "https://github.com/phylaxsystems/credible-sdk/releases/download/${LATEST_VERSION}/pcl-${LATEST_VERSION}-linux-x86_64.tar.gz" | tar -xz
-          sudo mv pcl/pcl /usr/local/bin/
-          sudo chmod +x /usr/local/bin/pcl
+          LATEST_VERSION=$(curl -fsSL https://api.github.com/repos/phylaxsystems/pcl/releases/latest | jq -r '.tag_name')
+          curl -fsSL "https://github.com/phylaxsystems/pcl/releases/download/${LATEST_VERSION}/pcl-${LATEST_VERSION}-linux-x86_64.tar.gz" | tar -xz
+          sudo install -m 0755 pcl/pcl /usr/local/bin/pcl
 
       - name: Run tests
         run: |

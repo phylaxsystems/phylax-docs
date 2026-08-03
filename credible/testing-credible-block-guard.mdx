@@ -1,0 +1,99 @@
+---
+title: How to Test the Credible Block Guard
+description: Test credible block marker bundling and fail-open behavior against a live Anvil node
+---
+
+Use this guide to verify that your upgraded contract is wired to `CredibleBlockGuard`, accepts calls in credible blocks, rejects calls in non-credible blocks, and fails open when credible block production stops.
+
+## Prerequisites
+
+- A checkout of [`credible-std`](https://github.com/phylaxsystems/credible-std)
+- `anvil`, `cast`, `forge`, and `jq` available on your `PATH`
+- A free local port `8545`, or another port selected with `RPC_PORT`
+
+## Run the integration script
+
+From the root of your `credible-std` checkout, run:
+
+```shell
+./examples/credible-block/script/test-credible-upgrades.sh
+```
+
+Without target options, the script starts a local Anvil node and tests its `GuardedCounter` fixture. This confirms that the harness and base guard work, but it does not validate your upgrade.
+
+To use another local port or shorten the fail-open test window, set either environment variable:
+
+```shell
+RPC_PORT=9545 FAIL_OPEN_THRESHOLD=5 ./examples/credible-block/script/test-credible-upgrades.sh
+```
+
+## Test your upgraded contract
+
+The runner always starts a fresh Anvil node. It cannot test an address from a live network or another Anvil instance. Instead, give it commands that deploy the registry and deploy or upgrade your contract **after** Anvil starts.
+
+Prepare two commands in your protocol repository:
+
+1. A registry command that configures the marker account as an authorized builder and prints the registry address as its final line.
+2. A target command that deploys or upgrades your contract to use that registry and threshold, sets up required balances, roles, or approvals, and prints the target or proxy address as its final line.
+
+Then provide:
+
+- The guarded function call to execute
+- A read-only call that proves the action's state effect
+- The expected state before the call and after a successful call
+- The registry and fail-open threshold the target must use
+
+The script runs each command with `RPC_URL`, `REGISTRY_ADDRESS`, and `EXPECTED_THRESHOLD` available as environment variables. It runs the registry command first, then supplies its resulting `REGISTRY_ADDRESS` to the target command.
+
+The script verifies `credibleRegistry()(address)` and `failOpenBlockThreshold()(uint256)` by default. If your contract exposes different getters, pass `--registry-read-call` and `--threshold-read-call`. If it exposes no suitable getters, use `--config-assert-command` to run a contract-specific assertion that exits successfully only when the target uses the expected registry and threshold.
+
+The command shape for your contract is:
+
+```shell
+./examples/credible-block/script/test-credible-upgrades.sh \
+  --registry-deploy-command 'cd /path/to/your-protocol && ./script/deploy-registry-to-anvil.sh' \
+  --target-deploy-command 'cd /path/to/your-protocol && ./script/upgrade-and-print-target.sh' \
+  --guarded-call 'yourGuardedFunction(uint256) 1000000' \
+  --state-read-call 'yourState()(uint256)' \
+  --state-before 0 \
+  --state-after 1000000 \
+  --expected-threshold 75
+```
+
+Replace the two command paths and the call/state values with your protocol's equivalents. `upgrade-and-print-target.sh` must leave the upgraded target or proxy address on its final output line. Choose `--expected-threshold` to match the threshold configured by that command.
+
+The following is a runnable reference implementation of that interface using the example contracts:
+
+```shell
+./examples/credible-block/script/test-credible-upgrades.sh \
+  --registry-deploy-command 'cd "$REPO_ROOT" && forge create examples/credible-block/src/CredibleRegistry.sol:CredibleRegistry --rpc-url "$RPC_URL" --private-key "$ADMIN_KEY" --broadcast --json --constructor-args "$MARKER_ADDRESS" | jq -r ".deployedTo"' \
+  --target-deploy-command 'cd "$REPO_ROOT" && forge create examples/credible-block/src/GuardedCounter.sol:GuardedCounter --rpc-url "$RPC_URL" --private-key "$ADMIN_KEY" --broadcast --json --constructor-args "$REGISTRY_ADDRESS" "$EXPECTED_THRESHOLD" | jq -r ".deployedTo"' \
+  --guarded-call 'bump()' \
+  --state-read-call 'count()(uint256)' \
+  --state-before 0 \
+  --state-after 1
+```
+
+Each deployment command must print its deployed contract address as its final line. The script also supplies `ADMIN_KEY`, `MARKER_KEY`, `GUARDED_KEY`, `MARKER_ADDRESS`, and `GUARDED_ADDRESS`; use them only in trusted local commands.
+
+## What the script verifies
+
+1. A builder marker transaction and a guarded call are queued and mined in the same block. Both transactions succeed and the counter increments.
+2. A guarded call mined without a marker reverts with `NonCredibleBlock()` while the recent credible-block window is still active.
+3. At the configured threshold, the guard remains closed. Once the latest credible block is more than `FAIL_OPEN_THRESHOLD` blocks behind, the call succeeds through the guard's fail-open path.
+
+The first case disables Anvil automining, queues the marker before the guarded call, and mines one block. This is the essential interaction: separate automatically mined transactions would land in different blocks and would not test the marker's effect on the guarded call.
+
+## Verify the result
+
+Confirm that the summary reports zero failures, for example:
+
+```text
+Summary: 14 passed, 0 failed
+```
+
+The exact number of passing checks can change as the script evolves; the required result is `0 failed` and a zero exit status.
+
+The runner validates the guard's configuration and behavior. It does not by itself prove broader upgrade safety, such as storage-layout compatibility or the correctness of your upgrade authorization flow.
+
+For unit-level decision coverage without a live-node bundle, see [How to Test Assertions](./testing-assertions).

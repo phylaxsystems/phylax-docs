@@ -3,7 +3,7 @@ title: 'Testing vs. Production'
 description: 'How assertion execution differs between testing and on-chain environments'
 ---
 
-In production, the Credible Layer **drops** transactions that fail assertions - they never enter the blockchain. This means there's no on-chain trace of what the attacker tried or which vulnerability was targeted.
+In production, the Assertion Enforcer reports assertion failures to the network integration. An enforcing integration can exclude a failing transaction before block inclusion; the executor itself reports all rejections and does not make the block-inclusion decision.
 
 In testing, failed assertions cause **reverts**. This lets you use `vm.expectRevert()` to verify your assertion catches violations and returns the expected error message.
 
@@ -13,11 +13,11 @@ Understanding this difference is important for writing effective tests and inter
 
 | Aspect | Testing | Production |
 |--------|---------|------------|
-| **When assertion fails** | Transaction reverts | Transaction dropped (never enters block) |
+| **When assertion fails** | Transaction reverts | Rejection reported to the network integration |
 | **Which assertion runs** | Specified by `fnSelector` | All matching assertions |
 | **Scope** | Next external call only | All transactions to protected contracts |
 
-## Production: Transactions Are Dropped
+## Production: Network Integrations Apply the Result
 
 In production, the [Assertion Enforcer](/credible/assertion-enforcer) validates transactions during block building:
 
@@ -28,17 +28,17 @@ flowchart LR
     MATCH --> |Yes| RUN[Run assertions]
     MATCH --> |No| INCLUDE[Include in block]
     RUN --> |All pass| INCLUDE
-    RUN --> |Any fails| DROP[Drop transaction]
+    RUN --> |Any fails| REPORT[Report rejection]
     
-    style DROP fill:#e74c3c,color:#fff
+    style REPORT fill:#e74c3c,color:#fff
     style INCLUDE fill:#27ae60,color:#fff
 ```
 
 Key behaviors:
 - Triggers are evaluated to determine which assertions run
 - All matching assertions for all interacted contracts execute
-- Failed transactions are dropped - they never enter the blockchain
-- Users don't see reverts; the transaction simply doesn't get included
+- A failing assertion produces a rejection report
+- An enforcing integration can use that report to exclude the transaction before inclusion
 
 ## Testing: Transactions Revert
 
