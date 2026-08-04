@@ -1,6 +1,6 @@
 ---
 title: 'Security Posture in The Phylax Explorer'
-description: 'How The Phylax Explorer presents release-generated protection summaries, operational authority and change paths, audit evidence, and deployed-code context'
+description: 'How The Phylax Explorer presents release-generated protection summaries, operational authority, change paths, and supporting evidence'
 ---
 
 The Phylax Explorer is a public diligence surface for protocols that use runtime enforcement. It brings together the protocol's protected actions, assertion details, operational authority, contract change paths, and supporting evidence so reviewers can evaluate the underlying facts in one place.
@@ -76,33 +76,11 @@ The **How protocol changes can happen** section expands each reviewed route. A r
 - the contracts and accounts that make up the route
 - whether the route can execute sooner than another route protecting the same outcome
 
-This route-level view matters because one contract can expose several administrative paths with different controls. A delayed upgrade path does not provide a guaranteed reaction period if another authority can make a comparable sensitive change immediately.
-
-For example, [Lagoon](https://app.phylax.systems/projects/lagoon) shows immediate owner-controlled routes for availability, parameters, and roles alongside delayed proxy-upgrade routes. The project-level finding calls out that the immediate parameter routes can execute sooner than the one-day upgrade delay.
-
-<Frame caption="Review Lagoon's protocol change paths and route controls">
-  <video controls playsInline preload="metadata" aria-label="Lagoon protocol change paths walkthrough" style={{ width: "100%" }}>
-    <source src="/images/lagoon-op-risk.mp4" type="video/mp4" />
-  </video>
-</Frame>
-
 ### Contracts with no change route
 
 When the analysis finds no active material change path for a contract at the pinned block, The Phylax Explorer lists it under **Contracts with no change route**. The 0x-settler project demonstrates this distinction: contracts with reviewed owner-controlled solver routes appear separately from contracts for which no material change route was active.
 
 This is evidence about the analyzed state, not a permanent immutability guarantee. Review the pinned analysis, contract links, and any staleness warning before relying on the result.
-
-## Compare deployed and audited code
-
-When both audit evidence and deployed-code information are available, The Phylax Explorer can compare the commit identified by the audit with the commit resolved for the deployed implementation.
-
-Results can include:
-
-- **No drift**: the audited commit and resolved deployed commit appear to match
-- **Drift**: the resolved deployed code appears to differ from the audited commit
-- **Inconclusive**: one side of the comparison could not be resolved with enough confidence
-
-A drift check is not a new audit. **No drift** only means the resolved commits matched. **Drift** identifies a difference that may require review; it does not determine whether the difference is exploitable.
 
 ## Inspect the supporting evidence
 

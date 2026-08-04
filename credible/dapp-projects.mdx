@@ -66,10 +66,16 @@ Once created, you can manage your project through the project dashboard:
 - Choose Staging or Production
 - Sign the deployment transaction
 
-<Frame caption="Reviewing and deploying a release">
-  <video controls playsInline preload="metadata" aria-label="Release review and deployment walkthrough" style={{ width: "100%" }}>
-    <source src="/images/release-review.mp4" type="video/mp4" />
-  </video>
+<Frame caption="Review the release contents and assertion changes before deployment">
+  <img src="/images/release-review-overview.png" alt="Release overview showing the environment, status, verification checks, and assertions added by the release" />
+</Frame>
+
+<Frame caption="Phylax comes bundled with pre-release checks and backtesting against thousands of blocks to reduce the chance of erroneous deployment, forgotten triggers or misconfiguration.">
+  <img src="/images/release-review-verification.png" alt="Assertion verification showing a passed assertion, its adopter contract, and function-call triggers" />
+</Frame>
+
+<Frame caption="Review backtesting findings and matched historical transactions">
+  <img src="/images/release-review-backtesting.png" alt="Release backtesting result showing a historical transaction that would have been invalidated by the assertion set" />
 </Frame>
 
 For detailed instructions, see the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-4-deploy-the-assertion).

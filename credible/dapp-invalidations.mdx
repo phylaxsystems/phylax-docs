@@ -76,7 +76,12 @@ The replay includes:
 - **Developer data**: raw transaction and assertion traces, including hidden internal calls when expanded
 - **Execution context**: block state, prior transactions, and block environment used for the replay
 
-Transaction execution and assertion evaluation are shown separately. A protocol call can execute successfully during replay while the assertion evaluation rejects the transaction because the resulting state violates the assertion.
+The replay shows two separate results:
+
+1. **Transaction execution:** Did the protocol call run successfully?
+2. **Assertion evaluation:** Did the resulting state satisfy the assertion?
+
+A call can pass the first check and fail the second. In that case, the assertion rejects the transaction.
 
 <Frame caption="Review an invalidating transaction, classified changes, execution evidence, and developer data">
   <video controls playsInline preload="metadata" aria-label="Invalidating transaction replay walkthrough" style={{ width: "100%" }}>
@@ -86,7 +91,7 @@ Transaction execution and assertion evaluation are shown separately. A protocol 
 
 ### Real-time updates and alerts
 
-New invalidations stream into the project list while it is open. Project teams can also configure external notifications:
+Project teams can configure external notifications:
 
 - **Slack**: receive invalidation notifications through a Slack integration
 - **PagerDuty**: send invalidation notifications to an incident-response workflow
