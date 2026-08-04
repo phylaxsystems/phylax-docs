@@ -1,0 +1,87 @@
+---
+title: 'Security Posture in The Phylax Explorer'
+description: 'How The Phylax Explorer presents release-generated protection summaries, operational authority, change paths, and supporting evidence'
+---
+
+The Phylax Explorer is a public diligence surface for protocols that use runtime enforcement. It brings together the protocol's protected actions, assertion details, operational authority, contract change paths, and supporting evidence so reviewers can evaluate the underlying facts in one place.
+
+The Phylax Explorer does not assign a security score or claim that a protocol is safe. Instead, it shows what can be verified and links reviewers to the contracts, accounts, assertion source code, and security documents that support each finding.
+
+<Note>
+Public views in The Phylax Explorer are for review. Some transaction payloads, traces, staging data, and project-management controls are only available to project members.
+</Note>
+
+## Start with the project overview
+
+The project overview establishes the scope of the review. It identifies the network, protocol manager, public repository, protected contracts, active assertions, and available audits or security documents.
+
+The overview also includes a plain-English project summary and a list of protected actions. The project team creates these summaries as part of each new release, so the description reflects the assertions included in that release rather than a static project description.
+
+<Frame caption="Project overview with a release-generated protection summary">
+  <img src="/images/phylax-project-overview.png" alt="Project overview showing project information, active assertion status, protected actions, and a release-generated summary" />
+</Frame>
+
+## Understand what each assertion protects
+
+Open an assertion to review the protection at assertion level. The summary connects the assertion's intent to the deployed contracts and execution conditions that a technical reviewer can inspect.
+
+An assertion page can show:
+
+- **Unsafe condition**: the failure mode the assertion is designed to prevent
+- **Protected action**: the transaction behavior the assertion blocks when its rule is violated
+- **Linked contracts**: the contracts covered by the assertion
+- **Triggers**: the calls or state changes that cause the assertion to execute
+- **Source code**: the implementation behind the plain-English description
+
+These summaries make assertion behavior easier to assess, but they do not replace review of the assertion source code, protocol contracts, or audit reports.
+
+## Review operational authority and change paths
+
+The **Operational Risk** section describes how the reviewed contracts can change. It begins with a project-level finding and four summaries that answer:
+
+- **Who holds change power?** The authority mechanisms that control the reviewed paths, such as multisig wallets.
+- **What is the fewest approval count?** The lowest signer threshold among the reviewed paths.
+- **How soon can a change execute?** The shortest enforced waiting period found across those paths.
+- **Can another route avoid protections?** Whether an alternate path can bypass approvals or delays used elsewhere.
+
+These are project-wide summaries of the least-protected reviewed route. They should be read with the detailed evidence below them, not as independent ratings.
+
+<Frame caption="Review authority, approval thresholds, execution delays, and protocol change paths">
+  <video controls playsInline preload="metadata" aria-label="Operational risk walkthrough" style={{ width: "100%" }}>
+    <source src="/images/phylax-operational-risk.mp4" type="video/mp4" />
+  </video>
+</Frame>
+
+### Who can do what
+
+The **Who can do what** table maps each affected contract to its authority mechanism and controlling account. For a multisig-controlled route, it also shows the signer threshold and links to the authority account on the block explorer.
+
+This separates the question of who can authorize a change from the question of what that authority can change.
+
+### How protocol changes can happen
+
+The **How protocol changes can happen** section expands each reviewed route. A route identifies:
+
+- what can change, such as fees, roles, availability, authorized solvers, or contract implementation
+- which contract is affected and whether it is direct or upgradeable
+- the account or signer group that authorizes the change
+- the minimum approvals required
+- the earliest execution time, including any enforced delay
+- the contracts and accounts that make up the route
+- whether the route can execute sooner than another route protecting the same outcome
+
+### Contracts with no change route
+
+When the analysis finds no active material change path for a contract at the pinned block, The Phylax Explorer lists it under **Contracts with no change route**. The 0x-settler project demonstrates this distinction: contracts with reviewed owner-controlled solver routes appear separately from contracts for which no material change route was active.
+
+This is evidence about the analyzed state, not a permanent immutability guarantee. Review the pinned analysis, contract links, and any staleness warning before relying on the result.
+
+## Inspect the supporting evidence
+
+Protocol teams can publish repository links, audit reports, audited commit references, and formal verification materials. The **Audits and security documents** table makes every public report uploaded by the project team available from the project overview.
+
+Evidence should be reviewed whenever contracts are upgraded, assertions are added or removed, governance authority changes, or a new audit is published. Operational-risk analysis can also become stale as on-chain configuration changes, so check its update warning and underlying contract links before making a decision.
+
+<Warning>
+The Phylax Explorer is not a certification, audit replacement, insurance product, or guarantee that a protocol cannot fail.
+</Warning>

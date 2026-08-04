@@ -1,0 +1,99 @@
+---
+title: Drift Admin Takeover
+description: Reported Drift administrative takeover and assertion patterns for constraining high-impact governance actions
+---
+
+This case study explains how a reported administrative takeover can lead to rapid value loss and which assertion patterns could constrain comparable high-impact actions in an EVM protocol.
+
+## What Happened
+
+In April 2026, Drift Protocol reported an active attack and suspended deposits and withdrawals. The Record reported that security firms estimated losses above USD 285 million, while other estimates were at least USD 130 million. TechRadar later summarized Drift's public explanation as a sophisticated attack involving durable nonces, misrepresented transaction approvals, and rapid takeover of Drift's Security Council administrative powers.
+
+Sources:
+- [The Record report on the Drift security incident](https://therecord.media/drift-crypto-heist-solana-hacker)
+- [TechRadar report on the Drift incident](https://www.techradar.com/pro/security/this-is-not-an-april-fools-joke-crypto-platform-drift-suspends-services-after-millions-stolen)
+
+<Note>
+Drift is not an EVM protocol. This page uses the incident as an operational-risk case study for comparable EVM systems with emergency councils, admin multisigs, governance executors, or fast-path roles.
+</Note>
+
+## Why It Worked
+
+The public reporting describes an attack on the administrative execution layer rather than a conventional smart-contract bug. The relevant risk pattern is that trusted signers or emergency-governance machinery can be induced to execute actions that are valid at the signature layer but unsafe for the protocol.
+
+For an EVM protocol, comparable high-impact actions include:
+
+- changing owners or role memberships,
+- lowering multisig thresholds,
+- upgrading implementation contracts,
+- minting or moving protocol assets,
+- pausing or unpausing critical systems,
+- changing risk parameters,
+- disabling safety checks or circuit breakers.
+
+## The Invariant
+
+The protocol should never enter a state where emergency or admin authority can be rapidly repointed, weakened, or used to move large value without satisfying the protocol's own governance policy.
+
+This can be expressed as several enforceable properties:
+
+- approved role graph remains intact,
+- signer threshold stays above a minimum,
+- new owners or role holders are on an allowlist or pass a timelock,
+- high-impact functions can only be called through approved governance routes,
+- protocol outflows stay within configured limits even when an admin action is validly signed.
+
+## Assertion Patterns
+
+### Admin Role-Graph Assertion
+
+An assertion can inspect role, owner, and threshold changes in the transaction and reject unsafe transitions.
+
+Useful checks include:
+
+- threshold cannot be reduced below the approved minimum,
+- emergency council members cannot be replaced outside an approved set,
+- admin roles cannot be granted to new addresses without a timelock,
+- ownership cannot move to an unrecognized executor.
+
+### High-Impact Action Allowlist
+
+An assertion can watch sensitive function selectors and require that they are called only through approved governance paths.
+
+Useful surfaces include:
+
+- `upgradeTo` or proxy implementation changes,
+- `grantRole`, `revokeRole`, and ownership changes,
+- minting functions,
+- treasury transfers,
+- risk-parameter changes,
+- emergency pause or unpause operations.
+
+### Outflow Circuit Breaker
+
+Even if an attacker reaches an admin role or function, an outflow circuit breaker can prevent rapid value extraction.
+
+Useful checks include:
+
+- maximum protocol asset outflow per transaction,
+- maximum outflow per rolling window,
+- tighter limits after admin-role changes,
+- separate limits for treasury, vault, and user collateral assets.
+
+## How Assertions Would Constrain It
+
+For an EVM protocol with comparable emergency-admin powers, assertions could block the unsafe transaction before it settles if the transaction:
+
+1. weakens the signer threshold,
+2. adds an unapproved admin,
+3. combines an admin change with large asset movement,
+4. calls a high-impact function outside the approved route, or
+5. moves value beyond the protocol's configured outflow limit.
+
+The key point is that the signature can be valid while the state transition is still unsafe. Runtime assertions give protocols a way to define that boundary.
+
+## Key Takeaways
+
+Operational security failures should not automatically become total protocol failures. Admin wallets, emergency councils, and governance executors are powerful because they are supposed to respond quickly, but that same power needs explicit runtime limits.
+
+Assertions can enforce the protocol's intended governance shape: who can hold authority, how much authority can change at once, and how much value can move when authority changes.

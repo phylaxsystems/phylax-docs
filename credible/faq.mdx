@@ -18,7 +18,7 @@ Use this page for short answers. If you are trying to complete a task, go to the
 ### What is the Phylax Credible Layer?
 The Credible Layer is a network extension that enables developers to link security rules to their smart contracts on-chain.
 
-These rules are defined in Solidity, executed off-chain, and enforced by the network during block building. Since these rules are verifiable, apps can turn implicit security assumptions into an explicit security posture using our transparency dashboard so that users can trust the apps they use.
+These rules are defined in Solidity, executed off-chain, and enforced by the network during block building. Since these rules are verifiable, apps can turn implicit security assumptions into an explicit security posture using The Phylax Explorer so that users can inspect the protections behind the apps they use.
 
 **Learn More:**
 - [Credible Layer Overview](/credible/credible-layer-overview) - Non-technical introduction
@@ -28,7 +28,7 @@ These rules are defined in Solidity, executed off-chain, and enforced by the net
 There are several key advantages:
 
 1. **Off-chain Execution**: Rules that would be too expensive or impossible to express on-chain due to gas costs and limits can be implemented easily as assertions as they are run off-chain. Our current benchmarks show around 1000x efficiency gains.
-2. **Simpler Security Model**: By writing invariants that define a state to prevent instead of every edge case that would lead there, you simplify and strengthen your protocol. If you are confused about what an invariant is, read on 👇🏻
+2. **Simpler Security Model**: By writing invariants that define a state to prevent instead of every edge case that would lead there, you simplify and strengthen your protocol.
 3. **No redeployment or downtime**: Add new security rules without modifying your existing contracts. You can even add rules to immutable contracts. To learn how this is possible read the [How do you extend the validation logic of the sequencer to the platform?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-platform) section below.
 
 **Learn More:**
@@ -55,16 +55,17 @@ While audits provide point-in-time code reviews, the Credible Layer offers conti
 - [Writing Assertions Guide](/credible/write-first-assertion)
 - [Assertions Book](/assertions-book/assertions-book-intro)
 
-### What is the transparency dashboard?
-The transparency dashboard is a tool that allows anyone to view public projects and their active assertion posture.
-It is useful for end users because they can review what protections a protocol has made visible, while developers can use it to learn from assertions used by protocols with similar contracts.
+### What is The Phylax Explorer?
+**[The Phylax Explorer](/credible/dapp-explorer)** is the public dashboard that displays the security and operational risk posture of protocols that have opted into runtime enforcement.
+
+Users can find summaries of actions protected by circuit breakers and assertions, scenarios the assertions prevent, operational details for admin multisig wallets, upgradeability documentation, and whether the currently deployed protocol has meaningfully diverged from the code at the time of audit.
 
 **Learn More:**
 - [Deploy Assertions](/credible/deploy-assertions-dapp)
-- [Glossary - Transparency Dashboard](/credible/glossary#transparency-dashboard)
+- [Glossary - The Phylax Explorer](/credible/glossary#the-phylax-explorer)
 
 ### Is the Credible Layer a SaaS protocol?
-No. The Credible Layer is a protocol with a product surface around it: the platform and `pcl` help teams author, review, deploy, and monitor assertions, while the on-chain registry remains the source of truth for active assertion state.
+No. The Credible Layer is a protocol with product tools around it: the platform and `pcl` help teams author, review, deploy, and monitor assertions, while the on-chain registry remains the source of truth for active assertion state.
 
 Access to assertion management is still gated by authorization. Only verified protocol admins can attach assertions to protected contracts, and supported networks may have onboarding or availability constraints.
 
@@ -146,7 +147,7 @@ considered invalid and is dropped before it can be included in a block.
 
 **Learn More:**
 - [Assertion Enforcer](/credible/assertion-enforcer)
-- [Incidents](/credible/dapp-incidents)
+- [Invalidations](/credible/dapp-invalidations)
 
 ### What are cheatcodes and how do they help?
 
@@ -178,11 +179,11 @@ Editing an assertion is straightforward:
 Yes, you can copy and adapt assertions from other protocols and use them to protect your own protocol.
 You should make sure that the assertions are compatible with your protocol.
 It will make the most sense to copy assertions for standard libraries and interfaces.
-You can inspect public assertion posture on the transparency dashboard. Some project and invalidation details are only visible to project managers and collaborators.
+You can inspect public assertion posture in The Phylax Explorer. Some project and invalidation details are only visible to project managers and collaborators.
 
 **Learn More:**
 - [Assertions Book](/assertions-book/assertions-book-intro)
-- [Transparency Dashboard](/credible/dapp-transparency-dashboard)
+- [The Phylax Explorer](/credible/dapp-explorer)
 
 ---
 
@@ -205,12 +206,12 @@ You can inspect public assertion posture on the transparency dashboard. Some pro
 **Learn More:**
 - [Architecture - Abstract Overview](/credible/architecture-overview#abstract-overview)
 
-### How are L1-originated transactions handled for OP Stack rollups?
+### How are externally originated transactions handled?
 
-OP Stack integrations define a validation policy for L1-originated deposits as part of the network integration. The policy specifies where assertion validation runs, how results are routed to sequencing components, and which incident metadata is sent to affected protocols.
+Network integrations define validation policy for transactions that do not enter through ordinary user RPC flow, such as bridge-originated actions, delayed queues, scheduled system transactions, or forced-inclusion-style paths. The policy specifies where assertion validation runs, how results are routed into sequencing or block-building components, what timeout behavior applies, and which invalidation context is sent to affected protocols.
 
 **Learn More:**
-- [Network Integration Overview - L1-originated transaction paths](/credible/network-integration#l1-originated-transaction-paths)
+- [Network Integration Overview - Transaction Source Coverage](/credible/network-integration#transaction-source-coverage)
 - [Glossary - Forced Inclusion Transactions](/credible/glossary#forced-inclusion-transactions)
 
 ### Does the Credible Layer introduce new trust assumptions or centralization points?
@@ -242,15 +243,13 @@ The practical requirement is that assertion workers keep up with the transaction
 
 ### How do you extend the validation logic of the sequencer to the platform?
 
-For OP stack chains, Flashbots introduced a piece of software that enables a sequencer to have an external block-builder that implements custom block-building logic, without changing the sequencer itself. This is also what powers Flashblocks.
+The exact implementation depends on the network architecture. The shared model is that the network adds an enforcement hook around block building, sequencing, preflight validation, or another documented inclusion boundary.
 
-For other chains, the exact implementation varries but generally follows the following architecture:
-
-Our custom block builder enables the sequencer to check each transaction against assertions defined through the platform.
-This requires no changes to contracts as it is effectively middleware.
+That hook sends candidate transaction context to the Assertion Enforcer. The enforcer selects relevant assertions, executes them, and returns a valid or invalid result that the integration applies before settlement. This requires no changes to protected contracts because assertions run as enforcement middleware around transaction inclusion.
 
 **Learn More:**
-- [Architecture - OP Stack Implementation](/credible/network-integrations/architecture-op-stack)
+- [Network Integration Overview](/credible/network-integration)
+- [Assertion Enforcer](/credible/assertion-enforcer)
 - [Glossary - Block Builder](/credible/glossary#block-builder)
 
 ### Can anyone write assertions for my contracts?
@@ -264,7 +263,9 @@ This way, we ensure that no malicious third party reduces functionality by writi
 
 ### My protocol doesn't support the owner interface. Can I still use the Credible Layer?
 
-Yes, but you may need manual verification. If your contracts are immutable or do not expose an admin interface such as `owner()`, Phylax can verify off-chain evidence that your team controls the protocol and then register the selected protocol admin for the specific contracts.
+Yes, if the contracts are deployed on a supported rollup. You may need manual verification if your contracts are immutable or do not expose an admin interface such as `owner()`. Phylax can verify off-chain evidence that your team controls the protocol and then register the selected protocol admin for the specific contracts.
+
+Manual verification is not available for Ethereum mainnet contracts because enforcement works differently on L1 and L2 blockchains.
 
 **Learn More:**
 - [Ownership Verification](/credible/ownership-verification)

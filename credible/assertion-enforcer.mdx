@@ -15,6 +15,8 @@ The Assertion Enforcer operates inside the block production pipeline:
 4. Returns validation results to the network
 5. The network integration applies its inclusion policy to those results
 
+Depending on the network integration, validation can run synchronously before inclusion or through a bounded optimistic path where the builder checkpoints execution, runs assertions in parallel worker capacity, and rolls back if a transaction invalidates.
+
 ## Sidecar Architecture
 
 As a [sidecar](/credible/glossary#sidecar), the Assertion Enforcer:
@@ -102,13 +104,31 @@ The Assertion Enforcer integrates with block builders so that the network can ap
 - The network integration determines how those results affect inclusion
 - Block production continues normally with validated transactions
 
+### Invalidation Handling
+
+When an assertion invalidates a candidate transaction, the integration applies the network's documented inclusion policy. In the usual production path, the invalid transaction is excluded before settlement and the platform records an invalidation.
+
+Some integrations may use optimistic execution to keep assertion work out of the serial block-building path. In that model, the builder creates a rollback checkpoint before speculative execution. If a transaction invalidates, the builder rolls back to the checkpoint before that transaction, excludes the invalid transaction, and replays later transactions within the configured speculative window.
+
+Rollback and replay cost must be bounded by policy. Integrations should define the speculative window, publication boundary, timeout behavior, and what happens when assertion workers fall behind.
+
 ## Performance Model
 
-The Assertion Enforcer is designed to keep the synchronous block-building path small. In the common case, the block builder pays for routing work such as metadata collection, assertion selection, checkpoint creation, and work submission. Assertion execution itself can run separately from that serial path, depending on the network integration.
+The Assertion Enforcer is designed to keep the synchronous block-building path small. In the common case, the block builder pays for routing work such as metadata collection, assertion selection, checkpoint creation, and work submission. Assertion execution itself can run separately from that serial path, depending on the integration.
 
-The important performance constraint is keeping assertion work bounded and predictable for the transaction workload. Network integrations use bounded queues, publication policies, fine-grained triggers, deterministic gas or runtime limits, and bounded execution surfaces to keep validation predictable.
+The hot path should stay limited to the work required to route, schedule, and account for assertion execution:
+
+- collect the trace or metadata needed for assertion routing
+- select relevant assertions from the registry snapshot
+- create rollback checkpoints where the integration uses optimistic execution
+- submit bounded work to assertion workers
+- apply the validation result before the publication boundary
+
+The important performance constraint is keeping assertion work bounded and predictable for the transaction workload. Integrations use bounded queues, publication policies, fine-grained triggers, deterministic gas or runtime limits, and bounded execution surfaces to keep validation predictable.
 
 The enforcer also avoids network fetches on the transaction hot path. Assertion bytecode is fetched after deployment events and cached before validation.
+
+The primary performance risk is assertion tail latency. Production monitoring should track trigger rate, p95, p99, and maximum assertion execution time, invalidation behavior, worker backlog, and timeout rates.
 
 ## Production Admission and Resource Limits
 
@@ -116,7 +136,7 @@ Production execution uses the active assertion set admitted through the configur
 
 Production assertion admission should account for:
 
-- Protected protocol surface and trigger conditions
+- Protected protocol areas and trigger conditions
 - Expected trigger frequency
 - Maximum gas or runtime budget
 - Expected read footprint
@@ -126,12 +146,27 @@ Production assertion admission should account for:
 
 These controls keep block-building resources predictable and help protocol teams understand which assertions are ready to promote from staging to production.
 
+## Resource Isolation and Griefing Controls
+
+Assertions should not automatically consume production block-building resources just because they were published. Production admission and resource limits protect the network from broad, expensive, or poorly scoped assertions.
+
+Common controls include:
+
+- Authorization or review before an assertion enters the production execution set
+- Trigger scoping so assertions run only for relevant contracts, selectors, or state changes
+- Runtime and read-footprint limits
+- Dedicated worker capacity for assertion execution
+- Timeout behavior with clear inclusion-policy consequences
+- Staging and backtesting requirements before production promotion
+
+Ingress filtering can also reduce repeated invalid submissions. When a transaction invalidates, the integration can record short-lived fingerprints for exact replays or repeated attempts against the same assertion and target contract or function. Broad fingerprints should use conservative TTLs and thresholds.
+
 ## Operational Expectations (Public)
 
 - **Non-invasive**: Runs alongside existing block builders without changing consensus rules
 - **Deterministic**: Given the same state, transaction, and assertion code, validation results are deterministic
 - **Staging support**: Networks can validate assertions before enforcing them in production
-- **Transparent outcomes**: Incidents are visible in the platform and dashboard
+- **Transparent outcomes**: Invalidations are visible in the platform and The Phylax Explorer
 
 ## Assertion Caching
 

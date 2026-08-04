@@ -12,6 +12,8 @@ This page summarizes the Credible Layer trust model in plain language.
 - **Pre-execution validation**: the enforcer reports assertion failures before block inclusion;
   enforcing network integrations can exclude those transactions
 - **Transparent rules**: assertions are public Solidity code and can be audited by anyone
+- **Observable outcomes**: invalidations, release activity, and project changes are recorded for project review and public reporting where appropriate
+- **Bounded execution**: production assertions are admitted with trigger scope and resource limits so enforcement remains predictable
 
 ## Scope of Guarantees
 
@@ -19,6 +21,7 @@ This page summarizes the Credible Layer trust model in plain language.
 - **Protocol-authored rules**: protocol teams define and maintain the rules that protect their contracts
 - **Integrated environments**: enforcement applies on networks and environments where the enforcer is integrated and the assertion is active
 - **On-chain coordination**: the State Oracle contracts remain the source of truth for assertion lifecycle state and timelocks
+- **Documented transaction paths**: each integration must define how ordinary, bridge-originated, system-originated, delayed, or forced-inclusion-style paths are validated
 
 ## Operational Model
 
@@ -27,6 +30,30 @@ This page summarizes the Credible Layer trust model in plain language.
 - The network follows its normal transaction validity rules alongside enforcement
 - Production assertions are admitted with bounded triggers and resource limits before they become part of the active execution set
 - Network integrations define continuity behavior for maintenance windows and degraded components
+
+## Trust Boundaries
+
+The Credible Layer adds protocol-defined validation to an integrated network's transaction inclusion process. It does not remove the trust users already place in that network for ordering, liveness, and ordinary transaction validity.
+
+The main trust boundaries are:
+
+- Protocol teams are responsible for writing and maintaining assertions that express the risks they want to prevent
+- Project manager wallets control assertion releases, staging, production promotion, rollback, and collaborator access
+- Network operators are responsible for running the integration, honoring active registry state, and documenting timeout or degraded-component behavior
+- Assertion DA and local enforcer caches make assertion bytecode available before production execution; hot-path validation should not depend on live network fetches
+- Private invalidation payloads and traces are visible only to project members unless the project opts in to share them with support or network security teams
+
+## Failure and Continuity Policies
+
+Each production integration should define what happens when a dependency is unavailable, assertion workers fall behind, or validation cannot complete before the publication boundary. Those policies are integration-specific, but they should be explicit before production rollout.
+
+Useful policy questions include:
+
+- Does the integration fail open, fail closed, or apply a bounded fallback for a specific transaction source?
+- What timeout applies to assertion execution?
+- What happens to transactions that cannot be classified in time?
+- How are delayed, retried, released, or rejected transactions reported?
+- What rollback path exists if a production assertion creates false positives?
 
 ## Assurance Practices
 

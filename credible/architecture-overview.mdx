@@ -129,17 +129,17 @@ flowchart LR
 The Assertion Enforcer is integrated with the block builder. During block production, the block builder invokes the Assertion Enforcer to validate transactions before including them.
 </Note>
 
-## Incident Lifecycle (Public View)
+## Invalidation Lifecycle (Public View)
 
-When an assertion is violated, the incident is recorded and exposed for transparency and alerts.
+When an assertion is violated, the invalidation is recorded and exposed for transparency and alerts.
 
 ```mermaid
 ---
-title: Incident Lifecycle
+title: Invalidation Lifecycle
 ---
 flowchart LR
     ENFORCER["Assertion Enforcer"] --> PLATFORM["Phylax Platform"]
-    PLATFORM --> DASH["Transparency Dashboard"]
+    PLATFORM --> DASH["The Phylax Explorer"]
     PLATFORM --> ALERTS["Slack/PagerDuty Alerts"]
 
     classDef enforcer fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff

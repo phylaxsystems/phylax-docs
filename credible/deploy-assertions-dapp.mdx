@@ -71,7 +71,7 @@ Configure your `credible.toml` and create a release with `pcl apply`:
 pcl apply
 ```
 
-This reads your `credible.toml` configuration, builds the assertion contracts, previews the requested changes, and creates a pending release on the platform after you confirm. See [Apply Assertions](/credible/apply-assertions) for detailed instructions on configuring `credible.toml` and using `pcl apply`.
+This reads your `credible.toml` configuration, builds the assertion contracts, previews the requested changes, and creates a pending release on the platform after you confirm. Creating a release also generates the plain-English summaries shown in The Phylax Explorer for the protections in that release. See [Apply Assertions](/credible/apply-assertions) for detailed instructions on configuring `credible.toml` and using `pcl apply`.
 
 ## Step 4: Deploy the Assertion
 
@@ -118,7 +118,7 @@ After deployment, manage assertions through your project dashboard:
 
 - **View Active Assertions**: See all assertions protecting your contracts
 - **Monitor Status**: Check assertion execution and triggered violations
-- **View Incidents**: View incidents that were prevented by assertions
+- **View Invalidations**: View transactions that were invalidated by assertions
 - **Update Assertions**: Submit new versions as your protocol evolves
 - **Remove Assertions**: Request removal when needed; the assertion remains active until the State Oracle timelock finishes
 
@@ -126,7 +126,7 @@ After deployment, manage assertions through your project dashboard:
 
 | Error | Solution |
 |-------|----------|
-| "Contract ownership verification failed" | Ensure your wallet passes the admin verifier (often `owner()`) or [request manual verification](/credible/manual-verification) if available |
+| "Contract ownership verification failed" | Ensure your wallet passes the admin verifier (often `owner()`) or, for rollup contracts only, [request manual verification](/credible/manual-verification) if available |
 | "Assertion already exists" | Use a different name or update the existing assertion |
 | "Authentication expired" | Run `pcl auth login` to refresh |
 
@@ -155,7 +155,7 @@ Full walkthrough from authentication to deployment:
   <Card title="Test Assertions" icon="flask" href="/credible/testing-assertions">
     Test your assertions before deployment
   </Card>
-  <Card title="Incidents" icon="warning" href="/credible/dapp-incidents">
+  <Card title="Invalidations" icon="warning" href="/credible/dapp-invalidations">
     Monitor prevented violations
   </Card>
   <Card title="Ownership Verification" icon="shield-check" href="/credible/ownership-verification">

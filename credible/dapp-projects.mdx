@@ -7,6 +7,8 @@ Projects are the organizational unit in the [Phylax platform](https://app.phylax
 
 ## What are Projects?
 
+Projects enable you to manage all your protocol's assertions from a single interface. The project itself is an off-chain organizing layer; the on-chain [State Oracle](/credible/credible-layer-contracts#state-oracle) remains the source of truth for which assertions are active for each protected contract.
+
 A project groups together:
 - One or more smart contract addresses
 - Assertions that protect those contracts
@@ -14,9 +16,6 @@ A project groups together:
 - Staging and production invalidations
 - Notification settings and project events
 - Collaborators and role-based access
-- Project metadata (name, description, target chain)
-
-Projects enable you to manage all your protocol's assertions from a single interface. The project itself is an off-chain organizing layer; the on-chain [State Oracle](/credible/credible-layer-contracts#state-oracle) remains the source of truth for which assertions are active for each protected contract.
 
 ## Creating a Project
 
@@ -43,7 +42,7 @@ To create a new project:
 <Note>
 Only authorized admins can create a project for a contract. Most deployments use owner-based verification by default. See [Ownership Verification](/credible/ownership-verification) for details.
 
-For contracts that don't pass the default verifier, you may be able to [request manual verification](/credible/manual-verification).
+For rollup contracts that don't pass the default verifier, you may be able to [request manual verification](/credible/manual-verification). Manual verification is not available for Ethereum mainnet contracts.
 </Note>
 
 ## Managing Projects
@@ -55,23 +54,31 @@ Once created, you can manage your project through the project dashboard:
 - View project metadata
 - See all assertions
 - See project events in the audit log, including assertion, contract, release, notification, collaborator, and invalidation activity
-- See all [incidents](/credible/dapp-incidents)
+- See all [invalidations](/credible/dapp-invalidations)
 
-### Add or Remove Contracts
-- Add new contract addresses to your project
-- Remove contracts that are no longer active
-- Update contract information
+### Create a Release
+- Run `pcl apply` to build your assertions and create a pending release
+- Review the requested assertion changes before confirming the release
+- Open the returned release link in the platform
 
-### Deploy Assertions
-- Deploy assertions to your project via `pcl apply`
-- Review release changes through the platform
-- View all active assertions protecting your contracts
+### Deploy the Release Onchain
+- Review the release and link assertions to protected contracts
+- Choose Staging or Production
+- Sign the deployment transaction
 
-<Frame caption="Deploying an Assertion">
-  <img src="/images/deploy_assertion_trimmed.webp" alt="Deploy Assertions" />
+<Frame caption="Review the release contents and assertion changes before deployment">
+  <img src="/images/release-review-overview.png" alt="Release overview showing the environment, status, verification checks, and assertions added by the release" />
 </Frame>
 
-For detailed instructions on deploying assertions, see the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-4-deploy-the-assertion).
+<Frame caption="Phylax comes bundled with pre-release checks and backtesting against thousands of blocks to reduce the chance of erroneous deployment, forgotten triggers or misconfiguration.">
+  <img src="/images/release-review-verification.png" alt="Assertion verification showing a passed assertion, its adopter contract, and function-call triggers" />
+</Frame>
+
+<Frame caption="Review backtesting findings and matched historical transactions">
+  <img src="/images/release-review-backtesting.png" alt="Release backtesting result showing a historical transaction that would have been invalidated by the assertion set" />
+</Frame>
+
+For detailed instructions, see the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-4-deploy-the-assertion).
 
 ### Project Settings
 
@@ -84,14 +91,14 @@ Here you can update the project name, description, and delete the project.
 You can transfer projects and contracts (including their associated assertions) to other wallets. This allows you to transfer project ownership while maintaining all linked assertions and contracts.
 
 **Protocol admin / manager wallet:**
-The wallet that signs assertion lifecycle transactions can be separate from the day-to-day platform account. Use this separation when your team wants project collaborators to review releases and incidents without requiring routine access to the multisig or governance wallet that controls deployment.
+The wallet that signs assertion lifecycle transactions can be separate from the day-to-day platform account. Use this separation when your team wants project collaborators to review releases and invalidations without requiring routine access to the multisig or governance wallet that controls deployment.
 
 **Access controls:**
 Admins can invite collaborators by email or wallet address. Use roles to separate review work from deployment authority:
 
 | Role | Typical permissions |
 | --- | --- |
-| Viewer | View incidents and project information without making changes |
+| Viewer | View invalidations and project information without making changes |
 | Editor | Create releases and configure notifications |
 | Admin | Manage members, settings, and the protocol manager wallet |
 
@@ -99,26 +106,40 @@ Admins can invite collaborators by email or wallet address. Use roles to separat
 Detailed invalidation evidence is scoped to project members. Admins can opt in to share invalidations or transactions dropped by the node operator with Phylax support and network teams for customer support and debugging.
 
 **Integrations:**
-Set up integrations to receive notifications when incidents occur, including Slack and PagerDuty where available.
+Set up integrations to receive notifications when invalidations occur, including Slack and PagerDuty where available.
 
 <Frame caption="Project settings">
   <img src="/images/project_settings.png" alt="Project settings showing analytics sharing controls and integration options" />
 </Frame>
 
+### Security Evidence Links
+
+Protocol teams can keep project evidence up to date so The Phylax Explorer can show a more complete public project page.
+
+Useful evidence includes:
+
+- public repository links
+- audit report links
+- audit scope or commit references, where available
+- formal verification links, where applicable
+- protected-contract labels
+- assertion names and descriptions
+
+This metadata helps reviewers understand what is protected, which code was reviewed, and whether deployed code appears to match known audited code.
+
 ## Project Dashboard
 
 The project dashboard provides a unified view of your project's security:
 
-- **Active Assertions**: See all assertions currently protecting your contracts
-- **Assertion Deployment**: Deploy or remove assertions for your project
-- **Ready for Deployment**: Assertions submitted via `pcl` that need to be linked and deployed
-- **Assertion Status**: Monitor execution status and any triggered violations. Status shows whether assertions are marked for enforcement/staging or enforced/staged
-- **Recent Incidents**: View detailed incidents for your project (see [Incidents](/credible/dapp-incidents#project-incidents-manager-view))
-- **Audit Log**: Review project changes, assertion lifecycle events, collaborator changes, release activity, and invalidations over time
-- **Project Settings**: Update project details and manage contracts
+- **Assertions**: View active and pending assertions
+- **Releases**: Review and deploy changes
+- **Operational Risk**: Review authority and change paths
+- **Evidence**: Review audits and deployed-code context
+- **Invalidations**: Inspect assertion violations
+- **Audit Log and Settings**: Review activity and manage the project
 
 <Frame caption="Project dashboard view for the project owner">
-  <img src="/images/project_dashboard_with_incident.png" alt="Project overview showing releases, contracts, active assertions, status, and network" />
+  <img src="/images/phylax-project-overview.png" alt="Project overview showing project information, active assertion status, protected actions, and linked contracts" />
 </Frame>
 
 ### Audit Log
@@ -133,7 +154,7 @@ Audit log entries can include:
 - Production and staging release events
 - Protocol manager changes
 - Collaborator role changes
-- Invalidations and incident-related activity
+- Invalidation-related activity
 
 <Frame caption="Project audit log">
   <img src="/images/project_audit_log.png" alt="Project audit log showing timestamped project, assertion, contract, manager, and invalidation events" />
