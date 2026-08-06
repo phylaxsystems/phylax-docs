@@ -17,10 +17,6 @@ Backtesting is included in the platform's pre-release checks. When you create a 
 
 Use these findings to measure how an assertion behaves against real protocol activity before you deploy it. This is especially important for probabilistic or threshold-based protections, such as outflow circuit breakers and anomaly detection, where a threshold that is too restrictive can block benign behavior and one that is too permissive can miss harmful behavior.
 
-<Note>
-A backtesting finding is review feedback, not proof that the matched transaction was malicious. You need to inspect the transaction and decide whether the assertion caught behavior you intended to prevent or produced a false positive.
-</Note>
-
 ## Open the release
 
 In the platform, open your project, select **Releases**, and choose the release you want to review. The release overview shows the proposed assertion changes and three pre-release checks: assertion verification, source code, and backtesting. See [Release Review Checks](./release-review-checks) for the fields and purpose of each check.
