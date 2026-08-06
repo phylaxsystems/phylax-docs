@@ -69,6 +69,7 @@
                 "pages": [
                   "credible/invariant-to-assertion",
                   "credible/apply-assertions",
+                  "credible/release-review-checks",
                   "credible/deploy-assertions-dapp",
                   "credible/manual-verification"
                 ]

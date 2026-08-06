@@ -108,11 +108,12 @@ pcl apply --yes
 After applying, complete deployment in the [Phylax platform](https://app.phylax.systems) using the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-4-deploy-the-assertion):
 
 1. Navigate to your project
-2. Click "Deployment" tab
-3. Find your assertion and click "Proceed to Review"
+2. Select **Releases**
+3. Choose the release created by `pcl apply`
 4. Review the release diff and selected target contracts
-5. Select the target environment (Staging or Production)
-6. Click "Deploy" and sign the transaction
+5. Review **Assertion verification**, **Source code**, and **Backtesting**. See [Release Review Checks](./release-review-checks) for details.
+6. Confirm the target environment declared in `credible.toml`
+7. Connect the protocol manager wallet, select **Deploy to Staging** or **Deploy to Production**, and sign the transaction
 
 <Note>
 Creating a release through `pcl apply` does not make the assertion active by itself. The release is pending until an authorized protocol admin, also called a manager, signs the deployment transaction in the platform. The assertion becomes active only after that transaction is accepted on-chain and the configured timelock in the State Oracle contracts expires. Removals follow the same State Oracle timelock flow.
