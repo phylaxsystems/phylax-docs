@@ -156,7 +156,6 @@
                 "pages": [
                   "credible/cli-reference",
                   "credible/cheatcodes-reference",
-                  "credible/backtesting-reference",
                   "credible/credible-std-overview"
                 ]
               },

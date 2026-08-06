@@ -23,7 +23,7 @@ We have mocked parts of the protocol in order to properly test the assertions an
 
 The Aave V3 assertion suite has been tested quite thoroughly given the early stage of the Credible Layer testing capabilities. We feel confident that the production assertions could be added to an Aave V3 deployment and add value to the security and robustness of the protocol.
 
-We recommend running the assertions in a test environment against historical transactions to validate behavior before production promotion. This is standard best practice for protocol upgrades and does not just apply to assertions.
+Before production promotion, create a release in the Phylax platform and review its automatic backtesting result. The platform tests the release against transactions from the last 20,000 blocks so you can identify benign activity that the assertion would have invalidated. See [How to Review Backtesting Results](/credible/backtesting).
 
 ## Here Be Dragons 🐲
 

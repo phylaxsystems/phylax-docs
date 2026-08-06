@@ -3,7 +3,7 @@ title: "credible-std Library"
 description: "Reference for credible-std contracts, helpers, specs, and testing utilities"
 ---
 
-`credible-std` is the Solidity standard library for writing, testing, and backtesting Credible Layer assertions. It provides the base assertion contract, the `ph` interface for PhEVM cheatcodes, trigger registration helpers, snapshot-read helpers, typed state-change helpers, and Forge test utilities.
+`credible-std` is the Solidity standard library for writing and testing Credible Layer assertions. It provides the base assertion contract, the `ph` interface for PhEVM cheatcodes, trigger registration helpers, snapshot-read helpers, typed state-change helpers, and Forge test utilities.
 
 For individual cheatcode signatures, see the [Cheatcodes API Reference](./cheatcodes-reference). For local assertion tests, see [Testing Assertions](./testing-assertions).
 
@@ -22,18 +22,6 @@ The current Phylax app and Linea deployment support the V1 assertion specificati
 | Development dependency | `phylaxsystems/credible-std` |
 | Foundry remapping | `credible-std/=lib/credible-std/src/` |
 
-Backtesting helpers require `ffi = true` in the relevant Foundry profile:
-
-```toml
-[profile.backtesting]
-src = "src"
-out = "out"
-libs = ["lib"]
-ffi = true
-gas_limit = 100000000
-test = "test"
-```
-
 ## Core Contracts
 
 | Contract | Purpose |
@@ -46,7 +34,6 @@ test = "test"
 | `StateChanges.sol` | Typed helpers for legacy state-change arrays. |
 | `ForkUtils.sol` | Helper functions for Reshiram-style snapshot reads and ERC20 balance delta workflows. |
 | `CredibleTest.sol` | Forge test base that exposes `cl.assertion(...)`. |
-| `CredibleTestWithBacktesting.sol` | Test base for replaying historical transactions against assertions. |
 
 ## Assertion Helpers
 
@@ -207,8 +194,6 @@ interface VmEx {
 }
 ```
 
-`CredibleTestWithBacktesting` extends the local test base for historical transaction replay. It looks for `credible-std/scripts/backtesting/transaction_fetcher.sh`; `CREDIBLE_STD_PATH` overrides the default dependency lookup path.
-
 ## Related Pages
 
 <CardGroup cols={2}>
@@ -218,8 +203,8 @@ interface VmEx {
   <Card title="Testing Assertions" icon="flask" href="./testing-assertions">
     How to test assertions locally
   </Card>
-  <Card title="Backtesting Reference" icon="clock-rotate-left" href="./backtesting-reference">
-    Backtesting configuration and behavior
+  <Card title="Review Backtesting Results" icon="clock-rotate-left" href="./backtesting">
+    Review the automatic backtest attached to a platform release
   </Card>
   <Card title="Write Your First Assertion" icon="code" href="./write-first-assertion">
     Build a first assertion with credible-std

@@ -53,7 +53,7 @@ If the matched transaction represents behavior the assertion is intended to prev
 
 If the matched transaction is benign, treat it as a false positive. Adjust the assertion's thresholds, trigger scope, time window, or handling of normal protocol operations, then add the transaction as a regression case in your assertion tests. Create a new release with `pcl apply`; the platform will run the pre-release checks and backtest the updated assertion set again.
 
-If the matched transaction and assertion metadata do not explain the finding, inspect the **Matched Incident Payload** and expand the previous transactions. Decode the revert data, review the block environment, reproduce the matched transaction locally, and confirm that the assertion ran against the intended adopter and state. See the [Backtesting Reference](./backtesting-reference) for transaction-level replay APIs and [Troubleshooting](./troubleshooting) for common assertion failures.
+If the matched transaction and assertion metadata do not explain the finding, inspect the **Matched Incident Payload** and expand the previous transactions. Decode the revert data, review the block environment, and confirm that the assertion ran against the intended adopter and state. Do not deploy the release until you can explain the finding from the transaction, assertion, and platform evidence. See [Troubleshooting](./troubleshooting) for common assertion failures.
 
 When the backtest passes, finish reviewing assertion verification and source code, then deploy the release to staging. Continue monitoring staging invalidations before promoting the assertion to production. A passing backtest confirms that the tested historical activity did not trigger the release; it is not a substitute for focused tests, known-exploit coverage, or staging observation.
 
@@ -69,7 +69,7 @@ When the backtest passes, finish reviewing assertion verification and source cod
   <Card title="Deploy with the Platform" icon="rocket" href="./deploy-assertions-dapp">
     Deploy a reviewed release to staging
   </Card>
-  <Card title="Backtesting Reference" icon="book" href="./backtesting-reference">
-    Replay a block range or a specific transaction locally
+  <Card title="Release Review Checks" icon="list-check" href="./release-review-checks">
+    Review assertion verification, source code, and backtesting
   </Card>
 </CardGroup>
