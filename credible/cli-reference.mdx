@@ -11,12 +11,12 @@ New to `pcl`? Start with the [Quickstart Tutorial](/credible/pcl-quickstart) to 
 
 ## Version
 
-This reference matches `pcl 1.6.0`.
+This reference matches [`pcl 1.8.0`](https://github.com/phylaxsystems/pcl/releases/tag/1.8.0).
 
 ```bash
-pcl 1.6.0
-Commit: 0a7d27b28373
-Default Platform URL: https://app.phylax.systems
+pcl 1.8.0
+Commit: f7ae8817db2f
+Build Timestamp: 2026-08-03T23:19:40Z
 ```
 
 ## Syntax
@@ -118,7 +118,7 @@ pcl apply [OPTIONS]
 | `--yes` | Apply without interactive confirmation |
 | `--auto-approve` | Alias for `--yes` |
 | `--dry-run` | Build and verify the release payload without calling the platform API |
-| `-u, --api-url API_URL` | Base URL for the platform API. Defaults to the URL remembered from the last login, or `https://app.phylax.systems` when no URL is stored |
+| `-u, --api-url API_URL` | Base URL for the platform API. Uses `PCL_API_URL` when set; otherwise, uses the platform remembered from the last login or network selection |
 | `-h, --help` | Print help |
 
 ### `apply` Behavior
@@ -154,7 +154,7 @@ pcl deploy [OPTIONS]
 | `-c, --config CONFIG` | Path to `credible.toml`, relative to root or absolute. Default: `assertions/credible.toml` |
 | `--yes`, `--auto-approve` | Proceed without interactive confirmations |
 | `--dry-run` | Build and verify locally, report which steps would act, and make no changes |
-| `-u, --api-url API_URL` | Base URL for the platform API. Defaults to `PCL_API_URL`, then `https://ethereum.phylax.systems` |
+| `-u, --api-url API_URL` | Base URL for the platform API. Uses `PCL_API_URL` when set; otherwise, uses the platform remembered from the last login or network selection |
 | `--private-key PRIVATE_KEY` | Hex-encoded private key used to sign transactions and challenges. Can also be set with `PCL_PRIVATE_KEY` |
 | `--account ACCOUNT` | Foundry keystore name from `~/.foundry/keystores` |
 | `--keystore-password KEYSTORE_PASSWORD` | Foundry keystore password. Can also be set with `PCL_KEYSTORE_PASSWORD` |
@@ -313,7 +313,7 @@ pcl download [OPTIONS]
 | `--project-id PROJECT_ID` | Project UUID to download assertions from |
 | `-o, --output-dir OUTPUT_DIR` | Output directory for `.sol` files. Default: `PROJECT_NAME-assertions/` |
 | `--json` | Emit machine-readable output for this command |
-| `-u, --api-url API_URL` | Base URL for the platform API. Defaults to the URL remembered from the last login, or `https://app.phylax.systems` when no URL is stored |
+| `-u, --api-url API_URL` | Base URL for the platform API. Uses `PCL_API_URL` when set; otherwise, uses the platform remembered from the last login or network selection |
 | `-h, --help` | Print help |
 
 ### `download` Behavior
@@ -397,7 +397,7 @@ args = ["0x75634113D6A2fbfF5e65151ce1572195bE1d001A", "42"]
 | Variable | Used by | Description | Default |
 |----------|---------|-------------|---------|
 | `PCL_AUTH_URL` | `pcl auth` | Base URL for the authentication service | `PCL_API_URL`, then the remembered login URL, then `https://app.phylax.systems` |
-| `PCL_API_URL` | Platform API commands | Base URL for the platform API | Remembered login URL, then `https://app.phylax.systems` |
+| `PCL_API_URL` | Platform API commands | Base URL for the platform API | Platform remembered from the last login or network selection |
 
 ## Configuration File
 
