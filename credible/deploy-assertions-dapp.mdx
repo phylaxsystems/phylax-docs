@@ -79,22 +79,19 @@ After applying via `pcl`, complete deployment in the platform:
 
 1. Navigate to your project
 
-2. Click the "Deployment" tab
+2. Select **Releases**
 
-3. Find your assertion and click "Proceed to Review"
+3. Choose the release created by `pcl apply`
 
-4. Review the release diff
+4. Review the release diff and confirm the target contracts and assertions
 
-5. Review assertion details:
-   - Assertion name and parameters
-   - Target contract address
-   - Trigger conditions
+5. Review **Assertion verification**, **Source code**, and **Backtesting**. See [Release Review Checks](./release-review-checks) for the fields and decisions in each check.
 
-6. Choose environment:
-   - **Staging**: For testing (assertions run but don't block transactions)
-   - **Production**: For active protection (assertions block violating transactions)
+6. Confirm the environment declared by the release:
+   - **Staging**: Assertions run but do not block transactions
+   - **Production**: Assertions block violating transactions
 
-7. Click "Deploy" and sign the transaction
+7. Connect the protocol manager wallet, select **Deploy to Staging** or **Deploy to Production**, and sign the transaction
 
 <Frame caption="Deploying an assertion in the platform">
   <img src="/images/deploy_assertion_trimmed.webp" alt="Deploying Assertion" />

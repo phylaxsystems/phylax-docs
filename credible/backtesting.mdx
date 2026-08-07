@@ -1,242 +1,75 @@
 ---
-title: Backtesting
-description: Test assertions against historical blockchain transactions
+title: 'How to Review Backtesting Results'
+description: 'Review historical transactions that your assertions would have invalidated before you deploy a release'
 ---
 
-Backtesting runs your assertions against actual historical transactions from a specified block range. This helps ensure your assertions behave as expected with real transaction patterns before deployment.
+This guide shows you how to review the automatic backtest for a release, inspect a matched historical transaction, and decide whether an assertion is ready to deploy or needs further tuning.
 
-<Note>
-If you're looking for the reference documentation on all configuration parameters, see the [Backtesting Reference](/credible/backtesting-reference).
-</Note>
+**Prerequisites**:
 
-<Note>
-Backtesting is a development-time validation tool. Running a backtest does not deploy assertions, change the on-chain registry, or affect production enforcement.
-</Note>
+- A project in the Phylax platform
+- A release created with [`pcl apply`](./apply-assertions)
+- Access to review that project's releases
 
-## How It Works
+## What backtesting checks
 
-Backtesting operates in two phases:
+Backtesting is included in the platform's pre-release checks. When you create a release and open it for review, the platform tests every assertion in the release against transactions from the last 20,000 blocks. The results identify historical transactions that would have been prevented from settling if the current assertion set had been active.
 
-1. **Transaction Fetching**: Identifies all transactions to the target contract in the block range using trace APIs (with automatic fallback)
-2. **Transaction Validation**: Replays each transaction with your assertion enabled
+Use these findings to measure how an assertion behaves against real protocol activity before you deploy it. This is especially important for probabilistic or threshold-based protections, such as outflow circuit breakers and anomaly detection, where a threshold that is too restrictive can block benign behavior and one that is too permissive can miss harmful behavior.
 
-The tool automatically detects both direct calls and internal calls (e.g., when Contract A calls your target Contract B through a router or aggregator) using trace APIs.
+## Open the release
 
-For validation, the tool forks the EVM at the exact transaction state and replays it against the specified assertion.
+In the platform, open your project, select **Releases**, and choose the release you want to review. The release overview shows the proposed assertion changes and three pre-release checks: assertion verification, source code, and backtesting. See [Release Review Checks](./release-review-checks) for the fields and purpose of each check.
 
-## Example
+Review the release diff first so you know which contracts and assertions are included. Then check the status beside **Backtesting**. A passed check means the backtest found no historical transaction that the release would have invalidated. **Issue found** means at least one transaction needs your review.
 
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+<Frame caption="Review the release diff and the status of each pre-release check">
+  <img src="/images/release-overview.png" alt="Release overview for the MetaMorpho Top 5 Vaults project with assertion verification, source code, and backtesting checks" />
+</Frame>
 
-import {CredibleTestWithBacktesting} from "credible-std/CredibleTestWithBacktesting.sol";
-import {BacktestingTypes} from "credible-std/utils/BacktestingTypes.sol";
-import {MyAssertion} from "../assertions/src/MyAssertion.a.sol";
+## Review a backtesting finding
 
-contract MyBacktestingTest is CredibleTestWithBacktesting {
-    function testHistoricalTransactions() public {
-        BacktestingTypes.BacktestingResults memory results = executeBacktest(
-            BacktestingTypes.BacktestingConfig({
-                targetContract: 0x5fd84259d66Cd46123540766Be93DFE6D43130D7, // USDC on Optimism Sepolia
-                endBlock: 31336940, // Latest block to test
-                blockRange: 20, // Number of blocks to test
-                assertionCreationCode: type(MyAssertion).creationCode,
-                assertionSelector: MyAssertion.assertionInvariant.selector,
-                rpcUrl: "https://sepolia.optimism.io",
-                detailedBlocks: false,
-                forkByTxHash: true
-            })
-        );
+Select **Backtesting** to open the complete result. The summary shows the tested block range and whether the assertions invalidated any historical transactions. When the backtest finds an invalidation, the result identifies the matched transaction hash, assertion ID, block number, assertion adopter, and all assertion IDs watched during the replay.
 
-        // Check results
-        assertEq(results.assertionFailures, 0, "Found protocol violations!");
-    }
-}
-```
+Start with the **Matched TX Hash**, **Matched Assertion ID**, and **Matched Assertion Adopter**. Together, these fields tell you which transaction was rejected, which assertion failed, and which protected contract it was evaluating. The attempt history records when the check ran, while **Transactions With Assertions** shows how many transactions in the range exercised the assertion set.
 
-Backtesting tests inherit from `CredibleTestWithBacktesting` instead of `CredibleTest`. The `executeBacktest` function returns results in a `BacktestingTypes.BacktestingResults` struct.
+<Frame caption="A backtesting finding with the matched transaction, assertion, block, and adopter">
+  <img src="/images/backtesting-ui.png" alt="Backtesting result for a release showing one historical transaction that would have been invalidated" />
+</Frame>
 
-<Tip>
-Consider excluding backtesting from your CI/CD pipeline as it can take time to run. Run backtesting manually on demand to increase confidence in your assertions before deployment.
-</Tip>
+## Inspect the invalidated transaction
 
-## Common Configurations
+Copy the **Matched TX Hash** and paste it into the block explorer for the project's network. Review the sender and recipient, decoded function call, calldata, transferred value, token transfers, event logs, and internal calls. Compare that activity with the assertion's intended invariant and the matched adopter address. The goal is to explain why the assertion would have rejected a transaction that previously settled: the transaction might contain behavior you want to prevent, or it might reveal a legitimate protocol operation that the assertion does not yet handle.
 
-### Standard Configuration
+Next, inspect the **Matched Incident Payload** in the backtesting result. The failure entry maps the revert data to the assertion function, assertion ID, and adopter address. For assertions that depend on cumulative flows, an outflow window, or anomaly-detection context, also expand the previous transactions and review the block environment. The matched transaction alone may look benign even though the preceding activity caused the assertion's threshold or model to fire.
 
-```solidity
-BacktestingTypes.BacktestingConfig({
-    targetContract: TARGET_CONTRACT,
-    endBlock: LATEST_BLOCK,
-    blockRange: 100,
-    assertionCreationCode: type(MyAssertion).creationCode,
-    assertionSelector: MyAssertion.assertionInvariant.selector,
-    rpcUrl: vm.envString("MAINNET_RPC_URL"),
-    detailedBlocks: false,
-    forkByTxHash: true
-})
-```
+<Frame caption="Use the incident payload and preceding transactions to understand why the assertion failed">
+  <img src="/images/backtesting-payload.png" alt="Matched incident payload with revert data, assertion metadata, and previous transactions from the backtest" />
+</Frame>
 
-### Testing Against a Specific Block
+## Decide what to do next
 
-When you want to test your assertion against a specific known transaction (such as a historical exploit), set `blockRange: 1` with the block number containing that transaction:
+If the matched transaction represents behavior the assertion is intended to prevent, record why the finding is expected and continue reviewing the other release checks. A historical match can be useful evidence that the assertion detects the targeted behavior, but it does not prove that the assertion covers every harmful transaction.
 
-```solidity
-BacktestingTypes.BacktestingConfig({
-    targetContract: BALANCER_V2_VAULT,
-    endBlock: 23717632,     // Block containing the exploit transaction
-    blockRange: 1,          // Only test this single block
-    assertionCreationCode: type(BatchSwapDeltaAssertion).creationCode,
-    assertionSelector: BatchSwapDeltaAssertion.assertionBatchSwapRateManipulation.selector,
-    rpcUrl: vm.envString("MAINNET_RPC_URL"),
-    detailedBlocks: false,
-    forkByTxHash: true
-})
-```
+If the matched transaction is benign, treat it as a false positive. Adjust the assertion's thresholds, trigger scope, time window, or handling of normal protocol operations, then add the transaction as a regression case in your assertion tests. Create a new release with `pcl apply`; the platform will run the pre-release checks and backtest the updated assertion set again.
 
-This is particularly useful for:
-- Validating that your assertion catches known exploits
-- Testing edge cases found in production
-- Verifying assertion behavior on specific problematic transactions
+If the matched transaction and assertion metadata do not explain the finding, inspect the **Matched Incident Payload** and expand the previous transactions. Decode the revert data, review the block environment, and confirm that the assertion ran against the intended adopter and state. Do not deploy the release until you can explain the finding from the transaction, assertion, and platform evidence. See [Troubleshooting](./troubleshooting) for common assertion failures.
 
-<Tip>
-See the [Balancer V2 Rate Manipulation Exploit](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit) for a real-world example of using backtesting to verify an assertion catches a historical exploit transaction.
-</Tip>
+When the backtest passes, finish reviewing assertion verification and source code, then deploy the release to staging. Continue monitoring staging invalidations before promoting the assertion to production. A passing backtest confirms that the tested historical activity did not trigger the release; it is not a substitute for focused tests, known-exploit coverage, or staging observation.
 
-### Testing a Single Transaction by Hash
+## Next steps
 
-For debugging a staging finding or validating against a specific transaction, use `executeBacktestForTransaction`:
-
-```solidity
-bytes32 txHash = 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef;
-
-BacktestingTypes.BacktestingResults memory results = executeBacktestForTransaction(
-    txHash,
-    TARGET_CONTRACT,
-    type(MyAssertion).creationCode,
-    MyAssertion.assertionInvariant.selector,
-    vm.envString("MAINNET_RPC_URL")
-);
-```
-
-This is particularly useful for:
-- Debugging staging findings (see [How to Plan Assertion Testing](/credible/testing-strategy))
-- Quick validation of assertion behavior on a specific transaction
-- Investigating incidents without needing to know the block number
-
-## Understanding Results
-
-When backtesting completes, transactions are categorized into different result types to help you quickly identify issues:
-
-### Result Categories
-
-**PASS** - Assertion passed successfully
-- Transaction replayed and assertion validated without errors
-- **Recommended Action:** None - everything is working as expected
-
-**SKIP** - Assertion not triggered
-- Transaction called a function not monitored by your assertion (function selector didn't match)
-- This is normal behavior - your assertion only triggers on specific function calls
-- **Recommended Action:** None required, unless you expected this transaction to trigger your assertion
-- **Note:** These are NOT assertion violations - they indicate transactions that aren't relevant to your assertion
-
-**REPLAY_FAIL** - Transaction replay failed
-- Transaction failed to replay before the assertion could execute
-- Common causes:
-  - **State dependencies:** Transaction depends on specific state that isn't present
-  - **Context requirements:** Transaction requires specific block context
-  - **Insufficient funds:** Sender balance changed between original execution and replay
-- **Recommended Action:** Check the error message for details; this usually indicates an environmental issue rather than an assertion problem
-- **Note:** These are NOT assertion violations
-
-**FAIL** - Assertion reverted
-- Your assertion reverted when validating this transaction
-- **Most Common Causes:**
-  - **False positive:** Your assertion logic incorrectly flags legitimate protocol behavior (most common)
-  - **Gas limit exceeded:** Assertion ran out of gas (3,000,000 by default)
-  - **Assertion bug:** Logic error in your assertion code
-  - **Known exploit:** If testing against a historical exploit block, this is expected behavior
-- **Recommended Action:**
-  - Check if the transaction is a known exploit - if so, this confirms your assertion works correctly
-  - Review your assertion logic to ensure it properly handles this transaction pattern
-  - Check if the assertion is running out of gas and needs optimization
-  - Verify the transaction on a block explorer to understand what it does
-
-**ERROR** - Unexpected failure
-- An error occurred that doesn't fit other categories
-- May indicate RPC issues, assertion bugs, or unexpected contract behavior
-- **Recommended Action:** Check the error message and retry; if persistent, [file a bug report](https://github.com/phylaxsystems/credible-std/issues).
-
-### Reading the Summary
-
-At the end of each backtest run, you'll see a summary like:
-
-```text
-==========================================
-           BACKTESTING SUMMARY
-==========================================
-Block Range: 23697580 - 23697590
-Total Transactions: 15
-Processed Transactions: 15
-Successful Validations: 10
-Skipped Transactions: 3
-Failed Validations: 2
-
-=== ERROR BREAKDOWN ===
-Protocol Violations (Assertion Failures): 1
-Replay Failures (Tx reverted before assertion): 1
-
-Success Rate: 83%
-================================
-```
-
-## Running Tests
-
-```bash
-# Set RPC URL environment variable
-export RPC_URL="YOUR_RPC_URL"
-
-# Run backtesting tests
-pcl test --ffi --match-test testHistoricalTransactions
-```
-
-<Note>
-The `--ffi` flag is required to enable foreign function interface for RPC calls.
-</Note>
-
-## Foundry Configuration
-
-Enable FFI in your Foundry profile:
-
-```toml
-[profile.backtest-assertions]
-src = "assertions/src"
-test = "assertions/test/backtest"
-out = "assertions/out"
-libs = ["lib"]
-solc = "0.8.29"
-optimizer = true
-optimizer_runs = 200
-ffi = true # To avoid setting --ffi in the test command
-```
-
-<Tip>
-See [CI/CD Integration](/credible/ci-cd-integration#foundry-profile-configuration) for complete Foundry profile configuration.
-</Tip>
-
-## Best Practices
-
-1. **Start small** - Test with 10-20 blocks first to verify your setup
-2. **Use paid RPC providers** - For block ranges over 1,000
-3. **Check assertion failures** - Ensure `results.assertionFailures == 0`
-4. **Run before deployment** - Validate behavior on real transactions
-5. **Run manually** - Exclude from CI/CD to avoid long test runs
-6. **Debug with single transactions** - Use `executeBacktestForTransaction` to investigate specific failures
-
-**Learn More:**
-- [Backtesting Reference](/credible/backtesting-reference) - Complete configuration details
-- [Testing Assertions](/credible/testing-assertions) - Basic testing guide
-- [Fuzz Testing](/credible/fuzz-testing) - Test with random inputs
-- [Troubleshooting](/credible/troubleshooting) - Common errors and solutions
-- [Balancer V2 Rate Manipulation Exploit](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit)
+<CardGroup cols={2}>
+  <Card title="Test Assertions" icon="flask" href="./testing-assertions">
+    Add focused and regression tests before creating another release
+  </Card>
+  <Card title="Apply Assertions" icon="code-branch" href="./apply-assertions">
+    Create a new release after tuning an assertion
+  </Card>
+  <Card title="Deploy with the Platform" icon="rocket" href="./deploy-assertions-dapp">
+    Deploy a reviewed release to staging
+  </Card>
+  <Card title="Release Review Checks" icon="list-check" href="./release-review-checks">
+    Review assertion verification, source code, and backtesting
+  </Card>
+</CardGroup>

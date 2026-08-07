@@ -21,11 +21,11 @@ This guide helps you diagnose and fix common errors when writing and testing ass
 
 ### "Expected 1 assertion to be executed, but 0 were executed"
 
-This error means your assertion never ran on the target transaction. This can occur in production, testing, or backtesting.
+This error means your assertion never ran on the target transaction. This can occur in local tests, staging, production, or a platform release backtest.
 
 **Common Causes:**
 
-**In production or backtesting:**
+**In staging, production, or a platform release backtest:**
 - The transaction that triggers the assertion fails or reverts before the assertion runs
 - The function selector in the trigger doesn't match the function being called
 
@@ -115,7 +115,7 @@ Assertion execution has a default **3,000,000 gas limit**. Node operators can co
 **Symptoms:**
 
 - `OutOfGas` error when running tests
-- "Unknown Revert Reason" with gas cost near the active assertion limit in backtesting results
+- "Unknown Revert Reason" with gas cost near the active assertion limit in a platform release backtesting result
 - Assertion fails consistently on complex transactions
 
 **Common Causes:**
@@ -324,15 +324,11 @@ FOUNDRY_PROFILE=assertions pcl test --match-contract ContractName
 - Check `foundry.toml` has assertions profile configured
 - Verify `remappings.txt` includes `credible-std/=lib/credible-std/src/`
 
-## Backtesting Errors
+## Release backtesting findings
 
-For backtesting-specific errors, see the [Backtesting Guide](/credible/backtesting#understanding-results).
+The platform runs backtesting automatically when you create a release. An **Issue found** result means at least one historical transaction from the last 20,000 blocks would have been invalidated by the release.
 
-**Common Backtesting Issues:**
-
-- **ASSERTION_FAIL** - Assertion reverted (may be false positive, [gas limit exceeded](#gas-limit-exceeded), or known exploit)
-- **UNKNOWN_ERROR** - Unexpected failure (check error message, may be RPC issue)
-- **NEEDS_REVIEW** - Transaction called a function not monitored by your assertion, or failed to replay
+Open **Backtesting** in the release and review the matched transaction hash, assertion ID, adopter, incident payload, previous transactions, and block environment. If the finding is benign, tune the assertion and create a new release. If the evidence does not explain the finding, do not deploy the release. See [How to Review Backtesting Results](./backtesting) for the complete workflow.
 
 ## Debugging
 

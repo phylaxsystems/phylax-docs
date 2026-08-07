@@ -141,7 +141,7 @@ Production assertion admission should account for:
 - Maximum gas or runtime budget
 - Expected read footprint
 - Deterministic behavior and read-only execution
-- Historical backtesting and staging behavior
+- Platform release-backtesting and staging behavior
 - Suitability for common acceleration paths, such as compact trace summaries or native helper functions
 
 These controls keep block-building resources predictable and help protocol teams understand which assertions are ready to promote from staging to production.
@@ -157,7 +157,7 @@ Common controls include:
 - Runtime and read-footprint limits
 - Dedicated worker capacity for assertion execution
 - Timeout behavior with clear inclusion-policy consequences
-- Staging and backtesting requirements before production promotion
+- Staging and platform release-review requirements before production promotion
 
 Ingress filtering can also reduce repeated invalid submissions. When a transaction invalidates, the integration can record short-lived fingerprints for exact replays or repeated attempts against the same assertion and target contract or function. Broad fingerprints should use conservative TTLs and thresholds.
 

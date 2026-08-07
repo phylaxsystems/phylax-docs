@@ -1,16 +1,16 @@
 ---
 title: 'How to Plan Assertion Testing'
-description: 'Plan local testing, backtesting, staging, and production promotion for assertions'
+description: 'Plan local testing, platform release review, staging, and production promotion for assertions'
 ---
 
-This guide shows you how to allocate assertion testing effort across local tests, backtesting, staging, and production promotion.
+This guide shows you how to allocate assertion testing effort across local tests, platform release review, staging, and production promotion.
 
 <Check>
 **Summary**
 - Local testing validates core logic; staging validates real-world behavior
 - Deploy to staging early to observe behavior against real transaction flow
 - Real transactions expose scenarios that are difficult to predict locally
-- Use backtesting to debug specific transactions with the smallest feedback loop
+- Review the automatic release backtest before every staging or production deployment
 </Check>
 
 ## The Testing Philosophy
@@ -34,7 +34,7 @@ Real-world transactions reveal edge cases that would take significant effort to 
 | Phase | Effort | Goal |
 |-------|--------|------|
 | Local testing | ~20-30% | Validate core logic, catch obvious bugs, verify gas limits |
-| Backtesting | ~10-20% | Sanity check before staging; debug specific transactions after |
+| Release review | ~10-20% | Review verification, source code, and automatic backtesting before deployment |
 | Staging | ~50-60% | Discover edge cases, observe real-world behavior, iterate |
 
 The bulk of your validation happens in staging. Local testing catches the obvious issues quickly so you can deploy with confidence, but staging is where you discover the edge cases.
@@ -62,47 +62,28 @@ See [Testing Assertions](/credible/testing-assertions) for local testing pattern
 **Leverage existing invariant tests.** If your protocol already has Forge invariant tests, the test setup and infrastructure can often be reused for assertion testing. This can significantly reduce the time spent on local test configuration.
 </Tip>
 
-## Backtesting: Two Key Uses
+## Review platform backtesting before staging
 
-Backtesting serves two distinct purposes in the development workflow:
+When you create a release with `pcl apply`, the platform runs three release checks: assertion verification, source code, and backtesting. The backtesting service tests every assertion in the release against transactions from the last 20,000 blocks.
 
-### 1. Pre-Staging Sanity Check
+Open the release in the platform and review the backtesting result before you authorize a deployment. A passing result means the release did not invalidate any transaction in the tested window. An **Issue found** result identifies a historical transaction that the assertion would have prevented from settling.
 
-Before deploying to staging, run a quick backtest against recent transactions:
+For each finding, inspect the matched transaction, assertion ID, adopter, incident payload, previous transactions, and block environment. If the transaction is benign, tune the assertion and create a new release so the platform can check the updated assertion set. If you cannot explain a finding, do not deploy the release.
 
-- Verifies expected behavior on normal protocol operations
-- Catches trigger mismatches (assertion not running when expected)
-- Identifies gas issues with realistic transaction complexity
-
-Keep block ranges small (10-100 blocks) for this sanity check. The goal is quick verification, not comprehensive coverage.
-
-For production promotion, expect a broader historical review. The exact window depends on protocol risk, transaction volume, network requirements, and the assertions being promoted. At minimum, include representative high-volume periods, known incident windows when applicable, and enough normal activity to measure assertion behavior on normal transactions.
-
-### 2. Debugging Staging Issues
-
-When staging reveals unexpected behavior, backtesting becomes your debugging tool:
-
-- Replay the specific transaction that triggered the issue locally
-- Step through assertion logic with full visibility
-- Fastest feedback loop for debugging
-
-This is often faster than trying to reproduce the scenario from scratch in a local test.
-
-<Note>
-See [Backtesting](/credible/backtesting) for configuration and usage details.
-</Note>
+See [How to Review Backtesting Results](./backtesting) for the investigation workflow and [Release Review Checks](./release-review-checks) for the complete release-check reference.
 
 ## The Staging Workflow
 
 ```mermaid
 flowchart LR
-    LOCAL[Local Testing] --> BACKTEST[Backtesting<br/>sanity check]
-    BACKTEST --> STAGING[Deploy to<br/>Staging]
+    LOCAL[Local Testing] --> APPLY[Create a Release]
+    APPLY --> REVIEW[Review Platform Checks<br/>and Backtesting]
+    REVIEW --> STAGING[Deploy to<br/>Staging]
     STAGING --> MONITOR[Monitor]
     MONITOR --> ISSUE{Issues<br/>Found?}
-    ISSUE --> |Yes| DEBUG[Backtest<br/>specific tx]
-    DEBUG --> FIX[Fix & Redeploy]
-    FIX --> STAGING
+    ISSUE --> |Yes| DEBUG[Inspect the<br/>Invalidation]
+    DEBUG --> FIX[Fix & Create<br/>New Release]
+    FIX --> REVIEW
     ISSUE --> |No, over weeks| PROD[Promote to<br/>Production]
 
     style PROD fill:#27ae60,color:#fff
@@ -110,7 +91,7 @@ flowchart LR
 
 ### Deploy Early
 
-Once local tests pass and backtesting shows no obvious issues, [deploy to staging](/credible/deploy-assertions-dapp). Don't wait for "perfect" local coverage—staging will reveal what you missed. Note that deployments have a [timelock](/credible/glossary#timelock) period before assertions become active, so starting early is beneficial.
+Once local tests pass and you have reviewed every platform release check, [deploy to staging](/credible/deploy-assertions-dapp). Don't wait for "perfect" local coverage—staging will reveal what you missed. Note that deployments have a [timelock](/credible/glossary#timelock) period before assertions become active, so starting early is beneficial.
 
 ### Monitor Staging Behavior
 
@@ -121,17 +102,17 @@ Check the [platform dashboard](https://app.phylax.systems) regularly for asserti
 
 Staging runs assertions but does NOT drop transactions, so you can observe behavior without risk.
 
-### Debug with Backtesting
+### Investigate staging invalidations
 
 When an issue appears in staging:
 
 1. Identify the transaction that triggered unexpected behavior
-2. Use backtesting to replay that exact transaction locally
-3. Debug with full visibility into assertion execution (`-vvvv`)
-4. Fix the issue and redeploy
+2. Open the invalidation in the platform and inspect its assertion result, trace, and execution context
+3. Add a focused local regression test that reproduces the assertion behavior
+4. Fix the issue, create a new release, and review its automatic backtesting result
 
 <Tip>
-**Add regression tests for discovered edge cases.** When staging or backtesting reveals an unexpected scenario, create a local unit test that reproduces the behavior. This prevents regressions and builds a test suite informed by real-world usage patterns rather than speculation.
+**Add regression tests for discovered edge cases.** When staging or platform backtesting reveals an unexpected scenario, create a local unit test that reproduces the behavior. This prevents regressions and builds a test suite informed by real-world usage patterns rather than speculation.
 </Tip>
 
 ### Recommended Staging Duration
@@ -148,7 +129,7 @@ Before promoting to production, verify:
 
 - Expected behavior observed on legitimate transactions
 - Sufficient transaction diversity to build confidence
-- Historical backtesting covers the relevant protocol surfaces and known risky periods
+- You reviewed every finding from the platform's automatic release backtest
 - Trigger frequency, runtime, and gas usage fit the network's production limits
 - You understand how the assertion behaves across different scenarios
 
@@ -160,7 +141,7 @@ Moving to production means assertion results can affect transaction inclusion ac
 
 **Over-investing in local testing:** Trying to cover every edge case locally is inefficient. Staging does this better with real transactions.
 
-**Skipping backtesting entirely:** A quick backtest catches obvious issues before staging and is essential for debugging staging discoveries.
+**Skipping the release backtest:** Review the automatic platform result and investigate every finding before authorizing deployment.
 
 **Deploying directly to production:** Always validate in staging first. Production should only use assertions that have passed staging review.
 
@@ -173,7 +154,7 @@ Moving to production means assertion results can affect transaction inclusion ac
     Local testing patterns and best practices
   </Card>
   <Card title="Backtesting" icon="clock-rotate-left" href="/credible/backtesting">
-    Test against historical transactions
+    Review the automatic backtest attached to a platform release
   </Card>
   <Card title="Deploy with the Platform" icon="rocket" href="/credible/deploy-assertions-dapp">
     Deploy assertions to staging or production
