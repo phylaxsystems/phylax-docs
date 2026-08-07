@@ -29,7 +29,7 @@ contract ERC20CumulativeOutflowBreakerAssertion is Assertion {
     }
 
     /// @notice Reverts when cumulative token outflow breaches the rolling-window limit.
-    /// @dev The Reshiram trigger collects one bucket per block across the window and calls this function only after breach.
+    /// @dev The Reshiram trigger tracks the window and calls this function only after breach.
     function assertCumulativeOutflow() external view {
         PhEvm.OutflowContext memory ctx = ph.outflowContext();
         require(ctx.token == monitoredToken, "ERC20Outflow: wrong token context");
