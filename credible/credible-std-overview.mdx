@@ -73,6 +73,8 @@ function watchCumulativeInflow(
 ) internal view;
 ```
 
+The cumulative flow helpers collect inflow or outflow into one bucket per block and evaluate those per-block buckets over the configured rolling window.
+
 `registerFnCallTrigger` pairs with `ph.context()` so an assertion can inspect the matched call's selector and call range.
 
 ## Fork and Snapshot Helpers

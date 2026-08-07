@@ -9,18 +9,18 @@ import ass20ERC20Drain from "/snippets/ass20-erc20-drain.a.mdx";
 
 Monitors and limits cumulative token outflows to prevent catastrophic asset loss during exploits, creating a response window for protocol operators. Use it for lending reserves, vault custody, bridge escrows, treasuries, liquidity pools, and other contracts where rapid ERC20 withdrawals are a critical risk.
 
-This is a V2 Reshiram circuit-breaker pattern. The rolling-window accounting is handled by the trigger/precompile machinery, not by assertion-authored storage.
+This is a V2 Reshiram circuit-breaker pattern. The trigger/precompile machinery collects token outflow into one bucket per block and evaluates those per-block buckets over the rolling window. The assertion does not need its own storage for this accounting.
 
 ## What This Pattern Checks
 
 Registers a percentage-based cumulative outflow limit:
 
 - `registerAssertionSpec(AssertionSpec.Reshiram)`: Registers the assertion as a Reshiram assertion.
-- `watchCumulativeOutflow(token, thresholdBps, windowDuration, assertFn)`: Watches ERC20 outflow over a rolling window.
+- `watchCumulativeOutflow(token, thresholdBps, windowDuration, assertFn)`: Collects ERC20 outflow into one bucket per block and watches the buckets over a rolling window.
 - `ph.outflowContext()`: Reads the token context inside the triggered assertion.
 - Reverts when cumulative outflow breaches the configured threshold.
 
-The assertion does not manually store balances or rolling counters. The Reshiram circuit-breaker trigger is responsible for tracking the window and invoking the assertion when the limit is exceeded.
+The assertion does not manually store balances or rolling counters. The Reshiram circuit-breaker trigger tracks the per-block buckets across the window and invokes the assertion when the limit is exceeded.
 
 <Warning>
 The current Phylax app and Linea deployment support the V1 assertion specification. Treat this V2 Reshiram pattern as a local or development example until the target deployment supports V2.

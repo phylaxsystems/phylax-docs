@@ -769,7 +769,7 @@ function registerErc20ChangeTrigger(
 
 #### `watchCumulativeOutflow`
 
-Registers a circuit breaker trigger for cumulative ERC20 outflow from the assertion adopter.
+Registers a circuit breaker trigger that collects ERC20 outflow from the assertion adopter into one bucket per block.
 
 ```solidity
 function watchCumulativeOutflow(
@@ -780,11 +780,11 @@ function watchCumulativeOutflow(
 ) internal view;
 ```
 
-`thresholdBps` is measured against the TVL snapshot taken at the start of the rolling window. `1000` is `10%`.
+The trigger evaluates the per-block buckets over the configured rolling window. `thresholdBps` is measured against the TVL snapshot taken at the start of that window. `1000` is `10%`.
 
 #### `watchCumulativeInflow`
 
-Registers a circuit breaker trigger for cumulative ERC20 inflow into the assertion adopter.
+Registers a circuit breaker trigger that collects ERC20 inflow into the assertion adopter into one bucket per block.
 
 ```solidity
 function watchCumulativeInflow(
@@ -795,7 +795,7 @@ function watchCumulativeInflow(
 ) internal view;
 ```
 
-`thresholdBps` is measured against the TVL snapshot taken at the start of the rolling window. `1000` is `10%`.
+The trigger evaluates the per-block buckets over the configured rolling window. `thresholdBps` is measured against the TVL snapshot taken at the start of that window. `1000` is `10%`.
 
 ## Deprecated Cheatcodes
 

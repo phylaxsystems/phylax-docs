@@ -157,7 +157,7 @@ The ability to run complex security rules outside the main blockchain execution,
 Special transactions that may have protocol-level inclusion guarantees, such as L1->L2 deposits. Network integrations define the validation policy for these transaction paths.
 
 ### Circuit Breaker
-An assertion pattern that limits how much value can flow into or out of a protected contract over a rolling window. Circuit breakers are useful when the goal is to reduce exploit velocity or contain blast radius rather than block one specific function call.
+An assertion pattern that collects value flowing into or out of a protected contract into one bucket per block, then limits the cumulative flow across those per-block buckets over a rolling window. Circuit breakers are useful when the goal is to reduce exploit velocity or contain blast radius rather than block one specific function call.
 
 ### Verifiability
 The ability to inspect the rules and registry state behind a protocol's Credible Layer posture. Assertion IDs and registry entries are on-chain, while assertion bytecode is stored in Assertion DA. Public views expose the protocol's visible assertion posture; private project data remains restricted to authorized project users.

@@ -43,9 +43,9 @@ Use this page as a reference catalog when you already know the class of risk you
 
 ## Circuit Breakers
 
-- [**ERC20 Cumulative Outflow Breaker**](./ass20-erc20-drain): Uses the Reshiram `watchCumulativeOutflow` trigger to limit ERC20 outflows over a rolling window.
+- [**ERC20 Cumulative Outflow Breaker**](./ass20-erc20-drain): Uses the Reshiram `watchCumulativeOutflow` trigger to collect ERC20 outflow into one bucket per block and limit cumulative outflow over a rolling window.
 
-- [**ERC20 Cumulative Inflow Breaker**](./ass22-erc20-inflow-breaker): Uses the Reshiram `watchCumulativeInflow` trigger to limit suspicious ERC20 inflows over a rolling window.
+- [**ERC20 Cumulative Inflow Breaker**](./ass22-erc20-inflow-breaker): Uses the Reshiram `watchCumulativeInflow` trigger to collect ERC20 inflow into one bucket per block and limit suspicious cumulative inflow over a rolling window.
 
 ## Native Asset Protection
 
