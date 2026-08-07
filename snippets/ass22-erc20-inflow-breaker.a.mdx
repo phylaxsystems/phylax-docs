@@ -29,7 +29,7 @@ contract ERC20CumulativeInflowBreakerAssertion is Assertion {
     }
 
     /// @notice Reverts when cumulative token inflow breaches the rolling-window limit.
-    /// @dev The Reshiram trigger collects one bucket per block across the window and calls this function only after breach.
+    /// @dev The Reshiram trigger tracks the window and calls this function only after breach.
     function assertCumulativeInflow() external view {
         PhEvm.InflowContext memory ctx = ph.inflowContext();
         require(ctx.token == monitoredToken, "ERC20Inflow: wrong token context");
