@@ -9,18 +9,18 @@ import ass22ERC20InflowBreaker from "/snippets/ass22-erc20-inflow-breaker.a.mdx"
 
 Use this pattern when unexpected inflows can distort protocol accounting, prices, or risk controls. It applies to lending vault donations, AMM reserve stuffing, bridged-asset accounting, staking receipt-token systems, and other protocols where excessive token inflow over a short window is suspicious.
 
-This is a V2 Reshiram circuit-breaker pattern. The rolling-window accounting is handled by the trigger/precompile machinery, not by assertion-authored storage.
+This is a V2 Reshiram circuit-breaker pattern. The trigger/precompile machinery collects token inflow into one bucket per block and evaluates those per-block buckets over the rolling window. The assertion does not need its own storage for this accounting.
 
 ## What This Pattern Checks
 
 Registers a percentage-based cumulative inflow limit:
 
 - `registerAssertionSpec(AssertionSpec.Reshiram)`: Registers the assertion as a Reshiram assertion.
-- `watchCumulativeInflow(token, thresholdBps, windowDuration, assertFn)`: Watches ERC20 inflow over a rolling window.
+- `watchCumulativeInflow(token, thresholdBps, windowDuration, assertFn)`: Collects ERC20 inflow into one bucket per block and watches the buckets over a rolling window.
 - `ph.inflowContext()`: Reads the token context inside the triggered assertion.
 - Reverts when cumulative inflow breaches the configured threshold.
 
-The assertion does not manually store balances or rolling counters. The Reshiram circuit-breaker trigger is responsible for tracking the window and invoking the assertion when the limit is exceeded.
+The assertion does not manually store balances or rolling counters. The Reshiram circuit-breaker trigger tracks the per-block buckets across the window and invokes the assertion when the limit is exceeded.
 
 <Warning>
 The current Phylax app and Linea deployment support the V1 assertion specification. Treat this V2 Reshiram pattern as a local or development example until the target deployment supports V2.

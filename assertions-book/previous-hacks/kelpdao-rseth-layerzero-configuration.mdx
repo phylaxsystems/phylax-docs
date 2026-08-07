@@ -33,7 +33,7 @@ The dangerous state is not only "a bridge was compromised." For a dependent prot
 
 ### Cross-Chain Inflow Circuit Breaker
 
-An inflow circuit breaker can limit how much of a bridged or restaked asset enters a protected protocol over a rolling window.
+An inflow circuit breaker can collect bridged or restaked asset inflow into one bucket per block and limit the cumulative inflow across those per-block buckets over a rolling window.
 
 Useful checks include:
 
@@ -69,7 +69,7 @@ Useful checks include:
 
 For an EVM protocol accepting an asset like rsETH as collateral or vault input, the assertions would not need to understand every LayerZero or KelpDAO internal detail. They would enforce local safety boundaries:
 
-1. The protected market cannot accept more than a configured amount of the asset over a rolling window.
+1. The protected market cannot accept more than a configured amount of the asset across the rolling window's per-block buckets.
 2. The market cannot grow exposure if asset backing or message-security data is stale, disputed, or outside policy.
 3. The protocol cannot silently continue with the same risk parameters after a critical upstream configuration changes.
 
