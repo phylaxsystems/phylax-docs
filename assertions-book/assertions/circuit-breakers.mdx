@@ -61,18 +61,19 @@ Each Hub adopts a circuit breaker. For each watched asset, the policy checks:
 
 The transaction is rejected when any configured limit is exceeded.
 
-### Why watch Hub balances
+The limits cover different flow patterns:
 
-- One balance signal covers every path that moves custody.
-- The check covers current and future protocol functions.
-- An approved spender cannot bypass it with `transferFrom`.
-- A token transfer is measured by its balance effect.
+| Flow pattern | Limit that can stop it |
+| --- | --- |
+| Fast movement in one block | Peak rate |
+| Smaller movements across many blocks | Cumulative flow |
+| Either limit is exceeded | Transaction rejected |
 
-### Why combine the limits
+### Hub flows and limits
 
-- A rapid drain can hit the rate limit before it reaches the cumulative limit.
-- A slow drain can reach the cumulative limit without a high peak rate.
-- The same protection applies to unexpected inflows.
+Blue lines show rolling 24-hour net flow as basis points of the Hub's token balance. Green and red dashed lines show the inflow and outflow limits.
+
+![Five Aave V4 Hub graphs showing rolling net flow for Core WBTC, Core USDG, Core wstETH, Prime WBTC, and Prime wstETH against inflow and outflow circuit-breaker limits](/images/aave-v4-flow-rate-realized-flows-2026-07-30.png)
 
 ## Read the references
 
