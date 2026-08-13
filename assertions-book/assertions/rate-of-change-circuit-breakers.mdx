@@ -41,8 +41,6 @@ After deployment, the cumulative watcher tracks the assertion adopter's balance 
 
 During that invocation, `ph.inflowRate()` or `ph.outflowRate()` returns rate statistics calculated from the same rolling-window data. The getter does not trigger the assertion by itself.
 
-If a rate limit must be checked before the intended cumulative limit is reached, register the watcher with a lower dispatch threshold and enforce both limits inside the assertion, as shown in the [combined example](#combined-inflow-and-outflow-example).
-
 ## Directional flow
 
 The executor records both inflow and outflow. It derives the directional values as follows:
