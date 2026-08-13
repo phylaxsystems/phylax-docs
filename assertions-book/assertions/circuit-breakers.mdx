@@ -43,7 +43,15 @@ When triggers are combined, the assertion can reject a transaction when either l
 
 ## Aave V4 example
 
-Aave V4 keeps ERC20 custody in its Core and Prime Hubs. Spokes use the Hubs for supplies, borrows, withdrawals, and liquidations.
+Aave checks each supply, borrow, withdrawal, and liquidation. These checks do not track total Hub custody movement across operations and time.
+
+Credible Layer watches the actual ERC20 balances of the Core and Prime Hubs. It does not depend on every token-moving path calling an onchain breaker.
+
+- A missed function or approved transfer cannot bypass the balance check.
+- No breaker code or storage is added to Aave.
+- User transactions do not pay extra gas for breaker accounting.
+
+Aave combines cumulative and rate limits using the same balance history.
 
 The Aave V4 assertion suite watches these Hub balances:
 
