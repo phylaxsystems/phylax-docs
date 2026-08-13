@@ -68,14 +68,6 @@ Suppose a breaker observes a TVL snapshot of 100,000 tokens. Each of the followi
 
 A cumulative threshold can activate the assertion for both cases. A rate-aware policy can then escalate the first case because its peak is higher while applying a different response to the second.
 
-## The cumulative limit remains the foundation
-
-Rate-of-change enriches a cumulative breaker; it does not replace one. The rate getters are only available after a matching cumulative trigger fires, and a rate-only policy can miss a slow drain that stays below its velocity threshold.
-
-Use the cumulative amount as the primary risk boundary. If the assertion permits a low-rate cumulative breach, handle the remaining cumulative risk through another limit, an alert, or an explicit operational policy. This keeps the rate signal from silently turning gradual loss into acceptable loss.
-
-Rate values use integer division, so a result below `1 bps/s` is rounded down to zero. A nonzero flow against a zero TVL snapshot is treated as an unbounded rate.
-
 ## Related documentation
 
 - [ERC20 Cumulative Outflow Breaker](./ass20-erc20-drain)
