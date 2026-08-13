@@ -35,13 +35,11 @@ Use each getter only in the matching cumulative trigger callback:
 | `ph.outflowRate()` | `watchCumulativeOutflow(...)` |
 | `ph.inflowRate()` | `watchCumulativeInflow(...)` |
 
-## Invocation lifecycle
+## When it runs
 
-1. The assertion registers `watchCumulativeOutflow(...)`, `watchCumulativeInflow(...)`, or both in `triggers()`.
-2. The executor records the assertion adopter's balance changes for the watched ERC20 token. All recorded changes in the same block are accumulated into one bucket.
-3. At evaluation, the executor keeps buckets whose timestamps are inside the configured rolling window. The token balance immediately before the earliest retained bucket becomes `tvlSnapshot`.
-4. The cumulative trigger calculates net directional flow across the window and invokes the assertion only when that amount is nonzero and strictly greater than `thresholdBps` of `tvlSnapshot`.
-5. Inside the invoked assertion, the matching rate getter returns statistics calculated from those same retained buckets.
+After deployment, the cumulative watcher tracks the assertion adopter's balance changes for the configured ERC20 token. It invokes the registered assertion function when net inflow or outflow is strictly greater than `thresholdBps` of the window-start balance.
+
+During that invocation, `ph.inflowRate()` or `ph.outflowRate()` returns rate statistics calculated from the same rolling-window data. The getter does not trigger the assertion by itself.
 
 If a rate limit must be checked before the intended cumulative limit is reached, register the watcher with a lower dispatch threshold and enforce both limits inside the assertion, as shown in the [combined example](#combined-inflow-and-outflow-example).
 
