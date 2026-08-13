@@ -715,7 +715,7 @@ function inflowRate() external view returns (FlowRateContext memory ctx);
 
 Returns a zeroed context when the assertion was not invoked by a matching cumulative-inflow trigger. In a zeroed context, `token == address(0)`.
 
-For the calculation model and design tradeoffs, see [Rate-of-Change Circuit Breakers](../assertions-book/assertions/rate-of-change-circuit-breakers).
+For calculations and edge cases, see [`outflowRate` and `inflowRate`](../assertions-book/assertions/rate-of-change-circuit-breakers).
 
 ### Math Helpers
 
