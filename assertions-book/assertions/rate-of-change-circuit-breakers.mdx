@@ -1,0 +1,134 @@
+---
+title: 'outflowRate and inflowRate'
+description: 'Reference for the flow-rate context returned by cumulative ERC20 flow triggers'
+---
+
+import rateOfChangeCircuitBreaker from "/snippets/rate-of-change-circuit-breaker.a.mdx";
+
+`ph.outflowRate()` and `ph.inflowRate()` return rate statistics for the rolling window that caused a cumulative ERC20 flow trigger to invoke an assertion. The getters take no arguments, do not register a trigger, and do not enforce a rate limit.
+
+<Warning>
+An assertion that calls either getter must register `AssertionSpec.Experimental`; Legacy and Reshiram assertions cannot call them.
+</Warning>
+
+## Interface
+
+```solidity
+struct FlowRateContext {
+    address token;
+    uint256 peakRateBps;
+    uint256 lastRateBps;
+    uint256 meanRateBps;
+    uint256 tvlSnapshot;
+    uint256 windowStart;
+    uint256 windowEnd;
+}
+
+function outflowRate() external view returns (FlowRateContext memory ctx);
+function inflowRate() external view returns (FlowRateContext memory ctx);
+```
+
+Use each getter only in the matching cumulative trigger callback:
+
+| Getter | Matching trigger |
+| --- | --- |
+| `ph.outflowRate()` | `watchCumulativeOutflow(...)` |
+| `ph.inflowRate()` | `watchCumulativeInflow(...)` |
+
+## When it runs
+
+After deployment, the cumulative watcher tracks the assertion adopter's balance changes for the configured ERC20 token. It invokes the registered assertion function when net inflow or outflow is strictly greater than `thresholdBps` of the window-start balance.
+
+During that invocation, `ph.inflowRate()` or `ph.outflowRate()` returns rate statistics calculated from the same rolling-window data. The getter does not trigger the assertion by itself.
+
+## Directional flow
+
+The executor records both inflow and outflow. It derives the directional values as follows:
+
+| Context | Per-block flow used for `peakRateBps` and `lastRateBps` | Window flow used for `meanRateBps` |
+| --- | --- | --- |
+| Outflow | `max(blockOutflow - blockInflow, 0)` | `max(totalOutflow - totalInflow, 0)` |
+| Inflow | `max(blockInflow - blockOutflow, 0)` | `max(totalInflow - totalOutflow, 0)` |
+
+Opposite-direction flow therefore offsets the watched direction. The per-block rates clamp each bucket independently, while the mean uses net flow across the entire retained window.
+
+## Rate calculations
+
+All three rate fields are integer values measured in basis points of `tvlSnapshot` per second.
+
+### Peak rate
+
+For every retained block bucket, the executor calculates:
+
+`bucket rate = floor(net block flow × 10,000 ÷ (tvlSnapshot × 10 seconds))`
+
+`peakRateBps` is the greatest bucket rate. The denominator always uses 10 seconds; it does not use the chain's actual block interval.
+
+### Latest rate
+
+`lastRateBps` is the bucket rate for the most recent retained block. A previous spike can therefore remain in `peakRateBps` while `lastRateBps` falls to a lower value.
+
+### Mean rate
+
+The mean uses the active span between the earliest and latest retained buckets:
+
+`active span = latest bucket timestamp - earliest bucket timestamp + 10 seconds`
+
+`mean rate = floor(net window flow × 10,000 ÷ (tvlSnapshot × active span))`
+
+It does not divide by the full configured window when the retained activity covers a shorter span. With one retained bucket, the active span is 10 seconds, so peak, latest, and mean rates are equal.
+
+## Returned fields
+
+| Field | Behavior |
+| --- | --- |
+| `token` | Watched ERC20 token. `address(0)` means no matching flow trigger context was available. |
+| `peakRateBps` | Highest directional block-bucket rate in the retained window. |
+| `lastRateBps` | Directional rate of the most recent retained block bucket. |
+| `meanRateBps` | Net directional window flow divided by the active span. |
+| `tvlSnapshot` | Adopter's token balance immediately before the earliest retained bucket. |
+| `windowStart` | Timestamp of the earliest retained bucket. |
+| `windowEnd` | `windowStart + windowDuration`, with saturating addition. |
+
+## Edge cases
+
+| Condition | Behavior |
+| --- | --- |
+| Getter called without its matching trigger context | Returns a zero-filled `FlowRateContext`. Check `token != address(0)` before using the rate fields. |
+| Cumulative flow equals the watcher threshold | The watcher does not invoke the assertion. Dispatch requires a strict threshold breach. |
+| Net directional flow is zero | The watcher does not invoke the assertion, including when its threshold is zero. |
+| Several changes occur in one block | Their inflow and outflow amounts are accumulated before the block rate is calculated. |
+| Distinct blocks share the same 10-second period | They remain distinct block buckets, but each rate still uses the fixed 10-second denominator. |
+| Calculated rate is below `1 bps/s` | Integer division rounds it down to zero. |
+| `tvlSnapshot` is zero | Nonzero cumulative flow breaches any finite threshold. A nonzero rate calculation returns `type(uint256).max`; a zero-flow bucket still has a zero rate. |
+| Bucket timestamp equals the window cutoff | The bucket remains in the window because the cutoff is inclusive. |
+| `windowDuration` is below 10 seconds or does not fit in `uint64` | Trigger registration is rejected. |
+| Rate multiplication | The executor uses 512-bit intermediate arithmetic before narrowing the result to `uint256`. |
+
+## Calculation example
+
+For a `tvlSnapshot` of 100,000 tokens:
+
+| Retained outflow | Result |
+| --- | ---: |
+| 10,000 tokens in one block | `peakRateBps = 100 bps/s` |
+| 1,000 tokens in each of ten blocks | `peakRateBps = 10 bps/s` |
+
+Both results use the fixed 10-second denominator for each block bucket. The timestamps of the first and last retained blocks determine `meanRateBps`.
+
+## Combined inflow and outflow example
+
+This assertion registers both cumulative directions with a low dispatch threshold, reads the matching cumulative and rate contexts, and rejects when either configured limit is exceeded.
+
+<rateOfChangeCircuitBreaker />
+
+<Note>
+Circuit breakers should be paired with invalidation monitoring and an incident-response plan. See [Monitoring and incident response](./circuit-breakers#monitoring-and-incident-response).
+</Note>
+
+## Related documentation
+
+- [Circuit breakers](./circuit-breakers)
+- [ERC20 Cumulative Outflow Breaker](./ass20-erc20-drain)
+- [ERC20 Cumulative Inflow Breaker](./ass22-erc20-inflow-breaker)
+- [Circuit-breaker cheatcode reference](../../credible/cheatcodes-reference#circuit-breaker-context)

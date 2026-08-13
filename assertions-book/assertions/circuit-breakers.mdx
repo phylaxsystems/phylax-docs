@@ -1,0 +1,63 @@
+---
+title: 'Circuit breakers'
+description: 'Overview of cumulative and rate-of-change circuit breakers for ERC20 balance changes'
+---
+
+Circuit breakers enforce configured limits on ERC20 balance changes. They can reject a candidate transaction before it settles. This page compares cumulative and rate-of-change controls.
+
+## What they watch
+
+- **Adopter:** The contract protected by the assertion.
+- **Token:** The ERC20 balance being watched.
+- **Direction:** Tokens entering or leaving the adopter.
+- **Time:** Balance changes across blocks and transactions.
+
+## Circuit breaker types
+
+<CardGroup cols={3}>
+  <Card title="Cumulative outflow" icon="arrow-up-right-from-square" href="./ass20-erc20-drain">
+    Limits net tokens leaving the adopter over a rolling window.
+  </Card>
+  <Card title="Cumulative inflow" icon="arrow-down-to-square" href="./ass22-erc20-inflow-breaker">
+    Limits net tokens entering the adopter over a rolling window.
+  </Card>
+  <Card title="Rate of change" icon="gauge-high" href="./rate-of-change-circuit-breakers">
+    Lets an assertion limit how quickly the watched balance changes.
+  </Card>
+</CardGroup>
+
+## How cumulative and rate limits work together
+
+Cumulative and rate-of-change limits use different semantics. A cumulative limit measures total net flow over a rolling window, while a rate limit measures how quickly the balance changes. An assertion can enforce either policy or both. Both policies use a matching cumulative watcher to invoke the assertion. For a rate limit, the assertion reads the rolling-window rate data during that callback.
+
+| Risk | Circuit breaker |
+| --- | --- |
+| Too many tokens leave over time | Cumulative outflow |
+| Too many tokens enter over time | Cumulative inflow |
+| The balance changes too quickly | Rate of change |
+| Total flow and flow speed must both be bounded | Cumulative and rate of change |
+
+When checks are combined, the assertion can reject a transaction when either limit is exceeded.
+
+## Why use a Phylax circuit breaker
+
+A protocol-integrated circuit breaker protects the execution paths wired through it.
+
+A Phylax circuit breaker runs as an assertion before the transaction settles. It watches the actual ERC20 balance change of the adopter.
+
+| | Protocol-integrated circuit breaker | Phylax circuit breaker |
+| --- | --- | --- |
+| Coverage | Covers paths integrated with the breaker | Covers observed changes to the adopter's watched ERC20 balance |
+| Measurement | Defined by the protocol integration | Uses the observed balance change |
+| Time window | May require counters or buckets in protocol storage | Keeps rolling buckets outside the protected protocol |
+| Protocol code | Adds hooks, state, and audit surface | Adds no breaker code or storage to the protocol |
+| User gas | May include breaker calls and storage writes | Adds no protocol-side gas for breaker accounting |
+| Changes | Integration may require a protocol upgrade or wrapper | Uses an assertion release without changing protocol code |
+
+Because enforcement runs as an assertion, the protocol does not need breaker-specific hooks or storage. The assertion can reject a candidate transaction when it exceeds the configured policy.
+
+## Monitoring and incident response
+
+Circuit breakers constrain token flow rather than a specific attack path, so they can limit the impact of different exploit classes, including attacks that begin with oracle manipulation. They bound flow within the configured rolling window; they do not replace monitoring or incident response.
+
+Choose a window long enough for your team to receive an invalidation alert, investigate, and apply mitigation before earlier flow ages out of the window. Before production, [validate the threshold and window in staging](../../credible/testing-strategy#monitor-staging-behavior) and [configure invalidation notifications](../../credible/dapp-integrations).

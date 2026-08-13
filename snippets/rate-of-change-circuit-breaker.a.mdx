@@ -1,0 +1,71 @@
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+contract ERC20FlowRateCircuitBreakerAssertion is Assertion {
+    // Dispatch early so the assertion can enforce its own cumulative and rate limits.
+    uint256 internal constant DISPATCH_THRESHOLD_BPS = 1;
+
+    address public immutable monitoredToken;
+    uint256 public immutable windowDuration;
+    uint256 public immutable inflowLimitBps;
+    uint256 public immutable outflowLimitBps;
+    uint256 public immutable inflowPeakRateLimitBps;
+    uint256 public immutable outflowPeakRateLimitBps;
+
+    constructor(
+        address monitoredToken_,
+        uint256 windowDuration_,
+        uint256 inflowLimitBps_,
+        uint256 outflowLimitBps_,
+        uint256 inflowPeakRateLimitBps_,
+        uint256 outflowPeakRateLimitBps_
+    ) {
+        registerAssertionSpec(AssertionSpec.Experimental);
+
+        monitoredToken = monitoredToken_;
+        windowDuration = windowDuration_;
+        inflowLimitBps = inflowLimitBps_;
+        outflowLimitBps = outflowLimitBps_;
+        inflowPeakRateLimitBps = inflowPeakRateLimitBps_;
+        outflowPeakRateLimitBps = outflowPeakRateLimitBps_;
+    }
+
+    function triggers() external view override {
+        watchCumulativeInflow(
+            monitoredToken,
+            DISPATCH_THRESHOLD_BPS,
+            windowDuration,
+            this.assertInflowWithinLimits.selector
+        );
+        watchCumulativeOutflow(
+            monitoredToken,
+            DISPATCH_THRESHOLD_BPS,
+            windowDuration,
+            this.assertOutflowWithinLimits.selector
+        );
+    }
+
+    function assertInflowWithinLimits() external view {
+        PhEvm.InflowContext memory flow = ph.inflowContext();
+        PhEvm.FlowRateContext memory rate = ph.inflowRate();
+        require(flow.token == monitoredToken && rate.token == monitoredToken, "ERC20Flow: bad inflow context");
+
+        require(flow.currentBps <= inflowLimitBps, "ERC20Flow: cumulative inflow limit");
+        require(rate.peakRateBps <= inflowPeakRateLimitBps, "ERC20Flow: peak inflow rate limit");
+    }
+
+    function assertOutflowWithinLimits() external view {
+        PhEvm.OutflowContext memory flow = ph.outflowContext();
+        PhEvm.FlowRateContext memory rate = ph.outflowRate();
+        require(flow.token == monitoredToken && rate.token == monitoredToken, "ERC20Flow: bad outflow context");
+
+        require(flow.currentBps <= outflowLimitBps, "ERC20Flow: cumulative outflow limit");
+        require(rate.peakRateBps <= outflowPeakRateLimitBps, "ERC20Flow: peak outflow rate limit");
+    }
+}
+```
