@@ -55,3 +55,9 @@ A Phylax circuit breaker runs as an assertion before the transaction settles. It
 | Changes | Integration may require a protocol upgrade or wrapper | Uses an assertion release without changing protocol code |
 
 Because enforcement runs as an assertion, the protocol does not need breaker-specific hooks or storage. The assertion can reject a candidate transaction when it exceeds the configured policy.
+
+## Monitoring and incident response
+
+Circuit breakers constrain token flow rather than a specific attack path, so they can limit the impact of different exploit classes, including attacks that begin with oracle manipulation. They bound flow within the configured rolling window; they do not replace monitoring or incident response.
+
+Choose a window long enough for your team to receive an invalidation alert, investigate, and apply mitigation before earlier flow ages out of the window. Before production, [validate the threshold and window in staging](../../credible/testing-strategy#monitor-staging-behavior) and [configure invalidation notifications](../../credible/dapp-integrations).
