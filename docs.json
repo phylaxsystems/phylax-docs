@@ -276,6 +276,7 @@
               {
                 "group": "Circuit Breakers",
                 "pages": [
+                  "assertions-book/assertions/circuit-breakers",
                   "assertions-book/assertions/ass20-erc20-drain",
                   "assertions-book/assertions/ass22-erc20-inflow-breaker",
                   "assertions-book/assertions/rate-of-change-circuit-breakers"

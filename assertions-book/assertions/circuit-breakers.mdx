@@ -1,0 +1,89 @@
+---
+title: 'Circuit breakers'
+description: 'Overview of cumulative and rate-of-change circuit breakers for ERC20 balance changes'
+---
+
+Circuit breakers limit unusual ERC20 balance changes. They can reject a candidate transaction before it settles.
+
+## What they watch
+
+- **Adopter:** The contract protected by the assertion.
+- **Token:** The ERC20 balance being watched.
+- **Direction:** Tokens entering or leaving the adopter.
+- **Time:** Balance changes across blocks and transactions.
+
+## Circuit breaker types
+
+<CardGroup cols={3}>
+  <Card title="Cumulative outflow" icon="arrow-up-right-from-square" href="./ass20-erc20-drain">
+    Limits net tokens leaving the adopter over a rolling window.
+  </Card>
+  <Card title="Cumulative inflow" icon="arrow-down-to-square" href="./ass22-erc20-inflow-breaker">
+    Limits net tokens entering the adopter over a rolling window.
+  </Card>
+  <Card title="Rate of change" icon="gauge-high" href="./rate-of-change-circuit-breakers">
+    Limits how quickly the watched balance changes.
+  </Card>
+</CardGroup>
+
+## Use them separately or together
+
+Each circuit breaker can enforce its own limit.
+
+Rate of change can be used as an independent trigger. It can also be combined with a cumulative trigger.
+
+| Risk | Circuit breaker |
+| --- | --- |
+| Too many tokens leave over time | Cumulative outflow |
+| Too many tokens enter over time | Cumulative inflow |
+| The balance changes too quickly | Rate of change |
+| Total flow and flow speed must both be bounded | Cumulative and rate of change |
+
+When triggers are combined, the assertion can reject a transaction when either limit is exceeded.
+
+## Aave V4 example
+
+Aave V4 keeps ERC20 custody in its Core and Prime Hubs. Spokes use the Hubs for supplies, borrows, withdrawals, and liquidations.
+
+The Aave V4 assertion suite watches these Hub balances:
+
+| Adopter | Watched assets |
+| --- | --- |
+| Core Hub | WBTC, USDG, and wstETH |
+| Prime Hub | WBTC and wstETH |
+
+Each Hub adopts a circuit breaker. For each watched asset, the policy checks:
+
+- Cumulative inflow over a rolling 24-hour window.
+- Cumulative outflow over a rolling 24-hour window.
+- Peak inflow rate.
+- Peak outflow rate.
+
+The transaction is rejected when any configured limit is exceeded.
+
+### Why watch Hub balances
+
+- One balance signal covers every path that moves custody.
+- The check covers current and future protocol functions.
+- An approved spender cannot bypass it with `transferFrom`.
+- A token transfer is measured by its balance effect.
+
+### Why combine the limits
+
+- A rapid drain can hit the rate limit before it reaches the cumulative limit.
+- A slow drain can reach the cumulative limit without a high peak rate.
+- The same protection applies to unexpected inflows.
+
+## Read the references
+
+<CardGroup cols={3}>
+  <Card title="Cumulative outflow" icon="arrow-up-right-from-square" href="./ass20-erc20-drain">
+    Review the outflow trigger and assertion pattern.
+  </Card>
+  <Card title="Cumulative inflow" icon="arrow-down-to-square" href="./ass22-erc20-inflow-breaker">
+    Review the inflow trigger and assertion pattern.
+  </Card>
+  <Card title="Rate contexts" icon="gauge-high" href="./rate-of-change-circuit-breakers">
+    Review the rate fields, calculations, and edge cases.
+  </Card>
+</CardGroup>
