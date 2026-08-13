@@ -3,7 +3,7 @@ title: 'Circuit breakers'
 description: 'Overview of cumulative and rate-of-change circuit breakers for ERC20 balance changes'
 ---
 
-Circuit breakers limit unusual ERC20 balance changes. They can reject a candidate transaction before it settles.
+Circuit breakers enforce configured limits on ERC20 balance changes. They can reject a candidate transaction before it settles. This page compares cumulative and rate-of-change controls.
 
 ## What they watch
 
@@ -22,15 +22,13 @@ Circuit breakers limit unusual ERC20 balance changes. They can reject a candidat
     Limits net tokens entering the adopter over a rolling window.
   </Card>
   <Card title="Rate of change" icon="gauge-high" href="./rate-of-change-circuit-breakers">
-    Limits how quickly the watched balance changes.
+    Lets an assertion limit how quickly the watched balance changes.
   </Card>
 </CardGroup>
 
-## Use them separately or together
+## How cumulative and rate limits work together
 
-Each circuit breaker can enforce its own limit.
-
-Rate of change can be used as an independent trigger. It can also be combined with a cumulative trigger.
+Cumulative and rate-of-change limits use different semantics. A cumulative limit measures total net flow over a rolling window, while a rate limit measures how quickly the balance changes. An assertion can enforce either policy or both. Both policies use a matching cumulative watcher to invoke the assertion. For a rate limit, the assertion reads the rolling-window rate data during that callback.
 
 | Risk | Circuit breaker |
 | --- | --- |
@@ -39,35 +37,21 @@ Rate of change can be used as an independent trigger. It can also be combined wi
 | The balance changes too quickly | Rate of change |
 | Total flow and flow speed must both be bounded | Cumulative and rate of change |
 
-When triggers are combined, the assertion can reject a transaction when either limit is exceeded.
+When checks are combined, the assertion can reject a transaction when either limit is exceeded.
 
 ## Why use a Phylax circuit breaker
 
-An onchain circuit breaker is part of the protocol. Every path that moves value must call it.
+A protocol-integrated circuit breaker protects the execution paths wired through it.
 
 A Phylax circuit breaker runs as an assertion before the transaction settles. It watches the actual ERC20 balance change of the adopter.
 
 | | Protocol-integrated circuit breaker | Phylax circuit breaker |
 | --- | --- | --- |
-| Coverage | Protects paths that call the breaker | Covers any path that changes the watched balance |
-| Measurement | Uses the amount supplied by protocol code | Uses the observed balance change |
-| Time window | Stores counters or buckets in protocol storage | Keeps rolling buckets outside the protected protocol |
+| Coverage | Covers paths integrated with the breaker | Covers observed changes to the adopter's watched ERC20 balance |
+| Measurement | Defined by the protocol integration | Uses the observed balance change |
+| Time window | May require counters or buckets in protocol storage | Keeps rolling buckets outside the protected protocol |
 | Protocol code | Adds hooks, state, and audit surface | Adds no breaker code or storage to the protocol |
-| User gas | Pays for breaker calls and storage writes | Adds no protocol-side gas for breaker accounting |
-| Changes | Requires a protocol upgrade or wrapper | Uses an assertion release without changing protocol code |
+| User gas | May include breaker calls and storage writes | Adds no protocol-side gas for breaker accounting |
+| Changes | Integration may require a protocol upgrade or wrapper | Uses an assertion release without changing protocol code |
 
-Phylax removes breaker plumbing from the protocol without removing enforcement. A transaction that exceeds the policy is rejected before settlement.
-
-## Read the references
-
-<CardGroup cols={3}>
-  <Card title="Cumulative outflow" icon="arrow-up-right-from-square" href="./ass20-erc20-drain">
-    Review the outflow trigger and assertion pattern.
-  </Card>
-  <Card title="Cumulative inflow" icon="arrow-down-to-square" href="./ass22-erc20-inflow-breaker">
-    Review the inflow trigger and assertion pattern.
-  </Card>
-  <Card title="Rate contexts" icon="gauge-high" href="./rate-of-change-circuit-breakers">
-    Review the rate fields, calculations, and edge cases.
-  </Card>
-</CardGroup>
+Because enforcement runs as an assertion, the protocol does not need breaker-specific hooks or storage. The assertion can reject a candidate transaction when it exceeds the configured policy.
