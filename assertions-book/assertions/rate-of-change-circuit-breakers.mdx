@@ -3,6 +3,8 @@ title: 'Rate-of-Change Circuit Breakers'
 description: 'How flow-rate signals distinguish fast ERC20 drains from large, gradual movements'
 ---
 
+import rateOfChangeCircuitBreaker from "/snippets/rate-of-change-circuit-breaker.a.mdx";
+
 Rate-of-change signals add velocity to cumulative ERC20 circuit breakers. They help distinguish a sudden drain or reserve-stuffing attack from a large movement spread over time, even when both movements reach the same cumulative amount.
 
 <Warning>
@@ -67,6 +69,12 @@ Suppose a breaker observes a TVL snapshot of 100,000 tokens. Each of the followi
 | 1,000 tokens in each of ten blocks over 100 seconds | 1,000 bps | 10 bps/s |
 
 A cumulative threshold can activate the assertion for both cases. A rate-aware policy can then escalate the first case because its peak is higher while applying a different response to the second.
+
+## Combined inflow and outflow example
+
+This assertion watches both flow directions for one ERC20 token. A low cumulative threshold dispatches the corresponding assertion function early. That function then rejects the transaction when either the configured cumulative limit or peak-rate limit is exceeded.
+
+<rateOfChangeCircuitBreaker />
 
 ## Related documentation
 
