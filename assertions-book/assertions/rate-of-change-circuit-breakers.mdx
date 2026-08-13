@@ -1,6 +1,6 @@
 ---
 title: 'outflowRate and inflowRate'
-description: 'Reference for the experimental flow-rate context returned by cumulative ERC20 flow triggers'
+description: 'Reference for the flow-rate context returned by cumulative ERC20 flow triggers'
 ---
 
 import rateOfChangeCircuitBreaker from "/snippets/rate-of-change-circuit-breaker.a.mdx";
@@ -8,7 +8,7 @@ import rateOfChangeCircuitBreaker from "/snippets/rate-of-change-circuit-breaker
 `ph.outflowRate()` and `ph.inflowRate()` return rate statistics for the rolling window that caused a cumulative ERC20 flow trigger to invoke an assertion. The getters take no arguments, do not register a trigger, and do not enforce a rate limit.
 
 <Warning>
-Both getters are experimental. An assertion that calls either getter must register `AssertionSpec.Experimental`; Legacy and Reshiram assertions cannot call them.
+An assertion that calls either getter must register `AssertionSpec.Experimental`; Legacy and Reshiram assertions cannot call them.
 </Warning>
 
 ## Interface
