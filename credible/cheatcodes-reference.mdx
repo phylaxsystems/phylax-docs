@@ -679,6 +679,44 @@ struct InflowContext {
 function inflowContext() external view returns (InflowContext memory ctx);
 ```
 
+#### `FlowRateContext`
+
+Contains experimental rate-of-change statistics for an assertion triggered by a cumulative-flow watcher. Rate fields are basis points of `tvlSnapshot` per second.
+
+```solidity
+struct FlowRateContext {
+    address token;
+    uint256 peakRateBps;
+    uint256 lastRateBps;
+    uint256 meanRateBps;
+    uint256 tvlSnapshot;
+    uint256 windowStart;
+    uint256 windowEnd;
+}
+```
+
+#### `outflowRate`
+
+Returns rate-of-change context for an assertion triggered by `watchCumulativeOutflow`. The assertion must register `AssertionSpec.Experimental`.
+
+```solidity
+function outflowRate() external view returns (FlowRateContext memory ctx);
+```
+
+Returns a zeroed context when the assertion was not invoked by a matching cumulative-outflow trigger. In a zeroed context, `token == address(0)`.
+
+#### `inflowRate`
+
+Returns rate-of-change context for an assertion triggered by `watchCumulativeInflow`. The assertion must register `AssertionSpec.Experimental`.
+
+```solidity
+function inflowRate() external view returns (FlowRateContext memory ctx);
+```
+
+Returns a zeroed context when the assertion was not invoked by a matching cumulative-inflow trigger. In a zeroed context, `token == address(0)`.
+
+For the calculation model and design tradeoffs, see [Rate-of-Change Circuit Breakers](../assertions-book/assertions/rate-of-change-circuit-breakers).
+
 ### Math Helpers
 
 #### `mulDivDown`
