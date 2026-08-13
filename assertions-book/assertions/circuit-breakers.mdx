@@ -41,47 +41,22 @@ Rate of change can be used as an independent trigger. It can also be combined wi
 
 When triggers are combined, the assertion can reject a transaction when either limit is exceeded.
 
-## Aave V4 example
+## Why use a Phylax circuit breaker
 
-Aave checks each supply, borrow, withdrawal, and liquidation. These checks do not track total Hub custody movement across operations and time.
+An onchain circuit breaker is part of the protocol. Every path that moves value must call it.
 
-Credible Layer watches the actual ERC20 balances of the Core and Prime Hubs. It does not depend on every token-moving path calling an onchain breaker.
+A Phylax circuit breaker runs as an assertion before the transaction settles. It watches the actual ERC20 balance change of the adopter.
 
-- A missed function or approved transfer cannot bypass the balance check.
-- No breaker code or storage is added to Aave.
-- User transactions do not pay extra gas for breaker accounting.
+| | Protocol-integrated circuit breaker | Phylax circuit breaker |
+| --- | --- | --- |
+| Coverage | Protects paths that call the breaker | Covers any path that changes the watched balance |
+| Measurement | Uses the amount supplied by protocol code | Uses the observed balance change |
+| Time window | Stores counters or buckets in protocol storage | Keeps rolling buckets outside the protected protocol |
+| Protocol code | Adds hooks, state, and audit surface | Adds no breaker code or storage to the protocol |
+| User gas | Pays for breaker calls and storage writes | Adds no protocol-side gas for breaker accounting |
+| Changes | Requires a protocol upgrade or wrapper | Uses an assertion release without changing protocol code |
 
-Aave combines cumulative and rate limits using the same balance history.
-
-The Aave V4 assertion suite watches these Hub balances:
-
-| Adopter | Watched assets |
-| --- | --- |
-| Core Hub | WBTC, USDG, and wstETH |
-| Prime Hub | WBTC and wstETH |
-
-Each Hub adopts a circuit breaker. For each watched asset, the policy checks:
-
-- Cumulative inflow over a rolling 24-hour window.
-- Cumulative outflow over a rolling 24-hour window.
-- Peak inflow rate.
-- Peak outflow rate.
-
-The transaction is rejected when any configured limit is exceeded.
-
-The limits cover different flow patterns:
-
-| Flow pattern | Limit that can stop it |
-| --- | --- |
-| Fast movement in one block | Peak rate |
-| Smaller movements across many blocks | Cumulative flow |
-| Either limit is exceeded | Transaction rejected |
-
-### Hub flows and limits
-
-Blue lines show rolling 24-hour net flow as basis points of the Hub's token balance. Green and red dashed lines show the inflow and outflow limits.
-
-![Five Aave V4 Hub graphs showing rolling net flow for Core WBTC, Core USDG, Core wstETH, Prime WBTC, and Prime wstETH against inflow and outflow circuit-breaker limits](/images/aave-v4-flow-rate-realized-flows-2026-07-30.png)
+Phylax removes breaker plumbing from the protocol without removing enforcement. A transaction that exceeds the policy is rejected before settlement.
 
 ## Read the references
 
