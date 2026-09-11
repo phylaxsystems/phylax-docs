@@ -21,11 +21,13 @@ bash examples/protocol-guard/script/test-protocol-guard.sh
 
 Without target options, the script starts a local Anvil node and tests its `GuardedCounter` fixture. This confirms that the harness and base guard work, but it does not validate your upgrade.
 
-To use another local port or shorten the fail-open test window, set either environment variable:
+To use another local port, set `RPC_PORT`:
 
 ```shell
-RPC_PORT=9545 FAIL_OPEN_THRESHOLD=5 bash examples/protocol-guard/script/test-protocol-guard.sh
+RPC_PORT=9545 bash examples/protocol-guard/script/test-protocol-guard.sh
 ```
+
+The default fixture uses the generic guard’s 10-block threshold. Setting an expected threshold does not change the target contract; a different threshold requires a target implementation that overrides the getter.
 
 ## Test your upgraded contract
 
