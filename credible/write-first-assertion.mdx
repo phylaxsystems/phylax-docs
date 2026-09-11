@@ -3,7 +3,7 @@ title: 'Tutorial: Write Your First Assertion'
 description: 'Tutorial: build a complete assertion that blocks unauthorized ownership changes'
 ---
 
-This guide walks you through writing your first assertion from scratch. By the end, you'll have a working assertion that prevents unauthorized ownership transfers.
+In this tutorial, you will build and test an assertion that rejects ownership changes in a local test. Production enforcement depends on the [integration path](./credible-layer-overview).
 
 <Note>
 Use this tutorial to learn the basic shape of an assertion. If you already understand the workflow and need specific syntax, jump to [Triggers](./triggers) and the [Cheatcodes API Reference](./cheatcodes-reference).
@@ -26,8 +26,8 @@ contract Ownable {
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-    constructor() {
-        _owner = address(0xdead);
+    constructor(address initialOwner) {
+        _owner = initialOwner;
         emit OwnershipTransferred(address(0), _owner);
     }
 
@@ -48,7 +48,7 @@ contract Ownable {
 }
 ```
 
-Our assertion will verify that the owner remains unchanged after each transaction. This protects against attacks like the 2024 Radiant Capital hack where attackers gained multisig access and changed the protocol owner, resulting in $50M losses.
+Our assertion will verify that the owner remains unchanged for the tested ownership-transfer call. It rejects even an authorized transfer to a different owner; this is an illustrative policy, not a general ownership recommendation.
 
 ## Step 1: Set Up Your Project
 
@@ -72,6 +72,8 @@ my-protocol/
     test/     # Test files (.t.sol)
   src/        # Protocol contracts
 ```
+
+Replace `src/Ownable.sol` with the example contract above so its constructor matches the test below.
 
 For manual setup, see the [Quickstart Guide](./pcl-quickstart).
 
@@ -113,9 +115,7 @@ contract OwnableAssertion is Assertion {
 
 ### How It Works
 
-This assertion compares the owner before and after the transaction. If the owner changed, the `require` fails, the assertion reverts, and the transaction is dropped from the block.
-
-In general: **if an assertion reverts, the transaction is blocked.** This prevents attacks entirely rather than just detecting them.
+This assertion compares the owner before and after the candidate. If the owner changed, the assertion reverts. The local test exposes that result as a revert; production integrations apply the verdict through their inclusion policy.
 
 ### Key Components
 

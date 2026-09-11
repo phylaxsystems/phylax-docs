@@ -3,7 +3,7 @@ title: 'Overview'
 description: 'Understanding Credible Layer assertions'
 ---
 
-An [assertion](/credible/glossary#assertion) is a function that checks if a transaction violates a rule. If the rule is violated, the transaction is dropped during block building and never enters a block.
+An [assertion](/credible/glossary#assertion) is a function that checks if a transaction violates a rule. If the rule is violated, the evaluator reports it to the integrated builder or sequencer for its inclusion policy.
 
 Assertions are most useful when they describe an invalid effect, not every possible path that could produce it. A protocol may not know whether a future failure comes from an oracle issue, signer compromise, integration bug, rounding error, or governance action, but it can still define the state transition that should not be allowed.
 
@@ -13,7 +13,7 @@ Assertions are most useful when they describe an invalid effect, not every possi
 - **Reshiram (V2)** replaces mutable fork switching with immutable `ForkId` snapshot reads and adds newer transaction and call inspection precompiles.
 
 <Warning>
-Do not use Reshiram features on Linea yet. The current Linea deployment supports only Legacy (V1); wait until Linea is upgraded to support Reshiram (V2).
+Confirm the assertion specification, triggers, and state-access capabilities supported by the target network and evaluator backend. Local Reshiram support does not establish deployed support.
 </Warning>
 
 ## How Assertions Work
@@ -22,9 +22,9 @@ When a transaction is submitted to the network:
 
 - The system identifies which assertions apply to the contracts being interacted with
 - Assertions are configured with [triggers](/credible/glossary#trigger) that specify when they should execute (on specific function calls, storage changes, or balance changes)
-- The [PhEVM](/credible/glossary#phevm-phylax-evm) simulates the transaction and creates [pre/post state](/credible/glossary#pre-statepost-state) snapshots
+- The integration supplies candidate execution and [pre/post state](./glossary#pre-statepost-state) to the evaluator
 - All relevant assertions execute against these states
-- If all assertions pass → transaction is included; if any fail → transaction is dropped
+- The builder or sequencer applies the verdict; passing does not guarantee inclusion
 
 ## Example: Prevent Unauthorized Ownership Changes
 
@@ -40,7 +40,7 @@ function checkOwnershipChange() external view {
 }
 ```
 
-When a transaction tries to change the owner, this assertion runs. If the owner changed, the transaction is dropped.
+When a transaction tries to change the owner, this assertion runs. If the owner changed, the assertion reports a violation.
 
 ## What They Can Do That Regular Solidity Can't
 
@@ -51,7 +51,7 @@ Contract-level checks usually protect the code paths where they were added. Asse
 Regular Solidity only sees the current state during execution. Assertions can compare values before and after a transaction using [cheatcodes](/credible/glossary#cheatcodes) like `ph.loadStateAt` with explicit `ForkId` snapshots. You can also inspect state around a specific matched call by combining `ph.context()` with call-scoped `ForkId` values.
 
 **Protect immutable contracts**
-You can add assertions to contracts without modifying them. No redeployment needed.
+On supported rollup deployments, eligible immutable contracts need no application changes for covered sequencing paths. Ethereum requires a guard or supported mandatory hook/adapter; see [Enforcement Designs](./credible-layer-overview).
 
 **Keep policy separate from protocol mechanics**
 Assertions let teams review security rules separately from accounting, settlement, permissioning, and integration logic. This can make it easier to audit what the rule is meant to prevent and to update the rule without upgrading the protected contract.
@@ -76,9 +76,7 @@ Assertions run [off-chain](/credible/glossary#off-chain-execution) with higher g
 
 **Gas Limit**
 
-Assertion execution has a default limit of 3,000,000 gas. Node operators can configure this limit. If an assertion exceeds the active limit, the transaction is dropped.
-
-This bound keeps validation predictable under adversarial inputs. Transactions that exhaust the assertion gas budget are treated as invalid, preserving the enforcement invariant.
+Use the gas and runtime limits configured for the target backend. Resource exhaustion must be handled through its documented evaluation and inclusion policy; do not assume a universal budget or treat an evaluator error as a proven policy violation.
 
 Stay mindful of gas consumption:
 - Use [triggers](/credible/triggers) to run assertions only when needed

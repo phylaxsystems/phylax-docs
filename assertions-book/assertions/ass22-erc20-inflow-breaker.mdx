@@ -23,7 +23,7 @@ Registers a percentage-based cumulative inflow limit:
 The assertion does not manually store balances or rolling counters. The Reshiram circuit-breaker trigger tracks the per-block buckets across the window and invokes the assertion when the limit is exceeded.
 
 <Warning>
-The current Phylax app and Linea deployment support the V1 assertion specification. Treat this V2 Reshiram pattern as a local or development example until the target deployment supports V2.
+This example uses V2 Reshiram capabilities. Confirm support for its triggers and stateful behavior on the target network and evaluator backend before deployment; local test support does not establish production compatibility.
 </Warning>
 
 For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).

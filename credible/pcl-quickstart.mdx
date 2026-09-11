@@ -21,6 +21,10 @@ By the end of this tutorial, you will:
 If you already know the overall flow and only need one task, use the dedicated guides for [installation](./credible-install), [applying assertions](./apply-assertions), or [deployment in the platform](./deploy-assertions-dapp).
 </Note>
 
+<Note>
+This unguarded ownership example demonstrates assertion authoring and the supported rollup enforcement path. It is not an Ethereum guard integration. Confirm the target deployment and backend support before the network steps; use [Ethereum Integration](./network-integrations/architecture-ethereum) for that adoption path.
+</Note>
+
 ## Prerequisites
 
 Before you begin, make sure you have:
@@ -195,13 +199,15 @@ Next, let's attempt to transfer ownership to a new address. Make sure you replac
 cast send <ADDRESS_OF_OWNABLE_CONTRACT> "transferOwnership(address)" <NEW_OWNER_ADDRESS> --rpc-url <RPC_URL> --account <account_name>
 ```
 
-The transaction should timeout, which means that the assertion reverted and the transaction was dropped:
+The transaction may remain unconfirmed. A timeout alone does not prove that an assertion rejected it:
 
 ```bash
 Error: transaction was not confirmed within the timeout
 ```
 
-To confirm that the ownership hasn't changed, let's check the owner again:
+Check the transaction hash for a receipt and inspect the matching assertion result in the platform or integration logs. Distinguish a violation from an evaluator error, pending transaction, or ordinary revert. If no rejection evidence is available, treat the result as inconclusive.
+
+To check whether ownership changed, read the owner again:
 
 ```bash
 cast call <ADDRESS_OF_OWNABLE_CONTRACT> "owner()" --rpc-url <RPC_URL>

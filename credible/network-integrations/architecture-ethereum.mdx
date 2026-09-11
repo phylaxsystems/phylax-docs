@@ -14,7 +14,7 @@ A protocol selects the functions to protect and connects them to the Credible Re
 The builder must evaluate applicable active assertions for candidate transactions regardless of ingress route, including transactions obtained outside Credible RPC. It must exclude violating candidates before publishing the marked block. Otherwise, a marked block would not provide the intended assertion enforcement.
 
 ```mermaid
-flowchart LR
+flowchart TD
   Ingress[Transaction sources] --> Builder[Participating builder]
   Builder --> Execution[Local candidate execution]
   Execution --> Evaluator[Applicable assertion evaluation]
