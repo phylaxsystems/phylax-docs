@@ -3,7 +3,7 @@ title: 'System Requirements'
 description: 'Hardware and infrastructure requirements for running the Credible Layer sidecar in production and development environments.'
 ---
 
-The Credible Layer operates as a [sidecar](/credible/glossary#sidecar) alongside the network block builder or sequencer. This page outlines high-level requirements for running the sidecar.
+This reference provides sizing guidance for rollup integrations that run an evaluator as a [sidecar](./glossary#sidecar). Embedded builder integrations have a different deployment shape; use their release-specific resource requirements. These guidelines do not establish performance or feature parity across backends.
 
 ## Production Guidance
 
@@ -18,7 +18,7 @@ Sizing depends on network throughput and assertion complexity. Use these guideli
 
 ### CPU
 
-The sidecar requires significant compute for assertion execution. Use 32 physical cores with AMD Zen 3 performance equivalent or higher.
+CPU needs depend on transaction rate, trigger frequency, and assertion execution cost. Establish capacity with the integration’s workload and latency budget rather than a universal core count.
 
 ### Memory
 

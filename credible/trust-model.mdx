@@ -9,7 +9,7 @@ This page summarizes the Credible Layer trust model in plain language.
 
 - **Deterministic enforcement**: given the same on-chain state and assertion code, enforcement
   results are deterministic
-- **Pre-execution validation**: the enforcer reports assertion failures before block inclusion;
+- **Validation before inclusion**: the enforcer reports assertion failures before block inclusion;
   enforcing network integrations can exclude those transactions
 - **Transparent rules**: assertions are public Solidity code and can be audited by anyone
 - **Observable outcomes**: invalidations, release activity, and project changes are recorded for project review and public reporting where appropriate
@@ -38,10 +38,16 @@ The Credible Layer adds protocol-defined validation to an integrated network's t
 The main trust boundaries are:
 
 - Protocol teams are responsible for writing and maintaining assertions that express the risks they want to prevent
-- Project manager wallets control assertion releases, staging, production promotion, rollback, and collaborator access
+- Platform permissions control project access and collaboration; the State Oracle’s authorized protocol manager controls assertion lifecycle actions. Initial ownership verification and administrative overrides are separate authorities
 - Network operators are responsible for running the integration, honoring active registry state, and documenting timeout or degraded-component behavior
 - Assertion DA and local enforcer caches make assertion bytecode available before production execution; hot-path validation should not depend on live network fetches
 - Private invalidation payloads and traces are visible only to project members unless the project opts in to share them with support or network security teams
+
+## Enforcement Authority
+
+For [rollup integrations](./network-integrations/rollup-sequencers), coverage depends on the integrated sequencing paths and the operator honoring verdicts. Forced inclusion, delayed queues, bridge traffic, and fallback production require separate verification; filtering is not automatically a consensus or proof-system rule.
+
+For [Ethereum](./network-integrations/architecture-ethereum), the guard restricts selected actions to marked blocks while active. Users trust authorized marker operators to evaluate applicable assertions regardless of ingress route. A marker is not proof of correct off-chain evaluation. Credible Registry administration and application upgrade or bypass authority can change the effective boundary.
 
 ## Failure and Continuity Policies
 
@@ -54,6 +60,8 @@ Useful policy questions include:
 - What happens to transactions that cannot be classified in time?
 - How are delayed, retried, released, or rejected transactions reported?
 - What rollback path exists if a production assertion creates false positives?
+
+The generic Ethereum guard’s [block-gap fail-open predicate](./ethereum-guard-reference#guard-decision) is separate from sequencer fallback. It restores baseline operation by relaxing the credible-block requirement. Global marker liveness neither prevents selective censorship nor detects every RPC or evaluator outage. Registry read failures can still revert generic guarded calls.
 
 ## Assurance Practices
 

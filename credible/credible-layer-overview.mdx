@@ -3,32 +3,22 @@ title: 'High-Level Overview'
 description: 'High-level overview of the Credible Layer system that explains how exploit prevention works, without requiring deep technical knowledge.'
 ---
 
-This explanation describes how the Credible Layer prevents invalid transactions before execution and why that model matters for protocol teams and networks.
+The Credible Layer uses one assertion system with two enforcement designs. Both check protocol-defined rules before block inclusion; they differ in what prevents a violating action from taking another route.
 
-## Introduction
+## Why the Designs Differ
 
-Phylax's real-time security system detects and pre-emptively removes exploits before losses can be realized.
+An integrated rollup sequencer can exclude a candidate from the transaction-building paths it controls. A protocol can register assertions for those paths without adding an application guard. Forced inclusion and fallback production need separate coverage analysis.
 
-![System Overview](/images/overview-step-0.png)
+On a multi-builder network, a transaction excluded by one builder can reach another. In the Ethereum design, selected application functions therefore check whether their block was marked through the Credible Registry. Participating builders, including the Titan integration, are responsible for evaluating applicable assertions before inclusion in marked blocks.
 
-<Info>
-**The Credible Layer** is a network extension that lets protocols define security rules and enforces them at the network level. Transactions that would violate these rules are dropped *before* they can execute, preventing exploits rather than detecting them after the damage is done.
-</Info>
+| Question | Rollup sequencer integration | Ethereum / participating builders |
+| --- | --- | --- |
+| Where is the inclusion decision? | Integrated sequencing path | Participating builder’s candidate selection |
+| What limits alternate routes? | Coverage of the relevant transaction sources | Application guard, subject to fail-open and bypass rules |
+| Are contract changes needed? | Not for eligible contracts on covered paths | Direct guard or supported hook/adapter integration |
+| What availability tradeoff applies? | Sequencer timeout and fallback policy | Access to marked blocks while the guard requirement is active |
 
-At a glance:
-
-- **Security rules** are defined by the protocol team as [assertions](/credible/glossary#assertion), with assertion IDs registered on-chain and bytecode served through [Assertion DA](/credible/assertion-da)
-- **The network** validates every transaction against relevant assertions before adding them to blocks
-- **Invalid transactions** are [dropped](/credible/glossary#drop). If an assertion fails, the transaction never executes
-
-<Check>
-**Easy to adopt**
-- Written in Solidity with familiar Forge patterns
-- No contract modifications or downtime required
-- Works with immutable contracts
-- All rules are publicly reviewable in [The Phylax Explorer](/credible/glossary#the-phylax-explorer)
-- [Implementation effort](/credible/development-effort) is comparable to writing Forge invariant tests
-</Check>
+These are integration designs, not rules about every L1 or L2. Running the evaluator as a sidecar or an embedded library is a separate implementation choice.
 
 ## Use Cases
 
@@ -86,61 +76,11 @@ While invariants are the most common use case, assertions also enable:
 - **Timelocks and Access Control**: Add time-based restrictions or multi-factor authentication requirements for sensitive functions like contract upgrades
 - **Business Logic Enforcement**: Ensure operational rules are followed, such as transaction limits or authorized contract interactions
 
-### Real-World Example: Balancer V2
+### Example: Vault Redemption
 
-In November 2025, an attacker exploited Balancer V2 stable pools through a complex rounding error attack, causing over $120M in losses. Through 84 crafted swap operations, pool rates changed by 20x in a single transaction.
+A vault might define a rule that a redemption must not pay out more assets than the redeemed shares justify. An assertion can compare the candidate transaction’s share and asset changes to detect a violation. This is an illustrative policy: the correct accounting rule depends on the vault.
 
-**The key insight:** While the root cause was complex (involving rounding errors and specific balance configurations), the security rule violation was simple:
-
-> _"Pool rates should not change drastically within a single transaction"_
-
-A simple assertion checking that pool rates don't change by more than 3x would have detected and prevented this attack, regardless of the specific exploit mechanism used.
-
-<Accordion title="View the assertion code">
-
-```solidity
-import {AssertionSpec} from "credible-std/SpecRecorder.sol";
-
-contract BatchSwapDeltaAssertion is Assertion {
-    uint256 constant MAX_RATE_CHANGE_MULTIPLIER = 3e18; // 3.0x
-
-    constructor() {
-        registerAssertionSpec(AssertionSpec.Reshiram);
-    }
-
-    function triggers() external view override {
-        registerFnCallTrigger(this.assertionBatchSwapRateManipulation.selector, IVault.batchSwap.selector);
-    }
-
-    function assertionBatchSwapRateManipulation() external view {
-        address vault = ph.getAssertionAdopter();
-        PhEvm.TriggerContext memory ctx = ph.context();
-
-        // Get affected pools from swap parameters
-        bytes32[] memory uniquePoolIds = _getUniquePoolIds(swaps);
-
-        for (uint256 i = 0; i < uniquePoolIds.length; i++) {
-            (address poolAddress, ) = IVault(vault).getPool(uniquePoolIds[i]);
-            PhEvm.ForkId memory preCall = PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart});
-            PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd});
-
-            uint256 preRate = uint256(ph.loadStateAt(poolAddress, RATE_SLOT, preCall));
-            uint256 postRate = uint256(ph.loadStateAt(poolAddress, RATE_SLOT, postCall));
-
-            require(
-                (postRate * 1e18) / preRate <= MAX_RATE_CHANGE_MULTIPLIER,
-                "BatchSwap: Extreme pool rate manipulation detected"
-            );
-        }
-    }
-}
-```
-
-</Accordion>
-
-This demonstrates the power of assertions: by focusing on *what should never happen* rather than *how it might happen*, you protect against both known and unknown attack vectors.
-
-Read the [full Balancer V2 exploit analysis](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit) to see how this assertion was tested against the actual exploit transaction.
+A violation could reveal an exploit, a legitimate operation the rule did not anticipate, or an assertion bug. Passing the check only establishes that the evaluated rule held in that candidate context.
 
 ### Network Enforcement
 
@@ -150,35 +90,13 @@ Once assertions are defined, they need to be deployed to protect your contracts.
 
 The [Phylax platform](https://app.phylax.systems) creates releases and submits assertion changes to the Credible Layer smart contracts. Those contracts are the source of truth for which assertion IDs protect which contract addresses and when changes become active. Assertion bytecode is stored in [Assertion DA](/credible/assertion-da) and fetched by the enforcer before validation.
 
-#### How Enforcement Works
+#### Evaluation and Inclusion
 
-A network node running the Credible Layer [sidecar](/credible/glossary#sidecar) does not care _how_ a transaction violates the protocol's rule. All that matters is _whether_ the assertion passes or fails. If the assertion fails, the node drops the transaction before it can be included in a block.
+The evaluator selects applicable active assertions and checks transaction behavior. The sequencer or builder uses the result to retain or exclude the candidate. A passing result does not guarantee inclusion: ordinary validity, ordering, fees, and block selection still apply.
 
-When a user opens a position on a yield protocol, the transaction may touch multiple contracts:
+Pre-state is the state immediately before the candidate in its proposed position. Post-state is immediately after that candidate, not automatically end-of-block state or finality. The Titan integration design evaluates artifacts from the builder’s local candidate execution; it does not require a second candidate execution by the evaluator.
 
-![A single transaction can interact with multiple contracts](/images/phylax-multi-contract-interaction.png)
-
-Each contract that has assertions is checked by the sidecar, which simulates the cumulative end states:
-
-![Each contract with assertions is checked by the sidecar](/images/phylax-assertion-checking.png)
-
-#### Validation Process
-
-1. User submits a transaction to the network
-2. The network node passes it to the sidecar for validation
-3. The sidecar simulates the transaction and checks all relevant assertions
-4. If all assertions pass, the transaction is included in the block
-5. If any assertion fails, the transaction is dropped
-
-The validation path is designed to keep assertion lookup and execution bounded for each network integration. The Credible Layer adapts to each network's architecture while preserving the same core model: protocol-authored assertions inform the block inclusion decision.
-
-For the full technical flow, see [Architecture](/credible/architecture-overview).
-
-<Note>
-The Credible Layer is designed as neutral middleware that preserves decentralization for both protocols and networks. Learn more about [why neutrality matters](/credible/neutrality).
-</Note>
-
-For interface boundaries and integration touchpoints, see [Interface Overview](/credible/interfaces-overview).
+For the shared responsibilities, see [General Design](./architecture-overview). For the enforcement boundary and exceptions, choose [Rollup Sequencers](./network-integrations/rollup-sequencers) or [Ethereum](./network-integrations/architecture-ethereum).
 
 ## Next Steps
 

@@ -3,7 +3,7 @@ title: 'Credible Layer Contracts'
 description: 'On-chain smart contracts that manage the assertion registry and coordinate protocol admins with network operators'
 ---
 
-The Credible Layer Contracts are the on-chain smart contracts that power the protocol. They manage assertion registration, coordinate protocol admins with network operators, and serve as the source of truth for which assertions protect which contracts.
+This reference describes assertion-policy contracts at `credible-layer-contracts` source revision `ba82c66118828b08416279acf91b7a0976d5535e`. Verify the deployed version and role assignments separately. The State Oracle manages assertion policy; the Ethereum [Credible Registry](./ethereum-guard-reference) separately manages block markers and builder authorization.
 
 <Info>
 The contracts are open source and available on [GitHub](https://github.com/phylaxsystems/credible-layer-contracts).
@@ -50,7 +50,7 @@ The State Oracle is the core contract that coordinates protocol admins and netwo
 
 **Behavior:**
 - Each assertion adopter maintains a manager and a set of assertion windows
-- An assertion ID can only be registered once. If removed, it cannot be re-added.
+- An assertion ID can only be registered once per adopter. If removed, it cannot be re-added.
 - Adding an assertion starts a configured timelock before it becomes staged or enforced
 - Removing an assertion starts a configured timelock before it stops being staged or enforced
 - External admin verifiers govern who may register new adopters
@@ -63,7 +63,7 @@ View the [StateOracle.sol source code](https://github.com/phylaxsystems/credible
 
 ### Protocol Admin Verification
 
-The Protocol Admin Verification interface verifies who has administrative authority over a protocol. This ensures only rightful owners can register and manage assertions for their contracts.
+The Protocol Admin Verification interface verifies who has administrative authority over a protocol. Initial authorization is separate from ongoing management through the State Oracle’s registered manager.
 
 Admin verification is required for initial registration of an assertion adopter. The system supports multiple verification methods:
 - **Owner-based verification**: Checks the `owner()` function on the target contract
@@ -74,18 +74,22 @@ See [Ownership Verification](/credible/ownership-verification) for details on ho
 
 ### Data Availability Verification
 
-The Data Availability Verification interface ensures that assertion bytecode is available before it can be registered on-chain. This prevents assertions from being registered without their bytecode being accessible to the [Assertion Enforcer](/credible/assertion-enforcer).
+The Data Availability Verification interface checks the availability proof supplied at registration. A valid signature is not a guarantee of future retrieval or evaluator readiness. See [Assertion DA](./assertion-da).
 
 When adding assertions, a proof of availability must be provided. The current implementation (`DAVerifierECDSA`) requires a signature from the [Assertion DA](/credible/assertion-da) prover, which is generated when creating a release via [`pcl apply`](/credible/cli-reference#apply).
 
-### State Oracle Administration
+### State Oracle Permissions
 
-The State Oracle owner retains privileged controls for emergency scenarios:
+| Operation | Authority at this source revision |
+| --- | --- |
+| Register an adopter | Caller passes a registered admin verifier and the whitelist check when enabled |
+| Add an assertion | Registered manager; whitelist check when enabled; registered DA verifier and valid proof |
+| Remove an assertion | Registered manager or guardian, through their respective entry points |
+| Transfer management | Current manager proposes; pending manager accepts |
+| Revoke a manager | Guardian |
+| Configure admin/DA verifiers, assertion limit, or whitelist enablement | Governance |
+| Add or remove whitelist accounts | Operator |
 
-- **Add or remove admin verifiers**: Adjust which verification modules are authorized
-- **Register or revoke managers**: Directly manage assertion adopter permissions when necessary
-- **Remove assertions**: Forcefully deactivate assertions if malicious logic is introduced or emergency removal is requested
+Both manager and guardian removal schedule `deactivationBlock = block.number + ASSERTION_TIMELOCK_BLOCKS`; guardian removal is not immediate deactivation at this revision. Addition schedules the corresponding activation block. These block-based policy delays are separate from the Ethereum registry’s builder-administration timelock and the application guard’s fail-open threshold.
 
-<Warning>
-These controls are intended strictly for emergency response scenarios, such as attacks or lost manager keys, and are exercised with operational safeguards.
-</Warning>
+Platform collaborators do not automatically acquire any of these on-chain roles. Registry builder authorization also does not grant State Oracle management or application bypass authority.

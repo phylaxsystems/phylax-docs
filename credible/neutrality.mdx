@@ -3,26 +3,21 @@ title: 'Neutrality & Decentralization'
 description: 'Why neutrality is critical to the Credible Layer architecture and how it preserves decentralization for both protocols and networks.'
 ---
 
-*Neutrality is critical. It determines who controls the system. Who controls the system decides how the system is regulated.*
+Neutrality concerns who can define policy, change it, and choose which transactions are included. Protocol-authored assertions make policy inspectable, but do not remove operational or administrative trust.
 
-As middleware, the Credible Layer extends network capabilities without requiring external execution services. Protocols define security rules through existing governance channels, and networks enforce these rules through existing mechanisms.
+## Protocol Policy and Operator Authority
 
-## Decentralization Preservation
+Protocols define assertions through their authorized management process. The State Oracle’s manager and administrative roles are distinct from platform collaborator permissions. Users need to understand those change paths as well as the rules themselves.
 
-- Networks can remove the Credible Layer anytime and still execute their core functionality
-- Protocol teams can add or remove assertions through the configured assertion lifecycle and timelocks
-- The system passes the "off-switch test"
-- By avoiding centralized control points, this architecture preserves decentralization for both protocols and networks
+An integrated rollup sequencer applies assertions on the paths it controls. Removing the integration may preserve ordinary rollup operation while removing that enforcement. It does not demonstrate equivalent protection or coverage of forced-inclusion and fallback paths.
 
-## The Importance of Neutrality
+On Ethereum, participating builders and authorized markers form an additional trust boundary. Application guards restrict selected actions while active; their bypass, fail-open, and upgrade mechanisms affect access. Removing a builder integration does not instantly remove an application’s guard requirement.
 
-Policymakers are becoming increasingly aware of decentralization and see its value. Systems that quietly rely on centralized emergency controls for security risk falling on the wrong side of laws meant to capture decentralized-in-name-only projects.
+## Availability and Censorship
 
-Non-neutral solutions ultimately create new centralized control points:
-- AI providers can change detection algorithms
-- SaaS companies can modify security policies
+A protocol policy can reject unwanted behavior, but operators can also omit legitimate transactions. A global credible-block liveness signal does not prevent selective censorship: a builder can keep marking blocks while a particular user’s transaction is omitted.
 
-Security solutions should optimally **not** add additional trust assumptions or risks, and they should **not** centralize the systems they serve.
+Assertion data services, policy administrators, registry administrators, and application authorities are control points to assess. Public code and visible registry state help users inspect them; they do not make the system free of centralized dependencies. See [Trust Model](./trust-model).
 
 ## Next Steps
 

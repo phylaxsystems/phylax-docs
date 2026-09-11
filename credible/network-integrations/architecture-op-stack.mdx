@@ -3,7 +3,7 @@ title: 'OP Stack'
 description: 'OP Stack specific implementation of the Credible Layer'
 ---
 
-The OP Stack implementation uses [Rollup-Boost](https://github.com/flashbots/rollup-boost) to connect an external sidecar assertion validation components with the L2 sequencer through a bridge proxy.
+The OP Stack implementation uses [Rollup-Boost](https://github.com/flashbots/rollup-boost) to connect external assertion validation components with the L2 sequencer through a bridge proxy.
 
 <Note>
 For the general integration path, see [Network Integration Overview](/credible/network-integration).
@@ -12,6 +12,10 @@ For the general integration path, see [Network Integration Overview](/credible/n
 <Note>
 Looking for the Besu/Linea pattern? See [Linea / Besu Integration](/credible/network-integrations/architecture-linea).
 </Note>
+
+## Enforcement Scope
+
+This is a rollup sequencing integration pattern, not the Ethereum application-guard design. Eligible protocols can register assertions without a credible-block guard on covered paths. The diagram does not establish deployed coverage: verify forced inclusion, delayed queues, bridge-originated transactions, and fallback production separately. See [Rollup Sequencer Integrations](./rollup-sequencers).
 
 ## Architecture Diagram
 
@@ -68,7 +72,7 @@ class RollupBoostProxy,AssertionEnforcer rollupBoost
 - **op-geth/op-reth**: The execution layer clients (Geth or Reth) that process and execute transactions, providing the EVM environment for the rollup.
 
 ### Credible Layer (Sidecar)
-- **[Block Builder](/credible/glossary#block-builder)**: The component of the network that simulates transactions and runs assertions before transaction finalization to ensure they don't violate defined conditions.
+- **[Block Builder](/credible/glossary#block-builder)**: The component of the network that simulates transactions and runs assertions before inclusion in its candidate block.
 - **op-reth**: The execution layer client within the Credible Layer that processes transactions and maintains state.
 - **[`pcl` CLI](/credible/glossary#pcl-cli)**: Command-line interface for developers to write, test, and deploy assertions to the system.
 - **[Platform](https://app.phylax.systems)**: The web application interface to deploy, manage, and view assertions and projects.
@@ -86,19 +90,21 @@ class RollupBoostProxy,AssertionEnforcer rollupBoost
 - The Assertion DA serves assertion bytecode to the Block Builder, ensuring up-to-date enforcement.
 - `pcl` and the platform provide interfaces for assertion development, submission and management.
 
+Fallback blocks supplied by the ordinary execution client do not automatically carry assertion enforcement. Confirm which checks the fallback path performs and what coverage remains during degraded operation.
+
 ## L1-Originated Transactions
 
 OP Stack networks can define an L1-originated transaction validation policy alongside the ordinary sequencer-selected transaction path.
 
-An integration should specify where assertion validation runs, how validation results are reported to sequencing components, and what metadata is sent to the platform. See [Network Integration Overview](/credible/network-integration#l1-originated-transaction-paths) for the general checklist.
+An integration should specify where assertion validation runs, how validation results are reported to sequencing components, and what metadata is sent to the platform. See [Network Integration Overview](/credible/network-integration#transaction-source-coverage) for the general checklist.
 
 ## Transaction Flow
 
 ![Transaction Flow](/images/tx-flow-credible.png "OP Stack transaction flow with assertion execution detail")
 
-The diagram above illustrates transaction flow through the OP Stack implementation. The top section shows the complete deployment: users submit transactions that flow through OP-Talos (block builder) → Rollup-Boost → OP Stack Sequencer → Network. Malicious transactions are identified and removed before reaching the sequencer.
+The diagram above illustrates transaction flow through the OP Stack implementation. The top section shows the complete deployment: users submit transactions that flow through OP-Talos (block builder) → Rollup-Boost → OP Stack Sequencer → Network. Candidates that violate active assertions are excluded on this path; a violation is not automatically malicious.
 
-The bottom section zooms into **assertion execution** - this process is consistent across all Credible Layer implementations, not just OP Stack. The transaction and State 1 (pre-state) flow into the EVM for simulation, producing State 2 (post-state). PhEVM then validates these states against deployed assertions, returning valid/invalid.
+The bottom section zooms into **assertion execution** - this diagram describes the OP Stack sidecar path. Other backends may obtain execution artifacts directly from the builder. The transaction and State 1 (pre-state) flow into the EVM for simulation, producing State 2 (post-state). PhEVM then validates these states against deployed assertions, returning valid/invalid.
 
 ## Key Technologies
 
@@ -111,7 +117,7 @@ This solution provides several advantages for OP Stack networks:
 
 1. **Non-invasive**: No modifications required to the sequencer code
 2. **Modular**: Assertion validation runs as a separate, upgradable component
-3. **Performant**: Parallel assertion execution doesn't impact sequencer performance
+3. **Resource isolation**: Separate execution capacity can reduce serial work, but latency and fallback behavior still require measurement
 4. **Flexible**: Easy to enable/disable assertion enforcement
 
 For more details on the general architecture and other implementations, see the [Architecture Overview](/credible/architecture-overview).

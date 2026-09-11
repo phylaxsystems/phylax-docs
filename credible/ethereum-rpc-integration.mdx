@@ -1,0 +1,49 @@
+---
+title: "How to Integrate Credible RPC"
+description: "Plan pre-signing simulation and private submission of signed Ethereum transactions to Titan."
+---
+
+This guide shows you how to connect an application’s simulation and submission flow to the Ethereum participating-builder design.
+
+## Prerequisites
+
+- A supported Ethereum integration with the intended guard or hook/adapter on the selected actions.
+- Authorized, active assertions with code available to the evaluator.
+- The endpoint, supported method set, chain, registry version, and private Titan submission route confirmed for your deployment.
+- A wallet or application transport that can use that route for signed transactions.
+
+See [Ethereum Architecture](./network-integrations/architecture-ethereum) for the enforcement boundary. Credible RPC is the simulation and submission interface; choosing it is not what prevents an attacker from bypassing a guarded action.
+
+## 1. Simulate Before Requesting a Signature
+
+Send the proposed call through a supported Credible RPC simulation method, such as `eth_call` or `eth_estimateGas`, before asking the user to sign. Use the intended sender, destination, value, and calldata.
+
+Confirm that your endpoint supports the method, block tag, and request options you use. Present assertion violations separately from ordinary contract reverts and evaluation-unavailable errors. Do not treat an unavailable evaluation as a passing assertion.
+
+A supported credible simulation supplies the context needed for the guard and evaluates applicable assertions. Historical calls and unsupported request shapes must not be assumed to use the same policy as current-state simulation.
+
+## 2. Submit the Signed Transaction Privately
+
+After simulation succeeds, ask the user to sign. Submit the signed bytes through the deployment’s documented private route to Titan. When that interface uses `eth_sendRawTransaction`, it receives an already-signed transaction; it is not the pre-signing simulation step.
+
+Ensure the wallet’s actual submission transport uses the intended route. An application’s simulation provider and its wallet’s broadcast provider can differ. Handle private-route failures explicitly rather than silently switching to a public broadcast path.
+
+An RPC acceptance response or returned transaction hash does not prove builder validation or canonical inclusion. If submission is uncertain, reconcile the transaction hash and receipt before retrying.
+
+## 3. Verify the Complete Flow
+
+In your supported test environment, exercise a permitted action and an action that violates the selected assertion. Check:
+
+- Simulation reports the expected outcome before signing.
+- Signed submission follows the private route.
+- Builder evidence identifies evaluation in the candidate’s actual execution context.
+- For a successful guarded call, a receipt and block inspection establish inclusion, with the authorized marker before the call in the same block.
+- Rejection evidence distinguishes an assertion violation, evaluator error, builder exclusion, and an on-chain guard revert.
+
+Earlier simulation does not reserve future state or replace builder-side evaluation. Passing checks does not guarantee that Titan’s candidate block will be selected.
+
+## Failure and Recovery
+
+Test unavailable evaluation, private submission failures, pending transactions, and recovery against the exact endpoint release. A timeout alone is not evidence of an assertion violation. A missing receipt is not proof of exclusion.
+
+RPC recovery and application fail-open are separate. Restoring RPC service does not prove the evaluator has synchronized active assertions, and the guard’s global marker check does not detect every RPC outage. See [Guard Decision](./ethereum-guard-reference#guard-decision).

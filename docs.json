@@ -91,6 +91,7 @@
                 "group": "Integrate Credible Layer",
                 "pages": [
                   "credible/dapp-integration",
+                  "credible/ethereum-rpc-integration",
                   "credible/network-integration",
                   "credible/ownership-verification"
                 ]
@@ -108,10 +109,17 @@
                   "credible/interfaces-overview",
                   "credible/neutrality",
                   {
-                    "group": "Network Implementations",
+                    "group": "Enforcement Designs",
                     "pages": [
-                      "credible/network-integrations/architecture-linea",
-                      "credible/network-integrations/architecture-op-stack"
+                      {
+                        "group": "Rollup Sequencer Integrations",
+                        "pages": [
+                          "credible/network-integrations/rollup-sequencers",
+                          "credible/network-integrations/architecture-linea",
+                          "credible/network-integrations/architecture-op-stack"
+                        ]
+                      },
+                      "credible/network-integrations/architecture-ethereum"
                     ]
                   }
                 ]
@@ -162,6 +170,7 @@
               {
                 "group": "Operational Reference",
                 "pages": [
+                  "credible/ethereum-guard-reference",
                   "credible/system-requirements",
                   "credible/glossary"
                 ]

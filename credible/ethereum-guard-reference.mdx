@@ -1,0 +1,63 @@
+---
+title: "Credible Registry and Guard"
+description: "Source-version reference for marker authorization, guard predicates, and assertion adapters."
+---
+
+This reference describes `credible-registry` source revision `16fe58af214226ebc9554ba2eec6b99670b2b71a`. Match your integration to its exact contract version before relying on these interfaces. This is source behavior, not a list of verified deployments.
+
+## Registry and Marker
+
+| Interface | Behavior |
+| --- | --- |
+| `markCurrentBlockCredible(uint256 expectedBlockTimestamp)` | Requires `CREDIBLE_BUILDER_ROLE` and equality with `block.timestamp`; otherwise the timestamp check raises `UnexpectedBlockTimestamp` |
+| `lastCredibleBlock()` | Returns the latest marked block number |
+| `isCredibleBlock(uint256 blockNumber)` | True only for a nonzero block number equal to the latest stored marked block |
+
+The marker writes registry state before the guarded call in the same block. A preceding block’s marker does not mark the current block. Historical marks can be reconstructed from `CredibleBlockMarked` events; the latest-block getter is not a historical mark index.
+
+## Guard Decision
+
+`CredibleBlockGuard` is an abstract contract with the `onlyCredibleBlock` modifier. Construction requires a nonzero registry address and a nonzero `lastCredibleBlock()`; failures raise `ZeroCredibleRegistryAddress` or `CredibleRegistryNotReady`.
+
+For a guarded call, the source checks:
+
+1. A configured bypass for `msg.sender` allows the call without reading the registry.
+2. Fail-open allows the call when `block.number > lastCredibleBlock` **and** `block.number - lastCredibleBlock > failOpenBlockThreshold()`.
+3. Otherwise, the current block must be credible; an unmarked block raises `NonCredibleBlock`.
+
+The default threshold is **10 blocks**. A gap exactly equal to the threshold remains closed. The virtual getter can be overridden by an inheriting contract; inspect that implementation rather than assuming the default. Blocks are the unit, not a guaranteed wall-clock duration.
+
+`isCurrentBlockAllowed()` includes the caller’s bypass. `failOpenActive()` reports only the stale-marker predicate. Registry read failures are not caught by this generic guard and can revert protected calls. Other guards, including Safe-specific integrations, can have different read-failure policies.
+
+`_setCredibleBlockBypass(address,bool)` is internal and rejects a zero account with `ZeroBypassAddress`. The inheriting application must authorize any exposed bypass setter. A bypass permits baseline application behavior without the credible-block requirement.
+
+## Assertion Adapter
+
+`AssertionAdapter` takes a registry, a nonzero immutable block threshold, one nonzero authorized caller, and a nonzero `initialProtocolManager`. Construction requires an already-marked registry.
+
+| Call | Behavior |
+| --- | --- |
+| `check(true)` | Requires the authorized caller; applies the block-gap fail-open and current-block gate |
+| `check(false)` | Requires the authorized caller; returns without reading the registry or requiring a marked block |
+| `initialProtocolManager()` | Exposes the bootstrap manager value; does not itself perform State Oracle registration or ongoing manager transfer |
+
+With the gate enabled, a last credible block greater than the current block raises `FutureLastCredibleBlock`. Registry read failures propagate. The adapter’s configured threshold is immutable and is not the generic guard’s default.
+
+Assertions are registered against the adapter and evaluated by participating builders when applicable. The adapter does not call assertion bytecode. Optional gating still allows assertion evaluation on participating builders, but does not require other builders to enforce it.
+
+## Registry Authority
+
+At this source revision, the registry constructor seeds initial builders and grants separate administrator and guardian roles. Later builder additions and removals use typed timelock operations:
+
+- `DEFAULT_ADMIN_ROLE` schedules builder changes and delay updates, and administers the guardian role.
+- `GUARDIAN_ROLE` can cancel pending operations.
+- Matured operations can be executed permissionlessly through the registry wrappers.
+- Direct grant, revoke, or renunciation of `CREDIBLE_BUILDER_ROLE` is blocked; the timed lifecycle manages that role.
+- Scheduling uses at least seven days, even if the composed timelock’s configured delay is lower. The configurable maximum delay is 365 days.
+
+These are Credible Registry permissions. They do not grant platform access, State Oracle management, application upgrade authority, or permission to configure an application bypass. See [Ownership Verification](./ownership-verification) for the separate assertion-management boundary.
+
+## Related Documentation
+
+- [Ethereum enforcement and trust](./network-integrations/architecture-ethereum)
+- [How to test the registry guard](./testing-credible-block-guard)

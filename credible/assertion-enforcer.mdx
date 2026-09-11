@@ -1,9 +1,9 @@
 ---
 title: 'Assertion Enforcer'
-description: 'The sidecar component that orchestrates assertion validation during block production'
+description: 'The evaluator that reports assertion outcomes to integrated sequencers and builders'
 ---
 
-The Assertion Enforcer is a sidecar component that validates transactions against [assertions](/credible/glossary#assertion) during block production. It operates alongside the network's [sequencer](/credible/glossary#sequencer) or [block builder](/credible/glossary#block-builder), reporting which candidate transactions violate active assertions.
+The Assertion Enforcer is an evaluation component that validates transactions against [assertions](/credible/glossary#assertion) during block production. It operates alongside the network's [sequencer](/credible/glossary#sequencer) or [block builder](/credible/glossary#block-builder), reporting which candidate transactions violate active assertions.
 
 ## Role in the System
 
@@ -17,16 +17,16 @@ The Assertion Enforcer operates inside the block production pipeline:
 
 Depending on the network integration, validation can run synchronously before inclusion or through a bounded optimistic path where the builder checkpoints execution, runs assertions in parallel worker capacity, and rolls back if a transaction invalidates.
 
-## Sidecar Architecture
+## Sidecar and Embedded Implementations
 
-As a [sidecar](/credible/glossary#sidecar), the Assertion Enforcer:
+An evaluator can be embedded in a builder or deployed separately. In rollup integrations that use a [sidecar](/credible/glossary#sidecar), the Assertion Enforcer:
 
 - **Operates independently** from the main L2 infrastructure
 - **Integrates alongside block builders** without changing core protocol rules
 - **Scales separately** from the main network components
 - **Preserves network continuity** by keeping block production policy under the network operator's integration
 
-This design allows networks to adopt the Credible Layer without modifying their core infrastructure.
+Sidecar packaging allows separate operation and scaling, but still requires a transaction-building integration. Ethereum additionally needs the [application guard boundary](./network-integrations/architecture-ethereum). Packaging does not make assertions mandatory.
 
 ## Validation Process
 
@@ -85,7 +85,7 @@ flowchart LR
 
 2. **Fetch Assertion Bytecode**: Assertion bytecode is retrieved from internal cache (populated from [Assertion DA](/credible/assertion-da) when assertions are deployed)
 
-3. **Simulate Transaction**: The transaction is executed against pre-transaction state to produce the post-transaction state
+3. **Obtain Candidate Execution**: Use the candidate’s execution state and artifacts. A sidecar integration may simulate it; the Titan design evaluates artifacts from the builder’s own local execution without requiring a second execution. Pre-state is immediately before the candidate in its proposed position, and post-state immediately after it.
 
 4. **Execute Assertions**: [PhEVM](/credible/phevm) runs all relevant assertions with access to:
    - The transaction itself
@@ -93,8 +93,11 @@ flowchart LR
    - Post-transaction state (State2)
 
 5. **Return Result**:
-   - If any assertion reverts → transaction is invalid
-   - If all assertions pass → transaction is valid
+   - An assertion violation reports a failed rule
+   - Passing assertions reports no violation among the checks evaluated
+   - An evaluator error reports that evaluation could not complete reliably
+
+The sequencer or builder applies its inclusion and error policy. Passing assertions does not guarantee inclusion, and a violation is not automatically an exploit.
 
 ## Block Building Integration
 

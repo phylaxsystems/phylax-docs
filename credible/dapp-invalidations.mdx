@@ -81,7 +81,7 @@ The replay shows two separate results:
 1. **Transaction execution:** Did the protocol call run successfully?
 2. **Assertion evaluation:** Did the resulting state satisfy the assertion?
 
-A call can pass the first check and fail the second. In that case, the assertion rejects the transaction.
+A call can pass the first check and fail the second. That is an assertion violation; the sequencer or builder applies its inclusion policy. Local or replay execution does not prove on-chain inclusion, and a guard revert is a separate outcome. Evaluator errors also need separate diagnosis. Missing invalidation records do not prove a passing check or complete reporting coverage.
 
 <Frame caption="Review an invalidating transaction, classified changes, execution evidence, and developer data">
   <video controls playsInline preload="metadata" aria-label="Invalidating transaction replay walkthrough" style={{ width: "100%" }}>

@@ -1,36 +1,20 @@
 ---
 title: 'Introduction'
-description: 'Block exploits before they execute by linking security rules to your smart contracts on-chain.'
+description: 'Protocol-defined checks before block inclusion, through rollup sequencers or participating builders.'
 ---
 
 Use this page to understand what the Credible Layer is and choose the right documentation path for your goal.
 
 ## What is the Credible Layer?
 
-The Credible Layer is security infrastructure that enables developers to link security rules to their smart contracts on-chain. Then, the network validates every transaction that interacts with their smart contracts against their security rules, dropping any invalidating transaction.
+Phylax checks protocol-defined rules, called assertions, before transactions are included. On an integrated rollup, those checks sit in the sequencer’s transaction-building path. On Ethereum, participating builders run the checks, while a contract guard makes selected actions depend on their marked blocks.
 
-<Note>
-Use this page to choose the right kind of documentation for what you need next:
+## Choose Your Enforcement Design
 
-- Learn by doing: [Quickstart Tutorial](./pcl-quickstart)
-- Complete a specific task: [How-to Guides](./credible-install)
-- Understand the system: [High-Level Overview](./credible-layer-overview)
-- Look up commands and APIs: [Reference](./cli-reference)
-</Note>
+- **[Rollup sequencer integration](./network-integrations/rollup-sequencers)**: for supported deployments and covered paths, register assertions without adding a credible-block guard to your application. Eligible immutable contracts can be supported.
+- **[Ethereum / participating builders](./network-integrations/architecture-ethereum)**: integrate a guard directly or through a supported hook/adapter, register active assertions, and use Credible RPC for simulation and private submission to Titan.
 
-## How It Works
-
-<Steps>
-  <Step title="Define rules in Solidity">
-    Write assertions—security rules that define states your protocol should never reach. No contract modifications required.
-  </Step>
-  <Step title="Network validates every transaction">
-    The network checks each transaction against your assertions before inclusion in a block.
-  </Step>
-  <Step title="Invalid transactions are dropped">
-    Transactions that violate your rules are dropped by the network and never execute.
-  </Step>
-</Steps>
+The difference is where enforcement authority comes from. A builder integration does not make other builders enforce assertions. See the [High-Level Overview](./credible-layer-overview) for the tradeoffs.
 
 ## Choose the Right Path
 
@@ -65,15 +49,6 @@ Use this page to choose the right kind of documentation for what you need next:
     Inspect deployed assertions, invalidations, and public protocol coverage.
   </Card>
 </CardGroup>
-
-## Key Benefits
-
-- **Pre-execution prevention** — Exploits are blocked before they execute, not detected after
-- **No contract changes** — Add protection to any contract, including immutable ones
-- **Transparent & verifiable** — All rules are public Solidity, auditable by anyone
-- **Readable security posture** — Understand circuit breakers and verifiable operational risks through clear, plain-English breakdowns
-- **No external execution services** — Enforcement runs within the network’s block-building flow
-- **Deterministic decisions** — Binary enforcement based on your rules, not opaque scoring
 
 ## Community & Support
 

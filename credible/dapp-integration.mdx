@@ -15,6 +15,13 @@ Use it before deployment to identify the contracts, assertions, admins, and envi
 Project creation and assertion deployment require authorization for the target contracts. Depending on the contract and network, authorization can happen through an on-chain admin verifier such as `owner()` or, for rollup contracts only, through [manual verification](/credible/manual-verification).
 </Note>
 
+## Prerequisites and Integration Choice
+
+Confirm the target deployment, supported assertion capabilities, and protocol-management authority before creating a release.
+
+- **Rollup**: obtain the network’s covered transaction paths, authorization requirements, and fallback policy. Eligible contracts on those paths need no credible-block guard.
+- **Ethereum**: map selected functions and alternate paths, integrate the [guard or supported adapter](./network-integrations/architecture-ethereum#direct-guard-or-adapter), and configure [Credible RPC](./ethereum-rpc-integration). Verify guard behavior separately from assertion correctness.
+
 ## Adoption Workflow
 
 Teams follow the same underlying steps. The CLI is used to author and deploy assertions, while the platform
@@ -35,7 +42,8 @@ flowchart LR
   Platform --> DA[Assertion DA]
   Platform --> Registry[On-Chain Registry]
   Registry --> Enforcer[Assertion Enforcer]
-  Enforcer --> Outcome[Block Inclusion Decision]
+  Enforcer --> Verdict[Assertion Verdict]
+  Verdict --> Outcome[Builder or Sequencer Inclusion Decision]
   Outcome --> Invalidations[Invalidations + The Phylax Explorer]
 ```
 
@@ -65,7 +73,7 @@ Before assertions can be deployed for a contract, the platform needs to determin
 ## Deployment Modes
 
 - **Staging**: test and iterate on assertions without impacting production users
-- **Production**: enforce assertions at the network level for real transactions
+- **Production**: enforce active assertions on the selected integration’s covered paths
 
 Learn more about ownership checks in [Ownership Verification](/credible/ownership-verification).
 
@@ -79,6 +87,8 @@ Learn more about ownership checks in [Ownership Verification](/credible/ownershi
 
 - Assertions cover critical protocol invariants and admin operations
 - Staging assertions are validated before moving to production
+- Confirm activation, available assertion code, and evaluation evidence on the actual integration
+- For Ethereum, verify marked-block ordering, unmarked-call rejection, fail-open, bypasses, and alternate paths
 - Teams review invalidations and iterate on coverage over time
 
 ## Next Steps

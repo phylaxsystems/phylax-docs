@@ -1,0 +1,33 @@
+---
+title: "Rollup Sequencer Integrations"
+description: "Where sequencer enforcement applies, what protocols integrate, and which transaction paths need separate verification."
+---
+
+An integrated rollup sequencer supplies an enforcement point in its transaction-building path. For supported deployments and covered transaction paths, a protocol can register assertions without adding the Ethereum-style credible-block guard to its application.
+
+## Why Contract Changes May Be Unnecessary
+
+The sequencer obtains an assertion verdict before retaining a candidate. Exclusion happens outside the application contract, so eligible immutable contracts can also be supported. Eligibility still depends on authorization, assertion capabilities, and the network’s coverage. See [Ownership Verification](../ownership-verification).
+
+This is sequencer-side filtering. It is not automatically a consensus validity rule or a requirement enforced by the rollup’s proof system.
+
+## Coverage Beyond Ordinary Sequencing
+
+An ordinary transaction-building hook does not establish coverage for every transaction source. Forced inclusion, delayed queues, bridge-originated transactions, system transactions, and fallback production can have different inclusion requirements.
+
+For each deployment, the network’s policy must identify the validation point, who can exclude or delay the transaction, and what happens when a verdict is unavailable or conflicts with an inclusion deadline. If a route can proceed without assertion enforcement, the protocol’s coverage has that exception. See the [Network Integration Checklist](../network-integration#transaction-source-coverage).
+
+## Availability and Recovery
+
+Sequencer timeouts, worker backlog, unavailable assertion data, and fallback block production are network integration decisions. Continuing ordinary block production can preserve network availability while reducing assertion coverage. This differs from an Ethereum application guard relaxing its credible-block requirement.
+
+Recovery requires the evaluator to have the correct active policy and available code for the candidate state. A process restart or a healthy RPC alone does not establish that readiness.
+
+## Implementation Paths
+
+The existing implementation pages describe different rollup integration patterns:
+
+- [Linea / Besu](./architecture-linea): a Besu plugin connects transaction selection to an assertion sidecar.
+- [OP Stack](./architecture-op-stack): Rollup-Boost connects external block building to sequencing, including a fallback path that needs its own policy.
+
+These architecture descriptions do not establish a particular network’s deployed coverage or hosted test environment. Protocol teams can use [Platform Integration Planning](../dapp-integration); network operators can use [Network Integration Overview](../network-integration).

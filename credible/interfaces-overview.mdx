@@ -39,12 +39,16 @@ The Credible Layer combines protocol components with Phylax-operated product sur
 | Component | Purpose | Layer |
 | --- | --- | --- |
 | Credible Layer contracts | On-chain registry, protocol admin authority, assertion windows, and timelocks | Core protocol |
-| Assertion Enforcer | Executes active assertions and returns inclusion decisions during block production | Network enforcement |
+| Assertion Enforcer | Evaluates applicable active assertions and returns verdicts; the builder or sequencer decides inclusion | Network enforcement |
 | Assertion DA | Stores assertion bytecode and source code for enforcers and public verification | Phylax-operated storage today |
 | `pcl` CLI | Builds, tests, authenticates, and submits assertion releases | Local developer tooling |
 | Backtesting | Tests a platform release against transactions from the last 20,000 blocks before deployment | Phylax-operated release review service |
 | Staging | Runs assertions against live network activity without dropping transactions | Phylax-operated validation environment |
 | Platform | Manages releases, invalidations, audit logs, collaborators, alerts, and project metadata | Phylax product |
+
+## Ethereum Application Boundary
+
+The [Credible Registry](./ethereum-guard-reference) records authorized block markers; the State Oracle manages assertion policy. They are separate contracts with separate administration. The application guard reads registry state, while the participating builder evaluates assertions. [Credible RPC](./ethereum-rpc-integration) supplies simulation and private submission, not an unavoidable ingress boundary.
 
 ## Guidance
 

@@ -15,7 +15,7 @@ Understanding this difference is important for writing effective tests and inter
 |--------|---------|------------|
 | **When assertion fails** | Transaction reverts | Rejection reported to the network integration |
 | **Which assertion runs** | Specified by `fnSelector` | All matching assertions |
-| **Scope** | Next external call only | All transactions to protected contracts |
+| **Scope** | Next external call only | Applicable candidates on covered integration paths |
 
 ## Production: Network Integrations Apply the Result
 
@@ -26,7 +26,7 @@ flowchart LR
     TX[Transaction] --> AE[Assertion Enforcer]
     AE --> |Identify triggers| MATCH{Triggers<br/>match?}
     MATCH --> |Yes| RUN[Run assertions]
-    MATCH --> |No| INCLUDE[Include in block]
+    MATCH --> |No| INCLUDE[Return to builder selection]
     RUN --> |All pass| INCLUDE
     RUN --> |Any fails| REPORT[Report rejection]
     
@@ -36,9 +36,11 @@ flowchart LR
 
 Key behaviors:
 - Triggers are evaluated to determine which assertions run
-- All matching assertions for all interacted contracts execute
+- Matching active assertions execute within the backend’s supported capabilities and resource policy
 - A failing assertion produces a rejection report
 - An enforcing integration can use that report to exclude the transaction before inclusion
+
+An Ethereum guard revert is an on-chain application outcome, separate from an off-chain assertion rejection. An excluded candidate has no inclusion receipt from that builder; an included transaction with a reverted guarded call can consume gas. See [Ethereum Architecture](./network-integrations/architecture-ethereum).
 
 ## Testing: Transactions Revert
 

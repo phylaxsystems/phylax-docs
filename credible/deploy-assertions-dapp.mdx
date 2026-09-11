@@ -16,6 +16,8 @@ This guide shows you how to create a project in the [Phylax platform](https://ap
 New to the platform? See the [Platform Overview](/credible/dapp-overview) to understand its features.
 </Note>
 
+Before relying on production enforcement, complete the [integration plan](./dapp-integration). Release creation and State Oracle activation do not install an Ethereum application guard or establish rollup transaction-source coverage. Confirm that the target backend supports the assertion’s triggers and state access.
+
 ## Step 1: Authenticate
 
 Authenticate through `pcl`:
@@ -34,7 +36,7 @@ pcl auth login
 </Frame>
 
 <Note>
-Authentication links your wallet address with your `pcl` session, allowing you to manage projects that your wallet owns.
+Authentication grants a platform session. Project access, initial contract authorization, and the wallet allowed to sign State Oracle lifecycle changes are separate checks.
 </Note>
 
 ## Step 2: Create a Project
@@ -89,7 +91,7 @@ After applying via `pcl`, complete deployment in the platform:
 
 6. Confirm the environment declared by the release:
    - **Staging**: Assertions run but do not block transactions
-   - **Production**: Assertions block violating transactions
+   - **Production**: Active assertions inform exclusion on enforced transaction paths
 
 7. Connect the protocol manager wallet, select **Deploy to Staging** or **Deploy to Production**, and sign the transaction
 
@@ -109,7 +111,9 @@ Projects are managed in the platform, but the deployment transaction should be s
 The same model applies when you remove an assertion later. Removal is also scheduled through the State Oracle contracts and only takes effect after that configured timelock expires.
 </Note>
 
-## Step 5: Monitor Your Assertions
+## Step 5: Verify and Monitor Your Assertions
+
+Confirm the on-chain activation point has been reached and the evaluator has the matching assertion code available. Then verify a permitted transaction and a violating candidate on the target integration. For Ethereum, include [guard and marker checks](./testing-credible-block-guard); release status alone does not prove end-to-end enforcement.
 
 After deployment, manage assertions through your project dashboard:
 

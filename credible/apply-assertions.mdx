@@ -12,6 +12,8 @@ This guide shows you how to configure your assertions in `credible.toml` and cre
 
 **What you'll do**: Authenticate, declare the desired assertion state in `credible.toml`, and create a release. Then review and deploy that release in the platform.
 
+Before relying on production enforcement, complete the [integration plan](./dapp-integration). Release creation and State Oracle activation do not install an Ethereum application guard or establish rollup transaction-source coverage. Confirm that the target backend supports the assertion’s triggers and state access.
+
 ## Step 1: Authenticate
 
 Before deploying, authenticate with the Credible Layer:
@@ -23,7 +25,7 @@ pcl auth login
 `pcl` displays a device code and verification URL. Press Enter to open the URL in your browser, authenticate with your wallet, email, Google, or GitHub, and approve the request. `pcl` then detects the completed authentication.
 
 <Note>
-Your account must be linked to the wallet address that owns the contracts listed in `credible.toml`. The platform verifies on-chain ownership (via the admin verifier, typically `owner()`) before allowing assertion deployment. See [Ownership Verification](/credible/ownership-verification) for details.
+Your account needs platform access to the project. Initial adopter registration must pass the deployment’s admin verifier; subsequent on-chain lifecycle changes require the registered protocol manager or the applicable administrative authority. See [Ownership Verification](/credible/ownership-verification) for details.
 </Note>
 
 Check your status anytime:

@@ -14,15 +14,17 @@ Looking for a non-technical introduction? Start with the [Credible Layer Overvie
 The Credible Layer consists of four core components:
 
 1. **[Assertions](/credible/assertions-overview)**: Security rules written in Solidity that define states that should never occur
-2. **[Assertion Enforcer](/credible/assertion-enforcer)**: Sidecar that validates transactions against assertions during block production
+2. **[Assertion Enforcer](/credible/assertion-enforcer)**: Evaluator that checks transaction behavior against applicable assertions during block production
 3. **[Credible Layer Contracts](/credible/credible-layer-contracts)**: On-chain registry that maps assertions to protected contracts
 4. **[Assertion DA](/credible/assertion-da)**: Storage layer for assertion bytecode and source code
 
 ## How the Credible Layer Works
 
-The Credible Layer is a **sidecar security infrastructure** that validates transactions against developer-defined security rules (assertions) before they are included in blocks. As a sidecar, it runs alongside the L2 network's main components, intercepting transactions during block building and ensuring they don't violate any deployed security rules.
+Protocols define assertions; the evaluator checks applicable transaction behavior; the integrated sequencer or builder decides whether to retain the candidate. The evaluator does not itself control inclusion.
 
-The Assertion Enforcer is operated by the network's block builder or sequencer. Networks that integrate the Credible Layer run this sidecar as part of their block production infrastructure. This means enforcement does not rely on external execution services beyond the network you already trust to include transactions.
+In the [rollup design](./network-integrations/rollup-sequencers), enforcement authority comes from the integrated sequencing path. In the [Ethereum design](./network-integrations/architecture-ethereum), participating builders evaluate assertions and an application guard restricts selected calls to marked blocks while that requirement is active.
+
+A sidecar runs alongside the transaction builder. An embedded library runs within it. This packaging choice does not determine whether a protocol’s policy is mandatory.
 
 ### System Architecture
 
@@ -47,7 +49,7 @@ flowchart LR
         REGISTRY["Credible Layer<br/>Contracts"]
     end
 
-    subgraph enforcer["Assertion Enforcer (Sidecar)"]
+    subgraph enforcer["Assertion Evaluator"]
         direction TB
         SPACER_E[" "]
         PhEVM["PhEVM"]
@@ -85,53 +87,35 @@ The diagram shows two main flows:
 
 1. **Assertion Release and Activation**: Developers write assertions and create a release with `pcl apply`. The platform stores the artifact in Assertion DA; a separate on-chain lifecycle action activates it
 2. **Transaction Validation**: The network sends transactions to the Assertion Enforcer during block production
-3. **Assertion Execution**: The Assertion Enforcer simulates each transaction and validates it against relevant assertions using PhEVM
+3. **Assertion Execution**: The evaluator checks relevant assertions against candidate execution state; an integration may supply execution artifacts rather than re-execute the candidate
 4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the block builder or sequencer
 5. **Network Policy**: The network integration uses the validation result when deciding whether to include the transaction
 
 ## Transaction Flow
 
-When a user submits a transaction, it goes through the following validation process:
+### Rollup Sequencer
 
-```mermaid
----
-title: Transaction Validation Flow
----
-flowchart LR
-    USER["User"] -->|"Submits Transaction"| MP["Mempool"]
-    MP --> BUILDER["Block Builder / Sequencer"]
-    BUILDER -->|"Candidate Tx"| SIDECAR["Assertion Enforcer<br/>(Sidecar)"]
-    SIDECAR -->|"Validation report"| BUILDER
-    BUILDER -->|"Apply inclusion policy"| DECISION{"Include?"}
-    DECISION -->|"Yes"| BLOCK["Block"]
-    DECISION -->|"No"| EXCLUDE["Excluded"]
+The integrated sequencing path selects a candidate, obtains its assertion verdict, and applies its inclusion policy. This can exclude a violation before inclusion without changing the protected contract. The [rollup coverage boundary](./network-integrations/rollup-sequencers) determines what happens to forced inclusion, bridge transactions, delayed queues, and fallback blocks.
 
-    classDef user fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
-    classDef mempool fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#fff
-    classDef sidecar fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
-    classDef valid fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
-    classDef invalid fill:#d32f2f,stroke:#b71c1c,stroke-width:2px,color:#fff
+### Ethereum Participating Builder
 
-    class USER user
-    class MP mempool
-    class SIDECAR sidecar
-    class BLOCK valid
-    class EXCLUDE invalid
-```
+The builder executes a candidate locally and supplies the resulting state and execution artifacts for assertion evaluation. It retains or excludes that candidate before publishing a block. The application guard reads registry state written by an earlier authorized marker in that same block. The marker is a trust signal, not cryptographic proof of correct evaluation. See [Ethereum Architecture](./network-integrations/architecture-ethereum).
 
-1. **Transaction Submission**: User submits a transaction to the network
-2. **Mempool Entry**: Transaction enters the mempool awaiting selection
-3. **Block Builder Selection**: The block builder picks transactions from the mempool
-4. **Assertion Validation**: Each transaction is validated against deployed assertions
-5. **Inclusion Decision**: The network applies its inclusion policy to the validation report
+### Assertion Validation Process
 
-<Note>
-The Assertion Enforcer is integrated with the block builder. During block production, the block builder invokes the Assertion Enforcer to validate transactions before including them.
-</Note>
+Pre-state means the state immediately before the candidate in its proposed position; post-state means immediately after it. Neither refers to when the transaction first arrived, nor does post-state mean end-of-block state or Ethereum finality.
+
+| Outcome | Meaning |
+| --- | --- |
+| Assertion violation | An evaluated rule failed; this is not automatically evidence of an exploit |
+| Evaluator error | Evaluation could not complete reliably; apply the integration’s error policy |
+| Builder exclusion | The candidate is left out of that builder’s block |
+| Guarded call revert | The on-chain guard rejects a call; a reverting transaction may still be included and consume gas |
+| Successful inclusion | The transaction appears in the selected chain; passing assertions alone does not guarantee this |
 
 ## Invalidation Lifecycle (Public View)
 
-When an assertion is violated, the invalidation is recorded and exposed for transparency and alerts.
+Where reporting is supported, an assertion violation produces an invalidation record for investigation and alerts. Reporting coverage is integration-specific; a missing record is not proof that evaluation passed.
 
 ```mermaid
 ---
@@ -171,7 +155,7 @@ For details on the assertion validation process, see [Assertion Enforcer](/credi
 
 ### Assertion Enforcer
 
-The [Assertion Enforcer](/credible/assertion-enforcer) is a sidecar that orchestrates transaction validation. It identifies which assertions apply to incoming transactions and invokes PhEVM to execute them. The network integration applies its inclusion policy to the resulting validation report.
+The [Assertion Enforcer](/credible/assertion-enforcer) orchestrates transaction validation as a sidecar or embedded evaluator, depending on the integration. It identifies which assertions apply to incoming transactions and invokes PhEVM to execute them. The network integration applies its inclusion policy to the resulting validation report.
 
 ### PhEVM (Phylax EVM)
 
@@ -196,6 +180,9 @@ The [Credible Layer Contracts](/credible/credible-layer-contracts) are on-chain 
 The Credible Layer can be implemented on different networks. The core concepts remain the same, but implementation details vary by network architecture.
 
 For specific implementation details, see:
+- [Rollup Sequencer Integrations](./network-integrations/rollup-sequencers)
+- [Ethereum / Participating Builders](./network-integrations/architecture-ethereum)
+- [Linea / Besu](./network-integrations/architecture-linea)
 - [OP Stack Implementation](/credible/network-integrations/architecture-op-stack)
 
 ---

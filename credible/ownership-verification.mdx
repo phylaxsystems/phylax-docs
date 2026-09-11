@@ -19,7 +19,7 @@ interface IOwnable {
 }
 ```
 
-When testing or developing with the Credible Layer, ensure your contracts implement this interface to enable project registration and assertion management.
+Use the admin verifier supported by your deployment. An `owner()` check can authorize initial registration; it is not necessarily the source of ongoing State Oracle manager authority. Ethereum adapters can expose a bootstrap manager interface; match it to the deployed verifier.
 
 <Note>
 Managing assertions is a sensitive role. We recommend using hardware wallets and multisig accounts for protocol admin (assertion manager) addresses.
@@ -29,7 +29,7 @@ Managing assertions is a sensitive role. We recommend using hardware wallets and
 
 If your contracts are deployed on a supported rollup and are immutable or don't expose an admin interface, you may be able to request manual verification. In this path, Phylax validates that the requesting team controls the protocol and then registers a protocol admin (manager) address for the specific contracts in the State Oracle registry.
 
-Manual verification is not available for Ethereum mainnet contracts because enforcement works differently on L1 and L2 blockchains.
+Manual verification is not the Ethereum adoption path. The distinction is enforcement authority, not a universal L1/L2 rule; see [Ethereum Integration](./network-integrations/architecture-ethereum).
 
 High-level requirements and signals include:
 - Demonstrated control over the protocol codebase (e.g., ability to merge to the official repo and manage collaborators)
@@ -40,15 +40,11 @@ After approval, the protocol admin address is added to the registry and a timelo
 
 See [How to Request Manual Verification](./manual-verification) for the full process and requirements.
 
-## Future Development
+## Separate Authorities
 
-We are actively researching alternative ownership verification methods that will:
+Platform membership controls product access. Initial contract authorization establishes who can register an adopter. After registration, the State Oracle’s manager record controls ordinary assertion lifecycle operations, subject to its administrative roles and restrictions.
 
-- Support different ownership patterns
-- Enable seamless ownership transfers
-- Maintain security requirements
-
-These improvements will be implemented in future versions of the Credible Layer.
+The Credible Registry separately controls builder authorization. Application ownership, upgrade permissions, and guard bypass setters remain application authorities. A manager transfer or platform invitation does not automatically transfer those powers. Exact permissions depend on the [contract version](./credible-layer-contracts).
 
 ## Next Steps
 

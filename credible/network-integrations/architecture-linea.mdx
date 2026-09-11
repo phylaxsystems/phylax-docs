@@ -6,6 +6,10 @@ description: 'High-level integration of the Credible Layer with Linea via Besu p
 This page summarizes the Linea integration pattern at a high level. It focuses on interface boundaries
 and the enforcement flow without internal implementation details.
 
+## Enforcement Scope
+
+This is a rollup sequencing integration pattern, not the Ethereum application-guard design. Eligible protocols can register assertions without a credible-block guard on covered paths. The diagram does not establish deployed coverage: verify forced inclusion, delayed queues, bridge-originated transactions, and fallback production separately. See [Rollup Sequencer Integrations](./rollup-sequencers).
+
 ## Integration Pattern
 
 Linea uses a **plugin pattern** that integrates directly with the Besu node through its plugin system
@@ -54,7 +58,7 @@ flowchart LR
 1. The block builder selects a candidate transaction.
 2. The plugin sends the transaction to the sidecar for assertion validation.
 3. The sidecar executes applicable assertions and returns a decision.
-4. The block builder includes valid transactions and drops invalid ones.
+4. The block builder excludes assertion violations on enforced paths; a passing verdict leaves the candidate eligible for ordinary selection.
 
 ## Notes
 

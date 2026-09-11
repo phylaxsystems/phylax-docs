@@ -1,12 +1,12 @@
 ---
-title: 'Network Integration Overview'
+title: 'How to Plan a Network Integration'
 description: 'High-level integration path for networks and sequencers adopting the Credible Layer'
 ---
 
 Use this page when your goal is to scope a network integration and identify the infrastructure surfaces your team will need.
 
 <Note>
-This page describes the shared integration model. Network-specific runbooks can add client, sequencer, builder, or validator details without changing the guarantees described here. If you need background first, read the [Architecture Overview](./architecture-overview).
+This page describes the shared integration model. Guarantees depend on transaction-source coverage and who controls inclusion. Choose the [rollup sequencer path](./network-integrations/rollup-sequencers) or [Ethereum participating-builder path](./network-integrations/architecture-ethereum). If you need background first, read the [Architecture Overview](./architecture-overview).
 </Note>
 
 This page explains how networks integrate the Credible Layer at a high level. It focuses on the
@@ -30,8 +30,9 @@ flowchart LR
   RPC --> Policy
   Policy --> Builder[Block Builder or Sequencer]
   Builder --> Enforcer[Assertion Enforcer]
-  Enforcer -->|valid| Block[Block]
-  Enforcer -->|invalid| Drop[Dropped]
+  Enforcer -->|Verdict or error| Decision[Builder inclusion policy]
+  Decision -->|Retain| Block[Candidate block]
+  Decision -->|Exclude| Drop[Excluded]
   Enforcer -.-> Registry[On-Chain Registry]
   Enforcer -.-> DA[Assertion DA]
 ```
@@ -87,7 +88,7 @@ Common controls include exact invalid-transaction caching, broader short-lived f
 
 ## Operational Expectations
 
-- The enforcer runs alongside the block builder and does not change consensus rules
+- Evaluation can run alongside or inside the builder; sequencer filtering is not automatically a consensus or rollup-proof requirement
 - Enforcement is deterministic and only depends on on-chain state and assertion code
 - Protocol teams choose whether assertions are staged or enforced; networks honor the registry status during validation
 - Network operators define continuity behavior for maintenance windows, degraded dependencies, and validation timeouts
@@ -95,7 +96,8 @@ Common controls include exact invalid-transaction caching, broader short-lived f
 
 ## Integration Checklist (High Level)
 
-- Identify the block-building hook for transaction validation
+- Identify the block-building hook and every alternate producer or fallback path
+- For participating builders, verify the application guard and authorized marker boundary; evaluate applicable transactions regardless of ingress route
 - Configure access to registry data and assertion bytecode
 - Ensure the enforcer respects staged vs enforced assertions as set by protocol teams
 - Define validation policy for every supported transaction source
