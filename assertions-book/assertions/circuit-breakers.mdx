@@ -58,7 +58,7 @@ Because enforcement runs as an assertion, the protocol does not need breaker-spe
 
 ## Bucket ingestion and balance reconstruction
 
-On mainnet, the per-block buckets behind a cumulative watcher are not written while a block is being built. The executor ingests each complete canonical block after it has been executed, using the block's ERC20 `Transfer` logs and the adopter's post-block token balance. Bucket history therefore lags the chain tip, and a candidate transaction can be validated before the buckets for one or more recent blocks exist.
+On mainnet, the per-block buckets behind a cumulative watcher are not written while a block is being built. The executor ingests each complete canonical block after it has been executed, using the block's ERC20 `Transfer` logs and the adopter's post-block token balance. Ingestion runs concurrently with block building, so bucket history can lag the chain tip and a candidate transaction can be validated before the buckets for one or more recent blocks exist. Ingested blocks can also land partway through building a block. Each transaction reads the latest ingested history at the time it is validated, so two transactions in the same block can be evaluated against different histories: an earlier one against reconstructed buckets and a later one against exact buckets.
 
 When the history is behind, the executor still runs the check. It reconstructs the missing buckets for that evaluation only:
 
@@ -66,7 +66,7 @@ When the history is behind, the executor still runs the check. It reconstructs t
 2. It treats the difference as the net flow of the gap and spreads it evenly across the missing blocks, interpolating bucket timestamps between the last known block and the candidate block. If only earlier transactions in the current block are missing, the difference is added to the current block's bucket instead.
 3. It evaluates the threshold against the reconstructed window plus the candidate transaction's own transfers.
 
-Reconstructed buckets are never persisted. Durable history is updated only by block ingestion, so a later evaluation with complete buckets uses the exact per-block data.
+Reconstructed buckets are never persisted. Durable history is updated only by block ingestion, so as soon as the missing blocks are ingested, later transactions are evaluated against the exact per-block data.
 
 ### Effect on trigger context
 
