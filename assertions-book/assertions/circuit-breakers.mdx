@@ -56,6 +56,33 @@ A Phylax circuit breaker runs as an assertion before the transaction settles. It
 
 Because enforcement runs as an assertion, the protocol does not need breaker-specific hooks or storage. The assertion can reject a candidate transaction when it exceeds the configured policy.
 
+## Bucket ingestion and balance reconstruction
+
+On mainnet, the per-block buckets behind a cumulative watcher are not written while a block is being built. The executor ingests each complete canonical block after it has been executed, using the block's ERC20 `Transfer` logs and the adopter's post-block token balance. Bucket history therefore lags the chain tip, and a candidate transaction can be validated before the buckets for one or more recent blocks exist.
+
+When the history is behind, the executor still runs the check. It reconstructs the missing buckets for that evaluation only:
+
+1. It reads the adopter's token balance immediately before the candidate transaction from the current state and compares it with the balance recorded in the latest known bucket.
+2. It treats the difference as the net flow of the gap and spreads it evenly across the missing blocks, interpolating bucket timestamps between the last known block and the candidate block. If only earlier transactions in the current block are missing, the difference is added to the current block's bucket instead.
+3. It evaluates the threshold against the reconstructed window plus the candidate transaction's own transfers.
+
+Reconstructed buckets are never persisted. Durable history is updated only by block ingestion, so a later evaluation with complete buckets uses the exact per-block data.
+
+### Effect on trigger context
+
+Reconstruction recovers the exact net balance change, but not the individual transfers behind it. Inflows and outflows that offset each other within the gap cancel out and cannot be recovered.
+
+| Context fields | Under reconstruction |
+| --- | --- |
+| `cumulativeOutflow`, `cumulativeInflow` | Exact. Net flow is derived from the balance difference. |
+| `absoluteOutflow`, `absoluteInflow` | May undercount. Only the net direction of the gap is attributed as gross flow. |
+| `peakRateBps`, `lastRateBps`, `meanRateBps` | Approximate. Gap flow is spread evenly across the missing blocks. |
+| `tvlSnapshot`, `windowStart`, `currentBps` | Approximate when the earliest retained bucket falls inside the gap. |
+
+<Warning>
+Base rejection logic on net flow. An assertion that enforces a limit on `absoluteOutflow` or `absoluteInflow` can miss gross flow that occurred while bucket history was behind, so it may accept a transaction it would reject with complete buckets.
+</Warning>
+
 ## Monitoring and incident response
 
 Circuit breakers constrain token flow rather than a specific attack path, so they can limit the impact of different exploit classes, including attacks that begin with oracle manipulation. They bound flow within the configured rolling window; they do not replace monitoring or incident response.

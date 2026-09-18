@@ -679,6 +679,8 @@ struct InflowContext {
 function inflowContext() external view returns (InflowContext memory ctx);
 ```
 
+On mainnet, bucket history can lag the block being built. When it does, the executor reconstructs net flow from the latest known balance and the current state, so `absoluteOutflow` and `absoluteInflow` may undercount gross flow. See [Bucket ingestion and balance reconstruction](../assertions-book/assertions/circuit-breakers#bucket-ingestion-and-balance-reconstruction).
+
 #### `FlowRateContext`
 
 Contains rate-of-change statistics for an assertion triggered by a cumulative-flow watcher. Rate fields are basis points of `tvlSnapshot` per second.
