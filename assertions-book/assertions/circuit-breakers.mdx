@@ -80,7 +80,7 @@ Reconstruction recovers the exact net balance change, but not the individual tra
 | `tvlSnapshot`, `windowStart`, `currentBps` | Approximate when the earliest retained bucket falls inside the gap. |
 
 <Warning>
-Base rejection logic on net flow. An assertion that enforces a limit on `absoluteOutflow` or `absoluteInflow` can miss gross flow that occurred while bucket history was behind, so it may accept a transaction it would reject with complete buckets.
+An assertion that enforces a limit on `absoluteOutflow` or `absoluteInflow` can miss gross flow that occurred while bucket history was behind, so it may accept a transaction it would reject with complete buckets.
 </Warning>
 
 ## Monitoring and incident response
