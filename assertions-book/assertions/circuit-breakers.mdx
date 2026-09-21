@@ -60,13 +60,61 @@ Because enforcement runs as an assertion, the protocol does not need breaker-spe
 
 On mainnet, the per-block buckets behind a cumulative watcher are not written while a block is being built. The executor ingests each complete canonical block after it has been executed, using the block's ERC20 `Transfer` logs and the adopter's post-block token balance. Ingestion runs concurrently with block building, so bucket history can lag the chain tip and a candidate transaction can be validated before the buckets for one or more recent blocks exist. Ingested blocks can also land partway through building a block. Each transaction reads the latest ingested history at the time it is validated, so two transactions in the same block can be evaluated against different histories: an earlier one against reconstructed buckets and a later one against exact buckets.
 
+We do not expect history to be behind by more than one block on a regular basis, and any practical window is far longer than that. The missing blocks are always the newest blocks before the candidate transaction, so they lie inside the rolling window. The rest of this section assumes that.
+
 When the history is behind, the executor still runs the check. It reconstructs the missing buckets for that evaluation only:
 
-1. It reads the adopter's token balance immediately before the candidate transaction from the current state and compares it with the balance recorded in the latest known bucket.
+1. It derives the adopter's token balance immediately before the candidate transaction from the current state and compares it with the balance recorded in the latest known bucket.
 2. It treats the difference as the net flow of the gap and spreads it evenly across the missing blocks, interpolating bucket timestamps between the last known block and the candidate block. If only earlier transactions in the current block are missing, the difference is added to the current block's bucket instead.
 3. It evaluates the threshold against the reconstructed window plus the candidate transaction's own transfers.
 
 Reconstructed buckets are never persisted. Durable history is updated only by block ingestion, so as soon as the missing blocks are ingested, later transactions are evaluated against the exact per-block data.
+
+### Effect on the circuit breaker trigger
+
+When a transaction arrives at block N and the last stored bucket is block M with M < N-1, the blocks in between are missing. We pick the last stored bucket as the anchor, and we fill the gap like this:
+1. Compare the anchor's end-of-block balance with the candidate's pre-transaction balance.
+2. Divide the difference evenly across the missing blocks.
+3. Splice those fake buckets into a clone of the state and evaluate on it. The fake buckets are thrown away and not persisted.
+
+Because the missing blocks lie inside the window, the reconstructed buckets sum exactly to the real net balance change of the gap, and the cumulative check sees the same net flow it would see with complete buckets.
+
+**False triggers can only occur at the window boundary.** If a missing block has already aged out of the window, the even split still drops a share of that block's movement into the later gap blocks, which are inside the window. This requires history to be behind by more than the window itself, which we do not expect to happen:
+
+```mermaid
+flowchart LR
+    B1["Bucket 1 · stored anchor<br>expired"]
+    B2["Bucket 2 · missing<br>actual: 150 out<br>reconstructed: 50<br>expired"]
+
+    subgraph WINDOW["Active window · buckets 3–5"]
+        direction LR
+        B3["Bucket 3 · missing<br>actual: 0<br>reconstructed: 50"]
+        B4["Bucket 4 · missing<br>actual: 0<br>reconstructed: 50"]
+        B5["Bucket 5 · candidate<br>current flow: ε ≥ 0"]
+
+        B3 --> B4 --> B5
+    end
+
+    RESULT["Threshold 100<br>actual in window: ε · PASS<br>reconstructed: 100 + ε ≥ 100 · FALSE TRIGGER"]
+
+    B1 --> B2
+    B2 -. "150 delta is split evenly<br>across blocks 2–4" .-> B3
+    B5 --> RESULT
+
+    classDef expired fill:#E2E8F0,stroke:#475569,color:#0F172A,stroke-width:1.5px
+    classDef reconstructed fill:#FEF3C7,stroke:#B45309,color:#78350F,stroke-width:2px
+    classDef current fill:#DBEAFE,stroke:#1D4ED8,color:#1E3A8A,stroke-width:1.5px
+    classDef failure fill:#FEE2E2,stroke:#B91C1C,color:#7F1D1D,stroke-width:2px
+
+    class B1,B2 expired
+    class B3,B4 reconstructed
+    class B5 current
+    class RESULT failure
+
+    style WINDOW fill:#EFF6FF,stroke:#2563EB,color:#1E3A8A,stroke-width:1px
+```
+
+Gross flow is a separate matter. Inflows and outflows that offset each other inside the gap cancel out in the balance difference, so the reconstructed gross outflow is always less than or equal to the real gross outflow. A limit on gross flow can therefore undercount while history is behind. We don't recommend any direct changes to your circuit breaker design for this edge case.
 
 ### Effect on trigger context
 
@@ -82,6 +130,8 @@ Reconstruction recovers the exact net balance change, but not the individual tra
 <Warning>
 An assertion that enforces a limit on `absoluteOutflow` or `absoluteInflow` can miss gross flow that occurred while bucket history was behind, so it may accept a transaction it would reject with complete buckets.
 </Warning>
+
+If your circuit breaker uses `absoluteOutflow` or `absoluteInflow` to get the total token flow values, please be aware that the values you are reading might be derived from the above mechanism and approximate. Please keep this in mind when designing the limits, as the gross figures can undercount.
 
 ## Monitoring and incident response
 
