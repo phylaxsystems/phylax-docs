@@ -104,6 +104,7 @@ It does not divide by the full configured window when the retained activity cove
 | Bucket timestamp equals the window cutoff | The bucket remains in the window because the cutoff is inclusive. |
 | `windowDuration` is below 10 seconds or does not fit in `uint64` | Trigger registration is rejected. |
 | Rate multiplication | The executor uses 512-bit intermediate arithmetic before narrowing the result to `uint256`. |
+| Bucket history lags the block being built | The executor spreads the net balance change of the missing blocks evenly across them, so rate fields are approximate. See [Bucket ingestion and balance reconstruction](./circuit-breakers#bucket-ingestion-and-balance-reconstruction). |
 
 ## Calculation example
 
