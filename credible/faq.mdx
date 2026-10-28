@@ -1,366 +1,250 @@
 ---
-title: 'Frequently Asked Questions (FAQ)'
-description: 'Common questions about the Phylax Credible Layer'
+title: 'FAQ'
+description: 'Answers about enforcement, decentralized block building, integration, recovery, and testing.'
 ---
 
-Welcome to the Phylax Credible Layer FAQ! Here you'll find answers to common questions about the Credible Layer's
-features, capabilities, and usage. If you can't find what you're looking for, please reach out in
-our [Telegram](https://t.me/phylax_credible_layer).
+Use this page to look up how enforcement works, what an integration requires, and what happens when a rule blocks legitimate activity. Network support, deployed contract versions, and configuration determine which behavior applies to your integration.
 
-<Note>
-Use this page for short answers. If you are trying to complete a task, go to the [how-to guides](./credible-install). If you need definitions, use the [Glossary](./glossary). If you need the system rationale, start with the [Architecture Overview](./architecture-overview) and [Trust Model](./trust-model).
-</Note>
+## Assertions and Coverage
 
----
+### What does an assertion check?
 
-## General Questions
+An assertion is a Solidity rule evaluated against a candidate transaction. It can inspect transaction effects, compare state before and after execution, and check relationships across contracts. Triggers determine when the rule runs.
 
-### What is the Phylax Credible Layer?
-The Credible Layer is a network extension that enables developers to link security rules to their smart contracts on-chain.
+An assertion failure means the transaction violates the encoded rule. It does not, by itself, prove that the transaction is an exploit. A rule can be incorrect, too restrictive, or missing context about legitimate activity. Passing assertions also does not prove safety against risks the rules do not cover.
 
-These rules are defined in Solidity, executed off-chain, and enforced by the network during block building. Since these rules are verifiable, apps can turn implicit security assumptions into an explicit security posture using The Phylax Explorer so that users can inspect the protections behind the apps they use.
+See [Assertions Overview](./assertions-overview) and [Triggers](./triggers).
 
-**Learn More:**
-- [Credible Layer Overview](/credible/credible-layer-overview) - Non-technical introduction
-- [Architecture](/credible/architecture-overview) - Technical deep dive
+### Why use assertions if the protocol already has on-chain checks?
 
-### Why do I need the Credible Layer when I can write rules in my contracts?
-There are several key advantages:
+Keep existing access controls and accounting checks. Assertions can add checks that need transaction-wide effects, before-and-after snapshots, or state from several contracts. Their execution happens off-chain during block building, subject to execution limits.
 
-1. **Off-chain Execution**: Rules that would be too expensive or impossible to express on-chain due to gas costs and limits can be implemented easily as assertions as they are run off-chain. Our current benchmarks show around 1000x efficiency gains.
-2. **Simpler Security Model**: By writing invariants that define a state to prevent instead of every edge case that would lead there, you simplify and strengthen your protocol.
-3. **No redeployment or downtime**: Add new security rules without modifying your existing contracts. You can even add rules to immutable contracts. To learn how this is possible read the [How do you extend the validation logic of the sequencer to the platform?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-platform) section below.
+A simple condition that the protocol can reliably enforce in its own contracts may belong there. Identify what additional failure an assertion can detect beyond the controls already present.
 
-**Learn More:**
-- [Credible Layer Overview - Use Cases](/credible/credible-layer-overview#use-cases)
-- [Architecture - System Components](/credible/architecture-overview#system-components)
+### Do assertions replace audits?
 
-### How does the Credible Layer differ from other security approaches?
-The Credible Layer offers several key advantages:
+No. Audits review implementation and design; assertions enforce selected rules at runtime. Assertions, guards, authorization, and recovery paths all need review. An assertion cannot compensate for a missing trigger, an unguarded path, or a rule that permits the harmful state.
 
-1. **Deterministic prevention**: Binary enforcement based on protocol-authored assertions rather than opaque scoring
-2. **Pre-execution Protection**: Stop hacks during sequencing rather than detecting after damage
-3. **Network-Native Security**: Protocol-controlled rules enforced by the network itself, without relying on external execution services
-4. **Transparent Enforcement**: Public, verifiable Solidity rules rather than opaque algorithms
-5. **No contract modifications**: Add new protections without changing the protected contract; activation still follows the configured assertion lifecycle and timelocks
+### Can assertions protect immutable contracts without code changes?
 
-**Learn More:**
-- [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
-- [Architecture - Assertion Validation](/credible/architecture-overview#assertion-validation-process)
+It depends on the enforcement model. An integrated sequencer can apply assertion checks at its inclusion boundary without changing the protected contract, subject to its transaction-source coverage.
 
-### What's the difference between assertions and traditional audits?
-While audits provide point-in-time code reviews, the Credible Layer offers continuous protection via the sequencer actively validating every transaction that interacts with your contracts against your assertions.
+On a network with decentralized builders, routing to participating builders is insufficient on its own. Protected operations need an unavoidable on-chain gate that rejects execution outside credible blocks while the gate is active. That may require a contract upgrade, a supported wallet guard, or an existing hook covering every protected path. An immutable contract with no suitable gate cannot obtain that protection simply by registering assertions.
 
-**Learn More:**
-- [Writing Assertions Guide](/credible/write-first-assertion)
-- [Assertions Book](/assertions-book/assertions-book-intro)
+### Can I reuse an assertion from another protocol?
 
-### What is The Phylax Explorer?
-**[The Phylax Explorer](/credible/dapp-explorer)** is the public dashboard that displays the security and operational risk posture of protocols that have opted into runtime enforcement.
+You can adapt compatible examples, but review their assumptions: storage layout, token behavior, privileged roles, trigger coverage, and legitimate state transitions. Test them against your contracts before activation. The [Assertions Book](../assertions-book/assertions-book-intro) provides starting points.
 
-Users can find summaries of actions protected by circuit breakers and assertions, scenarios the assertions prevent, operational details for admin multisig wallets, upgradeability documentation, and whether the currently deployed protocol has meaningfully diverged from the code at the time of audit.
+## Enforcement and Decentralized Block Building
 
-**Learn More:**
-- [Deploy Assertions](/credible/deploy-assertions-dapp)
-- [Glossary - The Phylax Explorer](/credible/glossary#the-phylax-explorer)
+### Who runs assertions, and when?
 
-### Is the Credible Layer a SaaS protocol?
-No. The Credible Layer is a protocol with product tools around it: the platform and `pcl` help teams author, review, deploy, and monitor assertions, while the on-chain registry remains the source of truth for active assertion state.
+A participating sequencer or builder invokes the Assertion Enforcer while building a block. The enforcer executes relevant assertions against candidate transaction state and reports the result. The integration uses that report to exclude transactions that fail active production rules.
 
-Access to assertion management is still gated by authorization. Only verified protocol admins can attach assertions to protected contracts, and supported networks may have onboarding or availability constraints.
+Assertions run before inclusion, but transactions are simulated to obtain the effects being checked. Passing validation makes a transaction eligible for inclusion; it does not guarantee inclusion, ordering, or finality. See [Architecture](./architecture-overview).
 
-**Learn More:**
-- [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
-- [Architecture](/credible/architecture-overview)
-- [Ownership Verification](/credible/ownership-verification)
+### How does enforcement work when not every builder participates?
 
----
+The integration combines three parts:
 
-## Technical Details
+1. Participating builders validate candidate transactions against active assertions.
+2. An authorized builder marks the block credible in the Credible Registry before protected operations execute.
+3. An on-chain guard permits protected operations only in a credible block, unless its configured fail-open or authorized bypass condition applies.
 
-### What exactly is an assertion?
-An assertion is a Solidity contract that defines an invariant about your protocol, some state you want to prevent. Its identifier and registry entry are stored on-chain, while bytecode is stored in Assertion DA for enforcement. You can think of it as an inverse intent — you define the state you don't want to occur without specifying or caring about all the specific vectors that could lead to it.
+The Credible RPC routes submissions to participating builders. The guard makes the restriction apply even when someone submits through another route. Without that gate, a nonparticipating builder could include a transaction without assertion checks.
 
-Assertions are binary in nature, implemented through Solidity's **`require`** statement:
+This does not make assertions part of the chain's consensus validity rules.
 
-- If the **`require`** condition is met, the transaction is valid
-- If the **`require`** fails, the transaction is invalid and is dropped by the network
+### Is a credible-block marker proof that all assertions passed?
 
-This simple binary structure makes assertions both powerful and easy to understand - there's no ambiguity about what constitutes a violation. It either is or isn't a hack.
+No. The marker records an authorized builder's attestation. It is not a cryptographic proof of assertion execution. The guard checks the block marker; it does not execute assertions itself.
 
-Common examples include:
+The model relies on authorized builders checking the applicable rules and binding the marker to the block they build. Builder authorization, signing, and publication assumptions are part of the [Trust Model](./trust-model).
 
-- Unauthorized admin changes
-- Significant price movements
-- Violation of core protocol invariants
-- Complex cross-contract validations
+### What is the difference between the State Oracle and the Credible Registry?
 
-**Learn More:**
-- [Writing Assertions Guide](/credible/write-first-assertion)
-- [Assertions Book](/assertions-book/assertions-book-intro)
-- [Glossary - Assertion](/credible/glossary#assertion)
+The **State Oracle** records which assertions apply to which contracts, who can manage them, and when lifecycle changes take effect.
 
-### What are invariants and why are they important?
+The **Credible Registry** records credible-block markers and controls which builders may submit them. Guards consult it to decide whether an operation may execute in the current block. Registering an assertion does not install a guard or route transactions.
 
-Invariants are properties of your protocol that you want to maintain.
-They are fundamental to the Credible Layer's approach to security, and assertions are our tool to let you enforce them.
-While invariants define what should always be true, assertions give you the practical means to enforce these rules across your entire protocol:
-
-1. **Definition**:
-   - Properties that must hold true throughout execution
-   - Core rules that define valid and invalid protocol states
-   - Security guarantees that shouldn't be violated
-2. **Common Examples**:
-   - Total supply must equal sum of all balances
-   - Pool balance should never drop below initial deposit
-   - Admin privileges can't be granted without proper authorization
-   - Price changes must stay within acceptable bounds
-3. **Advantages**:
-   - Easier to reason about security properties
-   - Path Independent: Any state transition that breaks the invariant is flagged
+### Does one protocol's failed assertion stop other protocols or the entire block?
 
-For a good explainer on invariants see [this article](https://blog.trailofbits.com/2025/02/12/the-call-for-invariant-driven-development/)
+A failed assertion invalidates the candidate transaction to which it applies. It does not automatically invalidate unrelated transactions or the whole block.
 
-**Learn More:**
-- [Credible Layer Overview - Why Use Invariants](/credible/credible-layer-overview#why-use-invariants)
-- [Glossary - Protocol Invariants](/credible/glossary#protocol-invariants)
-- [Assertions Book](/assertions-book/assertions-book-intro)
+A transaction calling several protocols must pass all applicable assertions. If a batch combines multiple operations in one transaction, one failed assertion can exclude that entire transaction. Separate transactions can still proceed if they satisfy their checks and network inclusion requirements.
 
-### How do assertions work?
+### What happens if a protected call is inside a batch or another contract call?
 
-Although assertion IDs and registry entries are stored on-chain for transparency, assertions are run off-chain through the PhEVM (Phylax EVM) by the sequencer or block builder for performance reasons and can:
+Assertion rejection excludes the whole candidate transaction at the builder; the builder cannot commit only its successful portion.
 
-1. Compare state before and after transactions
-2. Monitor specific function calls
-3. Track changes to storage slots
-4. Analyze transaction patterns
-5. Enforce protocol-wide invariants
+An on-chain guard revert is different. A caller may catch a failed subcall and continue, depending on its code. Review batching, settlement, retry queues, and error handling so blocking one operation does not accidentally stop unrelated work or leave it unprocessed.
 
-**Learn More:**
-- [Architecture - Assertion Validation Process](/credible/architecture-overview#assertion-validation-process)
-- [Architecture - Transaction Flow](/credible/architecture-overview#transaction-flow)
-- [Glossary - PhEVM](/credible/glossary#phevm-phylax-evm)
+### Are bridge, system, or forced-inclusion transactions protected?
 
-### What counts as an assertion failure?
-An assertion failure occurs when an assertion reverts during validation. The transaction is then
-considered invalid and is dropped before it can be included in a block.
+Coverage depends on the network integration. These transactions may enter through paths other than ordinary RPC submission. Each path needs an explicit validation and failure policy.
 
-**Learn More:**
-- [Assertion Enforcer](/credible/assertion-enforcer)
-- [Invalidations](/credible/dapp-invalidations)
+Do not infer coverage from support for ordinary user transactions. See [Transaction Source Coverage](./network-integration#transaction-source-coverage).
 
-### What are cheatcodes and how do they help?
+## Integration and Transaction Routing
 
-Cheatcodes are special functions provided by the PhEVM that give assertions powerful capabilities
-beyond standard Solidity.
+### What work does a protocol integration require?
 
-For detailed documentation and examples of all available cheatcodes, see our
-[Cheatcodes Reference Guide](/credible/cheatcodes-reference).
+The scope includes assertion design and testing, authorization, contract-path coverage, transaction routing, rollout, and recovery. On decentralized-builder networks, it also includes reviewing and installing the required guard or gate.
 
-**Learn More:**
-- [Cheatcodes Reference](/credible/cheatcodes-reference)
-- [credible-std Overview](/credible/credible-std-overview)
-- [Glossary - Cheatcodes](/credible/glossary#cheatcodes)
+Define who supplies and reviews each contract change, who signs deployments, and who operates the controls. See [Integration Planning](./dapp-integration) and [Development Effort](./development-effort).
 
-### How do I edit assertions?
+### Who needs to use the Credible RPC?
 
-There might be cases where you want to edit an assertion to add new checks or change existing ones.
+For operations requiring a credible block, configure the component submitting the top-level transaction: a user wallet, Safe executor, keeper, bot, relayer, or service submitting bridge or settlement transactions.
 
-Editing an assertion is straightforward:
-1. Disable the current assertion
-2. Deploy new assertion and point it to the contract you're protecting
-3. Enable new assertion
+A contract called internally cannot choose an RPC. For a multisig, collecting signatures off-chain is separate from the executor submitting the final transaction. Changing only the frontend RPC leaves other paths unchanged. Ordinary reads and operations outside the protected scope can continue using their existing providers.
 
-**Learn More:**
-- [Deploy Assertions](/credible/deploy-assertions-dapp)
-- [Apply Assertions](/credible/apply-assertions) | [pcl Reference](/credible/cli-reference)
+### What happens if someone uses an ordinary RPC?
 
-### Can I copy assertions from other protocols?
-Yes, you can copy and adapt assertions from other protocols and use them to protect your own protocol.
-You should make sure that the assertions are compatible with your protocol.
-It will make the most sense to copy assertions for standard libraries and interfaces.
-You can inspect public assertion posture in The Phylax Explorer. Some project and invalidation details are only visible to project managers and collaborators.
+While the guard is active and no bypass applies, a protected call in a noncredible block reverts. It may succeed if it reaches a credible block and satisfies all applicable checks. An ordinary RPC therefore does not reliably provide an inclusion path for guarded operations.
 
-**Learn More:**
-- [Assertions Book](/assertions-book/assertions-book-intro)
-- [The Phylax Explorer](/credible/dapp-explorer)
+An attacker cannot bypass an unavoidable active guard merely by changing RPCs. Protection still depends on complete guard coverage, builder behavior, and the configured recovery conditions.
 
----
+### Does routing guarantee transaction privacy or inclusion?
 
-## Implementation and Adoption
+No. Routing delivers a transaction to the configured builder path; it does not establish a general privacy, inclusion, or latency guarantee. Confirm the endpoint's forwarding and retention behavior, builder coverage, and retry policy for your deployment.
 
-### How does the Credible Layer work at the sequencer level?
-1. Simulates each transaction against relevant assertions
-2. Allows valid transactions to proceed
-3. Filters out transactions that violate assertions
+### Does a successful RPC simulation mean the transaction will pass assertions?
 
-**Learn More:**
-- [Architecture](/credible/architecture-overview)
-- [Architecture - Transaction Flow](/credible/architecture-overview#transaction-flow)
-- [Glossary - Sequencer](/credible/glossary#sequencer)
+No. RPC simulation and assertion validation are separate checks. A simulation may account for the credible-block marker so guarded calls can be simulated, without running the full production assertion set.
 
-### How does the Credible Layer work with decentralized sequencers?
-- **Enshrine assertions** as part of state transition function or fork-choice rule, making them integral to the protocol.
-- **Credible sequencers** that mark blocks as safe by running invariants and posting attestations on-chain, ensuring safety without compromising performance
+Even an assertion preflight result applies to the simulated state. Active rules, ordering, and chain state can change before inclusion. Validate both routing and actual enforcement.
 
-**Learn More:**
-- [Architecture - Abstract Overview](/credible/architecture-overview#abstract-overview)
+### Does installing a Safe transaction guard cover modules too?
 
-### How are externally originated transactions handled?
+No. The Safe transaction guard covers the owner-authorized transaction path. Module execution is separate and needs its own reviewed control or an unavoidable downstream gate.
 
-Network integrations define validation policy for transactions that do not enter through ordinary user RPC flow, such as bridge-originated actions, delayed queues, scheduled system transactions, or forced-inclusion-style paths. The policy specifies where assertion validation runs, how results are routed into sequencing or block-building components, what timeout behavior applies, and which invalidation context is sent to affected protocols.
+An assertion rejecting module activity at a participating builder does not prevent a nonparticipating builder from including an unguarded module transaction. Include enabled modules, delegatecalls, guard changes, and recovery paths in the integration review.
 
-**Learn More:**
-- [Network Integration Overview - Transaction Source Coverage](/credible/network-integration#transaction-source-coverage)
-- [Glossary - Forced Inclusion Transactions](/credible/glossary#forced-inclusion-transactions)
+### Do rejected transactions consume gas? What about latency?
 
-### Does the Credible Layer introduce new trust assumptions or centralization points?
+A transaction excluded before inclusion consumes no on-chain execution gas. An included transaction that reverts at a guard does consume gas. Guard and marker operations also have on-chain costs, separate from off-chain assertion execution.
 
-No. For single-sequencer L2s, users and protocol teams already trust the sequencer with transaction inclusion, because, in theory, a sequencer can censor transactions arbitrarily when it receives them at the RPC layer.
-The Credible Layer simply extends the sequencer's validation logic with protocol-defined rules, expressed as Assertions (EVM bytecode).
+Latency depends on routing, participating builders, block opportunities, assertion workload, and failure policies. Measure the actual deployment; there is no universal zero-overhead or fixed-speedup guarantee.
 
-**Learn More:**
-- [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
-- [Architecture](/credible/architecture-overview)
+## Authority and Trust
 
-### Is this a form of censorship?
+### Who can add, change, or remove assertions for my contracts?
 
-The Credible Layer simply lets protocol teams define assertions that can prevent certain states regardless of the contract code. These assertions should be thought of as an addition to the protocol's core contracts. It would be censorship if a 3rd party (anyone other than the protocol team) could write assertions for a protocol's contracts. This is not how the Credible Layer works, and hence this is not censorship. Read more about this in [Can anyone write assertions for my contracts?](#can-anyone-write-assertions-for-my-contracts?) below.
+The authorized Protocol Manager controls the assertion lifecycle for registered contracts through the State Oracle. Authorization depends on a supported verifier or an approved manual process. Anyone may write assertion code; that does not grant permission to activate it for someone else's contract.
 
-**Learn More:**
-- [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
-- [Ownership Verification](/credible/ownership-verification)
+Platform access, transaction submission, assertion management, and protocol upgrade authority are distinct permissions. Confirm which addresses hold each role. See [Ownership Verification](./ownership-verification).
 
-### Does the Credible Layer slow down the network?
+### What if my contract does not expose owner()?
 
-The Credible Layer is designed to keep assertion overhead bounded and off the serial block-building path where the network integration supports that model. The hot path should mainly pay for tracing, assertion routing, checkpointing, and work submission, while assertion execution can run in parallel worker capacity.
+Check the verifier supported by the target deployment. Integrations may use an explicit initial Protocol Manager interface or an approved manual registration process for existing contracts. Lack of `owner()` is not, by itself, a reason to rule out Ethereum integration.
 
-The practical requirement is that assertion workers keep up with the transaction workload. If assertion execution falls behind, the integration needs bounded backpressure, publication-boundary waiting, or another network-specific policy.
+Confirm eligibility and authorization evidence with Phylax before changing contracts. Manager registration is separate from proving that protected execution paths are enforceable. See [Manual Verification](./manual-verification).
 
-**Learn More:**
-- [Assertion Enforcer - Performance Model](/credible/assertion-enforcer#performance-model)
-- [Architecture](/credible/architecture-overview)
+### Does the Credible Layer add trust assumptions?
 
-### How do you extend the validation logic of the sequencer to the platform?
+Yes. Their scope depends on the integration. You rely on correct assertions, authorized management, the enforcer, and the integration honoring active policy. On decentralized-builder networks, you also rely on authorized builders' attestations, the Registry, and the guard implementation and configuration.
 
-The exact implementation depends on the network architecture. The shared model is that the network adds an enforcement hook around block building, sequencing, preflight validation, or another documented inclusion boundary.
+A single-sequencer integration uses an existing inclusion boundary, but this does not remove implementation, authorization, or availability risks. See [Trust Model](./trust-model).
 
-That hook sends candidate transaction context to the Assertion Enforcer. The enforcer selects relevant assertions, executes them, and returns a valid or invalid result that the integration applies before settlement. This requires no changes to protected contracts because assertions run as enforcement middleware around transaction inclusion.
+### What can a compromised assertion manager do?
 
-**Learn More:**
-- [Network Integration Overview](/credible/network-integration)
-- [Assertion Enforcer](/credible/assertion-enforcer)
-- [Glossary - Block Builder](/credible/glossary#block-builder)
+A compromised manager can use its lifecycle permissions to propose restrictive rules or remove protections, subject to deployed authorization and timing rules. This can threaten availability or weaken protection; it does not automatically grant permission to transfer assets.
 
-### Can anyone write assertions for my contracts?
+Timelocks provide time to observe and respond to changes. They are not a complete recovery mechanism and do not necessarily constrain separate guard, upgrade, guardian, or Registry-admin powers. Review those authorities together.
 
-Anyone can write the assertions, but only the owner of the contract that the assertions protect can deploy them.
-This way, we ensure that no malicious third party reduces functionality by writing assertions for your contract.
+### What can users or security reviewers verify publicly?
 
-**Learn More:**
-- [Ownership Verification](/credible/ownership-verification)
-- [Deploy Assertions](/credible/deploy-assertions-dapp)
+They can inspect assertion code, identifiers, active registry state, and the posture exposed in [The Phylax Explorer](./dapp-explorer). A useful review also covers guarded operations, excluded paths, manager authority, timelocks, and fail-open conditions.
 
-### My protocol doesn't support the owner interface. Can I still use the Credible Layer?
+An Explorer entry is not proof that every action is protected. Private invalidation payloads, traces, and project records are not automatically public.
 
-Yes, if the contracts are deployed on a supported rollup. You may need manual verification if your contracts are immutable or do not expose an admin interface such as `owner()`. Phylax can verify off-chain evidence that your team controls the protocol and then register the selected protocol admin for the specific contracts.
+### Are the integration contracts audited?
 
-Manual verification is not available for Ethereum mainnet contracts because enforcement works differently on L1 and L2 blockchains.
+Audit status applies to a specific revision and scope. Obtain reports for the versions you plan to deploy and compare them with your guard, Registry, and protocol changes. An audit of a shared component does not cover every customization or assertion policy.
 
-**Learn More:**
-- [Ownership Verification](/credible/ownership-verification)
-- [How to Request Manual Verification](/credible/manual-verification)
+## Availability, False Positives, and Recovery
 
-### How can you write rules for immutable contracts?
+### What happens if participating builders stop producing credible blocks?
 
-As mentioned above in [How do you extend the validation logic of the sequencer to the platform?](#how-do-you-extend-the-validation-logic-of-the-sequencer-to-the-platform), the Credible Layer is functionally middleware as it enables the sequencer to drop transactions that would break the protocol's rules.
-The Credible Layer will still work with immutable contracts because the prevention happens at the sequencing step, which is where the L2 has ultimate power over transaction inclusion, whether or not they come from immutable contracts.
+While the gate remains active, protected operations cannot succeed in noncredible blocks. A configured fail-open condition can restore access after a gap in credible blocks, trading mandatory assertion enforcement for availability.
 
-**Learn More:**
-- [Architecture - Abstract Overview](/credible/architecture-overview#abstract-overview)
-- [Architecture - High-Level Architecture](/credible/architecture-overview#how-the-credible-layer-works)
+The block-gap condition in the guard implementations opens only when the gap is **greater than** the configured threshold; reaching the threshold is insufficient. Evaluate the deployed guard's configuration and other failure conditions rather than assuming a fixed duration.
 
-### What are the ramifications of writing rules for supposedly immutable contracts?
+### Does fail-open disable assertions everywhere?
 
-Short answer: We don't know.
+No. Fail-open relaxes the guard's requirement for a credible block. Transactions may then execute through builders that do not run assertions. Participating builders can continue enforcing active assertions.
 
-But here is what we think: If there *is* an owner it communicates that the protocol wants to have some power over the contracts.
-That is why we only allow only the owners of contracts to write assertions.
+Existing protocol checks still apply, but mandatory assertion protection for the affected path is reduced. Monitor fail-open periods and include them in the protocol's published security posture.
 
-We will use timelocks on protocols with immutable contracts as many of the users may be using that protocol because it is immutable and would not want to use it any longer if there is anything resembling censorship, even if it is configured through the platform itself.
+### Do all guards handle Registry failures the same way?
 
-**Learn More:**
-- [Credible Layer Overview - Why Neutrality Matters](/credible/credible-layer-overview#why-neutrality-matters)
-- [Ownership Verification](/credible/ownership-verification)
+No. The Safe guard includes fail-open handling for failed or malformed Registry responses. The generic contract guard does not provide the same catch-and-continue behavior; a failed Registry read can revert the protected call.
 
-### What's the difference between Staging and Production environments?
+Check the deployed implementation, including overrides and bypass permissions. A builder outage, a Registry read failure, and a bad assertion are different incidents and may need different recovery procedures.
 
-When deploying assertions, you can choose between two environments:
+### Can fail-open rescue a protocol from an overly restrictive assertion?
 
-- **Staging**: A mirrored chain environment used for testing assertions without affecting production. Assertions run on staging to observe behavior, but transactions are not dropped if they break assertion rules. This allows protocol teams to test assertions safely before deploying to production. After the timelock period, assertions become "staged".
+Not necessarily. A block-gap fail-open condition depends on credible-block production, not on whether your transactions succeed. Builders may continue producing credible blocks while your assertion rejects legitimate activity.
 
-- **Production**: The real chain environment where assertions actively prevent hacks. In production, transactions that violate assertions are dropped before they can execute, protecting protocols from exploits. After the timelock period, assertions become "enforced".
+Recovery may require correcting or removing the assertion through its lifecycle, or a separately authorized recovery path. Test that path before enforcement begins.
 
-Both environments require a timelock period before assertions become active. That timelock is enforced by the on-chain State Oracle contracts. During the timelock, assertions are marked for enforcement (production) or marked for staging (staging environment).
+### Can a legitimate operation trigger a circuit breaker?
 
-**Learn More:**
-- [Glossary - Staging](/credible/glossary#staging)
-- [Glossary - Production](/credible/glossary#production)
-- [Glossary - Timelock](/credible/glossary#timelock)
+Yes. Large withdrawals, migrations, liquidations, settlement batches, or administrative changes may violate a rule that lacks context. Backtesting and staging help identify these cases but cannot prove all future legitimate activity will pass.
 
-### How long is the timelock period?
+Define the accounting precisely: gross or net flows, assets included, time window, treatment of inflows, and current-transaction effects. Test ordinary activity and exceptional operations.
 
-The timelock period exists for two reasons: (1) to provide latency for the enforcer to index on-chain state and prepare for enforcement, and (2) to give users time to expect changes to protocol behavior. The exact duration may vary because it is configured on the State Oracle smart contracts. The same model applies when assertions are removed: the change is scheduled on-chain first, then only takes effect after the configured timelock expires.
+### Is a circuit-breaker threshold a guaranteed maximum loss?
 
-**Learn More:**
-- [Glossary - Timelock](/credible/glossary#timelock)
+No. A threshold limits the quantity measured by that rule under its enforcement assumptions. Actual exposure depends on accounting semantics, prices, covered assets and paths, bypasses, and periods without mandatory enforcement.
 
----
+Describe what the rule measures and which scenarios it constrains instead of presenting its threshold as a blanket guarantee.
 
-## Practical Questions
+### Can we allow one legitimate transaction or temporarily raise a limit?
 
-### What are some example use cases for assertions?
-1. **DeFi Protection**
-   - Prevent flash loan attacks
-   - Monitor liquidity pool ratios
-   - Enforce borrowing limits
-   - Detect price manipulation
-2. **Governance Safety**
-   - Validate proposal execution
-   - Monitor admin actions
-   - Enforce timelock requirements
-   - Track parameter changes
-3. **Cross-Protocol Security**
-   - Monitor oracle data feeds
-   - Track cross-chain messages
-   - Validate bridge transactions
-   - Enforce protocol dependencies
+That requires a deliberately designed and reviewed policy. A narrowly scoped authorization may constrain the action, parameters, executor, and expiry. Raising a threshold, resetting a counter, disabling a rule, and bypassing a guard have different effects.
 
-**Learn More:**
-- [Credible Layer Overview - Use Cases](/credible/credible-layer-overview#use-cases)
-- [Assertions Book](/assertions-book/assertions-book-intro)
-- [Previous Hacks Examples](/assertions-book/previous-hacks/prev-hacks-index)
+Do not assume a universal one-click exception or automatic reset is available. Confirm what the deployed assertion and management flow support, including authorization, timelocks, and restoration of the original policy.
 
-### How do I test my assertions?
+### Can an approved upgrade proceed without allowing arbitrary upgrades?
 
-Testing assertions is similar to standard Forge testing, with additional Credible Layer-specific features:
+An assertion can permit a specific reviewed transition, such as changing from an expected implementation to an approved replacement. The rule must encode the intended bounds and account for other sensitive changes in the same transaction.
 
-1. **Standard Testing Tools**:
-   - Use familiar Forge assertions (`assertEq`, `assertTrue`)
-   - Access standard cheatcodes (`vm.prank`, `vm.deal`)
-   - Leverage console logging for debugging
+Review the policy before scheduling the upgrade. Broadly disabling protection creates a different exposure from authorizing a specific transition.
 
-2. **Credible Layer-Specific Testing**:
-   - Register assertion function to be run on the next transaction using `cl.assertion()`
-   - Test both positive and negative cases
-   - Verify assertion behavior across different scenarios
+### Will a rejected transaction automatically run after we fix the rule?
 
-For detailed examples and testing patterns, see our [Testing Guide](/credible/testing-assertions).
+Do not assume so. Exclusion is not an on-chain queue or a guarantee of later resubmission. The submitting wallet, relayer, or service must determine whether to retry.
 
-**Learn More:**
-- [Testing Assertions](/credible/testing-assertions)
-- [Fuzz Testing](/credible/fuzz-testing)
-- [CI/CD Integration](/credible/ci-cd-integration)
-- [Backtesting](/credible/backtesting)
-- [Assertions Book](/assertions-book/assertions-book-intro)
-- [Quickstart Guide](/credible/pcl-quickstart)
+Before retrying, recheck nonce, expiry, state, slippage, and whether the action is still appropriate. Test retry and reconciliation behavior alongside enforcement.
+
+### How do we avoid permanent lockout if keys are lost or rules block recovery?
+
+Define recovery authority before rollout and test it against active assertions and guards. Include lost signers, a compromised manager, blocked upgrades, builder outages, and Registry failures.
+
+Recovery requiring the same unavailable key or operation blocked by an assertion may not work. A separate recovery role also introduces authority that must be disclosed and secured. Do not rely on contacting a builder as an undocumented bypass.
+
+## Testing and Lifecycle
+
+### How should assertions and the integration be tested?
+
+Test intended failures and legitimate behavior locally, including boundaries and exceptional operations. Use historical backtesting and staging to review false positives, then test the complete submission-to-enforcement path.
+
+For guarded integrations, exercise credible and noncredible blocks, routing, Safe modules where applicable, assertion updates, fail-open boundaries, and recovery. Confirm supported networks and test environments for the target deployment. See [Testing Strategy](./testing-strategy) and [Guard Testing](./testing-credible-block-guard).
+
+### Is staging a testnet, and does it prove production protection?
+
+Staging observes assertion behavior against a mirrored chain environment without dropping live transactions. It is not itself a separate public testnet or a test of every production guard and routing path.
+
+Production applies active assertions at the integrated enforcement boundary. Activating rules does not install missing guards or configure submitters. Both modes follow the configured assertion lifecycle.
+
+### How do we update assertions, and how long do changes take?
+
+Prepare and test a new release, review its differences and backtesting results, and schedule additions and removals through the authorized deployment flow. Review their effective times together to avoid a protection gap or conflicting rules.
+
+The State Oracle's configured timelocks determine when assertion changes become active. Do not assume immediate rollback or a universal delay. Guard replacement, Registry administration, and protocol upgrades can follow separate rules. See [Deploy Assertions](./deploy-assertions-dapp).
+
+### Does support on one chain cover the same protocol on other chains?
+
+No. Confirm the network integration, assertion specification, Registry and guard availability where required, RPC path, and operational support on each chain. Deploying an assertion for one address does not automatically protect its counterparts elsewhere.

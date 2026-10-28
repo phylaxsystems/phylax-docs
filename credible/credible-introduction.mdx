@@ -1,13 +1,13 @@
 ---
 title: 'Introduction'
-description: 'Block exploits before they execute by linking security rules to your smart contracts on-chain.'
+description: 'Understand assertion-based transaction enforcement and choose a documentation path.'
 ---
 
 Use this page to understand what the Credible Layer is and choose the right documentation path for your goal.
 
 ## What is the Credible Layer?
 
-The Credible Layer is security infrastructure that enables developers to link security rules to their smart contracts on-chain. Then, the network validates every transaction that interacts with their smart contracts against their security rules, dropping any invalidating transaction.
+The Credible Layer lets protocols register security rules on-chain and have participating sequencers or block builders validate candidate transactions against them. Transactions that fail active assertions are excluded by the enforcing integration. Coverage depends on the network, transaction path, and active rules.
 
 <Note>
 Use this page to choose the right kind of documentation for what you need next:
@@ -22,15 +22,17 @@ Use this page to choose the right kind of documentation for what you need next:
 
 <Steps>
   <Step title="Define rules in Solidity">
-    Write assertions—security rules that define states your protocol should never reach. No contract modifications required.
+    Write assertions: Solidity rules that check the effects of transactions against your protocol’s requirements.
   </Step>
-  <Step title="Network validates every transaction">
-    The network checks each transaction against your assertions before inclusion in a block.
+  <Step title="Participating builders validate transactions">
+    The integrated sequencer or builder runs relevant assertions against candidate transactions before inclusion.
   </Step>
-  <Step title="Invalid transactions are dropped">
-    Transactions that violate your rules are dropped by the network and never execute.
+  <Step title="Enforce the protected execution path">
+    The integration excludes transactions that fail assertions. On decentralized-builder networks, an on-chain guard restricts protected operations to credible blocks while its gate is active.
   </Step>
 </Steps>
+
+For decentralized block building, start with [Architecture](./architecture-overview#decentralized-block-building). For routing, availability, and recovery questions, see the [FAQ](./faq).
 
 ## Choose the Right Path
 
@@ -68,11 +70,11 @@ Use this page to choose the right kind of documentation for what you need next:
 
 ## Key Benefits
 
-- **Pre-execution prevention** — Exploits are blocked before they execute, not detected after
-- **No contract changes** — Add protection to any contract, including immutable ones
+- **Validation before inclusion** — Participating builders exclude transactions that violate active rules
+- **Separate security policy** — Maintain assertions independently of protocol logic; guard requirements depend on the network integration
 - **Transparent & verifiable** — All rules are public Solidity, auditable by anyone
 - **Readable security posture** — Understand circuit breakers and verifiable operational risks through clear, plain-English breakdowns
-- **No external execution services** — Enforcement runs within the network’s block-building flow
+- **Enforcement during block building** — Review the participating operators, guard configuration, and recovery assumptions in the [Trust Model](./trust-model)
 - **Deterministic decisions** — Binary enforcement based on your rules, not opaque scoring
 
 ## Community & Support

@@ -1,58 +1,26 @@
 ---
 title: 'Ownership Verification'
-description: 'Understand how the Credible Layer determines who is allowed to manage assertions for a contract'
+description: 'How the Credible Layer authorizes assertion management for a contract.'
 ---
 
-The Credible Layer uses admin verifier modules to determine who can deploy assertions for a contract. Most deployments use owner-based verification by default. This design will continue to expand with additional ownership patterns.
+Ownership verification establishes who may manage assertions for a protected contract. The supported verifier and registration process depend on the deployment and the contract's ownership design.
 
-<Note>
-This page explains the ownership model. If your rollup contracts do not fit the default verifier and you need the process for getting approved, use [How to Request Manual Verification](./manual-verification). Manual verification is not available for Ethereum mainnet contracts.
-</Note>
+## Protocol Manager Authorization
 
-## Current Implementation
+The State Oracle associates a Protocol Manager with registered contracts. This address can perform the assertion lifecycle actions permitted by that deployment. Anyone can author assertion code; only authorized accounts can activate it for the registered contracts.
 
-The common default verifier expects contracts to implement the `owner()` function (Ownable pattern). Here's an example of the expected interface:
+Possible authorization paths include a supported ownership interface such as `owner()`, an explicit initial Protocol Manager interface, or an approved manual registration process. Confirm the supported path before changing protocol contracts. A contract does not always need to expose `owner()` to integrate.
 
-```solidity
-interface IOwnable {
-    function owner() external view returns (address);
-}
-```
+## Manual Verification
 
-When testing or developing with the Credible Layer, ensure your contracts implement this interface to enable project registration and assertion management.
+For existing contracts that do not fit a supported automatic verifier, Phylax can review evidence of protocol control and the intended manager address. Availability and requirements must be confirmed for the target deployment. Ethereum integration is not categorically excluded from this path.
 
-<Note>
-Managing assertions is a sensitive role. We recommend using hardware wallets and multisig accounts for protocol admin (assertion manager) addresses.
-</Note>
+Approval establishes assertion-management authority for the agreed contracts. It does not install guards, configure RPC routing, or prove that all intended operations are protected. See [How to Request Manual Verification](./manual-verification).
 
-## Manual Verification (Overview)
+## Separate Authorities
 
-If your contracts are deployed on a supported rollup and are immutable or don't expose an admin interface, you may be able to request manual verification. In this path, Phylax validates that the requesting team controls the protocol and then registers a protocol admin (manager) address for the specific contracts in the State Oracle registry.
+Platform project membership, Protocol Manager authority, transaction submission, protocol upgrades, and guard administration are distinct permissions. A wallet used by a backend to submit transactions need not control assertion policy.
 
-Manual verification is not available for Ethereum mainnet contracts because enforcement works differently on L1 and L2 blockchains.
+A manager can make changes that affect availability and protection, subject to the configured lifecycle. Secure this role with an appropriate signing policy and review how it can be recovered or transferred. Check the deployed authorization and timing rules rather than assuming a fixed delay.
 
-High-level requirements and signals include:
-- Demonstrated control over the protocol codebase (e.g., ability to merge to the official repo and manage collaborators)
-- Strong public proof that the protocol wants to use the Credible Layer and that the selected admin address reflects the organization's intent (e.g., multisig signatures or official social announcements)
-- Willingness to share identity or evidence when needed
-
-After approval, the protocol admin address is added to the registry and a timelock begins before assertions can be deployed. Protocols can also opt out of registry additions if they do not want assertions attached to their contracts.
-
-See [How to Request Manual Verification](./manual-verification) for the full process and requirements.
-
-## Future Development
-
-We are actively researching alternative ownership verification methods that will:
-
-- Support different ownership patterns
-- Enable seamless ownership transfers
-- Maintain security requirements
-
-These improvements will be implemented in future versions of the Credible Layer.
-
-## Next Steps
-
-- [Quickstart Guide](./pcl-quickstart) - Get started with the Credible Layer
-- [Assertion Guide](./write-first-assertion) - Learn how to write assertions
-- [Deploy Assertions](./deploy-assertions-dapp) - Learn how to deploy assertions
-- [FAQ](./faq) - Find answers to common questions
+See [Trust Model](./trust-model) for compromise and recovery considerations, and [Integration Planning](./dapp-integration) for rollout requirements.

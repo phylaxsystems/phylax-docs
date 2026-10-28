@@ -1,6 +1,6 @@
 ---
 title: 'Development Effort'
-description: 'Understanding the effort required to develop assertions'
+description: 'What determines assertion development, integration, and operational effort.'
 ---
 
 <Check>
@@ -8,12 +8,12 @@ description: 'Understanding the effort required to develop assertions'
 - Comparable to writing Forge invariant tests when invariants are defined
 - Written in Solidity with familiar patterns
 - Few additional [cheatcodes](/credible/cheatcodes-overview) to learn
-- Main variable: whether invariants are already defined
+- Integration work also includes guard coverage, routing, authorization, and recovery
 </Check>
 
 ## Effort Factors
 
-Development effort depends on whether invariants are already defined for your protocol.
+Assertion authoring effort depends on how well the protocol invariants are defined. The full adoption effort also depends on the network enforcement model and existing contract controls.
 
 ### Invariants Defined
 
@@ -36,9 +36,17 @@ Some teams do this internally; others engage security researchers or auditors. F
 
 ## Testing Assertions
 
-Testing assertions can take longer than writing them. However, assertion tests reuse existing protocol test infrastructure. Existing Forge test setups carry over with minimal to no additional effort.
+Testing can take longer than authoring. Existing Forge fixtures can help, but assertions need explicit tests for trigger coverage, snapshot behavior, legitimate exceptions, and failures. Historical backtesting and staging add evidence without replacing those tests.
 
 See [Testing Assertions](/credible/testing-assertions) for patterns and best practices.
+
+## Integration and Operations
+
+On decentralized-builder networks, plan for guard installation or contract upgrades, coverage of alternative paths and wallet modules, and RPC configuration for every transaction submitter. An immutable contract with no usable gate may not support the intended protection.
+
+Review shared components at their deployed revision and review protocol-specific changes separately. Include integration tests, signer coordination, activation delays, false-positive handling, monitoring, and recovery rehearsals in the estimate.
+
+See [Integration Planning](./dapp-integration) for the work to scope before rollout.
 
 ## Next Steps
 

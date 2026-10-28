@@ -9,10 +9,14 @@ This guide shows you how to plan the platform, authorization, and rollout work f
 If you are ready to execute deployment, use [Deploy Assertions with the Platform](./deploy-assertions-dapp). If you need background on how the system works, start with the [Architecture Overview](./architecture-overview).
 </Note>
 
-Use it before deployment to identify the contracts, assertions, admins, and environments involved in the rollout.
+## Prerequisites
+
+Confirm the target network, supported assertion specification, and available staging or test environment. Identify protocol owners, assertion managers, contract addresses, and the team responsible for transaction submission.
+
+Use this plan before deployment to agree on implementation ownership, review scope, and recovery responsibilities.
 
 <Note>
-Project creation and assertion deployment require authorization for the target contracts. Depending on the contract and network, authorization can happen through an on-chain admin verifier such as `owner()` or, for rollup contracts only, through [manual verification](/credible/manual-verification).
+Assertion management requires authorization for the target contracts. Confirm the supported verifier or approved [manual registration process](./manual-verification) for your deployment. Registration does not install an enforcement gate or configure transaction routing.
 </Note>
 
 ## Adoption Workflow
@@ -45,7 +49,7 @@ flowchart LR
 - Staging vs production deployments
 - Invalidation notification routing and monitoring
 
-## Coverage Planning
+## Map Coverage and Required Contract Changes
 
 Before writing assertions, map the surfaces you intend to protect:
 
@@ -56,30 +60,53 @@ Before writing assertions, map the surfaces you intend to protect:
 - High-risk user flows, such as borrows, withdrawals, upgrades, and parameter changes
 - Known gaps that the first assertion release will not cover
 
-This map helps the protocol team decide which assertions belong in the first release and which risks should be handled by later releases or operational runbooks.
+For decentralized-builder integrations, identify the guard or gate for every protected path. Include alternative entry points, internal calls, privileged actions, and wallet modules. A Safe transaction guard does not cover module execution by itself. If a path has no suitable gate, record the gap and resolve it before claiming coverage.
+
+Agree on who implements contract changes, who reviews them, and which deployed version the review covers. Review any guard replacement or bypass authority along with the assertions.
+
+## Configure Transaction Submission
+
+Inventory every top-level submitter for guarded operations: user wallets, multisig executors, keepers, bots, relayers, and bridge or settlement services. Configure the required Credible RPC route for each. Off-chain multisig signers and internally called contracts do not choose the final submission route.
+
+Keep ordinary reads and unprotected traffic on their existing providers where appropriate. Test simulations and actual submission separately; a successful RPC simulation does not establish that production assertions pass.
+
+For each bridge, system, delayed, or forced-inclusion path, confirm the network's explicit validation policy. See [Transaction Source Coverage](./network-integration#transaction-source-coverage).
 
 ## Authorization Requirements
 
-Before assertions can be deployed for a contract, the platform needs to determine which protocol admin can manage that contract's assertion lifecycle. The common path is owner-based verification. If your rollup contracts do not expose a supported ownership interface, use [How to Request Manual Verification](/credible/manual-verification) to understand the fallback process. Manual verification is not available for Ethereum mainnet contracts.
+Confirm the Protocol Manager authorized by the State Oracle for each contract. Use the supported automatic verifier or [manual verification](./manual-verification) process. Distinguish this authority from platform membership, transaction submission, protocol upgrades, and guard administration.
+
+Document the signing policy and recovery path for each privileged role. Verify the deployed lifecycle delays rather than assuming immediate activation or rollback.
 
 ## Deployment Modes
 
-- **Staging**: test and iterate on assertions without impacting production users
-- **Production**: enforce assertions at the network level for real transactions
+- **Staging**: observe assertion behavior against a mirrored chain environment without dropping live transactions; this does not test every production guard and routing path
+- **Production**: apply active assertions at the integrated enforcement boundary, with guard coverage and routing configured where required
 
 Learn more about ownership checks in [Ownership Verification](/credible/ownership-verification).
+
+## Test Availability and Recovery
+
+Test both allowed and rejected operations, including batch failures and exceptional administrative actions. For guarded integrations, test credible and noncredible blocks, the exact fail-open boundary, Registry errors, and any authorized bypass.
+
+Rehearse lost keys, restrictive assertions, and blocked recovery transactions. A block-gap fallback may not help if builders continue producing credible blocks. Confirm how submitters reconcile exclusions and retry safely; do not assume automatic resubmission.
+
+See [Testing Strategy](./testing-strategy), [Guard Testing](./testing-credible-block-guard), and the [FAQ](./faq).
 
 ## What Users Can Verify
 
 - Which assertions are active for a protocol
 - On-chain registry entries and views in The Phylax Explorer
-- Invalidation history for protected contracts
+- Publicly exposed posture and invalidation information; private traces and payloads remain restricted
+- Guard coverage, recovery conditions, and administrative authority disclosed for the integration
 
 ## What Successful Rollout Looks Like
 
-- Assertions cover critical protocol invariants and admin operations
-- Staging assertions are validated before moving to production
-- Teams review invalidations and iterate on coverage over time
+- Reviewed assertions cover the agreed invariants and operational cases
+- Every protected path reaches the required enforcement boundary or guard
+- Actual submitters can route transactions successfully, and rejected operations are reconciled
+- Staging, integration, and recovery checks pass before production activation
+- Teams monitor invalidations, lifecycle changes, and periods of reduced enforcement
 
 ## Next Steps
 

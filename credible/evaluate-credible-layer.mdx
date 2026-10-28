@@ -12,6 +12,10 @@ This checklist helps teams evaluate whether the Credible Layer is a fit for thei
 - Do we want pre-execution protection rather than post-mortem monitoring?
 - Are we comfortable with transparent, public rules?
 - Do we have a team to monitor invalidations and iterate on rules?
+- Is our network and assertion specification supported by the intended deployment?
+- If only some builders participate, can every protected path reach a reviewed on-chain gate?
+- Can all relevant submitters use the required route?
+- Have we accepted the fail-open, bypass, management, and recovery assumptions?
 
 ## For Networks & Sequencers
 
@@ -22,7 +26,9 @@ This checklist helps teams evaluate whether the Credible Layer is a fit for thei
 
 ## Decision Support
 
-If you answered “yes” to most of the above, Credible Layer is likely a good fit.
+Treat network support, enforceable path coverage, authorization, and recovery as prerequisites rather than a score. If a protected operation can bypass the enforcement boundary, resolve that gap or explicitly narrow the claimed coverage.
+
+Use the [FAQ](./faq) to review routing, availability, and policy questions before committing to a rollout.
 
 ## Next Steps
 

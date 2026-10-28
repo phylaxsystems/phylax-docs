@@ -15,14 +15,14 @@ The Credible Layer consists of four core components:
 
 1. **[Assertions](/credible/assertions-overview)**: Security rules written in Solidity that define states that should never occur
 2. **[Assertion Enforcer](/credible/assertion-enforcer)**: Sidecar that validates transactions against assertions during block production
-3. **[Credible Layer Contracts](/credible/credible-layer-contracts)**: On-chain registry that maps assertions to protected contracts
+3. **[Credible Layer Contracts](/credible/credible-layer-contracts)**: The State Oracle records assertion assignments and lifecycle state; decentralized-builder integrations also use a Credible Registry for block markers
 4. **[Assertion DA](/credible/assertion-da)**: Storage layer for assertion bytecode and source code
 
 ## How the Credible Layer Works
 
-The Credible Layer is a **sidecar security infrastructure** that validates transactions against developer-defined security rules (assertions) before they are included in blocks. As a sidecar, it runs alongside the L2 network's main components, intercepting transactions during block building and ensuring they don't violate any deployed security rules.
+The Credible Layer validates candidate transactions against protocol-defined assertions during block building. Its sidecar runs alongside a participating sequencer or builder. The enforcement boundary and transaction sources covered depend on the network integration.
 
-The Assertion Enforcer is operated by the network's block builder or sequencer. Networks that integrate the Credible Layer run this sidecar as part of their block production infrastructure. This means enforcement does not rely on external execution services beyond the network you already trust to include transactions.
+An integrated sequencer can apply validation at its inclusion boundary. On networks with decentralized builders, participating builders run the enforcer, while on-chain guards restrict protected operations to credible blocks. This introduces builder, Registry, and guard assumptions described in the [Trust Model](./trust-model).
 
 ### System Architecture
 
@@ -77,7 +77,7 @@ flowchart LR
 
 The diagram shows two main flows:
 
-**Development Flow**: Developers use [`pcl`](/credible/apply-assertions) to develop, test, and prepare assertions for deployment. Running `pcl apply` compiles assertion code and creates a release on the [Phylax platform](https://app.phylax.systems), which handles storing it in [Assertion DA](/credible/assertion-da). An on-chain lifecycle action, such as `pcl deploy` or the platform deployment flow, then activates the release through the [Credible Layer Contracts](/credible/credible-layer-contracts).
+**Development Flow**: Developers use [`pcl`](/credible/apply-assertions) to develop, test, and prepare assertions for deployment. Running `pcl apply` compiles assertion code and creates a release on the [Phylax platform](https://app.phylax.systems), which handles storing it in [Assertion DA](/credible/assertion-da). A separate on-chain lifecycle action through the deployment flow schedules activation of the release through the [Credible Layer Contracts](/credible/credible-layer-contracts).
 
 **Runtime Flow**: The block builder or sequencer sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer uses its registry snapshot (from on-chain events) and cached assertion bytecode (from [Assertion DA](/credible/assertion-da)) to execute relevant assertions via [PhEVM](/credible/phevm). The network integration applies its inclusion policy to the resulting validation report.
 
@@ -91,7 +91,7 @@ The diagram shows two main flows:
 
 ## Transaction Flow
 
-When a user submits a transaction, it goes through the following validation process:
+The following diagram shows validation at a participating sequencer or builder. Submission can arrive through a mempool or the integration’s routing endpoint:
 
 ```mermaid
 ---
@@ -122,16 +122,50 @@ flowchart LR
 1. **Transaction Submission**: User submits a transaction to the network
 2. **Mempool Entry**: Transaction enters the mempool awaiting selection
 3. **Block Builder Selection**: The block builder picks transactions from the mempool
-4. **Assertion Validation**: Each transaction is validated against deployed assertions
+4. **Assertion Validation**: Candidate transactions are validated against applicable active assertions
 5. **Inclusion Decision**: The network applies its inclusion policy to the validation report
 
 <Note>
 The Assertion Enforcer is integrated with the block builder. During block production, the block builder invokes the Assertion Enforcer to validate transactions before including them.
 </Note>
 
+## Decentralized Block Building
+
+A network can have builders that do not run the Assertion Enforcer. Routing transactions to participating builders helps them reach the enforcement path, but routing alone cannot prevent inclusion elsewhere. The integration therefore combines off-chain validation with an on-chain gate.
+
+```mermaid
+flowchart TD
+    S["Transaction submitter"] --> RPC["Credible RPC"]
+    RPC --> B["Participating builder<br/>runs assertions"]
+    B -->|"Fail"| X["Exclude transaction"]
+    B -->|"Pass and selected"| M["Block with<br/>authorized marker"]
+    M --> G{"On-chain guard"}
+    O["Other builder"] --> G
+    G -->|"Allowed"| P["Protocol checks<br/>and execution"]
+    G -->|"Blocked"| R["Revert"]
+```
+
+The guard allows a credible block, an active fail-open condition, or an authorized bypass. Otherwise it rejects the protected operation.
+
+The authorized builder records the marker in the **Credible Registry** before protected operations execute. The marker is bound to the expected block timestamp. A guard consults the Registry to check the current block; it does not re-run assertions or verify a proof of their execution.
+
+The **State Oracle** has a separate role: it records assertion assignments, Protocol Managers, and lifecycle timing. Registering assertions there neither installs a guard nor changes RPC routing.
+
+### Guard Coverage and Routing
+
+Every execution path in the protected scope must reach a suitable gate. This can require a protocol upgrade, a supported wallet guard, or an existing hook. A Safe transaction guard covers owner-authorized execution; module paths need separate controls or a downstream gate. Internal calls and alternative entry points must be included in the coverage review.
+
+The actual top-level submitter uses the Credible RPC: for example, the wallet, multisig executor, keeper, or relayer. A contract making an internal call cannot choose an RPC. Reads and unprotected traffic can continue using ordinary providers.
+
+### Exclusion, Reverts, and Availability
+
+A builder exclusion happens before inclusion and consumes no on-chain execution gas. A transaction included in a noncredible block can instead revert at the guard and consume gas. Passing assertions does not guarantee that a builder will include a transaction.
+
+Guards can permit operations after a configured gap in credible blocks or through an authorized bypass. Fail-open relaxes the requirement for a credible block; participating builders may still run assertions. Registry-error handling differs between guard implementations. See the [FAQ](./faq#availability-false-positives-and-recovery) for recovery behavior and the [Trust Model](./trust-model) for assumptions.
+
 ## Invalidation Lifecycle (Public View)
 
-When an assertion is violated, the invalidation is recorded and exposed for transparency and alerts.
+Invalidations are recorded for project review and configured alerts. Public views expose selected posture information; private transaction payloads and traces are not automatically public.
 
 ```mermaid
 ---
@@ -183,7 +217,7 @@ The [Assertion Enforcer](/credible/assertion-enforcer) is a sidecar that orchest
 
 ### Credible Layer Contracts
 
-The [Credible Layer Contracts](/credible/credible-layer-contracts) are on-chain smart contracts that manage the assertion registry. The State Oracle coordinates protocol admins with network operators and serves as the source of truth for which assertions protect which contracts.
+The [Credible Layer Contracts](/credible/credible-layer-contracts) manage assertion lifecycle state through the State Oracle. Decentralized-builder integrations also use a Credible Registry to authorize block markers. These are separate responsibilities; see [Decentralized Block Building](#decentralized-block-building).
 
 ### Developer Tools
 
