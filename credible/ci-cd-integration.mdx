@@ -5,6 +5,8 @@ description: Automate assertion testing in your CI/CD pipeline
 
 You can set up CI/CD workflows to ensure all assertion tests pass before merging code. The setup is very similar to standard Foundry/Forge workflows, with the addition of installing `pcl` and running `pcl test` for testing.
 
+This workflow validates assertion logic. Add separate checks for your Ethereum guard wiring, upgrade compatibility, and recovery behavior; passing `pcl test` does not prove the live submission route. See [Testing Strategy](./testing-strategy).
+
 ## GitHub Actions Example
 
 ```yaml

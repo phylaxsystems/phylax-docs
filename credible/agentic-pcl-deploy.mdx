@@ -15,6 +15,7 @@ Before you begin, make sure you have:
 - An authenticated `pcl` session for the target platform
 - The target chain ID and an RPC endpoint
 - Access to the protocol manager wallet through a Foundry keystore
+- For production, reviewed Ethereum guard coverage, RPC routing for protected operations, and a tested recovery plan
 
 Confirm that your installed CLI supports the agentic deployment command:
 
@@ -30,19 +31,11 @@ Deployment creates remote platform state and can broadcast an on-chain transacti
 
 Complete authentication yourself before giving the agent the deployment task. The platform URL selects the target network:
 
-<CodeGroup>
-
-```bash Linea
-pcl auth login
-```
-
-```bash Ethereum
+```bash
 pcl auth -u https://ethereum.phylax.systems login
 ```
 
-</CodeGroup>
-
-The default `https://app.phylax.systems` platform targets Linea.
+Use the Ethereum platform explicitly. The earlier Linea platform selection is documented under [L2 Platform Notes](./l2-integrations/platform-and-compatibility).
 
 After login, `pcl` remembers the selected platform and uses it as the default for subsequent platform commands. Confirm the session before starting the agent:
 
@@ -58,8 +51,8 @@ Start with a prompt that provides the required choices and sets a clear approval
 Use the deploy-credible-assertions skill to prepare this assertion project
 for deployment.
 
-Target platform: <https://app.phylax.systems or https://ethereum.phylax.systems>
-Target chain ID: <chain-id>
+Target platform: https://ethereum.phylax.systems
+Target chain ID: 1 (Ethereum mainnet; confirm the approved deployment)
 RPC: <rpc-url or where the RPC can be found>
 Environment: staging
 Signer: Foundry keystore <account-name>
@@ -141,6 +134,8 @@ Require the agent to report:
 - Transaction hash, if a transaction was broadcast
 - Deployment outcome
 - Any remaining timelock or activation step
+
+Activation updates assertion policy; it does not install a guard or configure transaction submitters. Verify those separately with the [Ethereum integration plan](./dapp-integration).
 
 Keep these identifiers with your deployment record. You can inspect the project and release through the platform or the corresponding `pcl projects` and `pcl releases` commands.
 

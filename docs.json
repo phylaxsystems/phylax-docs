@@ -24,6 +24,18 @@
     {
       "source": "/credible/accelerate-with-ai",
       "destination": "/credible/agentic-pcl"
+    },
+    {
+      "source": "/credible/network-integration",
+      "destination": "/credible/l2-integrations/network-integration"
+    },
+    {
+      "source": "/credible/network-integrations/architecture-linea",
+      "destination": "/credible/l2-integrations/architecture-linea"
+    },
+    {
+      "source": "/credible/network-integrations/architecture-op-stack",
+      "destination": "/credible/l2-integrations/architecture-op-stack"
     }
   ],
   "navigation": {
@@ -88,10 +100,10 @@
                 ]
               },
               {
-                "group": "Integrate Credible Layer",
+                "group": "Ethereum Integration",
                 "pages": [
                   "credible/dapp-integration",
-                  "credible/network-integration",
+                  "credible/ethereum-builder-integration",
                   "credible/ownership-verification"
                 ]
               }
@@ -106,14 +118,7 @@
                   "credible/architecture-overview",
                   "credible/trust-model",
                   "credible/interfaces-overview",
-                  "credible/neutrality",
-                  {
-                    "group": "Network Implementations",
-                    "pages": [
-                      "credible/network-integrations/architecture-linea",
-                      "credible/network-integrations/architecture-op-stack"
-                    ]
-                  }
+                  "credible/neutrality"
                 ]
               },
               {
@@ -184,6 +189,17 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "L2 and Sequencer Integrations",
+            "pages": [
+              "credible/l2-integrations/overview",
+              "credible/l2-integrations/network-integration",
+              "credible/l2-integrations/architecture-linea",
+              "credible/l2-integrations/architecture-op-stack",
+              "credible/l2-integrations/validation-pipeline",
+              "credible/l2-integrations/platform-and-compatibility"
+            ]
           }
         ]
       },
@@ -193,7 +209,9 @@
         "groups": [
           {
             "group": "Start Here",
-            "pages": ["assertions-book/assertions-book-intro"]
+            "pages": [
+              "assertions-book/assertions-book-intro"
+            ]
           },
           {
             "group": "Explanation",
@@ -237,7 +255,9 @@
             "pages": [
               {
                 "group": "Assertion Pattern Catalog",
-                "pages": ["assertions-book/assertions/use-cases-index"]
+                "pages": [
+                  "assertions-book/assertions/use-cases-index"
+                ]
               },
               {
                 "group": "Access Control and Administrative Changes",
@@ -284,7 +304,9 @@
               },
               {
                 "group": "Native Asset Protection",
-                "pages": ["assertions-book/assertions/ass21-ether-drain"]
+                "pages": [
+                  "assertions-book/assertions/ass21-ether-drain"
+                ]
               },
               {
                 "group": "Vault and ERC4626 Security",
@@ -296,7 +318,9 @@
               },
               {
                 "group": "Emergency and Special Mode Protection",
-                "pages": ["assertions-book/assertions/ass17-panic-state-validation"]
+                "pages": [
+                  "assertions-book/assertions/ass17-panic-state-validation"
+                ]
               }
             ]
           }

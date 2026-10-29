@@ -1,165 +1,66 @@
 ---
-title: 'How to Plan Assertion Testing'
-description: 'Plan local testing, platform release review, staging, and production promotion for assertions'
+title: 'How to Plan Ethereum Assertion Testing'
+description: 'Validate assertion logic, release evidence, Ethereum guards, RPC routing, and recovery before production.'
 ---
 
-This guide shows you how to allocate assertion testing effort across local tests, platform release review, staging, and production promotion.
+Plan testing around the parts of Ethereum enforcement: the rule, the participating builder, the on-chain guard, and the actual transaction route. Staging provides useful evidence about rule behavior, but it does not exercise every production dependency.
 
-<Check>
-**Summary**
-- Local testing validates core logic; staging validates real-world behavior
-- Deploy to staging early to observe behavior against real transaction flow
-- Real transactions expose scenarios that are difficult to predict locally
-- Review the automatic release backtest before every staging or production deployment
-</Check>
+## Prerequisites
 
-## The Testing Philosophy
+Identify the protected contracts and entry points, assertion specification, intended guard implementation, transaction submitters, Protocol Manager, and recovery roles. Confirm the test environment available for the deployment; staging is not itself a public Ethereum testnet.
 
-The most effective approach to assertion development prioritizes [staging](/credible/glossary#staging) over exhaustive local testing. In staging, assertions run against real transactions on a mirrored environment but don't affect transaction inclusion, allowing you to observe behavior safely. In [production](/credible/glossary#production), the network applies its inclusion policy to assertion validation results.
+## 1. Test Rules Locally
 
-Real-world transactions reveal edge cases that would take significant effort to anticipate and mock locally.
+Use [local assertion tests](./testing-assertions) for allowed actions and intended failures. Cover trigger matching, snapshot selection, boundary values, gas limits, and exceptional legitimate operations such as migrations and upgrades.
 
-**Why local testing has limits:**
-- You can only think of so many test cases manually
-- Complex protocol states are difficult to reproduce
-- Setting up realistic testing environments for multi-protocol interactions is time-consuming
+Include a failure case that would pass if the assertion were absent. A test that only observes the protocol's existing revert does not demonstrate added assertion protection. Reuse protocol fixtures and add focused regression tests for findings from staging or historical replay.
 
-**Why staging excels:**
-- Real usage patterns and transaction diversity
-- Edge cases emerge organically from actual user behavior
-- Weeks of staging exposure reveals issues that extended local testing might miss
+## 2. Review the Release Evidence
 
-## How to Allocate Your Time
+Creating a release with `pcl apply` starts the platform's verification, source-code, and backtesting checks. Review the actual target contracts and assertion changes, then investigate each backtesting finding before deployment.
 
-| Phase | Effort | Goal |
-|-------|--------|------|
-| Local testing | ~20-30% | Validate core logic, catch obvious bugs, verify gas limits |
-| Release review | ~10-20% | Review verification, source code, and automatic backtesting before deployment |
-| Staging | ~50-60% | Discover edge cases, observe real-world behavior, iterate |
+A clean historical window establishes that the tested transactions did not violate the release under the replay conditions. It does not cover every possible future operation or prove that a guard is installed. See [Backtesting](./backtesting) and [Release Review Checks](./release-review-checks).
 
-The bulk of your validation happens in staging. Local testing catches the obvious issues quickly so you can deploy with confidence, but staging is where you discover the edge cases.
+## 3. Observe Staging Behavior
 
-## What to Test Locally
+Deploy the reviewed release to staging on the [Ethereum platform](https://ethereum.phylax.systems). Wait for the configured activation time and monitor matching activity and invalidations.
 
-Focus local testing on:
+Check representative ordinary traffic and important exceptional operations. Low traffic or no matching triggers can produce a quiet dashboard without establishing useful coverage. Choose a review period based on the scenarios observed, rather than a fixed number of days or a percentage of testing effort.
 
-- **Happy paths:** Verify assertions pass on valid transactions
-- **Known violation scenarios:** Verify assertions catch the specific violations you designed for
-- **Gas limits:** Ensure assertions stay within the active gas limit—3,000,000 by default—especially on the happy path (which typically uses more gas since all checks run to completion)
+Investigate false positives, add local regression cases, and review a new release after changes. Staging does not drop live transactions, so it does not prove that production rejection or recovery works.
 
-**What NOT to over-invest in locally:**
-- Exhaustive edge case enumeration
-- Complex multi-protocol interaction scenarios
-- Simulating every possible user behavior
+## 4. Test Guards and the Submission Path
 
-These are better discovered through staging with real transactions.
+Use local or fork-based guard tests, then the approved end-to-end environment with the real integration path.
 
-<Note>
-See [Testing Assertions](/credible/testing-assertions) for local testing patterns and [Gas Limits](/credible/testing-assertions#gas-limits) for gas considerations.
-</Note>
+| Scenario | Evidence to collect |
+| --- | --- |
+| Allowed transaction in a credible block | Marker present before the operation, correct guard decision, and expected protocol state change. |
+| Candidate failing an active assertion | Assertion result and invalidation evidence, exclusion by the participating builder, and unchanged protected state. |
+| Protected operation in a noncredible block | Guard rejection while fail-open and bypass conditions are inactive. |
+| Alternative entry point or Safe module | The intended on-chain gate is unavoidable, or the gap is explicitly excluded from coverage. |
+| RPC simulation and actual submission | The submitter uses the intended endpoint and the actual builder result agrees with the tested expectation. |
+| Batch containing a protected operation | Expected whole-transaction rejection or on-chain subcall handling, with application reconciliation. |
+| Guard or protocol upgrade | Correct wiring, storage layout where relevant, and preserved coverage after the change. |
 
-<Tip>
-**Leverage existing invariant tests.** If your protocol already has Forge invariant tests, the test setup and infrastructure can often be reused for assertion testing. This can significantly reduce the time spent on local test configuration.
-</Tip>
+A timeout alone is not rejection evidence. Check transaction status, builder or platform evidence, and contract state. Distinguish a pre-inclusion exclusion from an included guard revert, which consumes gas.
 
-## Review platform backtesting before staging
+See [Guard Testing](./testing-credible-block-guard) for the local harness. Its fixture proves the harness behavior; target your actual contract to validate its integration.
 
-When you create a release with `pcl apply`, the platform runs three release checks: assertion verification, source code, and backtesting. The backtesting service tests every assertion in the release against transactions from the last 20,000 blocks.
+## 5. Rehearse Recovery
 
-Open the release in the platform and review the backtesting result before you authorize a deployment. A passing result means the release did not invalidate any transaction in the tested window. An **Issue found** result identifies a historical transaction that the assertion would have prevented from settling.
+Test the configured fail-open boundary, Registry-read failures, authorized bypasses, assertion changes, and manager recovery. Use the exact guard implementation: Safe and generic contract guards do not handle Registry failures identically.
 
-For each finding, inspect the matched transaction, assertion ID, adopter, incident payload, previous transactions, and block environment. If the transaction is benign, tune the assertion and create a new release so the platform can check the updated assertion set. If you cannot explain a finding, do not deploy the release.
+Test restrictive assertions while builders continue producing credible blocks. This scenario may never trigger a block-gap fallback. Verify that recovery remains authorized and executable, then test safe resubmission or reconciliation of excluded operations.
 
-See [How to Review Backtesting Results](./backtesting) for the investigation workflow and [Release Review Checks](./release-review-checks) for the complete release-check reference.
+## 6. Review Production Readiness
 
-## The Staging Workflow
+Before activating production rules, verify:
 
-```mermaid
-flowchart LR
-    LOCAL[Local Testing] --> APPLY[Create a Release]
-    APPLY --> REVIEW[Review Platform Checks<br/>and Backtesting]
-    REVIEW --> STAGING[Deploy to<br/>Staging]
-    STAGING --> MONITOR[Monitor]
-    MONITOR --> ISSUE{Issues<br/>Found?}
-    ISSUE --> |Yes| DEBUG[Inspect the<br/>Invalidation]
-    DEBUG --> FIX[Fix & Create<br/>New Release]
-    FIX --> REVIEW
-    ISSUE --> |No, over weeks| PROD[Promote to<br/>Production]
+- Rule behavior, trigger coverage, and resource usage are understood.
+- Release and staging findings have been resolved.
+- Every claimed protected path reaches the required guard.
+- All actual submitters can route protected transactions.
+- Authority, activation delays, monitoring, and recovery have been reviewed and tested.
 
-    style PROD fill:#27ae60,color:#fff
-```
-
-### Deploy Early
-
-Once local tests pass and you have reviewed every platform release check, [deploy to staging](/credible/deploy-assertions-dapp). Don't wait for "perfect" local coverage—staging will reveal what you missed. Note that deployments have a [timelock](/credible/glossary#timelock) period before assertions become active, so starting early is beneficial.
-
-### Monitor Staging Behavior
-
-Check the [platform dashboard](https://app.phylax.systems) regularly for assertion execution status and enable [invalidation notifications](/credible/dapp-integrations) to get alerted via Slack or PagerDuty. Look for:
-
-- Unexpected invalidations on legitimate operations
-- Assertion behavior that needs tuning before production
-
-Staging runs assertions but does NOT drop transactions, so you can observe behavior without risk.
-
-### Investigate staging invalidations
-
-When an issue appears in staging:
-
-1. Identify the transaction that triggered unexpected behavior
-2. Open the invalidation in the platform and inspect its assertion result, trace, and execution context
-3. Add a focused local regression test that reproduces the assertion behavior
-4. Fix the issue, create a new release, and review its automatic backtesting result
-
-<Tip>
-**Add regression tests for discovered edge cases.** When staging or platform backtesting reveals an unexpected scenario, create a local unit test that reproduces the behavior. This prevents regressions and builds a test suite informed by real-world usage patterns rather than speculation.
-</Tip>
-
-### Recommended Staging Duration
-
-- **Minimum:** 1-2 weeks before considering production
-- **High-traffic protocols:** More transactions means faster feedback
-- **Low-traffic protocols:** May need longer staging periods
-
-The goal is sufficient transaction diversity, not a specific timeframe. As the developer, you are best positioned to judge when your assertions have been validated against enough real-world scenarios to warrant promotion to production.
-
-## When to Move to Production
-
-Before promoting to production, verify:
-
-- Expected behavior observed on legitimate transactions
-- Sufficient transaction diversity to build confidence
-- You reviewed every finding from the platform's automatic release backtest
-- Trigger frequency, runtime, and gas usage fit the network's production limits
-- You understand how the assertion behaves across different scenarios
-
-<Warning>
-Moving to production means assertion results can affect transaction inclusion according to the network's policy. Ensure you have validated behavior thoroughly in staging before promoting.
-</Warning>
-
-## Common Mistakes
-
-**Over-investing in local testing:** Trying to cover every edge case locally is inefficient. Staging does this better with real transactions.
-
-**Skipping the release backtest:** Review the automatic platform result and investigate every finding before authorizing deployment.
-
-**Deploying directly to production:** Always validate in staging first. Production should only use assertions that have passed staging review.
-
-**Expecting immediate feedback:** Edge cases may take weeks to appear in staging. Be patient and let real usage patterns emerge.
-
-## Next Steps
-
-<CardGroup cols={2}>
-  <Card title="Testing Assertions" icon="flask-vial" href="/credible/testing-assertions">
-    Local testing patterns and best practices
-  </Card>
-  <Card title="Backtesting" icon="clock-rotate-left" href="/credible/backtesting">
-    Review the automatic backtest attached to a platform release
-  </Card>
-  <Card title="Deploy with the Platform" icon="rocket" href="/credible/deploy-assertions-dapp">
-    Deploy assertions to staging or production
-  </Card>
-  <Card title="Troubleshooting" icon="wrench" href="/credible/troubleshooting">
-    Common errors and solutions
-  </Card>
-</CardGroup>
+Record remaining gaps and reduced-enforcement conditions. Production activation changes assertion policy; it does not complete missing contract or routing work. See [Ethereum Integration Planning](./dapp-integration).

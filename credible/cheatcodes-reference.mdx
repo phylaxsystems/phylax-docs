@@ -16,7 +16,7 @@ Cheatcodes are grouped by API status:
 - **Deprecated cheatcodes**: legacy fork-switching APIs. Do not use them in new assertions.
 
 <Warning>
-The current Phylax app and Linea deployment support the V1 assertion specification. `pcl` warns when an assertion uses the V2 Reshiram specification. Do not assume Reshiram-only precompiles or `onFnCall` and `onTxEnd` triggers are available until the target deployment supports V2.
+Confirm the assertion specification accepted by the target Ethereum enforcer. Reshiram-only precompiles and triggers require V2 support in that deployment; library availability and local tests are not sufficient. Earlier Linea-specific restrictions are in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
 </Warning>
 
 ## Assertion Specs

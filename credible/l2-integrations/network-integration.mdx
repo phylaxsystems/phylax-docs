@@ -1,12 +1,12 @@
 ---
-title: 'Network Integration Overview'
+title: 'How to Plan an L2 Integration'
 description: 'High-level integration path for networks and sequencers adopting the Credible Layer'
 ---
 
 Use this page when your goal is to scope a network integration and identify the infrastructure surfaces your team will need.
 
 <Note>
-This page describes the shared integration model. Network-specific runbooks can add client, sequencer, builder, or validator details without changing the guarantees described here. If you need background first, read the [Architecture Overview](./architecture-overview).
+This page describes the sequencer-based L2 integration model. Each network needs its own coverage and failure policy. Ethereum builder-and-guard integration is documented in [Ethereum Builder Integration](../ethereum-builder-integration).
 </Note>
 
 This page explains how networks integrate the Credible Layer at a high level. It focuses on the
@@ -15,7 +15,7 @@ interface surfaces and operational expectations without internal implementation 
 ## Who This Is For
 
 - L2 networks and sequencers evaluating integration
-- Infrastructure teams operating block builders or validators
+- Infrastructure teams operating L2 block-production components
 - Security teams defining network-level enforcement goals
 
 ## High-Level Flow
@@ -88,7 +88,7 @@ Common controls include exact invalid-transaction caching, broader short-lived f
 ## Operational Expectations
 
 - The enforcer runs alongside the block builder and does not change consensus rules
-- Enforcement is deterministic and only depends on on-chain state and assertion code
+- Validation is deterministic for the same assertion, state, and execution context
 - Protocol teams choose whether assertions are staged or enforced; networks honor the registry status during validation
 - Network operators define continuity behavior for maintenance windows, degraded dependencies, and validation timeouts
 - Production integrations keep assertion work bounded through admission review, trigger scoping, runtime limits, and operational monitoring

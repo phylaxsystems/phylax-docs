@@ -9,7 +9,7 @@ PhEVM (Phylax EVM) is a specialized EVM implementation that executes [assertion]
 
 PhEVM serves as the execution engine within the [Assertion Enforcer](/credible/assertion-enforcer). When a transaction needs validation, the Assertion Enforcer invokes PhEVM to run all relevant assertions against the transaction's state changes.
 
-See the [system architecture diagram](/credible/architecture-overview#system-architecture) for how PhEVM fits into the overall Credible Layer architecture.
+See the [system architecture diagram](/credible/architecture-overview#system-overview) for how PhEVM fits into the overall Credible Layer architecture.
 
 ## Key Capabilities
 
@@ -40,7 +40,7 @@ These cheatcodes are exposed through the [`credible-std`](/credible/credible-std
 PhEVM runs entirely off-chain as part of the [Assertion Enforcer](/credible/assertion-enforcer) sidecar. This provides several advantages:
 
 - **Higher gas limits**: Assertions can perform complex computations that would be prohibitively expensive on-chain
-- **No on-chain overhead**: Validation doesn't consume block gas or affect transaction costs
+- **Off-chain assertion gas**: Assertion execution does not consume Ethereum block gas. Credible-block markers and on-chain guard checks have separate gas costs.
 - **Parallel execution**: Multiple assertions can be validated simultaneously
 
 ## How It Works

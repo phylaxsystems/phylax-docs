@@ -3,7 +3,7 @@ title: 'Overview'
 description: 'Understanding Credible Layer assertions'
 ---
 
-An [assertion](/credible/glossary#assertion) is a function that checks whether a candidate transaction violates a rule. An enforcing sequencer or builder excludes transactions that fail active production assertions. On decentralized-builder networks, mandatory protection also requires a suitable on-chain gate for the protected operation. See [Architecture](./architecture-overview#decentralized-block-building).
+An [assertion](/credible/glossary#assertion) is a function that checks whether a candidate transaction violates a rule. Participating Ethereum builders exclude transactions that fail active production assertions. Mandatory protection also requires a suitable on-chain gate for the protected operation. See [Architecture](./architecture-overview#decentralized-block-building).
 
 Assertions are most useful when they describe an invalid effect, not every possible path that could produce it. A protocol may not know whether a future failure comes from an oracle issue, signer compromise, integration bug, rounding error, or governance action, but it can still define the state transition that should not be allowed.
 
@@ -13,12 +13,12 @@ Assertions are most useful when they describe an invalid effect, not every possi
 - **Reshiram (V2)** replaces mutable fork switching with immutable `ForkId` snapshot reads and adds newer transaction and call inspection precompiles.
 
 <Warning>
-Do not use Reshiram features on Linea yet. The current Linea deployment supports only Legacy (V1); wait until Linea is upgraded to support Reshiram (V2).
+Confirm which specification your target Ethereum deployment accepts before activation. Library availability and local tests do not establish enforcer compatibility. Earlier Linea-specific restrictions are in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
 </Warning>
 
 ## How Assertions Work
 
-When a participating sequencer or builder validates a candidate transaction:
+When a participating Ethereum builder validates a candidate transaction:
 
 - The system identifies which assertions apply to the contracts being interacted with
 - Assertions are configured with [triggers](/credible/glossary#trigger) that specify when they should execute (on specific function calls, storage changes, or balance changes)
@@ -51,7 +51,7 @@ Contract-level checks usually protect the code paths where they were added. Asse
 Regular Solidity only sees the current state during execution. Assertions can compare values before and after a transaction using [cheatcodes](/credible/glossary#cheatcodes) like `ph.loadStateAt` with explicit `ForkId` snapshots. You can also inspect state around a specific matched call by combining `ph.context()` with call-scoped `ForkId` values.
 
 **Separate assertion policy from contract code**
-An integrated sequencer can enforce rules without changing the protected contract, within its covered transaction paths. Decentralized-builder integrations require a suitable gate; an immutable contract without one cannot be protected simply by registering assertions.
+Ethereum enforcement requires a suitable gate; an immutable contract without one cannot be protected simply by registering assertions. The separate sequencer model is described in [L2 and Sequencer Integrations](./l2-integrations/overview).
 
 **Keep policy separate from protocol mechanics**
 Assertions let teams review security rules separately from accounting, settlement, permissioning, and integration logic. This can make it easier to audit what the rule is meant to prevent and to update the rule without upgrading the protected contract.

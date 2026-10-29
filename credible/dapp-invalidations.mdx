@@ -3,12 +3,14 @@ title: 'Invalidations'
 description: 'Review invalidation events, invalidating transactions, assertion results, and replay evidence'
 ---
 
-An invalidation is recorded when a transaction violates an assertion protecting a contract. In production, the [Enforcer](/credible/glossary#assertion-enforcer) applies the network's documented enforcement policy. On enforced transaction paths, the transaction is rejected before settlement. In staging, the platform records that the transaction would have been rejected, but the transaction can still land on the live network because staging is observe-only.
+An invalidation is recorded when a transaction violates an assertion protecting a contract. On Ethereum, the [Enforcer](./glossary#assertion-enforcer) reports the failure to the participating builder, which excludes the candidate under its production policy. In staging, the platform records that the transaction would have been rejected, but the transaction can still land on the live network because staging is observe-only.
 
 <Note>
 For the end-to-end flow, see the invalidation lifecycle diagram in
 [Architecture Overview](/credible/architecture-overview#invalidation-lifecycle-public-view).
 </Note>
+
+An invalidation is different from a transaction included on-chain and reverted by a guard. It also differs from an RPC timeout or an unavailable submission route. Reconcile assertion evidence, transaction status, and contract state before deciding what occurred.
 
 ## How invalidations are organized
 
@@ -107,7 +109,7 @@ The Phylax Explorer can show redacted aggregate invalidation history, such as a 
 | Environment | What an invalidation means | User impact |
 | --- | --- | --- |
 | Staging | The transaction would have violated an assertion under production enforcement | The transaction is recorded for review but is not rejected |
-| Production | The transaction violated an enforced assertion | The transaction is rejected before settlement on enforced paths, or handled according to the documented integration policy |
+| Production | The transaction violated an enforced assertion | The participating builder excludes the candidate; guard and routing coverage determine the protected execution path |
 
 ## Use cases
 

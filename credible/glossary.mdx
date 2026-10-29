@@ -8,7 +8,7 @@ Use this reference to look up Credible Layer terms, component names, lifecycle s
 ## Core Concepts
 
 ### The Credible Layer
-The Credible Layer lets protocols register security rules on-chain and have participating sequencers or block builders validate candidate transactions against them. Transactions that fail active assertions are excluded by the enforcing integration. Coverage depends on the network, transaction path, and active rules.
+Ethereum security infrastructure combining protocol-authored assertions, participating builders, credible-block markers, and on-chain guards. Builders exclude candidates that fail active rules; guards restrict protected operations while their gate is active.
 
 See the [Introduction](/credible/credible-introduction) for a comprehensive overview.
 
@@ -62,7 +62,7 @@ The address authorized to manage assertion lifecycle for registered contracts th
 A component that selects and orders candidate transactions into blocks. A participating Credible Layer builder invokes the Assertion Enforcer before including transactions; other builders need not run assertions.
 
 ### Sequencer
-A network component responsible for ordering transactions. An integrated sequencer adds assertion validation at its documented inclusion boundary.
+An L2 component responsible for ordering transactions. See [L2 and Sequencer Integrations](./l2-integrations/overview) for its separate assertion-enforcement model.
 
 ### Assertion Enforcer
 The sidecar component responsible for validating transactions against assertions during block production. It orchestrates the validation process by identifying relevant assertions, invoking PhEVM to execute them, and returning a validation report. The network integration applies the inclusion policy.
@@ -70,7 +70,7 @@ The sidecar component responsible for validating transactions against assertions
 Learn more: [Assertion Enforcer](/credible/assertion-enforcer)
 
 ### Platform
-The [Phylax platform](https://app.phylax.systems) is the web application interface for interacting with the Credible Layer. It allows protocol teams and end-users to deploy, manage, and view assertions and projects.
+The [Phylax platform](https://ethereum.phylax.systems) is the web application interface for interacting with the Credible Layer. It allows protocol teams and end-users to deploy, manage, and view assertions and projects.
 
 ### The Phylax Explorer
 A public dashboard that displays the security and operational risk posture of protocols that have opted into runtime enforcement. It can show summaries of actions protected by circuit breakers and assertions, scenarios the assertions prevent, assertion and circuit breaker behavior, admin multisig details, contract upgradeability documentation, and deployed-vs-audited code context where available. Detailed project management data, staging invalidations, transaction payloads, and traces are only available in private project views.
@@ -81,9 +81,9 @@ A software architecture pattern where a component runs alongside the main applic
 See [Architecture](./architecture-overview#how-the-credible-layer-works) for implementation details.
 
 ### Network Validator (Node)
-The network infrastructure component responsible for processing transactions and building blocks. In L2 networks, this is typically the sequencer or block builder. The Credible Layer integrates with the network validator through a sidecar to validate transactions against assertions before block inclusion.
+An Ethereum validator participates in consensus and may propose a block assembled by a builder. Validators apply Ethereum's consensus rules; they do not independently run Phylax assertions as part of block validity. A participating [block builder](#block-builder) runs the assertion integration before publishing its candidate.
 
-Related terms: [Sequencer](/credible/glossary#sequencer), [Block Builder](/credible/glossary#block-builder)
+For the different roles in an L2 sequencer architecture, see [L2 and Sequencer Integrations](./l2-integrations/overview).
 
 ## Assertion Components
 
@@ -172,7 +172,7 @@ Learn more: [Backtesting](/credible/backtesting)
 The ability to run complex security rules outside the main blockchain execution, providing significant efficiency gains compared to on-chain validation.
 
 ### Forced Inclusion Transactions
-Special transactions that may have protocol-level inclusion guarantees, such as L1->L2 deposits. Network integrations define the validation policy for these transaction paths.
+L2 transaction paths with protocol-level inclusion rules, such as L1-to-L2 deposits or delayed queues. Their assertion handling belongs to the [L2 integration policy](./l2-integrations/network-integration#transaction-source-coverage), not Ethereum builder routing.
 
 ### Circuit Breaker
 An assertion pattern that collects value flowing into or out of a protected contract into one bucket per block, then limits the cumulative flow across those per-block buckets over a rolling window. Circuit breakers are useful when the goal is to reduce exploit velocity or contain blast radius rather than block one specific function call.
@@ -191,7 +191,7 @@ Learn more: [Invalidations](/credible/dapp-invalidations)
 An EVM execution failure. An assertion revert occurs off-chain during validation and can cause builder exclusion. A guard revert occurs in the protocol execution path; if included on-chain, the transaction consumes gas. A caller may catch a subcall revert, depending on its code.
 
 ### Drop
-The technical term for when a sequencer or block builder excludes a transaction from block inclusion. After the sidecar detects that an assertion has reverted, it notifies the sequencer, which then drops the invalid transaction before it can be included in a block.
+Exclusion of a candidate transaction by a participating builder before inclusion. An excluded transaction consumes no on-chain execution gas. This differs from an included transaction reverting at a guard.
 
 ### Prevent
 Blocking a rule-violating effect through the integrated enforcement path. Protection depends on active assertions, trigger coverage, builder behavior, and any required guards; a violation is not necessarily malicious.
@@ -210,7 +210,7 @@ The process of reviewing an assertion, linking it to a contract, and signing the
 A mirrored chain environment used for testing assertions without affecting production. Assertions run on staging to observe behavior, but transactions are not dropped if they break assertion rules. This allows protocol teams to test assertions safely before deploying to production.
 
 ### Production
-The enforcement environment where active assertions cause the integrated sequencer or builder to exclude violating candidate transactions. Decentralized-builder deployments also require guard coverage and routing; fail-open or bypass conditions can reduce mandatory protection.
+The enforcement environment where participating Ethereum builders exclude candidates violating active assertions. Guard coverage and routing are also required for the protected operations; fail-open or bypass conditions can reduce mandatory protection.
 
 ### Timelock
 A period enforced by the on-chain State Oracle contracts between an assertion change and when that change takes effect. The timelock applies when you add an assertion and when you remove one. It exists for two reasons: (1) to provide latency for the enforcer to index on-chain state and prepare for enforcement changes, and (2) to give users time to expect changes to protocol behavior. During the timelock period, newly added assertions are marked for enforcement or staging but are not yet active, and removed assertions remain active until the timelock finishes.

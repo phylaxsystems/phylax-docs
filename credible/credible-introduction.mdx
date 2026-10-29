@@ -1,13 +1,13 @@
 ---
 title: 'Introduction'
-description: 'Understand assertion-based transaction enforcement and choose a documentation path.'
+description: 'Start with Ethereum assertions, participating builders, guards, and transaction routing.'
 ---
 
 Use this page to understand what the Credible Layer is and choose the right documentation path for your goal.
 
 ## What is the Credible Layer?
 
-The Credible Layer lets protocols register security rules on-chain and have participating sequencers or block builders validate candidate transactions against them. Transactions that fail active assertions are excluded by the enforcing integration. Coverage depends on the network, transaction path, and active rules.
+The Credible Layer protects Ethereum contract operations through Solidity assertions, participating block builders, and on-chain guards. Builders exclude candidate transactions that violate active rules. Guards restrict protected execution to credible blocks while their gate is active, and the Credible RPC routes transactions to participating builders.
 
 <Note>
 Use this page to choose the right kind of documentation for what you need next:
@@ -25,14 +25,14 @@ Use this page to choose the right kind of documentation for what you need next:
     Write assertions: Solidity rules that check the effects of transactions against your protocol’s requirements.
   </Step>
   <Step title="Participating builders validate transactions">
-    The integrated sequencer or builder runs relevant assertions against candidate transactions before inclusion.
+    Participating Ethereum builders run relevant assertions against candidate transactions before inclusion.
   </Step>
   <Step title="Enforce the protected execution path">
-    The integration excludes transactions that fail assertions. On decentralized-builder networks, an on-chain guard restricts protected operations to credible blocks while its gate is active.
+    An on-chain guard restricts protected operations to credible blocks while its gate is active. Configure the wallet, executor, or service that submits the transaction to use the Credible RPC.
   </Step>
 </Steps>
 
-For decentralized block building, start with [Architecture](./architecture-overview#decentralized-block-building). For routing, availability, and recovery questions, see the [FAQ](./faq).
+For Ethereum block building, start with [Architecture](./architecture-overview#decentralized-block-building). For routing, availability, and recovery questions, see the [FAQ](./faq).
 
 ## Choose the Right Path
 
@@ -57,8 +57,8 @@ For decentralized block building, start with [Architecture](./architecture-overv
   <Card title="Protocol Teams" icon="browser" href="./dapp-integration">
     See the adoption path for writing assertions, deploying them, and monitoring invalidations.
   </Card>
-  <Card title="Networks and Sequencers" icon="sitemap" href="./network-integration">
-    See the high-level integration path for enforcement during block building.
+  <Card title="Ethereum Builders" icon="sitemap" href="./ethereum-builder-integration">
+    Plan assertion validation, credible-block marking, and operator responsibilities.
   </Card>
   <Card title="Security Engineers" icon="shield-halved" href="../assertions-book/assertions-book-intro">
     Browse pattern catalogs and exploit case studies in the Assertions Book.
@@ -72,10 +72,12 @@ For decentralized block building, start with [Architecture](./architecture-overv
 
 - **Validation before inclusion** — Participating builders exclude transactions that violate active rules
 - **Separate security policy** — Maintain assertions independently of protocol logic; guard requirements depend on the network integration
-- **Transparent & verifiable** — All rules are public Solidity, auditable by anyone
+- **Reviewable Solidity** — Inspect the assertion source and release artifacts shared for your integration
 - **Readable security posture** — Understand circuit breakers and verifiable operational risks through clear, plain-English breakdowns
 - **Enforcement during block building** — Review the participating operators, guard configuration, and recovery assumptions in the [Trust Model](./trust-model)
 - **Deterministic decisions** — Binary enforcement based on your rules, not opaque scoring
+
+Sequencer-based enforcement and earlier network designs now live in [L2 and Sequencer Integrations](./l2-integrations/overview).
 
 ## Community & Support
 
@@ -86,9 +88,9 @@ Have questions or want to connect with the Phylax community?
 - Explore our [GitHub](https://github.com/phylaxsystems)
 - Visit the [Phylax Website](https://phylax.systems)
 
-## Learn More
+## Earlier Conceptual Introduction
 
-For the visual learners, here's a video introduction to the Credible Layer:
+This earlier video introduces assertion concepts. For the Ethereum guard and routing model, use the written [architecture](./architecture-overview) and [integration guide](./dapp-integration).
 
 <iframe
   className="w-full aspect-video rounded-xl"

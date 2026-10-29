@@ -137,4 +137,4 @@ If your circuit breaker uses `absoluteOutflow` or `absoluteInflow` to get the to
 
 Circuit breakers constrain token flow rather than a specific attack path, so they can limit the impact of different exploit classes, including attacks that begin with oracle manipulation. They bound flow within the configured rolling window; they do not replace monitoring or incident response.
 
-Choose a window long enough for your team to receive an invalidation alert, investigate, and apply mitigation before earlier flow ages out of the window. Before production, [validate the threshold and window in staging](../../credible/testing-strategy#monitor-staging-behavior) and [configure invalidation notifications](../../credible/dapp-integrations).
+Choose a window long enough for your team to receive an invalidation alert, investigate, and apply mitigation before earlier flow ages out of the window. Before production, [validate the threshold and window in staging](../../credible/testing-strategy#3-observe-staging-behavior) and [configure invalidation notifications](../../credible/dapp-integrations).

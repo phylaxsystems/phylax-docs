@@ -21,7 +21,11 @@ pnpm install
 
 ### Credible Layer (`/credible`)
 
-Documentation for the Credible Layer including guides, reference materials, and best practices.
+Documentation for Ethereum enforcement through participating builders, assertions, credible-block markers, on-chain guards, and transaction routing. The primary authoring, platform, and deployment guides use the Ethereum platform explicitly.
+
+### L2 and Sequencer Integrations (`/credible/l2-integrations`)
+
+The separate section preserves sequencer-oriented integration designs, Linea/Besu, OP Stack, validation pipelines, and earlier platform workflows. Confirm deployment support and versions before using them. Redirects in `docs.json` preserve the old network-integration page routes.
 
 ### Assertions Book (`/assertions-book`)
 

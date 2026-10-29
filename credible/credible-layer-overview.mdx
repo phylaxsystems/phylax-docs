@@ -1,160 +1,54 @@
 ---
 title: 'High-Level Overview'
-description: 'High-level overview of the Credible Layer system that explains how exploit prevention works, without requiring deep technical knowledge.'
+description: 'How the Credible Layer protects Ethereum contract operations through assertions, builders, and guards.'
 ---
 
-This explanation describes how assertions influence transaction inclusion and how enforcement differs between an integrated sequencer and a network with decentralized block building.
+The Credible Layer lets Ethereum protocols define security rules in Solidity and have participating block builders check candidate transactions against them. On-chain guards restrict protected operations to blocks marked credible by authorized builders while the gate is active.
 
-## Introduction
+## The Three Parts of Enforcement
 
-The Credible Layer lets protocols define rules for transaction effects and enforce those rules during block building. Its protection is bounded by the rules and execution paths covered by the integration.
+1. **Assertions describe the permitted effects.** A rule can compare state before and after a transaction, inspect calls, or check relationships across contracts.
+2. **Participating builders run the rules.** They exclude candidates that fail active production assertions before inclusion.
+3. **Guards restrict the execution path.** A guard checks the Credible Registry so another builder cannot simply include the protected operation in an unmarked block while the gate is closed.
 
-![System Overview](/images/overview-step-0.png)
+The Credible RPC routes submissions to participating builders. Routing and guarding serve different purposes: a route helps a transaction reach an enforcing builder; a guard constrains where the operation may execute.
 
-This illustration shows validation at a participating node. Decentralized-builder deployments also require the guard path described below.
+The marker is a builder attestation, not a cryptographic proof that assertions ran. The [Trust Model](./trust-model) explains builder, Registry, guard, and recovery assumptions.
 
-<Info>
-**The Credible Layer** checks candidate transactions before inclusion. Participating sequencers or builders exclude transactions that violate active assertions. Decentralized-builder integrations also need an on-chain gate so protected operations cannot simply execute through a nonparticipating builder.
-</Info>
+## What Rules Can Protect
 
-At a glance:
+Assertions can check administrative changes, asset flows, collateralization, oracle deviations, and relationships between balances or positions. The useful rule describes a harmful effect rather than attempting to enumerate every way it could arise.
 
-- **Security rules** are defined by the protocol team as [assertions](/credible/glossary#assertion), with assertion IDs registered on-chain and bytecode served through [Assertion DA](/credible/assertion-da)
-- **Participating sequencers or builders** validate candidate transactions against relevant active assertions
-- **Invalidating transactions** are [dropped](/credible/glossary#drop) by the enforcing integration; guards restrict protected execution paths on decentralized-builder networks
+For example, an assertion can detect an unexpected change in a pool's state across a transaction. The [Balancer V2 case study](../assertions-book/previous-hacks/balancer-v2-stable-rate-exploit) demonstrates an exploit replay using that approach. Production protection also requires active rules, matching triggers, and the guarded execution path.
 
-<Check>
-**Easy to adopt**
-- Written in Solidity with familiar Forge patterns
-- Assertion policy is maintained separately from protocol code
-- Contract changes, guards, and transaction routing depend on the enforcement model
-- All rules are publicly reviewable in [The Phylax Explorer](/credible/glossary#the-phylax-explorer)
-- [Implementation effort](/credible/development-effort) includes testing, authorization, and integration of protected paths
-</Check>
+An assertion failure is a rule violation, not proof of an attack. Legitimate migrations, withdrawals, or upgrades can also violate a rule that lacks the required context. Test those operations alongside known failure cases.
 
-## Use Cases
+## What Integration Requires
 
-Assertions enable a wide range of security and compliance use cases:
+Assertion code is separate from protocol logic, but Ethereum enforcement may require contract changes. Protected operations need a suitable gate: a contract guard, a supported wallet guard, or an unavoidable existing hook. An immutable contract with no suitable gate cannot obtain this protection simply by registering assertions.
 
-<CardGroup cols={2}>
-  <Card title="Parameter Protection" icon="shield-halved">
-    Prevent unauthorized changes to critical protocol parameters such as owner and implementation addresses
-  </Card>
-  <Card title="Market Integrity" icon="chart-line">
-    Ensure market prices don't move beyond specified thresholds inside of a single transaction
-  </Card>
-  <Card title="Lending Protocol Safety" icon="building-columns">
-    Check lending positions against defined collateralization rules
-  </Card>
-  <Card title="Oracle Monitoring" icon="satellite-dish">
-    Verify oracle prices stay within specified ranges to detect price manipulation
-  </Card>
-  <Card title="Balance Invariants" icon="scale-balanced">
-    Ensure that the sum of all positions match the total balance of a protocol
-  </Card>
-  <Card title="Compliance Rules" icon="clipboard-check">
-    Enforce KYC/AML requirements by validating that transaction participants meet regulatory criteria
-  </Card>
-</CardGroup>
+The actual transaction submitters need the intended route. This includes user wallets, multisig executors, keepers, bots, and relayers. A contract called internally cannot select an RPC.
 
-For concrete examples and implementations, explore the [Assertions Book](/assertions-book/assertions-book-intro).
+A Safe transaction guard covers its owner-authorized execution path; modules require separate review and controls. See [Integration Planning](./dapp-integration) for coverage and rollout requirements.
 
-## Who It's For
+## From Assertion to Enforcement
 
-<CardGroup cols={2}>
-  <Card title="Protocol Teams" icon="code" href="/credible/dapp-integration">
-    Deploy and manage assertions to protect your contracts
-  </Card>
-  <Card title="Networks & Sequencers" icon="sitemap" href="/credible/network-integration">
-    Integrate enforcement into block building
-  </Card>
-</CardGroup>
+Developers create a release on the [Ethereum platform](https://ethereum.phylax.systems), review its checks, and schedule activation through the authorized Protocol Manager. The State Oracle records which assertions apply and when additions or removals take effect. Assertion DA supplies the artifacts used by enforcers.
 
-## How It Works
+Staging observes assertion behavior without dropping live transactions. Production rules affect inclusion at participating builders. Neither mode installs missing guards or configures submission routes.
 
-### Defining Security Rules
+When a transaction touches several protected contracts, all applicable assertions must pass at the enforcing builder. Passing makes the transaction eligible for inclusion; selection and finality remain separate. An assertion failure excludes the whole candidate transaction, including a batch containing multiple operations.
 
-![Mapping and defining invariants](/images/overview-step-1.png)
+## Availability and Recovery
 
-Security rules (technically called [invariants](/credible/glossary#protocol-invariants)) are statements about your contract that must remain true no matter how users interact with it. They express the essential conditions that keep your system secure and functional.
+A guard can fail open after a configured gap in credible blocks. This restores access by allowing execution in blocks whose builders may not run assertions. Existing protocol checks remain in force, but mandatory assertion protection is reduced.
 
-Instead of exhaustively predicting every exploit path, you define the _states that must never occur_. If one of these states is violated, something fundamental has gone wrong.
+Recovery from a restrictive rule or lost manager key needs its own tested procedure. Builders can keep producing credible blocks while a particular protocol's transactions fail, so a block-gap fallback does not solve every lockout.
 
-These rules are then implemented as [assertions](/credible/glossary#assertion), which are Solidity smart contracts that verify the rules hold true. For a deeper understanding of how assertions work, see the [Assertions Overview](/credible/assertions-overview).
+## Choose Your Next Step
 
-**Beyond Security Rules**
-
-While invariants are the most common use case, assertions also enable:
-- **Timelocks and Access Control**: Add time-based restrictions or multi-factor authentication requirements for sensitive functions like contract upgrades
-- **Business Logic Enforcement**: Ensure operational rules are followed, such as transaction limits or authorized contract interactions
-
-### Example: Detecting Unexpected State Changes
-
-An assertion can compare a pool's state before and after a transaction and reject a change outside its defined bounds. This can detect a harmful effect without identifying every possible exploit path. The bounds still need testing against legitimate activity.
-
-The [Balancer V2 case study](../assertions-book/previous-hacks/balancer-v2-stable-rate-exploit) shows this approach with an exploit replay. A successful replay demonstrates that a rule detects that transaction under the test conditions; production protection also depends on active rules and enforcement coverage.
-
-### Network Enforcement
-
-Once assertions are defined, they need to be deployed to protect your contracts. This involves submitting the assertion to your project, then linking it to your contract address.
-
-![Submitting assertions for enforcement](/images/overview-step-2.png)
-
-The [Phylax platform](https://app.phylax.systems) creates releases and submits assertion changes to the Credible Layer smart contracts. Those contracts are the source of truth for which assertion IDs protect which contract addresses and when changes become active. Assertion bytecode is stored in [Assertion DA](/credible/assertion-da) and fetched by the enforcer before validation.
-
-#### How Enforcement Works
-
-A participating sequencer or builder invokes the Credible Layer [sidecar](/credible/glossary#sidecar) to evaluate relevant assertions. An assertion failure reports a rule violation; the enforcing integration excludes the candidate transaction. A rule violation can also reflect a false positive, so rules need review and testing.
-
-When a user opens a position on a yield protocol, the transaction may touch multiple contracts:
-
-![A single transaction can interact with multiple contracts](/images/phylax-multi-contract-interaction.png)
-
-Each contract that has assertions is checked by the sidecar, which simulates the cumulative end states:
-
-![Each contract with assertions is checked by the sidecar](/images/phylax-assertion-checking.png)
-
-#### Validation Process
-
-1. User submits a transaction to the network
-2. The network node passes it to the sidecar for validation
-3. The sidecar simulates the transaction and checks all relevant assertions
-4. If all assertions pass, the transaction remains eligible for inclusion, subject to normal validity and builder selection
-5. If any active production assertion fails, the enforcing integration excludes the transaction
-
-The validation path is designed to keep assertion lookup and execution bounded for each network integration. The Credible Layer adapts to each network's architecture while preserving the same core model: protocol-authored assertions inform the block inclusion decision.
-
-### Decentralized Builders and Contract Guards
-
-When only some builders participate, assertion validation is not a chain-wide consensus rule. A protected operation needs an on-chain guard that checks whether the current block was marked credible by an authorized builder. The Credible RPC routes submissions to those builders; the guard rejects protected operations in other blocks while its gate is active.
-
-The marker is a builder attestation, not a proof of assertion execution. A configured fail-open condition or authorized bypass can relax the gate. Those choices affect both availability and protection and belong in the integration's [Trust Model](./trust-model).
-
-This may require contract changes or a supported wallet guard. Registering assertions alone does not protect an immutable contract with no suitable enforcement gate.
-
-For the full flow, see [Architecture](./architecture-overview). The [FAQ](./faq) covers routing, batching, false positives, and recovery.
-
-<Note>
-The Credible Layer is designed as neutral middleware that preserves decentralization for both protocols and networks. Learn more about [why neutrality matters](/credible/neutrality).
-</Note>
-
-For interface boundaries and integration touchpoints, see [Interface Overview](/credible/interfaces-overview).
-
-## Next Steps
-
-Ready to dive deeper?
-
-<CardGroup cols={2}>
-  <Card title="Architecture" icon="gears" href="/credible/architecture-overview">
-    Technical deep dive into system architecture and transaction flow
-  </Card>
-  <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
-    Write and deploy your first assertion
-  </Card>
-  <Card title="Assertions" icon="diagram-project" href="/credible/assertions-overview">
-      How assertions work and how to write them
-  </Card>
-  <Card title="FAQ" icon="circle-question" href="/credible/faq">
-    Common questions about the Credible Layer
-  </Card>
-</CardGroup>
+- [Ethereum Architecture](./architecture-overview): components, markers, and transaction flow.
+- [Integration Planning](./dapp-integration): protocol changes, routing, authority, and recovery.
+- [Quickstart](./pcl-quickstart): test a first assertion locally.
+- [FAQ](./faq): customer questions about coverage, operation, and failure handling.
+- [L2 and Sequencer Integrations](./l2-integrations/overview): the separate sequencer-based model and earlier workflows.

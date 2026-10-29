@@ -1,91 +1,65 @@
 ---
 title: 'Credible Layer Contracts'
-description: 'On-chain smart contracts that manage the assertion registry and coordinate protocol admins with network operators'
+description: 'Ethereum assertion lifecycle, builder authorization, credible-block markers, and contract guards.'
 ---
 
-The Credible Layer Contracts are the on-chain smart contracts that power the protocol. They manage assertion registration, coordinate protocol admins with network operators, and serve as the source of truth for which assertions protect which contracts.
+Ethereum enforcement uses separate contracts for assertion policy and guarded execution. The State Oracle records which assertions apply; the Credible Registry records authorized builders and credible blocks; a guard restricts protected operations using that Registry.
 
-<Info>
-The contracts are open source and available on [GitHub](https://github.com/phylaxsystems/credible-layer-contracts).
-</Info>
-
-<Note>
-For how these contracts fit into the overall system, see [Interface Overview](/credible/interfaces-overview).
-</Note>
+Registering an assertion does not install a guard or configure transaction routing. See [Ethereum Architecture](./architecture-overview) for the complete execution path.
 
 ## Components
 
-```mermaid
-flowchart TD
-    USER["User / Protocol Team"]
-    
-    subgraph contracts["On-Chain Contracts"]
-        SO["State Oracle"]
-        AV["Protocol Admin<br/>Verification"]
-        DAV["Data Availability<br/>Verification"]
-    end
-    
-    USER --> SO
-    SO --> AV
-    SO --> DAV
-    
-    classDef user fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
-    classDef oracle fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
-    classDef verifier fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
-    
-    class USER user
-    class SO oracle
-    class AV,DAV verifier
-```
+| Component | Responsibility |
+| --- | --- |
+| State Oracle | Assertion assignments, manager authority, and lifecycle timing. |
+| Admin verifier | Authorization checks when registering an assertion adopter. |
+| DA verifier | Verification of the artifact availability proof used for registration. |
+| Credible Registry | Builder authorization and credible-block markers. |
+| Credible Block Guard | Restriction on protocol operations that invoke the guard. |
+| Credible Safe Guard | Restriction on Safe owner-authorized transactions through the supported transaction-guard path. |
 
 ### State Oracle
 
-The State Oracle is the core contract that coordinates protocol admins and network operators. It maintains the mapping between protected contracts and their assertions, and it is the contract layer that decides when assertion changes take effect.
+The State Oracle associates protected contract addresses, called assertion adopters, with a Protocol Manager and assertion activation windows. Its configured block delay governs additions and removals. The enforcer reads this state to determine applicable assertions.
 
-**Key responsibilities:**
-- Store assertion registrations for each protected contract (assertion adopter)
-- Enforce the configured timelock for assertion additions and removals
-- Manage assertion windows that define when assertions are active
-- Coordinate with admin verifiers to ensure only authorized parties can register assertions
-
-**Behavior:**
-- Each assertion adopter maintains a manager and a set of assertion windows
-- An assertion ID can only be registered once. If removed, it cannot be re-added.
-- Adding an assertion starts a configured timelock before it becomes staged or enforced
-- Removing an assertion starts a configured timelock before it stops being staged or enforced
-- External admin verifiers govern who may register new adopters
-
-In other words, the platform and `pcl` initiate assertion changes, but the State Oracle contracts enforce the waiting period on-chain.
-
-The [Assertion Enforcer](/credible/assertion-enforcer) reads from the State Oracle to determine which assertions apply to incoming transactions.
-
-View the [StateOracle.sol source code](https://github.com/phylaxsystems/credible-layer-contracts/blob/main/src/StateOracle.sol) on GitHub.
+In the [public State Oracle implementation](https://github.com/phylaxsystems/credible-layer-contracts/blob/main/src/StateOracle.sol), an assertion ID cannot be re-added for the same adopter after removal. Confirm the deployed implementation and configuration when planning updates.
 
 ### Protocol Admin Verification
 
-The Protocol Admin Verification interface verifies who has administrative authority over a protocol. This ensures only rightful owners can register and manage assertions for their contracts.
-
-Admin verification is required for initial registration of an assertion adopter. The system supports multiple verification methods:
-- **Owner-based verification**: Checks the `owner()` function on the target contract
-
-Additional verification methods may be introduced over time.
-
-See [Ownership Verification](/credible/ownership-verification) for details on how ownership is verified.
+An approved verifier establishes authority during registration. Supported paths depend on the deployment and can include ownership interfaces, an initial-manager interface, or approved manual verification. Platform membership alone does not grant on-chain manager authority. See [Ownership Verification](./ownership-verification).
 
 ### Data Availability Verification
 
-The Data Availability Verification interface ensures that assertion bytecode is available before it can be registered on-chain. This prevents assertions from being registered without their bytecode being accessible to the [Assertion Enforcer](/credible/assertion-enforcer).
-
-When adding assertions, a proof of availability must be provided. The current implementation (`DAVerifierECDSA`) requires a signature from the [Assertion DA](/credible/assertion-da) prover, which is generated when creating a release via [`pcl apply`](/credible/cli-reference#apply).
+The lifecycle verifies an artifact availability proof before accepting an assertion. The ECDSA verifier uses a signature from the Assertion DA prover. This binds registration to available creation data; it does not prove that a builder subsequently executed the assertion. See [Assertion DA](./assertion-da).
 
 ### State Oracle Administration
 
-The State Oracle owner retains privileged controls for emergency scenarios:
+The public implementation separates governance, operator, and guardian permissions. These control verifier configuration, registration allowlisting, and manager revocation or assertion removal. Guardian removal uses the configured removal delay; it is not an immediate universal off switch.
 
-- **Add or remove admin verifiers**: Adjust which verification modules are authorized
-- **Register or revoke managers**: Directly manage assertion adopter permissions when necessary
-- **Remove assertions**: Forcefully deactivate assertions if malicious logic is introduced or emergency removal is requested
+Review the deployed roles and timing alongside the [Trust Model](./trust-model). These permissions are separate from Credible Registry administration.
 
-<Warning>
-These controls are intended strictly for emergency response scenarios, such as attacks or lost manager keys, and are exercised with operational safeguards.
-</Warning>
+### Credible Registry
+
+The Registry authorizes builder addresses and records whether a block has been marked credible. An authorized builder calls `markCurrentBlockCredible` with the expected block timestamp before protected operations execute. Guards can query `isCredibleBlock` and `lastCredibleBlock`.
+
+The marker attests that the builder followed the validation policy. The Registry does not execute assertions or verify a cryptographic proof of their execution. Builder behavior, marker publication, and Registry administration remain trust assumptions.
+
+Builder authorization changes follow the Registry's own governance and timing rules. They are independent of a protocol's assertion-manager permissions and State Oracle lifecycle.
+
+### Credible Block Guard
+
+Protocol code invokes the guard on each protected execution path. While the gate is active, an unmarked block causes the protected operation to revert. The guard can permit configured bypass accounts, and its block-gap fallback activates when the latest credible block is **strictly more** than the configured threshold behind.
+
+An included guard revert consumes transaction gas. A builder excluding a transaction before inclusion does not. Paths that never reach the guard remain outside its protection.
+
+The reference guard propagates Registry read failures. Review the deployed implementation and any overrides rather than assuming all guards fail open on a Registry error.
+
+### Credible Safe Guard
+
+The Safe transaction guard checks owner-authorized `execTransaction` execution. Safe module paths require separate controls or an unavoidable downstream gate. Installing a transaction guard alone does not cover those modules.
+
+The reference Safe guard also has a block-gap fallback. Unlike the generic guard, it fails open when Registry reads revert, return malformed data, or target an address without code. Its Registry and threshold configuration are immutable; changing them requires replacing the guard.
+
+Both guards can relax the credible-block requirement during fallback. Participating builders can continue enforcing assertions, but operations submitted through other builders may then execute without those checks. Ordinary protocol authorization still applies.
+
+For integration requirements, see [Ethereum Integration Planning](./dapp-integration). For local guard behavior, see [How to Test the Credible Block Guard](./testing-credible-block-guard).

@@ -19,7 +19,7 @@ Assertion authoring effort depends on how well the protocol invariants are defin
 
 When invariants exist, writing assertions is similar to writing Forge invariant tests:
 
-- **Workflow**: Write Solidity, test with `pcl test`(fork of `forge`), deploy via the [platform](https://app.phylax.systems)
+- **Workflow**: Write Solidity, test with `pcl test`(fork of `forge`), deploy via the [platform](https://ethereum.phylax.systems)
 - **Learning curve**: A small set of [cheatcodes](/credible/cheatcodes-overview) for snapshot reads (`PhEvm.ForkId`, `ph.loadStateAt`, etc.)
 - **Familiarity**: Developers who write Forge tests can write assertions
 
@@ -42,7 +42,7 @@ See [Testing Assertions](/credible/testing-assertions) for patterns and best pra
 
 ## Integration and Operations
 
-On decentralized-builder networks, plan for guard installation or contract upgrades, coverage of alternative paths and wallet modules, and RPC configuration for every transaction submitter. An immutable contract with no usable gate may not support the intended protection.
+On Ethereum, plan for guard installation or contract upgrades, coverage of alternative paths and wallet modules, and RPC configuration for every transaction submitter. An immutable contract with no usable gate may not support the intended protection.
 
 Review shared components at their deployed revision and review protocol-specific changes separately. Include integration tests, signer coordination, activation delays, false-positive handling, monitoring, and recovery rehearsals in the estimate.
 
@@ -52,7 +52,7 @@ See [Integration Planning](./dapp-integration) for the work to scope before roll
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/credible/pcl-quickstart">
-    Write and deploy your first assertion
+    Test and inspect your first assertion locally
   </Card>
   <Card title="Assertion Guide" icon="code" href="/credible/write-first-assertion">
     Step-by-step guide to writing assertions

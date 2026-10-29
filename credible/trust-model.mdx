@@ -3,7 +3,7 @@ title: 'Trust Model & Guarantees'
 description: 'Enforcement scope, builder and guard assumptions, authorization, and recovery tradeoffs.'
 ---
 
-The Credible Layer adds protocol-defined checks to transaction inclusion. Its guarantees depend on active rules, covered execution paths, and the network integration. This page explains those boundaries and the authority and availability tradeoffs behind them.
+On Ethereum, the Credible Layer relies on participating builders, credible-block markers, and guards covering protected operations. This page explains the rule coverage, authority, and availability assumptions of that model.
 
 ## Enforcement Scope
 
@@ -11,19 +11,15 @@ The Credible Layer adds protocol-defined checks to transaction inclusion. Its gu
 - **Validation before inclusion**: the enforcer reports failures before inclusion; the enforcing integration excludes those candidate transactions.
 - **Assertion-defined coverage**: rules protect only the behavior their logic and triggers capture. Passing a rule is not proof of safety against other failures.
 - **Configured lifecycle**: the State Oracle determines assertion assignments and activation or removal times.
-- **Transaction-source coverage**: ordinary, bridge-originated, delayed, system, and forced-inclusion paths need explicit integration policies.
+- **Execution-path coverage**: every protected Ethereum operation must reach the guard, including calls submitted by relayers, bridges, bots, and wallet modules where applicable.
 
 Assertions do not replace ordinary chain validity, protocol checks, or finality rules. Their execution is subject to resource limits and the integration's timeout and error policies.
 
-## Integrated Sequencers
-
-An integrated sequencer runs assertion validation at its inclusion boundary. Users already rely on that sequencer for ordering and availability; the assertion integration adds software, policy, and authorization dependencies at that boundary.
-
-Coverage depends on which transaction sources pass through validation. An integration must document any path whose inclusion guarantees or system role require different handling. Support for ordinary RPC transactions does not establish coverage for every source.
+For the separate sequencer inclusion boundary, see [L2 and Sequencer Integrations](./l2-integrations/overview).
 
 ## Decentralized Builders
 
-When only some builders participate, assertion validation is not a consensus rule. Protected operations need an unavoidable on-chain gate that checks a credible-block marker. Routing through the Credible RPC makes transactions available to participating builders, but routing alone cannot prevent another builder from including them.
+On Ethereum, only participating builders run assertions; assertion validation is not a consensus rule. Protected operations need an unavoidable on-chain gate that checks a credible-block marker. Routing through the Credible RPC makes transactions available to participating builders, but routing alone cannot prevent another builder from including them.
 
 The model relies on:
 

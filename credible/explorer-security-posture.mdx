@@ -35,6 +35,8 @@ An assertion page can show:
 
 These summaries make assertion behavior easier to assess, but they do not replace review of the assertion source code, protocol contracts, or audit reports.
 
+Ethereum reviewers should also verify which operations reach the guard, which Registry it uses, and when fail-open or bypass conditions relax enforcement. These facts are not implied by an assertion summary or project listing.
+
 ## Review operational authority and change paths
 
 The **Operational Risk** section describes how the reviewed contracts can change. It begins with a project-level finding and four summaries that answer:

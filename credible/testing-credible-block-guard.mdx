@@ -94,6 +94,6 @@ Summary: 14 passed, 0 failed
 
 The exact number of passing checks can change as the script evolves; the required result is `0 failed` and a zero exit status.
 
-The runner validates the guard's configuration and behavior. It does not by itself prove broader upgrade safety, such as storage-layout compatibility or the correctness of your upgrade authorization flow.
+The runner validates the guard's local configuration and behavior. It does not exercise the Credible RPC, a participating Ethereum builder, assertion activation, or Safe module coverage; verify those separately through your [integration test plan](./testing-strategy). It does not by itself prove broader upgrade safety, such as storage-layout compatibility or the correctness of your upgrade authorization flow.
 
 For unit-level decision coverage without a live-node bundle, see [How to Test Assertions](./testing-assertions).

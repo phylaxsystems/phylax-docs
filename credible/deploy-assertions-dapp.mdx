@@ -3,11 +3,12 @@ title: 'Deploy Assertions with the Platform'
 description: 'Create projects and deploy assertions to protect your contracts'
 ---
 
-This guide shows you how to create a project in the [Phylax platform](https://app.phylax.systems), create a release with `pcl apply`, and deploy assertions to protect your smart contracts.
+This guide shows you how to create a project in the [Phylax platform](https://ethereum.phylax.systems), create a release with `pcl apply`, and deploy assertions to protect your smart contracts.
 
 **Prerequisites**:
 - [pcl installed](/credible/credible-install)
-- Smart contracts deployed on a supported chain
+- Target contracts and an authorized Protocol Manager on the approved Ethereum deployment
+- For production, reviewed guards, transaction routing, and recovery under the [Ethereum integration plan](./dapp-integration)
 - An assertion [written](/credible/write-first-assertion) and [tested](/credible/testing-assertions)
 
 **What you'll accomplish**: Create a project, link your contracts, create a pending release, and deploy assertions to staging or production.
@@ -21,7 +22,7 @@ New to the platform? See the [Platform Overview](/credible/dapp-overview) to und
 Authenticate through `pcl`:
 
 ```bash
-pcl auth login
+pcl auth -u https://ethereum.phylax.systems login
 ```
 
 1. A login link appears in your terminal
@@ -29,12 +30,8 @@ pcl auth login
 3. Authenticate via wallet, email, Google, or GitHub
 4. Enter the login code from the CLI
 
-<Frame caption="Authentication with pcl auth login">
-  <img src="/images/pcl_auth_login.webp" alt="Authentication with pcl auth login" />
-</Frame>
-
 <Note>
-Authentication links your wallet address with your `pcl` session, allowing you to manage projects that your wallet owns.
+Authentication selects your platform account. Confirm the Ethereum platform in the session and verify the separate on-chain Protocol Manager authority before deployment.
 </Note>
 
 ## Step 2: Create a Project
@@ -54,10 +51,6 @@ Authentication links your wallet address with your `pcl` session, allowing you t
    - The platform verifies admin access via the network's admin verifier (often owner-based)
 
 5. Review and click "Create Project"
-
-<Frame caption="Creating a project in the platform">
-  <img src="/images/create_project_dapp.webp" alt="Create project form in the Phylax platform" />
-</Frame>
 
 <Note>
 Only authorized admins can create a project for a contract. See [Ownership Verification](/credible/ownership-verification) for details on verification methods.
@@ -89,13 +82,9 @@ After applying via `pcl`, complete deployment in the platform:
 
 6. Confirm the environment declared by the release:
    - **Staging**: Assertions run but do not block transactions
-   - **Production**: Assertions block violating transactions
+   - **Production**: Participating builders exclude violating candidates; Ethereum protection also requires the reviewed guard and routing setup
 
 7. Connect the protocol manager wallet, select **Deploy to Staging** or **Deploy to Production**, and sign the transaction
-
-<Frame caption="Deploying an assertion in the platform">
-  <img src="/images/deploy_assertion_trimmed.webp" alt="Deploying Assertion" />
-</Frame>
 
 <Note>
 Adding an assertion is not immediate. The deployment transaction registers it in the on-chain [State Oracle](./credible-layer-contracts#state-oracle), and the State Oracle enforces a configured [timelock](./glossary#timelock) before the assertion becomes staged or enforced.
@@ -108,6 +97,12 @@ Projects are managed in the platform, but the deployment transaction should be s
 <Note>
 The same model applies when you remove an assertion later. Removal is also scheduled through the State Oracle contracts and only takes effect after that configured timelock expires.
 </Note>
+
+## Verify Ethereum Enforcement
+
+After activation, verify an allowed operation and a deliberately invalidating case in the approved test setup. Check assertion evidence and contract state, not just an RPC response or timeout. Verify that a protected call in a noncredible block reaches the guard and is rejected while the gate is closed.
+
+Include the actual transaction submitters, alternative entry points, wallet modules, and recovery conditions. See [Testing Strategy](./testing-strategy). A successful activation transaction alone does not prove coverage.
 
 ## Step 5: Monitor Your Assertions
 
@@ -125,23 +120,19 @@ After deployment, manage assertions through your project dashboard:
 |-------|----------|
 | "Contract ownership verification failed" | Confirm the supported admin verifier or approved [manual verification](./manual-verification) path for the target deployment |
 | "Assertion already exists" | Use a different name or update the existing assertion |
-| "Authentication expired" | Run `pcl auth login` to refresh |
+| "Authentication expired" | Run `pcl auth -u https://ethereum.phylax.systems login` to refresh |
 
 ## Recap
 
 You've deployed an assertion to protect your protocol:
 
-1. **Authenticate**: Sign in via `pcl auth login`
+1. **Authenticate**: Sign in via `pcl auth -u https://ethereum.phylax.systems login`
 2. **Create project**: Set up your project and link contracts
 3. **Apply**: Create a release via `pcl apply`
 4. **Deploy**: Complete deployment in the platform and sign transaction
 5. **Monitor**: Track assertion status in your dashboard
 
-## Video Walkthrough
-
-Full walkthrough from authentication to deployment:
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/MrDVLp5UDZ0?si=tdgQEJ3Tkps2LwJA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+The earlier video walkthrough is retained under [L2 Platform Notes](./l2-integrations/platform-and-compatibility#earlier-platform-walkthrough).
 
 ## Next Steps
 

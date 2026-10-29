@@ -1,9 +1,9 @@
 ---
-title: 'How to Plan a Platform Integration'
-description: 'Plan the platform, authorization, and rollout work for a protocol adopting the Credible Layer'
+title: 'How to Plan an Ethereum Integration'
+description: 'Plan Ethereum assertions, contract guards, transaction routing, authorization, and recovery.'
 ---
 
-This guide shows you how to plan the platform, authorization, and rollout work for a protocol team adopting the Credible Layer.
+This guide shows you how to plan an Ethereum integration from protected contract paths through assertion activation and operational recovery.
 
 <Note>
 If you are ready to execute deployment, use [Deploy Assertions with the Platform](./deploy-assertions-dapp). If you need background on how the system works, start with the [Architecture Overview](./architecture-overview).
@@ -39,8 +39,11 @@ flowchart LR
   Platform --> DA[Assertion DA]
   Platform --> Registry[On-Chain Registry]
   Registry --> Enforcer[Assertion Enforcer]
-  Enforcer --> Outcome[Block Inclusion Decision]
-  Outcome --> Invalidations[Invalidations + The Phylax Explorer]
+  Enforcer --> Builder[Participating Ethereum Builder]
+  Builder --> Outcome[Candidate Inclusion Decision]
+  Dev --> Guard[Guard Coverage + RPC Routing]
+  Guard --> Execution[Protected Contract Execution]
+  Outcome --> Execution
 ```
 
 ## What You Control
@@ -60,7 +63,7 @@ Before writing assertions, map the surfaces you intend to protect:
 - High-risk user flows, such as borrows, withdrawals, upgrades, and parameter changes
 - Known gaps that the first assertion release will not cover
 
-For decentralized-builder integrations, identify the guard or gate for every protected path. Include alternative entry points, internal calls, privileged actions, and wallet modules. A Safe transaction guard does not cover module execution by itself. If a path has no suitable gate, record the gap and resolve it before claiming coverage.
+For Ethereum, identify the guard or gate for every protected path. Include alternative entry points, internal calls, privileged actions, and wallet modules. A Safe transaction guard does not cover module execution by itself. If a path has no suitable gate, record the gap and resolve it before claiming coverage.
 
 Agree on who implements contract changes, who reviews them, and which deployed version the review covers. Review any guard replacement or bypass authority along with the assertions.
 
@@ -70,7 +73,7 @@ Inventory every top-level submitter for guarded operations: user wallets, multis
 
 Keep ordinary reads and unprotected traffic on their existing providers where appropriate. Test simulations and actual submission separately; a successful RPC simulation does not establish that production assertions pass.
 
-For each bridge, system, delayed, or forced-inclusion path, confirm the network's explicit validation policy. See [Transaction Source Coverage](./network-integration#transaction-source-coverage).
+For Ethereum bridge and relayer operations, check the submitted transaction and its actual contract path. L2 delayed queues and forced-inclusion rules are covered separately in [L2 Integration Planning](./l2-integrations/network-integration#transaction-source-coverage).
 
 ## Authorization Requirements
 
@@ -81,7 +84,7 @@ Document the signing policy and recovery path for each privileged role. Verify t
 ## Deployment Modes
 
 - **Staging**: observe assertion behavior against a mirrored chain environment without dropping live transactions; this does not test every production guard and routing path
-- **Production**: apply active assertions at the integrated enforcement boundary, with guard coverage and routing configured where required
+- **Production**: participating Ethereum builders enforce active assertions, with guard coverage and routing configured for the protected operations
 
 Learn more about ownership checks in [Ownership Verification](/credible/ownership-verification).
 

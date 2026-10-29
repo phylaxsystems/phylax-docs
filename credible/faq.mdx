@@ -3,7 +3,7 @@ title: 'FAQ'
 description: 'Answers about enforcement, decentralized block building, integration, recovery, and testing.'
 ---
 
-Use this page to look up how enforcement works, what an integration requires, and what happens when a rule blocks legitimate activity. Network support, deployed contract versions, and configuration determine which behavior applies to your integration.
+Use this page to look up Ethereum enforcement, integration requirements, and recovery when a rule blocks legitimate activity. Deployed versions and configuration determine the exact behavior. Earlier network-specific designs are in [L2 and Sequencer Integrations](./l2-integrations/overview).
 
 ## Assertions and Coverage
 
@@ -27,9 +27,7 @@ No. Audits review implementation and design; assertions enforce selected rules a
 
 ### Can assertions protect immutable contracts without code changes?
 
-It depends on the enforcement model. An integrated sequencer can apply assertion checks at its inclusion boundary without changing the protected contract, subject to its transaction-source coverage.
-
-On a network with decentralized builders, routing to participating builders is insufficient on its own. Protected operations need an unavoidable on-chain gate that rejects execution outside credible blocks while the gate is active. That may require a contract upgrade, a supported wallet guard, or an existing hook covering every protected path. An immutable contract with no suitable gate cannot obtain that protection simply by registering assertions.
+On Ethereum, routing to participating builders is insufficient on its own. Protected operations need an unavoidable on-chain gate that rejects execution outside credible blocks while the gate is active. That may require a contract upgrade, a supported wallet guard, or an existing hook covering every protected path. An immutable contract with no suitable gate cannot obtain that protection simply by registering assertions.
 
 ### Can I reuse an assertion from another protocol?
 
@@ -39,7 +37,7 @@ You can adapt compatible examples, but review their assumptions: storage layout,
 
 ### Who runs assertions, and when?
 
-A participating sequencer or builder invokes the Assertion Enforcer while building a block. The enforcer executes relevant assertions against candidate transaction state and reports the result. The integration uses that report to exclude transactions that fail active production rules.
+A participating Ethereum builder invokes the Assertion Enforcer while building a block. The enforcer executes relevant assertions against candidate transaction state and reports the result. The integration uses that report to exclude transactions that fail active production rules.
 
 Assertions run before inclusion, but transactions are simulated to obtain the effects being checked. Passing validation makes a transaction eligible for inclusion; it does not guarantee inclusion, ordering, or finality. See [Architecture](./architecture-overview).
 
@@ -81,9 +79,9 @@ An on-chain guard revert is different. A caller may catch a failed subcall and c
 
 ### Are bridge, system, or forced-inclusion transactions protected?
 
-Coverage depends on the network integration. These transactions may enter through paths other than ordinary RPC submission. Each path needs an explicit validation and failure policy.
+On Ethereum, review the actual submitted transaction and contract path for bridge or relayer operations. A protected path must reach the required gate, regardless of the caller or frontend.
 
-Do not infer coverage from support for ordinary user transactions. See [Transaction Source Coverage](./network-integration#transaction-source-coverage).
+L2 system transactions and forced-inclusion queues have separate network rules. Their coverage is described in [L2 Transaction Source Coverage](./l2-integrations/network-integration#transaction-source-coverage); do not infer it from Ethereum support.
 
 ## Integration and Transaction Routing
 
@@ -137,7 +135,7 @@ Platform access, transaction submission, assertion management, and protocol upgr
 
 ### What if my contract does not expose owner()?
 
-Check the verifier supported by the target deployment. Integrations may use an explicit initial Protocol Manager interface or an approved manual registration process for existing contracts. Lack of `owner()` is not, by itself, a reason to rule out Ethereum integration.
+Check the verifier supported by the target deployment. Integrations may use an explicit initial Protocol Manager interface or an approved manual registration process for existing contracts. A contract does not always need `owner()` to integrate on Ethereum.
 
 Confirm eligibility and authorization evidence with Phylax before changing contracts. Manager registration is separate from proving that protected execution paths are enforceable. See [Manual Verification](./manual-verification).
 
@@ -145,7 +143,7 @@ Confirm eligibility and authorization evidence with Phylax before changing contr
 
 Yes. Their scope depends on the integration. You rely on correct assertions, authorized management, the enforcer, and the integration honoring active policy. On decentralized-builder networks, you also rely on authorized builders' attestations, the Registry, and the guard implementation and configuration.
 
-A single-sequencer integration uses an existing inclusion boundary, but this does not remove implementation, authorization, or availability risks. See [Trust Model](./trust-model).
+See [Trust Model](./trust-model) for Ethereum assumptions. The separate sequencer model is documented in [L2 and Sequencer Integrations](./l2-integrations/overview).
 
 ### What can a compromised assertion manager do?
 

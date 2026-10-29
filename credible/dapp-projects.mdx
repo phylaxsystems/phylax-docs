@@ -3,11 +3,13 @@ title: 'Projects'
 description: 'Create and manage projects in the Phylax platform'
 ---
 
-Projects are the organizational unit in the [Phylax platform](https://app.phylax.systems). Each project represents a protocol or set of smart contracts that you want to protect with assertions.
+Projects are the organizational unit in the [Phylax platform](https://ethereum.phylax.systems). Each project represents a protocol or set of smart contracts that you want to protect with assertions.
 
 ## What are Projects?
 
 Projects enable you to manage all your protocol's assertions from a single interface. The project itself is an off-chain organizing layer; the on-chain [State Oracle](/credible/credible-layer-contracts#state-oracle) remains the source of truth for which assertions are active for each protected contract.
+
+For Ethereum, the project does not install a guard or configure RPC routing. Track those requirements in the [integration plan](./dapp-integration).
 
 A project groups together:
 - One or more smart contract addresses
@@ -35,12 +37,8 @@ To create a new project:
 6. Review your project details
 7. Click "Create Project" to create the project
 
-<Frame caption="Creating a project in the platform">
-  <img src="/images/create_project_dapp.webp" alt="Create project form in the Phylax platform" />
-</Frame>
-
 <Note>
-Only authorized admins can create a project for a contract. Most deployments use owner-based verification by default. See [Ownership Verification](/credible/ownership-verification) for details.
+Only authorized admins can create a project for a contract. Use the verifier or approved manual process supported by the target deployment. See [Ownership Verification](/credible/ownership-verification) for details.
 
 For contracts that do not pass a supported verifier, confirm whether an approved [manual verification](./manual-verification) process is available for the target deployment.
 </Note>

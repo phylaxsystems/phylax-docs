@@ -17,11 +17,11 @@ This checklist helps teams evaluate whether the Credible Layer is a fit for thei
 - Can all relevant submitters use the required route?
 - Have we accepted the fail-open, bypass, management, and recovery assumptions?
 
-## For Networks & Sequencers
+## For Ethereum Builders
 
 - Can we integrate an external enforcer into block building?
-- Do we want a policy layer for transaction admission?
-- Do we want to offer protocol teams optional enforcement?
+- Can we apply validation results before publishing candidate blocks?
+- Can we operate the authorized marker and RPC submission path under the agreed trust model?
 - Do we have monitoring and invalidation review workflows?
 
 ## Decision Support
@@ -30,14 +30,16 @@ Treat network support, enforceable path coverage, authorization, and recovery as
 
 Use the [FAQ](./faq) to review routing, availability, and policy questions before committing to a rollout.
 
+For sequencer-based networks, use [L2 and Sequencer Integrations](./l2-integrations/overview).
+
 ## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Plan a Platform Integration" icon="browser" href="/credible/dapp-integration">
     High-level adoption for protocol teams
   </Card>
-  <Card title="Network Integration" icon="sitemap" href="/credible/network-integration">
-    High-level adoption for networks and sequencers
+  <Card title="Ethereum Builder Integration" icon="sitemap" href="./ethereum-builder-integration">
+    Builder validation, block marking, and operations
   </Card>
   <Card title="Architecture Overview" icon="diagram-project" href="/credible/architecture-overview">
     System components and transaction flow
