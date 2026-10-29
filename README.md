@@ -21,7 +21,7 @@ pnpm install
 
 ### Credible Layer (`/credible`)
 
-Documentation for Ethereum enforcement through participating builders, assertions, credible-block markers, on-chain guards, and transaction routing. The primary authoring, platform, and deployment guides use the Ethereum platform explicitly.
+Documentation for Ethereum enforcement through participating builders, assertions, credible-block markers, on-chain guards, and transaction routing. Start Here explains evaluation and custom policy development with Phylax sales engineering. Tutorials are optional local learning exercises; advanced authoring and deployment guides support the agreed integration plan. The primary platform and deployment guides use the Ethereum platform explicitly.
 
 ### L2 and Sequencer Integrations (`/credible/l2-integrations`)
 

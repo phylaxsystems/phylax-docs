@@ -12,7 +12,7 @@ Before you begin, make sure you have:
 - Completed the [Agentic PCL setup](./agentic-pcl)
 - [`pcl` installed](./credible-install)
 - A Foundry-based protocol repository
-- Written definitions of the invariants you want to protect
+- Custom policy requirements and implementation responsibilities agreed with [Phylax sales engineering](./work-with-phylax)
 
 ## 1. Start the agent in the protocol repository
 
@@ -28,7 +28,7 @@ Use a prompt like this:
 Use the pcl-assertion-workflow skill to create a Credible Layer assertion
 project in this repository.
 
-The invariants are defined in: <path or description>
+The policy requirements agreed with Phylax sales engineering are in: <path>
 The protected contracts are: <contract paths or names>
 
 Before editing:
@@ -96,7 +96,7 @@ Passing tests do not prove that the chosen invariant is correct or complete. Rev
 
 ## 6. Prepare for deployment
 
-Before handing the project to a deployment agent:
+Review the implementation, coverage gaps, and test evidence against the agreed requirements with sales engineering. Before handing the project to a deployment agent:
 
 - Commit or otherwise preserve the reviewed local changes
 - Confirm that `assertions/credible.toml` names every protected contract and assertion

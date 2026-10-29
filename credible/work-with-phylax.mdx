@@ -1,0 +1,44 @@
+---
+title: 'Work with Phylax'
+description: 'How your team and Phylax sales engineering develop custom policies and prepare an Ethereum integration.'
+---
+
+Custom policies are developed with Phylax sales engineering. Your protocol's intended behavior, legitimate exceptions, and operational constraints shape the policy and its implementation. Public examples and local experiments help you evaluate the approach; they do not replace this collaboration.
+
+## Start a Conversation
+
+[Request a demo](https://forms.fillout.com/t/sJ1sHJMEnwus) to discuss your protection needs, or contact your existing Phylax sales engineering counterpart. You can begin with a description of your protocol and the operations you are concerned about. A completed assertion project is not required.
+
+The [preparation guide](./evaluate-credible-layer) lists useful context for the discussion. Share proprietary materials through the channel agreed with your Phylax contact.
+
+## The Integration Process
+
+| Stage | Work done together | Outcome to agree on |
+| --- | --- | --- |
+| Scope protection | Identify assets, critical operations, dependencies, existing controls, and paths that could bypass enforcement. | A coverage description, including explicit gaps. |
+| Define policies | Specify prohibited effects, legitimate exceptions, thresholds, and recovery behavior. | Policy specifications that your team can review in plain language. |
+| Implement and validate | Assign implementation and review responsibilities; test allowed activity, violations, and exceptions; inspect historical and staging evidence. | Reviewed assertions and evidence of what was tested. |
+| Integrate enforcement | Prepare guards, submission routes, manager authorization, monitoring, and recovery procedures. | An integration plan with named owners and verification steps. |
+| Activate and operate | Review readiness, authorize the lifecycle actions, and establish how changes and incidents are handled. | An activation record and operational runbook. |
+
+These stages describe the work to scope. The implementation plan and division of responsibilities depend on your contracts, governance, and intended protection.
+
+## Who Does What
+
+Your team explains protocol behavior, identifies acceptable exceptions, and approves the intended policies. Involve engineers who understand contract changes and transaction submission, plus the people responsible for governance and incident response.
+
+Phylax sales engineering guides custom policy development and the integration discussion. Agree on who writes each assertion, implements protocol changes, reviews the code and evidence, and maintains the resulting controls. Using developer tools or an AI agent does not replace the required collaboration.
+
+Platform access, assertion management, protocol upgrades, and transaction submission are separate authorities. Working with Phylax does not itself grant signing access: lifecycle actions still require the authorized Protocol Manager, and other changes follow the relevant protocol permissions.
+
+## What You Review Before Activation
+
+The review should establish which operations are protected, which remain outside the scope, and what happens during failures or recovery. Evidence should cover normal activity, rejected activity, legitimate exceptions, guard behavior, and the actual transaction submission path.
+
+Passing local tests or staging checks alone does not establish Ethereum production coverage. Use the [integration plan](./dapp-integration), [testing strategy](./testing-strategy), and [release checks](./release-review-checks) to assess readiness with the team.
+
+## Changes After Launch
+
+Bring changes in protocol behavior, dependencies, thresholds, or governance into the policy review process with sales engineering. Review the changed rules and their test evidence before authorized activation. Assertion changes follow the deployed lifecycle delays; guards and protocol upgrades can have separate procedures.
+
+Define monitoring, escalation, and incident responsibilities during integration. The [FAQ](./faq) explains false positives, fail-open behavior, policy updates, and recovery limits.

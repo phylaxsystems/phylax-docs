@@ -3,13 +3,7 @@ title: 'Development Effort'
 description: 'What determines assertion development, integration, and operational effort.'
 ---
 
-<Check>
-**Summary**
-- Comparable to writing Forge invariant tests when invariants are defined
-- Written in Solidity with familiar patterns
-- Few additional [cheatcodes](/credible/cheatcodes-overview) to learn
-- Integration work also includes guard coverage, routing, authorization, and recovery
-</Check>
+Custom policies are developed with [Phylax sales engineering](./work-with-phylax). Your team contributes protocol expertise, reviews legitimate behavior and exceptions, and handles the integration and operational work assigned during scoping. You do not need to author assertions before the first discussion.
 
 ## Effort Factors
 
@@ -32,7 +26,7 @@ Defining invariants involves identifying:
 - States that should never occur
 - Relationships that must always hold (e.g., total supply = sum of balances)
 
-Some teams do this internally; others engage security researchers or auditors. For guidance, see [Intro to Invariants ↗](https://jstcz.eth.link/blog/2025/08/13/intro-to-invariants/).
+Work with sales engineering to refine these requirements, using existing engineering, security, and audit work where available. For guidance, see [Intro to Invariants ↗](https://jstcz.eth.link/blog/2025/08/13/intro-to-invariants/).
 
 ## Testing Assertions
 
@@ -51,8 +45,8 @@ See [Integration Planning](./dapp-integration) for the work to scope before roll
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Quickstart" icon="rocket" href="/credible/pcl-quickstart">
-    Test and inspect your first assertion locally
+  <Card title="Prepare for Your Integration" icon="users" href="./evaluate-credible-layer">
+    Gather protocol context and identify implementation responsibilities.
   </Card>
   <Card title="Assertion Guide" icon="code" href="/credible/write-first-assertion">
     Step-by-step guide to writing assertions

@@ -3,7 +3,7 @@ title: 'Agentic PCL'
 description: 'Use an AI coding agent to create, test, and deploy Credible Layer assertion projects with pcl'
 ---
 
-This guide shows you how to equip an AI coding agent to operate `pcl`, from creating an assertion project through deploying it with the Phylax platform.
+This guide shows engineers how to use an AI coding agent to implement, test, and prepare assertion projects from agreed policy requirements. Custom policies are developed with [Phylax sales engineering](./work-with-phylax); generated code and passing tests do not replace that collaboration.
 
 Phylax publishes reusable instructions in the [agent-skills repository](https://github.com/phylaxsystems/agent-skills). These skills give compatible agents the project structure, safety boundaries, and `pcl` workflows needed to complete a task instead of relying on a large one-off prompt.
 
@@ -14,7 +14,7 @@ Before you begin, make sure you have:
 - [`pcl` installed](./credible-install)
 - An agent that supports the [Agent Skills format](https://agentskills.io), such as Codex or Claude Code
 - A local protocol repository the agent can inspect and edit
-- Clearly defined protocol invariants
+- For custom integration work, policy requirements and review responsibilities agreed with sales engineering
 
 For deployment, you also need a target chain, an RPC endpoint, and access to the protocol manager wallet.
 
@@ -61,25 +61,23 @@ Use the skill name in your request so the intended workflow is unambiguous.
 
 ## Start with a high-level prompt
 
-You can describe the intended outcome and let the skills determine the required `pcl` workflow. Include the protocol, target environment, authoritative sources, release contents, and verification boundary.
+Give the agent the agreed policy specification, target contracts, test requirements, and verification boundary. Require it to surface ambiguity and proposed policy changes for review.
 
 For example:
 
 ```text
-Use the Agentic PCL skills to deploy an Aave V3 Horizon project end to end on
-staging.
+Use the Agentic PCL skills to implement and test the agreed custom policies.
 
-Find and verify the authoritative deployed contract addresses on-chain. Create
-credible.toml using the latest reviewed Aave V3 assertions. Create the platform
-project and release. Verify that the release is correct, then set the project
-profile image from the specified official brand asset and deploy it.
+Policy specification reviewed with Phylax sales engineering: <path>
+Protocol contracts and deployment records: <paths>
+Required allowed, rejected, and exception cases: <path>
 
-RPC: <RPC URL or secure location>
-Signer: <keystore or secure credential location>
-Project branding: <official asset source and requested profile image>
+Explain how the implementation maps to the specification. Surface any missing
+requirements, uncovered paths, or proposed behavior changes for review.
+Run the relevant pcl tests and report their results and limitations.
 
-Do not print, copy, or commit signing credentials. Ask for clarification if
-sources conflict or any requested project metadata is ambiguous.
+Do not change the policy requirements, create platform resources, access
+signing credentials, or deploy anything as part of this task.
 ```
 
 ## Orient the agent with the installed CLI

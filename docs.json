@@ -48,24 +48,33 @@
             "group": "Start Here",
             "pages": [
               "credible/credible-introduction",
-              "credible/credible-layer-overview"
+              "credible/credible-layer-overview",
+              "credible/work-with-phylax",
+              "credible/evaluate-credible-layer",
+              "credible/faq"
             ]
           },
           {
             "group": "Tutorials",
             "pages": [
               "credible/pcl-quickstart",
-              "credible/write-first-assertion"
+              "credible/test-policy-behavior"
             ]
           },
           {
             "group": "How-to Guides",
             "pages": [
               {
-                "group": "Set Up and Evaluate",
+                "group": "Developer Setup",
                 "pages": [
-                  "credible/evaluate-credible-layer",
                   "credible/credible-install"
+                ]
+              },
+              {
+                "group": "Advanced Policy Development",
+                "pages": [
+                  "credible/write-first-assertion",
+                  "credible/invariant-to-assertion"
                 ]
               },
               {
@@ -79,7 +88,6 @@
               {
                 "group": "Build and Deploy",
                 "pages": [
-                  "credible/invariant-to-assertion",
                   "credible/apply-assertions",
                   "credible/release-review-checks",
                   "credible/deploy-assertions-dapp",
@@ -149,8 +157,7 @@
               "credible/dapp-explorer",
               "credible/explorer-security-posture",
               "credible/dapp-projects",
-              "credible/dapp-invalidations",
-              "credible/faq"
+              "credible/dapp-invalidations"
             ]
           },
           {
@@ -353,8 +360,8 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Quickstart",
-      "href": "https://docs.phylax.systems/credible/pcl-quickstart"
+      "label": "Plan your integration",
+      "href": "/credible/work-with-phylax"
     }
   },
   "footer": {

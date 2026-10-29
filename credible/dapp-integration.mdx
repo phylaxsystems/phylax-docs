@@ -3,7 +3,7 @@ title: 'How to Plan an Ethereum Integration'
 description: 'Plan Ethereum assertions, contract guards, transaction routing, authorization, and recovery.'
 ---
 
-This guide shows you how to plan an Ethereum integration from protected contract paths through assertion activation and operational recovery.
+Use this technical checklist with Phylax sales engineering to plan an Ethereum integration from protected contract paths through assertion activation and operational recovery. For the engagement and responsibilities, start with [Work with Phylax](./work-with-phylax).
 
 <Note>
 If you are ready to execute deployment, use [Deploy Assertions with the Platform](./deploy-assertions-dapp). If you need background on how the system works, start with the [Architecture Overview](./architecture-overview).
@@ -11,7 +11,7 @@ If you are ready to execute deployment, use [Deploy Assertions with the Platform
 
 ## Prerequisites
 
-Confirm the target network, supported assertion specification, and available staging or test environment. Identify protocol owners, assertion managers, contract addresses, and the team responsible for transaction submission.
+Agree on the initial policy scope and implementation and review responsibilities with sales engineering. Confirm the target network, supported assertion specification, and available staging or test environment. Identify protocol owners, assertion managers, contract addresses, and the team responsible for transaction submission.
 
 Use this plan before deployment to agree on implementation ownership, review scope, and recovery responsibilities.
 
@@ -21,11 +21,11 @@ Assertion management requires authorization for the target contracts. Confirm th
 
 ## Adoption Workflow
 
-Teams follow the same underlying steps. The CLI is used to author and deploy assertions, while the platform
-is used to manage deployments and monitoring.
+Start with the agreed policy requirements, including legitimate exceptions and explicit coverage gaps. The assigned engineers use the CLI to implement and test assertions, while the platform supports release review, activation, and monitoring.
 
-- **CLI authoring**: write assertions locally and create a release with `pcl apply`
-- **Platform management**: link contracts, stage or deploy, and monitor invalidations
+- **Policy review**: your team and sales engineering resolve the requirements and review the evidence
+- **Implementation**: assigned engineers write and test assertions, then prepare a release with `pcl apply`
+- **Activation and operation**: authorized signers approve lifecycle actions; the agreed operators monitor and respond
 
 ## End-to-End Flow
 
@@ -34,7 +34,9 @@ is used to manage deployments and monitoring.
 title: Protocol Adoption Flow
 ---
 flowchart LR
-  Dev[Protocol Team] --> Assertion[Write Assertions]
+  Dev[Protocol Team] --> Scope[Agreed Policy Requirements]
+  SE[Phylax Sales Engineering] --> Scope
+  Scope --> Assertion[Implement and Test Assertions]
   Assertion --> Platform[Phylax Platform]
   Platform --> DA[Assertion DA]
   Platform --> Registry[On-Chain Registry]
@@ -54,7 +56,7 @@ flowchart LR
 
 ## Map Coverage and Required Contract Changes
 
-Before writing assertions, map the surfaces you intend to protect:
+With sales engineering, map the surfaces you intend to protect before implementing custom assertions:
 
 - Protected contracts and external entry points
 - Privileged roles and admin operations

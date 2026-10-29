@@ -3,7 +3,7 @@ title: 'Tutorial: Write Your First Assertion'
 description: 'Tutorial: build and test an assertion that detects ownership changes.'
 ---
 
-This guide walks you through writing your first assertion from scratch. By the end, you'll have a locally tested assertion that rejects ownership changes. Ethereum production protection additionally requires [guard coverage, routing, and activation](./dapp-integration).
+In this optional advanced tutorial, you will implement and test a rule that rejects ownership changes. Use it to study assertion code. Custom policies for your protocol are developed with [Phylax sales engineering](./work-with-phylax); the example is not a production integration.
 
 <Note>
 Use this tutorial to learn the basic shape of an assertion. If you already understand the workflow and need specific syntax, jump to [Triggers](./triggers) and the [Cheatcodes API Reference](./cheatcodes-reference).
@@ -11,11 +11,11 @@ Use this tutorial to learn the basic shape of an assertion. If you already under
 
 **Prerequisites**: Familiarity with Solidity, the [Assertions Overview](./assertions-overview), and [`pcl` installed](./credible-install).
 
-**What you'll build**: An assertion that blocks any transaction attempting to change a contract's owner.
+**What you'll build**: A locally tested assertion that detects an owner change when `transferOwnership` is called. It also rejects legitimate transfers; the example does not encode an approval process.
 
 ## The Example Contract
 
-We'll protect a simple ownership contract:
+The example uses this ownership contract in `src/Ownable.sol`:
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -26,8 +26,8 @@ contract Ownable {
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-    constructor() {
-        _owner = address(0xdead);
+    constructor(address initialOwner) {
+        _owner = initialOwner;
         emit OwnershipTransferred(address(0), _owner);
     }
 
@@ -48,7 +48,7 @@ contract Ownable {
 }
 ```
 
-Our assertion will verify that the owner remains unchanged after each transaction. This protects against attacks like the 2024 Radiant Capital hack where attackers gained multisig access and changed the protocol owner, resulting in $50M losses.
+The assertion compares the owner before and after transactions that call `transferOwnership`. A changed owner violates this example policy regardless of whether the transfer was approved. Other functions or storage paths need their own coverage review.
 
 ## Step 1: Set Up Your Project
 
@@ -57,10 +57,11 @@ Clone the starter repository:
 ```bash
 git clone --recurse-submodules https://github.com/phylaxsystems/credible-layer-starter
 cd credible-layer-starter
+git -C lib/credible-std checkout 0.7.0
 ```
 
 <Note>
-The starter repository provides the project structure used in this tutorial. Its existing ownership example uses the legacy trigger and snapshot APIs; replace it with the Reshiram-based assertion shown below rather than treating it as the finished version of this tutorial.
+The starter provides the project structure and ownership contract. Its original assertion uses Legacy APIs. The dependency selection above provides the Reshiram helpers used here; replace the assertion and test files with the versions below. Deployment compatibility must be confirmed separately.
 </Note>
 
 This includes the necessary structure:
@@ -73,7 +74,7 @@ my-protocol/
   src/        # Protocol contracts
 ```
 
-For manual setup, see the [Quickstart Guide](./pcl-quickstart).
+To inspect the unmodified starter first, see [Run an Example Policy Locally](./pcl-quickstart).
 
 ## Step 2: Write the Assertion
 
@@ -113,9 +114,9 @@ contract OwnableAssertion is Assertion {
 
 ### How It Works
 
-This assertion compares the owner before and after the transaction. If the owner changed, the `require` fails, the assertion reverts, and the transaction is dropped from the block.
+This assertion compares the owner before and after the transaction. If the owner changed, the `require` fails. The local test observes that rejection through the assertion test harness.
 
-In general: **if an assertion reverts, the transaction is blocked.** This prevents attacks entirely rather than just detecting them.
+In production, participating builders exclude candidates that fail active assertions. Ethereum protection also requires reviewed [guards, routing, and activation](./dapp-integration); this unguarded example does not establish that coverage.
 
 ### Key Components
 
@@ -147,7 +148,7 @@ Key points about triggers:
 - Each assertion function must be registered via its selector
 - You can define multiple assertion functions in one contract
 - Each trigger maps to exactly one assertion function
-- Use triggers to run assertions only when needed (saves gas)
+- Use triggers to limit off-chain validation work to the relevant calls
 
 See [Triggers](./triggers) for more trigger types and optimization.
 
@@ -170,7 +171,7 @@ function assertionOwnershipChange() external view {
 - `ph.getAssertionAdopter()`: Returns the protected contract's address
 - `PhEvm.ForkId`: Identifies the pre-transaction and post-transaction snapshots
 - `ph.loadStateAt()`: Reads the protected contract's owner slot at the requested snapshot
-- The `require` blocks the transaction if ownership changed
+- The `require` rejects the candidate when ownership changed
 
 ### Best Practices
 
@@ -234,7 +235,7 @@ contract TestOwnableAssertion is CredibleTest, Test {
 ### Key Testing Concepts
 
 - [`cl.assertion()`](./testing-assertions#register-an-assertion-for-the-next-transaction): Registers the assertion to run on the next transaction
-- `vm.expectRevert()`: Verifies the assertion blocks the transaction
+- `vm.expectRevert()`: Verifies the local harness observes the expected assertion rejection
 - Test both cases: invalid (ownership changes) and valid (no change)
 
 For more details on testing assertions, see [Testing Assertions](./testing-assertions).
@@ -251,7 +252,9 @@ You've built a complete assertion:
 
 1. **Set up**: Clone the starter repo with correct structure
 2. **Write**: Create assertion with triggers and validation logic
-3. **Test**: Verify it blocks attacks and allows normal operations
+3. **Test**: Verify rejection of an ownership change and acceptance when the owner stays unchanged
+
+These tests do not distinguish an approved transfer from a harmful one. Use [Test a Policy’s Allowed and Rejected Cases](./test-policy-behavior) to examine that gap before discussing custom requirements.
 
 ## Video Walkthrough
 
@@ -271,8 +274,8 @@ For a visual walkthrough of assertion development:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Apply Assertions" icon="upload" href="/credible/apply-assertions">
-    Create an assertion release with `pcl apply`
+  <Card title="Prepare for Your Integration" icon="users" href="./evaluate-credible-layer">
+    Bring policy requirements and legitimate exceptions to sales engineering.
   </Card>
   <Card title="From Invariant to Assertion" icon="lightbulb" href="/credible/invariant-to-assertion">
     Learn to write complex real-world assertions

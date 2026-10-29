@@ -1,9 +1,13 @@
 ---
-title: 'Quickstart: Test Your First Assertion'
-description: 'Run and inspect a local assertion example before planning Ethereum deployment.'
+title: 'Run an Example Policy Locally'
+description: 'Optional tutorial: run an example assertion and inspect its allowed and rejected behavior.'
 ---
 
-In this tutorial, you will run a working assertion project and inspect a rule that rejects ownership changes. You will finish with a locally tested assertion and know which integration steps are needed before it can protect Ethereum operations.
+In this optional tutorial, you will run a working assertion project and inspect a rule that rejects ownership changes. You will finish with passing local tests and an example policy to examine.
+
+<Note>
+Custom policies for your protocol are developed with [Phylax sales engineering](./work-with-phylax). Completing this tutorial does not establish production coverage, and it is not a prerequisite for starting an integration.
+</Note>
 
 ## Prerequisites
 
@@ -56,13 +60,8 @@ Ethereum builders that do not participate can include transactions without runni
 
 The starter also contains earlier live-deployment instructions. Use the Ethereum guides below for platform selection and enforcement requirements.
 
-## Continue to Ethereum Integration
+## Continue Exploring
 
-You now have a local example you can inspect and modify. To use an assertion on Ethereum:
+Next, [test the allowed and rejected cases](./test-policy-behavior) and examine how the same rule treats a legitimate ownership transfer.
 
-1. [Plan the integration](./dapp-integration): identify protected operations, required guards, transaction submitters, authority, and recovery.
-2. [Apply assertions](./apply-assertions): authenticate explicitly with the Ethereum platform and prepare a release for reviewed target contracts.
-3. [Deploy through the platform](./deploy-assertions-dapp): review staging evidence and schedule activation through the authorized manager.
-4. [Test the full integration](./testing-strategy): verify guarded execution, routing, assertion rejection, and recovery before production.
-
-For a tutorial on authoring the Solidity rule, continue to [Write Your First Assertion](./write-first-assertion).
+To discuss protection for your protocol, [prepare for your integration](./evaluate-credible-layer) and work with sales engineering on the policy requirements. Engineers who want to study the implementation can continue to [Write Your First Assertion](./write-first-assertion).

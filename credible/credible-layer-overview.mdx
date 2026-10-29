@@ -1,9 +1,9 @@
 ---
-title: 'High-Level Overview'
+title: 'How Ethereum Enforcement Works'
 description: 'How the Credible Layer protects Ethereum contract operations through assertions, builders, and guards.'
 ---
 
-The Credible Layer lets Ethereum protocols define security rules in Solidity and have participating block builders check candidate transactions against them. On-chain guards restrict protected operations to blocks marked credible by authorized builders while the gate is active.
+Ethereum protocols work with Phylax sales engineering to define custom security policies. Those policies are implemented as Solidity assertions and checked by participating block builders against candidate transactions. On-chain guards restrict protected operations to blocks marked credible by authorized builders while the gate is active.
 
 ## The Three Parts of Enforcement
 
@@ -48,7 +48,8 @@ Recovery from a restrictive rule or lost manager key needs its own tested proced
 ## Choose Your Next Step
 
 - [Ethereum Architecture](./architecture-overview): components, markers, and transaction flow.
+- [Work with Phylax](./work-with-phylax): policy development, responsibilities, and the integration process.
 - [Integration Planning](./dapp-integration): protocol changes, routing, authority, and recovery.
-- [Quickstart](./pcl-quickstart): test a first assertion locally.
+- [Run an Example Policy Locally](./pcl-quickstart): an optional learning exercise.
 - [FAQ](./faq): customer questions about coverage, operation, and failure handling.
 - [L2 and Sequencer Integrations](./l2-integrations/overview): the separate sequencer-based model and earlier workflows.

@@ -1,0 +1,68 @@
+---
+title: 'Test a Policy’s Allowed and Rejected Cases'
+description: 'Run an example policy’s tests and identify a legitimate operation the rule would reject.'
+---
+
+In this tutorial, you will run the ownership policy's allowed and rejected cases, then record a legitimate exception the rule cannot distinguish. You will finish with a small behavior table you can use when reviewing policy requirements.
+
+<Note>
+This is an optional local exercise. Custom policies are developed with [Phylax sales engineering](./work-with-phylax); completing these tests does not establish production coverage.
+</Note>
+
+## Prerequisites
+
+Complete [Run an Example Policy Locally](./pcl-quickstart). Use the same starter checkout and run commands from its root.
+
+## 1. Run the Allowed Case
+
+```bash
+pcl test --match-contract TestOwnableAssertion --match-test test_assertionOwnershipNotChanged
+```
+
+The test calls `transferOwnership` with the current owner. The owner remains unchanged, so the rule passes. The output should include:
+
+```text
+[PASS] test_assertionOwnershipNotChanged()
+```
+
+Open `assertions/test/OwnableAssertion.t.sol` and locate this test. Notice that it registers the assertion before making the external call.
+
+## 2. Run the Rejected Case
+
+```bash
+pcl test --match-contract TestOwnableAssertion --match-test test_assertionOwnershipChanged
+```
+
+This test attempts to transfer ownership to another address and expects the assertion to revert. The output should include:
+
+```text
+[PASS] test_assertionOwnershipChanged()
+```
+
+Here, a passing test means the expected rejection occurred. It does not mean the ownership transfer was allowed.
+
+## 3. Examine a Legitimate Exception
+
+Now consider a planned transfer to a replacement governance contract. The owner would still change, so the same rule would reject it. The example has no input that represents governance approval or an approved destination.
+
+Record the results:
+
+| Operation | Example policy result | Review finding |
+| --- | --- | --- |
+| Transfer to the existing owner | Passes in the local test. | This operation leaves the owner unchanged. |
+| Transfer to a different owner | Rejected in the local test. | The rule detects a changed owner. |
+| Approved transfer to new governance | Would also be rejected by the same comparison. | The rule does not encode this legitimate exception. |
+
+The third row is a conclusion from the rule's logic, not an additional executed test. The test suite establishes the first two outcomes; it does not establish that the policy is suitable for a live protocol.
+
+## 4. Record the Requirement to Review
+
+Write down how an approved ownership change should be distinguished from an unauthorized one: who approves it, which destination is permitted, when it may occur, and how that approval can be verified. Record what should happen if the approval cannot be verified.
+
+Those are policy requirements to resolve with sales engineering before implementation. Simply removing the assertion would also remove its restriction on harmful ownership changes.
+
+## What You Have Verified
+
+You ran one allowed case and one rejected case, then identified a legitimate exception the policy does not handle. This is the starting point for reviewing coverage, rather than evidence that all normal and harmful activity has been classified correctly.
+
+Use this behavior table when you [prepare for your integration](./evaluate-credible-layer). For implementation detail, see [Write Your First Assertion](./write-first-assertion).

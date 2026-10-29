@@ -1,47 +1,46 @@
 ---
-title: 'Evaluate Credible Layer'
-description: 'A quick checklist for protocol teams and networks evaluating Credible Layer'
+title: 'Prepare for Your Integration'
+description: 'Gather protocol context and protection requirements for a scoping conversation with Phylax sales engineering.'
 ---
 
-This checklist helps teams evaluate whether the Credible Layer is a fit for their protocol or network.
+Use this guide to prepare for a technical scoping conversation with Phylax sales engineering. Bring what you already know and record the open questions. You do not need to write Solidity assertions or complete a tutorial first.
 
-## For Protocol Teams
+## Prerequisites
 
-- Do we have invariants that should never be violated?
-- Can we encode those rules as assertions in Solidity?
-- Do we want pre-execution protection rather than post-mortem monitoring?
-- Are we comfortable with transparent, public rules?
-- Do we have a team to monitor invalidations and iterate on rules?
-- Is our network and assertion specification supported by the intended deployment?
-- If only some builders participate, can every protected path reach a reviewed on-chain gate?
-- Can all relevant submitters use the required route?
-- Have we accepted the fail-open, bypass, management, and recovery assumptions?
+Identify a technical contact who understands your protocol and the operations you want to protect. If you are still evaluating the model, start with [How Ethereum Enforcement Works](./credible-layer-overview).
 
-## For Ethereum Builders
+## 1. Describe the Protection Need
 
-- Can we integrate an external enforcer into block building?
-- Can we apply validation results before publishing candidate blocks?
-- Can we operate the authorized marker and RPC submission path under the agreed trust model?
-- Do we have monitoring and invalidation review workflows?
+List the assets and operations in scope, the harmful outcomes you want to prevent, and any known gaps in existing controls. Include examples of normal activity and exceptional operations that must remain possible, such as migrations, large withdrawals, or governance changes.
 
-## Decision Support
+You can describe these in plain language. Work with sales engineering to turn them into precise policy requirements, including thresholds and exceptions where appropriate.
 
-Treat network support, enforceable path coverage, authorization, and recovery as prerequisites rather than a score. If a protected operation can bypass the enforcement boundary, resolve that gap or explicitly narrow the claimed coverage.
+## 2. Gather Technical Context
 
-Use the [FAQ](./faq) to review routing, availability, and policy questions before committing to a rollout.
+Prepare the information available to your team:
 
-For sequencer-based networks, use [L2 and Sequencer Integrations](./l2-integrations/overview).
+- Target networks, contract addresses, source repositories, and relevant documentation.
+- Contract architecture, upgrade mechanisms, privileged roles, and external dependencies.
+- Transaction submitters, including wallets, multisig executors, keepers, bots, and relayers.
+- Existing tests, invariants, audit findings, and examples of legitimate operational activity.
+- Known restrictions on contract changes, routing, governance timing, or availability.
 
-## Next Steps
+Use the agreed private channel for proprietary materials. Credentials and signing keys are not needed for scoping.
 
-<CardGroup cols={2}>
-  <Card title="Plan a Platform Integration" icon="browser" href="/credible/dapp-integration">
-    High-level adoption for protocol teams
-  </Card>
-  <Card title="Ethereum Builder Integration" icon="sitemap" href="./ethereum-builder-integration">
-    Builder validation, block marking, and operations
-  </Card>
-  <Card title="Architecture Overview" icon="diagram-project" href="/credible/architecture-overview">
-    System components and transaction flow
-  </Card>
-</CardGroup>
+## 3. Identify the People and Decisions Needed
+
+Name the people who can explain protocol behavior, approve policy requirements, implement contract or routing changes, authorize lifecycle actions, and respond to incidents. One person may hold several roles; their permissions remain distinct.
+
+With Phylax, agree on implementation and review responsibilities, the initial coverage, and the evidence required before activation. Record unresolved questions instead of treating assumptions as approved behavior.
+
+## 4. Review Ethereum Integration Feasibility
+
+Use the [technical integration plan](./dapp-integration) with sales engineering to assess guard coverage, supported deployments, routing, authority, and recovery. A protected operation that can bypass the required gate needs a resolved integration change or an explicitly narrower coverage claim.
+
+An immutable contract without a suitable gate cannot gain Ethereum protection simply by registering assertions. Review fail-open behavior, legitimate exceptions, and blocked recovery paths before deciding on a rollout.
+
+## Ready for the Discussion
+
+You are ready to start when you can explain the protection need, identify a technical contact, and share the context available so far. Use [Work with Phylax](./work-with-phylax#start-a-conversation) to start the conversation and understand the next stages.
+
+Ethereum infrastructure operators should use [Builder Integration Planning](./ethereum-builder-integration). Sequencer-based integrations have a separate [L2 guide](./l2-integrations/overview).

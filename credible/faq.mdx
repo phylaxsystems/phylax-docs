@@ -5,6 +5,20 @@ description: 'Answers about enforcement, decentralized block building, integrati
 
 Use this page to look up Ethereum enforcement, integration requirements, and recovery when a rule blocks legitimate activity. Deployed versions and configuration determine the exact behavior. Earlier network-specific designs are in [L2 and Sequencer Integrations](./l2-integrations/overview).
 
+## Working with Phylax
+
+### How do we start a custom policy integration?
+
+Custom policies are developed with Phylax sales engineering. Start with your protection needs, available protocol documentation, and a technical contact. Together, define the intended behavior, exceptions, coverage, implementation responsibilities, and rollout requirements. See [Work with Phylax](./work-with-phylax) and [Prepare for Your Integration](./evaluate-credible-layer).
+
+### Do we need to write Solidity assertions before speaking with Phylax?
+
+No. You can start with a plain-language description of the operations and outcomes you want to constrain. Your team needs to explain legitimate protocol behavior and approve the intended requirements. Assertion implementation responsibilities are agreed during scoping. The tutorials are optional learning exercises.
+
+### Who approves the policies and controls activation?
+
+Your team approves the intended policy behavior while working with sales engineering on its design and validation. On-chain lifecycle actions still require the authorized Protocol Manager under the deployed permissions. Platform membership, protocol upgrades, and guard administration are separate authorities; the engagement itself does not grant signing access. See [Ownership Verification](./ownership-verification).
+
 ## Assertions and Coverage
 
 ### What does an assertion check?
@@ -31,7 +45,7 @@ On Ethereum, routing to participating builders is insufficient on its own. Prote
 
 ### Can I reuse an assertion from another protocol?
 
-You can adapt compatible examples, but review their assumptions: storage layout, token behavior, privileged roles, trigger coverage, and legitimate state transitions. Test them against your contracts before activation. The [Assertions Book](../assertions-book/assertions-book-intro) provides starting points.
+Use compatible examples as starting points for custom policy development with sales engineering. Review their assumptions: storage layout, token behavior, privileged roles, trigger coverage, and legitimate state transitions. Test them against your contracts before activation. The [Assertions Book](../assertions-book/assertions-book-intro) provides starting points.
 
 ## Enforcement and Decentralized Block Building
 
@@ -89,7 +103,7 @@ L2 system transactions and forced-inclusion queues have separate network rules. 
 
 The scope includes assertion design and testing, authorization, contract-path coverage, transaction routing, rollout, and recovery. On decentralized-builder networks, it also includes reviewing and installing the required guard or gate.
 
-Define who supplies and reviews each contract change, who signs deployments, and who operates the controls. See [Integration Planning](./dapp-integration) and [Development Effort](./development-effort).
+Plan engineering involvement with sales engineering around your existing contracts, routing, governance, and operational needs. Agree on who supplies and reviews each contract change, who signs deployments, and who operates the controls; there is no universal effort estimate. See [Integration Planning](./dapp-integration) and [Development Effort](./development-effort).
 
 ### Who needs to use the Credible RPC?
 
@@ -239,7 +253,7 @@ Production applies active assertions at the integrated enforcement boundary. Act
 
 ### How do we update assertions, and how long do changes take?
 
-Prepare and test a new release, review its differences and backtesting results, and schedule additions and removals through the authorized deployment flow. Review their effective times together to avoid a protection gap or conflicting rules.
+Review changed custom policy requirements and legitimate exceptions with sales engineering. Prepare and test a new release, review its differences and backtesting results against the agreed requirements, and schedule additions and removals through the authorized deployment flow. Review their effective times together to avoid a protection gap or conflicting rules.
 
 The State Oracle's configured timelocks determine when assertion changes become active. Do not assume immediate rollback or a universal delay. Guard replacement, Registry administration, and protocol upgrades can follow separate rules. See [Deploy Assertions](./deploy-assertions-dapp).
 
