@@ -6,7 +6,7 @@ description: 'Run an example policy’s tests and identify a legitimate operatio
 In this tutorial, you will run the ownership policy's allowed and rejected cases, then record a legitimate exception the rule cannot distinguish. You will finish with a small behavior table you can use when reviewing policy requirements.
 
 <Note>
-This is an optional local exercise. Custom policies are developed with [Phylax sales engineering](./work-with-phylax); completing these tests does not establish production coverage.
+This is an optional local exercise. You can develop your own assertions, and we highly recommend the [sales engineering support included in your subscription](./work-with-phylax) for policy fit. These tests do not establish production coverage.
 </Note>
 
 ## Prerequisites
@@ -59,7 +59,7 @@ The third row is a conclusion from the rule's logic, not an additional executed 
 
 Write down how an approved ownership change should be distinguished from an unauthorized one: who approves it, which destination is permitted, when it may occur, and how that approval can be verified. Record what should happen if the approval cannot be verified.
 
-Those are policy requirements to resolve with sales engineering before implementation. Simply removing the assertion would also remove its restriction on harmful ownership changes.
+Resolve those policy requirements before implementation. Sales engineering can help you assess the exceptions and their effect on protection. Simply removing the assertion would also remove its restriction on harmful ownership changes.
 
 ## What You Have Verified
 

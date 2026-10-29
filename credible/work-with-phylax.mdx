@@ -1,9 +1,11 @@
 ---
 title: 'Work with Phylax'
-description: 'How your team and Phylax sales engineering develop custom policies and prepare an Ethereum integration.'
+description: 'Sales engineering guidance included in your Phylax subscription for policy fit and Ethereum integration.'
 ---
 
-Custom policies are developed with Phylax sales engineering. Your protocol's intended behavior, legitimate exceptions, and operational constraints shape the policy and its implementation. Public examples and local experiments help you evaluate the approach; they do not replace this collaboration.
+You can write your own assertions. We highly recommend working with Phylax sales engineering to find the policies and integration approach that best fit your protocol. This support is included in your Phylax subscription at no additional cost.
+
+Sales engineering can help you examine intended behavior, legitimate exceptions, and operational constraints, whether you bring existing assertions or start with a protection goal.
 
 ## Start a Conversation
 
@@ -27,7 +29,7 @@ These stages describe the work to scope. The implementation plan and division of
 
 Your team explains protocol behavior, identifies acceptable exceptions, and approves the intended policies. Involve engineers who understand contract changes and transaction submission, plus the people responsible for governance and incident response.
 
-Phylax sales engineering guides custom policy development and the integration discussion. Agree on who writes each assertion, implements protocol changes, reviews the code and evidence, and maintains the resulting controls. Using developer tools or an AI agent does not replace the required collaboration.
+When you work with Phylax sales engineering, agree on who writes each assertion, implements protocol changes, reviews the code and evidence, and maintains the resulting controls. You can also develop assertions independently using the documentation and tools. In either case, generated code and passing tests still need review against the intended policy.
 
 Platform access, assertion management, protocol upgrades, and transaction submission are separate authorities. Working with Phylax does not itself grant signing access: lifecycle actions still require the authorized Protocol Manager, and other changes follow the relevant protocol permissions.
 
@@ -39,6 +41,6 @@ Passing local tests or staging checks alone does not establish Ethereum producti
 
 ## Changes After Launch
 
-Bring changes in protocol behavior, dependencies, thresholds, or governance into the policy review process with sales engineering. Review the changed rules and their test evidence before authorized activation. Assertion changes follow the deployed lifecycle delays; guards and protocol upgrades can have separate procedures.
+Review policies when protocol behavior, dependencies, thresholds, or governance change. We recommend involving sales engineering to assess their effect on policy fit and coverage. Review the changed rules and their test evidence before authorized activation. Assertion changes follow the deployed lifecycle delays; guards and protocol upgrades can have separate procedures.
 
 Define monitoring, escalation, and incident responsibilities during integration. The [FAQ](./faq) explains false positives, fail-open behavior, policy updates, and recovery limits.

@@ -3,7 +3,7 @@ title: 'Agentic PCL'
 description: 'Use an AI coding agent to create, test, and deploy Credible Layer assertion projects with pcl'
 ---
 
-This guide shows engineers how to use an AI coding agent to implement, test, and prepare assertion projects from agreed policy requirements. Custom policies are developed with [Phylax sales engineering](./work-with-phylax); generated code and passing tests do not replace that collaboration.
+This guide shows engineers how to use an AI coding agent to implement, test, and prepare assertion projects from agreed policy requirements. You can develop assertions yourself or use the [sales engineering support included in your subscription](./work-with-phylax), which we highly recommend for policy fit. Generated code and passing tests still need review against your requirements.
 
 Phylax publishes reusable instructions in the [agent-skills repository](https://github.com/phylaxsystems/agent-skills). These skills give compatible agents the project structure, safety boundaries, and `pcl` workflows needed to complete a task instead of relying on a large one-off prompt.
 
@@ -14,7 +14,7 @@ Before you begin, make sure you have:
 - [`pcl` installed](./credible-install)
 - An agent that supports the [Agent Skills format](https://agentskills.io), such as Codex or Claude Code
 - A local protocol repository the agent can inspect and edit
-- For custom integration work, policy requirements and review responsibilities agreed with sales engineering
+- For custom integration work, defined policy requirements and assigned review responsibilities
 
 For deployment, you also need a target chain, an RPC endpoint, and access to the protocol manager wallet.
 
@@ -68,7 +68,7 @@ For example:
 ```text
 Use the Agentic PCL skills to implement and test the agreed custom policies.
 
-Policy specification reviewed with Phylax sales engineering: <path>
+Policy specification approved by our team: <path>
 Protocol contracts and deployment records: <paths>
 Required allowed, rejected, and exception cases: <path>
 

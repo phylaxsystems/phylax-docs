@@ -9,7 +9,11 @@ Use this page to look up Ethereum enforcement, integration requirements, and rec
 
 ### How do we start a custom policy integration?
 
-Custom policies are developed with Phylax sales engineering. Start with your protection needs, available protocol documentation, and a technical contact. Together, define the intended behavior, exceptions, coverage, implementation responsibilities, and rollout requirements. See [Work with Phylax](./work-with-phylax) and [Prepare for Your Integration](./evaluate-credible-layer).
+Start by defining your protection needs, intended behavior, exceptions, coverage, and rollout requirements. You can write assertions yourself; we highly recommend working with Phylax sales engineering to find the best policies and integration approach for your protocol. See [Work with Phylax](./work-with-phylax) and [Prepare for Your Integration](./evaluate-credible-layer).
+
+### Can we write assertions ourselves, and is sales engineering required?
+
+Yes, you can write assertions yourself using the public documentation and tools. Working with sales engineering is optional and highly recommended to find the best fit for your protocol. This support is included in your Phylax subscription at no additional cost.
 
 ### Do we need to write Solidity assertions before speaking with Phylax?
 
@@ -17,7 +21,7 @@ No. You can start with a plain-language description of the operations and outcom
 
 ### Who approves the policies and controls activation?
 
-Your team approves the intended policy behavior while working with sales engineering on its design and validation. On-chain lifecycle actions still require the authorized Protocol Manager under the deployed permissions. Platform membership, protocol upgrades, and guard administration are separate authorities; the engagement itself does not grant signing access. See [Ownership Verification](./ownership-verification).
+Your team approves the intended policy behavior, whether you develop assertions independently or with sales engineering. On-chain lifecycle actions still require the authorized Protocol Manager under the deployed permissions. Platform membership, protocol upgrades, and guard administration are separate authorities; the engagement itself does not grant signing access. See [Ownership Verification](./ownership-verification).
 
 ## Assertions and Coverage
 
@@ -45,7 +49,7 @@ On Ethereum, routing to participating builders is insufficient on its own. Prote
 
 ### Can I reuse an assertion from another protocol?
 
-Use compatible examples as starting points for custom policy development with sales engineering. Review their assumptions: storage layout, token behavior, privileged roles, trigger coverage, and legitimate state transitions. Test them against your contracts before activation. The [Assertions Book](../assertions-book/assertions-book-intro) provides starting points.
+Use compatible examples as starting points for your own custom policies. Sales engineering can help you assess their fit. Review their assumptions: storage layout, token behavior, privileged roles, trigger coverage, and legitimate state transitions. Test them against your contracts before activation. The [Assertions Book](../assertions-book/assertions-book-intro) provides starting points.
 
 ## Enforcement and Decentralized Block Building
 
@@ -103,7 +107,7 @@ L2 system transactions and forced-inclusion queues have separate network rules. 
 
 The scope includes assertion design and testing, authorization, contract-path coverage, transaction routing, rollout, and recovery. On decentralized-builder networks, it also includes reviewing and installing the required guard or gate.
 
-Plan engineering involvement with sales engineering around your existing contracts, routing, governance, and operational needs. Agree on who supplies and reviews each contract change, who signs deployments, and who operates the controls; there is no universal effort estimate. See [Integration Planning](./dapp-integration) and [Development Effort](./development-effort).
+Plan engineering involvement around your existing contracts, routing, governance, and operational needs. Sales engineering can help you scope this work. Agree on who supplies and reviews each contract change, who signs deployments, and who operates the controls; there is no universal effort estimate. See [Integration Planning](./dapp-integration) and [Development Effort](./development-effort).
 
 ### Who needs to use the Credible RPC?
 
@@ -253,7 +257,7 @@ Production applies active assertions at the integrated enforcement boundary. Act
 
 ### How do we update assertions, and how long do changes take?
 
-Review changed custom policy requirements and legitimate exceptions with sales engineering. Prepare and test a new release, review its differences and backtesting results against the agreed requirements, and schedule additions and removals through the authorized deployment flow. Review their effective times together to avoid a protection gap or conflicting rules.
+Review changed custom policy requirements and legitimate exceptions. We recommend involving sales engineering to assess their effect on policy fit. Prepare and test a new release, review its differences and backtesting results against the agreed requirements, and schedule additions and removals through the authorized deployment flow. Review their effective times together to avoid a protection gap or conflicting rules.
 
 The State Oracle's configured timelocks determine when assertion changes become active. Do not assume immediate rollback or a universal delay. Guard replacement, Registry administration, and protocol upgrades can follow separate rules. See [Deploy Assertions](./deploy-assertions-dapp).
 
