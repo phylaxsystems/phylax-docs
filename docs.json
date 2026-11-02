@@ -68,6 +68,10 @@
     {
       "source": "/credible/dapp-integrations",
       "destination": "/credible/setting-up-alerting"
+    },
+    {
+      "source": "/credible/release-review-checks",
+      "destination": "/credible/deploy-assertions-dapp"
     }
   ],
   "navigation": {
@@ -120,7 +124,8 @@
                 "pages": [
                   "credible/credible-install",
                   "credible/pcl-quickstart",
-                  "credible/test-policy-behavior"
+                  "credible/test-policy-behavior",
+                  "credible/deploy-assertions-dapp"
                 ]
               },
               {
@@ -134,9 +139,7 @@
               {
                 "group": "Build and Deploy",
                 "pages": [
-                  "credible/apply-assertions",
-                  "credible/release-review-checks",
-                  "credible/deploy-assertions-dapp"
+                  "credible/apply-assertions"
                 ]
               },
               {

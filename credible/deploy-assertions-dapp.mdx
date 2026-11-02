@@ -1,36 +1,30 @@
 ---
-title: 'Deploy Assertions with the Platform'
-description: 'Create projects and deploy assertions to protect your contracts'
+title: 'Review and Deploy Policies'
+description: 'Review release verification and backtests, then authorize your policies for alerting or production.'
 ---
 
-Create a project in the [Phylax platform](https://ethereum.phylax.systems), prepare a release, and authorize its deployment.
+Prepare a release, review its checks, and authorize deployment in the [Phylax platform](https://ethereum.phylax.systems).
 
-**Prerequisites**:
+## Before You Start
+
+You need:
+
 - Approved policies and assigned reviewers
-- [pcl installed](/credible/credible-install)
-- Target contracts and an authorized Protocol Manager on the approved Ethereum deployment
+- [pcl installed](./credible-install) and an assertion [written](./writing-your-own-policies) and [tested](./testing-assertions)
+- Target contracts and an authorized [Protocol Manager](./managing-policy-deployments) on the approved Ethereum deployment
 - For production, reviewed guards, transaction routing, and recovery under the [Ethereum integration plan](./dapp-integration)
-- An assertion [written](./writing-your-own-policies) and [tested](/credible/testing-assertions)
-
-<Note>
-New to the platform? See the [Platform Overview](/credible/dapp-overview) to understand its features.
-</Note>
 
 ## Step 1: Authenticate
-
-Authenticate through `pcl`:
 
 ```bash
 pcl auth -u https://ethereum.phylax.systems login
 ```
 
-Open the login link from your terminal. Sign in and enter the CLI login code.
-
-<Note>
-Authentication selects your platform account. Confirm the Ethereum platform in the session and verify the separate on-chain Protocol Manager authority before deployment.
-</Note>
+Open the login link from your terminal. Sign in and enter the CLI login code. Confirm that the session uses the Ethereum platform.
 
 ## Step 2: Create a Project
+
+If your project already exists, open it and continue to the next step. Otherwise:
 
 1. Select **Create a Project** under **Projects**.
 2. Enter the protocol name, description, and target chain.
@@ -48,16 +42,42 @@ Configure your `credible.toml` and create a release with `pcl apply`:
 pcl apply
 ```
 
-Review the preview and confirm to create a pending release. See [Apply Assertions](./apply-assertions) for configuration.
+Review the preview and confirm to create a pending release. See [Apply Assertions](./apply-assertions) for configuration. Creating a release does not activate it.
 
-## Step 4: Deploy the Assertion
+## Step 4: Review Release Checks
 
-1. Open the release under **Releases** in your project.
-2. Review its target contracts, policy changes, and [release checks](./release-review-checks).
-3. Confirm the environment. **Alerting** records violations. **Production** excludes violating candidates at participating builders.
-4. Connect your authorized policy-management wallet.
-5. Select **Deploy to Alerting** or **Deploy to Production**.
-6. Authorize the transaction through your signing process.
+Open the release under **Releases**. Compare its target contracts, environment, and policy additions and removals with the approved changes. Review all three checks below.
+
+### Assertion verification
+
+Confirm that every assertion passed. Match its **Assertion ID**, **Adopter** (protected contract), and registered triggers to the approved policy. Check each trigger's type, selector or identifier, and **Used by** assertion function.
+
+<Frame caption="Assertion verification maps each assertion to its adopter and registered triggers">
+  <img src="/images/release-review-verification.png" alt="Assertion verification result showing a passed assertion, assertion ID, adopter contract, and function-call triggers" />
+</Frame>
+
+Verification checks the submitted configuration; it does not establish that the policy protects the intended behavior.
+
+### Source code
+
+Confirm that every **Assertion ID** in the release has a **Passed** source result. Source verification does not audit the assertion or establish that its logic is correct.
+
+### Backtesting
+
+The **Backtesting** check tests every assertion in the release against transactions from the last 20,000 blocks. Review the tested block range and watched assertion IDs. Check how many transactions exercised the assertions.
+
+Open each **Issue found** result to inspect the matched transaction, assertion, adopter, and replay data. Determine whether the rejection is intended or a false positive. Use [How to Review Backtesting Results](./backtesting) for the investigation workflow.
+
+Resolve failed verification checks and unexpected backtesting findings before signing. Passing checks do not establish complete coverage. Complete [local and integration tests](./testing-strategy) before production.
+
+<span id="step-4-deploy-the-assertion" />
+
+## Step 5: Authorize Deployment
+
+1. Confirm the release's environment. **Alerting** records violations without blocking live transactions. **Production** excludes violating candidates at participating builders.
+2. Connect your authorized policy-management wallet.
+3. Select **Deploy to Alerting** or **Deploy to Production**.
+4. Authorize the transaction through your signing process.
 
 The [State Oracle](./credible-layer-contracts#state-oracle) applies the configured delay before activation. Removals follow the same delay mechanism. Platform membership does not grant signing authority.
 
@@ -67,31 +87,16 @@ With your FDE, verify an allowed operation and an assertion violation in the app
 
 Test a protected call in a noncredible block while the guard is active. Include the actual submitters, alternative entry points, and recovery conditions in the [test plan](./testing-strategy).
 
-## Step 5: Monitor Your Assertions
+<span id="step-5-monitor-your-assertions" />
+
+## Step 6: Monitor Your Policies
 
 Use [Review and deploy changes](./managing-your-circuit-breakers) to check active policies, investigate violations, and review updates or removals.
 
 ## Troubleshooting
 
 | Error | Solution |
-|-------|----------|
+| --- | --- |
 | Contract registration is not authorized | Confirm the supported admin verifier and manager authorization for the target Ethereum deployment; see [Managing Policy Deployments](./managing-policy-deployments) |
 | "Assertion already exists" | Use a different name or update the existing assertion |
 | "Authentication expired" | Run `pcl auth -u https://ethereum.phylax.systems login` to refresh |
-
-## Next Steps
-
-<CardGroup cols={2}>
-  <Card title="Writing Your Own Policies" icon="code" href="./writing-your-own-policies">
-    Define, implement, and test policies for your protocol.
-  </Card>
-  <Card title="Test Assertions" icon="flask" href="/credible/testing-assertions">
-    Test your assertions before deployment
-  </Card>
-  <Card title="Review and deploy changes" icon="warning" href="./managing-your-circuit-breakers#investigate-a-rejected-transaction">
-    Review releases, authorize changes, and investigate rejected transactions.
-  </Card>
-  <Card title="Managing Policy Deployments" icon="shield-check" href="./managing-policy-deployments">
-    Understand policy deployment permissions
-  </Card>
-</CardGroup>
