@@ -109,7 +109,14 @@
                 "group": "Writing Your Own Policies",
                 "root": "credible/writing-your-own-policies",
                 "pages": [
-                  "credible/credible-install"
+                  "credible/credible-install",
+                  {
+                    "group": "Try It Yourself",
+                    "pages": [
+                      "credible/pcl-quickstart",
+                      "credible/test-policy-behavior"
+                    ]
+                  }
                 ]
               },
               {
@@ -190,13 +197,6 @@
               "credible/setting-up-alerting",
               "credible/managing-your-circuit-breakers",
               "credible/dapp-explorer"
-            ]
-          },
-          {
-            "group": "Try It Yourself",
-            "pages": [
-              "credible/pcl-quickstart",
-              "credible/test-policy-behavior"
             ]
           },
           {
