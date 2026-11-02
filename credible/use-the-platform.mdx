@@ -29,7 +29,7 @@ Follow [Managing Your Circuit Breakers](./managing-your-circuit-breakers#review-
 
 Authorize the release targeting **Alerting** through your signing process. Wait for its activation delay.
 
-Review **Invalidations → Alerting** with your FDE. Exercise the operations in your [test plan](./testing-strategy). Investigate false positives and retest policy changes.
+Review **Invalidations → Alert-only** with your FDE. Exercise the operations in your [test plan](./testing-strategy). Investigate false positives and retest policy changes.
 
 Alerting records violations without blocking live transactions. Production requires a separate release.
 
@@ -41,7 +41,7 @@ After the activation delay, [verify live enforcement](./deploy-assertions-dapp#v
 
 ## 5. Investigate an Invalidation
 
-Open **Invalidations** and select the environment. Follow the [transaction investigation walkthrough](./managing-your-circuit-breakers#investigate-a-rejected-transaction).
+Open **All invalidations** and select an event. Follow the [transaction investigation walkthrough](./managing-your-circuit-breakers#investigate-a-rejected-transaction).
 
 Review unexpected findings with your FDE. Policy changes require a reviewed release and your signing process.
 

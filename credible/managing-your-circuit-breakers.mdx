@@ -5,14 +5,29 @@ description: 'Review releases, authorize policy changes, and investigate rejecte
 
 Use the [Phylax platform](https://ethereum.phylax.systems) to review circuit breakers and investigate rejected transactions. Your signers authorize policy changes.
 
+## Check Active Policies
+
+Open **Assertions** to review circuit-breaker activity against its window and threshold. Select an assertion to check its enforcement status and linked contracts.
+
+<Tabs>
+  <Tab title="Circuit Breakers">
+    <Frame caption="Review each circuit breaker's environment, window, threshold, and current activity">
+      <img src="/images/platform/assertions.png" alt="Assertions page showing two production circuit breakers, their outflow windows and thresholds, and the full assertion list" />
+    </Frame>
+  </Tab>
+  <Tab title="Assertion Details">
+    <Frame caption="Inspect an assertion's configuration and use View source code to read its policy">
+      <img src="/images/platform/assertion-detail.png" alt="Enforced production assertion showing its linked contract, constructor arguments, triggers, and View source code action" />
+    </Frame>
+  </Tab>
+</Tabs>
+
 ## Review a Release
 
-Open **Releases** and select the proposed change. Check the target contracts and environment, then review assertion additions, changes, and removals alongside the verification and backtesting results.
+Open **Releases** and select a release. Check its environment, target contracts, and **Release Diff**. Review **Assertion verification**, **Source code**, and **Backtesting** before authorizing deployment.
 
-<Frame caption="Walk through a release's verification, source code, and backtesting results">
-  <video controls playsInline preload="metadata" poster="/images/release-review-poster.png" aria-label="Circuit breaker release review walkthrough" style={{ width: "100%" }}>
-    <source src="/images/release-review.mp4" type="video/mp4" />
-  </video>
+<Frame caption="An active production release showing its completed checks and policy additions and removals">
+  <img src="/images/platform/release-review.png" alt="Active Release 2 with completed verification, source code, and backtesting checks, plus a diff showing two additions and two removals" />
 </Frame>
 
 Investigate unexpected findings with your FDE before signing. [Release Review Checks](./release-review-checks) explains each check; [Backtesting Results](./backtesting) covers historical transaction findings.
@@ -20,7 +35,7 @@ Investigate unexpected findings with your FDE before signing. [Release Review Ch
 ## Authorize the Change
 
 1. Confirm that the release contains the policies and contracts your team approved.
-2. Connect the authorized policy-management wallet and select **Deploy to Alerting** or **Deploy to Production** for the release's environment.
+2. Connect your authorized policy-management wallet to deploy the release to its selected environment.
 3. Complete your signing process and wait for the configured activation delay.
 4. Check the active rules and contract addresses. Your FDE verifies production protection with you.
 
@@ -28,26 +43,28 @@ Project access and deployment authority are separate. See [Managing Policy Deplo
 
 ## Investigate a Rejected Transaction
 
-Open **Invalidations** and select the environment. Select an event to check its policy and contract. Open a transaction under **Invalid Transactions**.
+Open **All invalidations**. **Prevented** lists transactions blocked by enforcement; **Alert-only** lists violations observed without blocking live transactions; **Simulated** lists simulation results. Filter by assertion name and select an event.
+
+<Frame caption="Invalidations are grouped by outcome; this example has alert-only and simulated events">
+  <img src="/images/platform/invalidations.png" alt="All invalidations showing no prevented events, two alert-only events, and five simulated events" />
+</Frame>
+
+Open the transaction replay. Read the rejection reason in **Replay overview**, then compare **Transaction Execution** with **Assertion Evaluation** under **Execution evidence**.
 
 <Tabs>
-  <Tab title="Find the Transaction">
-    <Frame caption="An invalidation event links the affected policy, contract, and transactions">
-      <img src="/images/invalidation-event.png" alt="Invalidation event showing the affected assertion and contract, environment, and a transaction to inspect" />
+  <Tab title="Rejection Reason">
+    <Frame caption="The replay identifies the assertion and its outflow-limit rejection reason">
+      <img src="/images/platform/invalidation-replay.png" alt="Replay overview showing a withdrawal rejected by TradingVaultOutflowAssertion because the outflow limit was exceeded" />
     </Frame>
   </Tab>
-  <Tab title="Watch the Replay">
-    <Frame caption="Follow a rejected ownership change through the replay, call details, and assertion trace">
-      <video controls playsInline preload="metadata" poster="/images/invalidation-replay-poster.png" aria-label="Rejected transaction investigation walkthrough" style={{ width: "100%" }}>
-        <source src="/images/invalidations.mp4" type="video/mp4" />
-      </video>
+  <Tab title="Execution Evidence">
+    <Frame caption="The transaction succeeds in the replay, but the assertion rejects its outcome">
+      <img src="/images/platform/invalidation-evidence.png" alt="Replay evidence showing a 1,000 demoUSD transfer, successful transaction execution, and a rejected assertion evaluation" />
     </Frame>
   </Tab>
 </Tabs>
 
-Compare the transaction execution result with the assertion result, rejection reason, and state changes. A protocol call can succeed in the replay while its assertion rejects the outcome.
-
-In alerting mode, the violation is recorded without blocking the live transaction. In production, it reports a candidate excluded by a participating builder. An included transaction that reverts at an onchain guard is a separate event.
+This event is **Alert-only**. The **Transaction rejected** badge describes the replay result, not a live transaction being blocked. **What changed** shows the transfers and other events from that replay. An onchain guard revert is a separate event from an assertion rejection.
 
 ## Update or Remove a Circuit Breaker
 
