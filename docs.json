@@ -119,13 +119,8 @@
                 "root": "credible/writing-your-own-policies",
                 "pages": [
                   "credible/credible-install",
-                  {
-                    "group": "Try It Yourself",
-                    "pages": [
-                      "credible/pcl-quickstart",
-                      "credible/test-policy-behavior"
-                    ]
-                  }
+                  "credible/pcl-quickstart",
+                  "credible/test-policy-behavior"
                 ]
               },
               {
