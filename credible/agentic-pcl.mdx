@@ -1,6 +1,6 @@
 ---
-title: 'Agentic PCL'
-description: 'Use an AI coding agent to create, test, and deploy Credible Layer assertion projects with pcl'
+title: 'Build and Manage Policies with AI'
+description: 'Use AI coding agents to build, test, and deploy policies with pcl.'
 ---
 
 Use an AI coding agent to implement, test, and prepare policy releases with `pcl`. Review its output against the agreed requirements.
@@ -16,7 +16,7 @@ Phylax provides reusable workflows in the [agent-skills repository](https://gith
 
 For deployment, you also need a target chain, an RPC endpoint, and access to the protocol manager wallet.
 
-Authenticate with the platform for your target network before starting the agent. See [How to Deploy Projects Through Agentic PCL](./agentic-pcl-deploy#1-authenticate-manually) for explicit Ethereum platform selection. The earlier L2 workflow is in [L2 Platform Notes](./l2-integrations/platform-and-compatibility).
+Authenticate with the platform for your target network before starting the agent. See [Deploy Policies with an AI Agent](./agentic-pcl-deploy#1-authenticate-manually) for explicit Ethereum platform selection. The earlier L2 workflow is in [L2 Platform Notes](./l2-integrations/platform-and-compatibility).
 
 <Warning>
 An agent can edit code, create platform resources, and broadcast on-chain transactions. Review its plan and local changes before authorizing remote mutations. Require a successful dry run and explicit approval before any production deployment.
@@ -64,7 +64,7 @@ Give the agent the approved policies, target contracts, and test requirements. R
 For example:
 
 ```text
-Use the Agentic PCL skills to implement and test the agreed custom policies.
+Use the Phylax agent skills to implement and test the agreed custom policies.
 
 Policy specification approved by our team: <path>
 Protocol contracts and deployment records: <paths>
@@ -101,7 +101,7 @@ Do not paste a private key into the conversation or commit it to the repository.
   <Card title="Create a Project with an Agent" icon="folder-plus" href="./agentic-pcl-create-project">
     Bootstrap and validate an assertion project locally
   </Card>
-  <Card title="Deploy Projects Through Agentic PCL" icon="rocket" href="./agentic-pcl-deploy">
+  <Card title="Deploy Policies with an AI Agent" icon="rocket" href="./agentic-pcl-deploy">
     Create a platform project and activate a release on-chain
   </Card>
 </CardGroup>
