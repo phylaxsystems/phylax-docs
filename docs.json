@@ -106,6 +106,15 @@
                 ]
               },
               {
+                "group": "Platform",
+                "pages": [
+                  "credible/dapp-overview",
+                  "credible/setting-up-alerting",
+                  "credible/managing-your-circuit-breakers",
+                  "credible/dapp-explorer"
+                ]
+              },
+              {
                 "group": "Writing Your Own Policies",
                 "root": "credible/writing-your-own-policies",
                 "pages": [
@@ -188,15 +197,6 @@
                   "credible/execution-model"
                 ]
               }
-            ]
-          },
-          {
-            "group": "Platform",
-            "pages": [
-              "credible/dapp-overview",
-              "credible/setting-up-alerting",
-              "credible/managing-your-circuit-breakers",
-              "credible/dapp-explorer"
             ]
           },
           {
