@@ -27,14 +27,14 @@ Documentation for Ethereum enforcement through participating builders, assertion
 
 The separate section preserves sequencer-oriented integration designs, Linea/Besu, OP Stack, validation pipelines, and earlier platform workflows. Confirm deployment support and versions before using them. Redirects in `docs.json` preserve the old network-integration page routes.
 
-### Assertions Book (`/assertions-book`)
+### Use Cases Book (`/assertions-book`)
 
 A collection of practical assertion examples and patterns that developers can use as a learning resource and inspiration for building their own assertions.
 Each example demonstrates real-world patterns and best practices. The book also includes a collection of previous hacks and detailed explanations of how they could have been prevented using assertions.
 
 ## Code Snippet Integration
 
-The documentation integrates Assertions Book code snippets from [`credible-std`](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book) through:
+The documentation integrates Use Cases Book code snippets from [`credible-std`](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book) through:
 
 1. Automated GitHub Actions
 2. Storage in `/snippets`
@@ -46,7 +46,7 @@ We welcome contributions to improve our documentation! Here are some ways you ca
 
 - Add new guides and tutorials
 - Improve existing content for clarity
-- Add more examples to the Assertions Book
+- Add more examples to the Use Cases Book
 
 ### How to Contribute
 
@@ -55,7 +55,7 @@ We welcome contributions to improve our documentation! Here are some ways you ca
 3. Make your changes:
    - Create or modify `.mdx` files in the appropriate directory
    - If adding new pages, add them to `docs.json` to include them in the navigation
-   - For Assertions Book code snippets, update `credible-std/examples/assertions-book/assertions/src` first, then import them into `/snippets`
+   - For Use Cases Book code snippets, update `credible-std/examples/assertions-book/assertions/src` first, then import them into `/snippets`
 4. Test your changes:
    - Run `pnpm dev` to preview locally
    - Check for broken links using `pnpm broken-links`
