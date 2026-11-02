@@ -106,7 +106,7 @@
                 ]
               },
               {
-                "group": "Platform",
+                "group": "Managing Circuit Breakers",
                 "pages": [
                   "credible/dapp-overview",
                   "credible/setting-up-alerting",

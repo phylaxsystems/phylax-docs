@@ -180,7 +180,7 @@ The ability to inspect the rules and registry state behind a protocol's Credible
 ### Invalidation
 A report that a candidate transaction violated an assertion. Production enforcement excludes the transaction at the integrated boundary. Alerting records the violation without blocking the live transaction; ordinary network validity and inclusion rules still apply.
 
-Learn more: [Managing Your Circuit Breakers](./managing-your-circuit-breakers#investigate-a-rejected-transaction)
+Learn more: [Review and deploy changes](./managing-your-circuit-breakers#investigate-a-rejected-transaction)
 
 ### Revert
 An EVM execution failure. An assertion revert occurs off-chain during validation and can cause builder exclusion. A guard revert occurs in the protocol execution path; if included on-chain, the transaction consumes gas. A caller may catch a subcall revert, depending on its code.
