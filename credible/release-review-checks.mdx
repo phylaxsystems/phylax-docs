@@ -3,7 +3,7 @@ title: 'Release Review Checks'
 description: 'Reference for assertion verification, source code, and backtesting checks attached to a platform release'
 ---
 
-Release review checks report whether the assertions and submitted source in a release were verified and how the assertion set behaved against historical transactions. Use these results with the release diff before you authorize a staging or production deployment.
+Release checks report assertion verification, source verification, and historical test results. Review all three with the release diff before deployment.
 
 ## Checks at a glance
 
@@ -13,11 +13,9 @@ Release review checks report whether the assertions and submitted source in a re
 | **Source code** | Source verification status for each submitted assertion ID | Every assertion in the release has a passing source result |
 | **Backtesting** | Results from testing the release against transactions from the last 20,000 blocks | Any historical transaction that would have been invalidated is expected behavior rather than a false positive |
 
-These checks answer different questions. A passing result in one check does not replace review of the others. For custom policies, review this evidence alongside legitimate exceptions and coverage gaps. We recommend involving [Phylax sales engineering](./work-with-phylax) to assess policy fit.
-
 ## Assertion verification
 
-The **Assertion verification** check reports the assertion contracts included in the release. Its summary shows the total, passed, and failed assertion counts. Each detail entry contains the following fields:
+The check reports total, passed, and failed assertion counts, with these fields for each assertion:
 
 | Field | Description |
 | --- | --- |
@@ -28,7 +26,7 @@ The **Assertion verification** check reports the assertion contracts included in
 | **Trigger type** | Trigger category, such as function call, transaction end, or cumulative outflow |
 | **Used by** | Assertion function registered to the trigger, when applicable |
 
-Compare the assertion count, IDs, and adopter addresses with the release diff. Then inspect every trigger. A passing status confirms that the platform verified the submitted assertion configuration; it does not confirm that the invariant or trigger selection protects the intended behavior.
+Compare the assertion IDs, adopters, and triggers with the approved policies. Verification checks the submitted configuration, not whether the policy protects the intended behavior.
 
 <Frame caption="Assertion verification maps each assertion to its adopter and registered triggers">
   <img src="/images/release-review-verification.png" alt="Assertion verification result showing a passed assertion, assertion ID, adopter contract, and function-call triggers" />
@@ -36,9 +34,9 @@ Compare the assertion count, IDs, and adopter addresses with the release diff. T
 
 ## Source code
 
-The **Source code** check reports the verification status for the submitted assertion source. The result contains one entry per assertion, with its **Assertion ID** and a **Passed** value.
+The check reports an **Assertion ID** and **Passed** value for each submitted assertion. Every ID in the release must have a passing entry.
 
-Match the assertion IDs against the assertion-verification result and release diff. Every assertion expected in the release should have a corresponding passing source entry. A passing source result does not mean that the assertion has been audited or that its business logic is correct; it reports only the platform's verification result for the submitted source.
+Source verification does not audit the assertion or establish that its logic is correct.
 
 ## Backtesting
 
@@ -50,16 +48,9 @@ See [How to Review Backtesting Results](./backtesting) for the complete investig
 
 ## Interpreting the overall review
 
-A release is ready for deployment review only after you have checked the release diff and examined all three results:
+Resolve failed assertion or source checks before deployment. Investigate each backtesting finding and revise false positives.
 
-- **All checks pass:** Confirm the target environment and continue to the wallet authorization step.
-- **Assertion verification fails:** Identify the failed assertion, review its adopter and trigger details, and resolve the reported verification problem before creating another release.
-- **Source code fails:** Identify the assertion ID without a passing source result and resolve the reported source-verification problem before creating another release.
-- **Backtesting finds an issue:** Inspect and classify every matched transaction before deciding whether to tune the assertion or continue.
-
-<Warning>
-Passing release checks reduce deployment risk, but they do not prove that an assertion is correct, complete, or safe for production. Continue with focused tests and staging observation before production deployment.
-</Warning>
+Passing checks do not establish complete policy coverage. Continue with [local and integration tests](./testing-strategy) before production.
 
 ## Related documentation
 
@@ -71,7 +62,7 @@ Passing release checks reduce deployment risk, but they do not prove that an ass
     Investigate historical transactions matched by a release
   </Card>
   <Card title="Deploy with the Platform" icon="rocket" href="./deploy-assertions-dapp">
-    Authorize a reviewed release for staging or production
+    Authorize a reviewed release for alerting or production
   </Card>
   <Card title="Testing Assertions" icon="flask" href="./testing-assertions">
     Validate assertion behavior before deployment

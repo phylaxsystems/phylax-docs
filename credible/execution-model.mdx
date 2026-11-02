@@ -7,8 +7,6 @@ On Ethereum, the Assertion Enforcer reports failures to the participating builde
 
 In testing, failed assertions cause **reverts**. This lets you use `vm.expectRevert()` to verify your assertion catches violations and returns the expected error message.
 
-Understanding this difference is important for writing effective tests and interpreting their results.
-
 ## Quick Comparison
 
 | Aspect | Testing | Production |
@@ -35,12 +33,7 @@ flowchart LR
     style INCLUDE fill:#27ae60,color:#fff
 ```
 
-Key behaviors:
-- Triggers are evaluated to determine which assertions run
-- All matching assertions for all interacted contracts execute
-- A failing assertion produces a rejection report
-- The participating builder excludes a failing candidate before inclusion
-- Passing validation does not guarantee inclusion; guard coverage is required to constrain execution through other builders
+All matching assertions execute. The builder excludes failing candidates. Passing validation does not guarantee inclusion. Guards restrict protected operations in other builders' blocks.
 
 ## Testing: Transactions Revert
 

@@ -1,0 +1,56 @@
+---
+title: 'Use the Phylax Platform'
+description: 'Find your project, review releases and backtests, monitor invalidations, and configure alerts.'
+---
+
+Use the [Phylax platform](https://ethereum.phylax.systems) to review the work prepared with your FDE and manage your protection.
+
+## Before You Start
+
+Ask your FDE or project admin for access. Have the target contracts and approved policies available for review.
+
+Deployment requires your authorized policy signers. Platform access alone does not grant deployment authority.
+
+## 1. Open Your Project
+
+Sign in to [ethereum.phylax.systems](https://ethereum.phylax.systems). Open your protocol under **Projects** and check its network and contract addresses.
+
+If needed, [create the project](./deploy-assertions-dapp#step-2-create-a-project) with your FDE.
+
+## 2. Review a Release
+
+Your FDE or developer prepares a release with [`pcl apply`](./apply-assertions). Open it under **Releases**.
+
+Check the proposed policies against your requirements. Review the [release checks](./release-review-checks) and [backtesting results](./backtesting) with your FDE. Creating a release does not activate it.
+
+Follow [Managing Your Circuit Breakers](./managing-your-circuit-breakers#review-a-release) for the walkthrough.
+
+## 3. Deploy to Alerting and Observe
+
+Authorize the release targeting **Alerting** through your signing process. Wait for its activation delay.
+
+Review **Invalidations → Alerting** with your FDE. Exercise the operations in your [test plan](./testing-strategy). Investigate false positives and retest policy changes.
+
+Alerting records violations without blocking live transactions. Production requires a separate release.
+
+## 4. Authorize Production and Verify Protection
+
+Complete the integration tests and recovery rehearsal with your FDE. Follow [Deploy Assertions](./deploy-assertions-dapp) to authorize the production release.
+
+After the activation delay, [verify live enforcement](./deploy-assertions-dapp#verify-ethereum-enforcement) with your FDE. Check the active policies, guard coverage, and transaction routes.
+
+## 5. Investigate an Invalidation
+
+Open **Invalidations** and select the environment. Follow the [transaction investigation walkthrough](./managing-your-circuit-breakers#investigate-a-rejected-transaction).
+
+Review unexpected findings with your FDE. Policy changes require a reviewed release and your signing process.
+
+## 6. Configure and Test Alerts
+
+Follow [Setting Up Alerting](./setting-up-alerting) to connect Slack and test notification delivery. Agree with your FDE who investigates alerts and who can authorize recovery.
+
+## 7. Keep Access and Project Information Current
+
+Manage collaborators and project details under **Settings**. Use **Audit Log** to review project changes.
+
+Update policies when protocol behavior changes. Review and authorize each release, then verify the resulting protection. Use your agreed [recovery procedures](./work-with-phylax#fallback-paths-and-recovery) during an incident.

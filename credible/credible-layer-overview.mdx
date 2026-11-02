@@ -1,17 +1,17 @@
 ---
 title: 'How Ethereum Enforcement Works'
-description: 'How the Credible Layer protects Ethereum contract operations through assertions, builders, and guards.'
+description: 'How Phylax circuit breakers protect Ethereum operations through assertions, participating builders, and onchain guards.'
 ---
 
-You can write your own assertions to define custom security policies for your Ethereum protocol. We highly recommend working with Phylax sales engineering to find the policies and integration approach that best fit your protocol. This support is included in your Phylax subscription at no additional cost.
+Phylax circuit breakers enforce the security policies your team defines and approves. The rules are implemented as Solidity assertions and evaluated before settlement by builders that run the Phylax enforcement engine.
 
-Policies are implemented as Solidity assertions and checked by participating block builders against candidate transactions. On-chain guards restrict protected operations to blocks marked credible by authorized builders while the gate is active.
+An onchain guard checks that protected functions execute in a credible block. While its enforcement gate is active, calls in a non-participating builder's block revert. This ties successful execution to builders evaluating the transaction against your rules.
 
 ## The Three Parts of Enforcement
 
-1. **Assertions describe the permitted effects.** A rule can compare state before and after a transaction, inspect calls, or check relationships across contracts.
-2. **Participating builders run the rules.** They exclude candidates that fail active production assertions before inclusion.
-3. **Guards restrict the execution path.** A guard checks the Credible Registry so another builder cannot simply include the protected operation in an unmarked block while the gate is closed.
+1. **Assertions encode your policies.** A rule can compare state before and after a transaction, inspect calls, or check relationships across contracts.
+2. **Participating builders run the enforcement engine.** They evaluate transactions against your circuit breakers and exclude violating transactions from the blocks they build.
+3. **Onchain guards enforce the block requirement.** A guard checks the Credible Registry's block marker and makes protected calls revert in a noncredible block while its enforcement gate is active.
 
 The Credible RPC routes submissions to participating builders. Routing and guarding serve different purposes: a route helps a transaction reach an enforcing builder; a guard constrains where the operation may execute.
 
@@ -27,6 +27,8 @@ An assertion failure is a rule violation, not proof of an attack. Legitimate mig
 
 ## What Integration Requires
 
+Our forward deployed engineers (FDEs) work with you to define policies, write assertions, and implement the agreed guard and routing changes. Your team reviews the policies, code, and test evidence and approves protocol changes. You can also develop assertions independently. See [Work with Phylax](./work-with-phylax) for the process and responsibilities.
+
 Assertion code is separate from protocol logic, but Ethereum enforcement may require contract changes. Protected operations need a suitable gate: a contract guard, a supported wallet guard, or an unavoidable existing hook. An immutable contract with no suitable gate cannot obtain this protection simply by registering assertions.
 
 The actual transaction submitters need the intended route. This includes user wallets, multisig executors, keepers, bots, and relayers. A contract called internally cannot select an RPC.
@@ -35,13 +37,19 @@ A Safe transaction guard covers its owner-authorized execution path; modules req
 
 ## From Assertion to Enforcement
 
-Developers create a release on the [Ethereum platform](https://ethereum.phylax.systems), review its checks, and schedule activation through the authorized Protocol Manager. The State Oracle records which assertions apply and when additions or removals take effect. Assertion DA supplies the artifacts used by enforcers.
+Before activation, our FDEs run backtests and test a replica of your protocol on a fork of Ethereum, including legitimate activity, violations, guard behavior, and recovery. Your team reviews the evidence against the intended policies.
 
-Staging observes assertion behavior without dropping live transactions. Production rules affect inclusion at participating builders. Neither mode installs missing guards or configures submission routes.
+We prepare releases on the [Ethereum platform](https://ethereum.phylax.systems) and simulate the activation transactions. Management of your policies and protocol remains entirely under your authority. Your signers authorize and execute the actions, and we verify the live protection. No other party can activate or change your rules without your authorization.
+
+The State Oracle records which assertions apply and when additions or removals take effect. Assertion DA supplies the artifacts used by enforcers.
+
+Alerting observes assertion behavior without dropping live transactions. Production rules affect inclusion at participating builders. Neither mode installs missing guards or configures submission routes.
 
 When a transaction touches several protected contracts, all applicable assertions must pass at the enforcing builder. Passing makes the transaction eligible for inclusion; selection and finality remain separate. An assertion failure excludes the whole candidate transaction, including a batch containing multiple operations.
 
 ## Availability and Recovery
+
+We designed onchain recovery paths to work independently of us. Your team defines who can use them, and we test them before activation.
 
 A guard can fail open after a configured gap in credible blocks. This restores access by allowing execution in blocks whose builders may not run assertions. Existing protocol checks remain in force, but mandatory assertion protection is reduced.
 
@@ -53,5 +61,5 @@ Recovery from a restrictive rule or lost manager key needs its own tested proced
 - [Work with Phylax](./work-with-phylax): policy development, responsibilities, and the integration process.
 - [Integration Planning](./dapp-integration): protocol changes, routing, authority, and recovery.
 - [Run an Example Policy Locally](./pcl-quickstart): an optional learning exercise.
-- [FAQ](./faq): customer questions about coverage, operation, and failure handling.
+- [Enforcement FAQ](./faq): technical questions about builders, guards, routing, and recovery.
 - [L2 and Sequencer Integrations](./l2-integrations/overview): the separate sequencer-based model and earlier workflows.

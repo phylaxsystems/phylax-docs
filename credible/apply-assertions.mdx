@@ -3,15 +3,13 @@ title: 'Apply Assertions'
 description: 'Configure assertions and create a release on the platform using `pcl apply`'
 ---
 
-This guide shows you how to configure your assertions in `credible.toml` and create a release on the platform with `pcl apply`.
+Declare your policies in `credible.toml`, then create a release with `pcl apply`.
 
 **Prerequisites**:
-- Defined policy scope and assigned implementation and review responsibilities; [sales engineering support](./work-with-phylax) is recommended and included in your subscription
+- Approved policies and assigned reviewers
 - [pcl installed](/credible/credible-install)
-- An assertion [written](/credible/write-first-assertion) and [tested](/credible/testing-assertions)
+- An assertion [written](./writing-your-own-policies) and [tested](/credible/testing-assertions)
 - A [project created](/credible/deploy-assertions-dapp#step-2-create-a-project) in the platform
-
-**What you'll do**: Authenticate, declare the desired assertion state in `credible.toml`, and create a release. Then review and deploy that release in the platform.
 
 ## Step 1: Authenticate
 
@@ -21,10 +19,10 @@ Before deploying, authenticate with the Credible Layer:
 pcl auth -u https://ethereum.phylax.systems login
 ```
 
-`pcl` displays a device code and verification URL. Press Enter to open the URL in your browser, authenticate with your wallet, email, Google, or GitHub, and approve the request. `pcl` then detects the completed authentication.
+`pcl` displays a device code and verification URL. Press Enter to open the browser. Sign in and approve the request.
 
 <Note>
-Confirm that the intended Protocol Manager is authorized for the contracts in `credible.toml`. Platform login and on-chain management authority are separate. See [Ownership Verification](./ownership-verification) for the supported verifier or approved manual path.
+Confirm that the intended Protocol Manager is authorized for the contracts in `credible.toml`. Platform login and on-chain management authority are separate. See [Managing Policy Deployments](./managing-policy-deployments) for the supported authorization path.
 </Note>
 
 Check your status anytime:
@@ -37,7 +35,7 @@ For Ethereum production, complete [guard coverage, routing, and recovery plannin
 
 ## Step 2: Configure `credible.toml`
 
-Create a `credible.toml` file at `assertions/credible.toml` in your project root. This file declares the desired release state for your project: which contracts are in scope and which assertion files should protect them.
+Create `assertions/credible.toml` to declare the protected contracts and their assertions:
 
 ```toml
 environment = "production"
@@ -75,11 +73,11 @@ Each contract address must be unique within the configuration. See the [pcl Refe
 </Note>
 
 <Tip>
-Set `project_id` in your `credible.toml` to skip the interactive project selection prompt. This is especially useful for CI/CD pipelines.
+Set `project_id` to skip interactive project selection, including in CI.
 </Tip>
 
 <Note>
-`credible.toml` is declarative. If a later release removes a contract or assertion from the manifest, the platform treats that as a requested removal from the project when the release is reviewed, deployed, and the State Oracle timelock expires.
+Omitting a contract or assertion requests its removal. The removal takes effect after deployment approval and the State Oracle delay.
 </Note>
 
 ## Step 3: Apply Your Assertions
@@ -90,11 +88,7 @@ Create a release on the platform:
 pcl apply
 ```
 
-This command:
-1. Reads your `credible.toml` configuration
-2. Builds and compiles the referenced assertion contracts
-3. Previews the release changes against the current project state
-4. Creates a pending release on the platform after you confirm
+The command builds the configured assertions and previews changes against the project state. Confirm to create a pending release.
 
 You'll be prompted to confirm before applying. Use `--yes` to skip the confirmation prompt:
 
@@ -108,19 +102,9 @@ pcl apply --yes
 
 ## Step 4: Review and Deploy in the Platform
 
-After applying, complete deployment in the [Phylax platform](https://ethereum.phylax.systems) using the [Deploy Assertions guide](/credible/deploy-assertions-dapp#step-4-deploy-the-assertion):
+Open the release under **Releases** in your project. Review the diff and [release checks](./release-review-checks), then follow [Deploy Assertions](./deploy-assertions-dapp#step-4-deploy-the-assertion).
 
-1. Navigate to your project
-2. Select **Releases**
-3. Choose the release created by `pcl apply`
-4. Review the release diff and selected target contracts
-5. Review **Assertion verification**, **Source code**, and **Backtesting**. See [Release Review Checks](./release-review-checks) for details.
-6. Confirm the target environment declared in `credible.toml`
-7. Connect the protocol manager wallet, select **Deploy to Staging** or **Deploy to Production**, and sign the transaction
-
-<Note>
-Creating a release through `pcl apply` does not make the assertion active by itself. The release is pending until an authorized protocol admin, also called a manager, signs the deployment transaction in the platform. The assertion becomes active only after that transaction is accepted on-chain and the configured timelock in the State Oracle contracts expires. Removals follow the same State Oracle timelock flow.
-</Note>
+The release becomes active after an authorized manager signs the deployment and the State Oracle delay expires.
 
 ## Troubleshooting
 

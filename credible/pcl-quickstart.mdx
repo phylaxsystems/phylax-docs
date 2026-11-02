@@ -3,18 +3,14 @@ title: 'Run an Example Policy Locally'
 description: 'Optional tutorial: run an example assertion and inspect its allowed and rejected behavior.'
 ---
 
-In this optional tutorial, you will run a working assertion project and inspect a rule that rejects ownership changes. You will finish with passing local tests and an example policy to examine.
-
-<Note>
-You can write your own assertions. We highly recommend the [sales engineering support included in your subscription](./work-with-phylax) to assess policy fit. Completing this local exercise does not establish production coverage.
-</Note>
+Run an example policy that rejects ownership changes. Inspect its passing and failing cases in local tests.
 
 ## Prerequisites
 
 - [pcl installed](./credible-install)
 - Git and Foundry available locally
 
-This tutorial runs local tests. It does not require a wallet, a funded account, or a live transaction.
+No wallet or live transaction is required.
 
 ## 1. Clone the Starter
 
@@ -54,14 +50,12 @@ This rule rejects legitimate ownership transfers too. For a real protocol, defin
 
 ## 4. Understand What You Have Verified
 
-The tests establish that the example detects an ownership change under its local test conditions. They do not install a guard, activate an assertion, or exercise the Ethereum builder path.
+The tests check ownership changes in the local harness. The starter contract has no Ethereum guard, so these tests do not establish production protection.
 
-Ethereum builders that do not participate can include transactions without running assertions. The starter's unguarded Ownable contract is therefore not a production Ethereum protection setup. A timeout after submitting a transaction would not prove assertion enforcement either.
-
-The starter also contains earlier live-deployment instructions. Use the Ethereum guides below for platform selection and enforcement requirements.
+Use the current [Ethereum integration guide](./dapp-integration) instead of the starter's earlier deployment instructions.
 
 ## Continue Exploring
 
 Next, [test the allowed and rejected cases](./test-policy-behavior) and examine how the same rule treats a legitimate ownership transfer.
 
-To start authoring, continue to [Write Your First Assertion](./write-first-assertion). We also recommend [preparing for an integration discussion](./evaluate-credible-layer) with sales engineering to review policy requirements and fit.
+To adapt the policy, see [Writing Your Own Policies](./writing-your-own-policies).

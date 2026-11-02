@@ -3,13 +3,11 @@ title: 'Agentic PCL'
 description: 'Use an AI coding agent to create, test, and deploy Credible Layer assertion projects with pcl'
 ---
 
-This guide shows engineers how to use an AI coding agent to implement, test, and prepare assertion projects from agreed policy requirements. You can develop assertions yourself or use the [sales engineering support included in your subscription](./work-with-phylax), which we highly recommend for policy fit. Generated code and passing tests still need review against your requirements.
+Use an AI coding agent to implement, test, and prepare policy releases with `pcl`. Review its output against the agreed requirements.
 
-Phylax publishes reusable instructions in the [agent-skills repository](https://github.com/phylaxsystems/agent-skills). These skills give compatible agents the project structure, safety boundaries, and `pcl` workflows needed to complete a task instead of relying on a large one-off prompt.
+Phylax provides reusable workflows in the [agent-skills repository](https://github.com/phylaxsystems/agent-skills).
 
 ## Prerequisites
-
-Before you begin, make sure you have:
 
 - [`pcl` installed](./credible-install)
 - An agent that supports the [Agent Skills format](https://agentskills.io), such as Codex or Claude Code
@@ -42,7 +40,7 @@ npx github:phylaxsystems/agent-skills#851cd274972efa6047393eaa61a935ed56f66b3b i
 
 </CodeGroup>
 
-The commit pin ensures that both commands install the reviewed skill versions shown in this guide.
+Both commands pin the skill version.
 
 The [agent-skills repository](https://github.com/phylaxsystems/agent-skills) also includes focused skills for invariant design, assertion implementation, testing, trigger optimization, and troubleshooting.
 
@@ -61,7 +59,7 @@ Use the skill name in your request so the intended workflow is unambiguous.
 
 ## Start with a high-level prompt
 
-Give the agent the agreed policy specification, target contracts, test requirements, and verification boundary. Require it to surface ambiguity and proposed policy changes for review.
+Give the agent the approved policies, target contracts, and test requirements. Require review of unresolved requirements and proposed policy changes.
 
 For example:
 
@@ -91,16 +89,11 @@ as the source of truth. Prefer top-level workflow commands, structured JSON
 output, and the next actions returned by pcl.
 ```
 
-This prevents the agent from inventing flags or relying on a workflow from another `pcl` version.
+This gives the agent guidance for the installed CLI version.
 
 ## Keep a human in the approval loop
 
-Authenticate with the target platform yourself before starting the deployment agent. Then give the agent autonomy for inspection, local file changes, builds, and tests. Require it to pause for:
-
-- Any choice between staging and production
-- Access to a signer or keystore
-- Platform mutations
-- On-chain broadcasts
+Authenticate before starting the deployment agent. Allow local inspection, edits, builds, and tests. Approve the environment, platform changes, and signer use before deployment.
 
 Do not paste a private key into the conversation or commit it to the repository. Prefer a Foundry keystore and provide its password through a file outside the project.
 

@@ -3,29 +3,17 @@ title: 'How to Plan an Ethereum Integration'
 description: 'Plan Ethereum assertions, contract guards, transaction routing, authorization, and recovery.'
 ---
 
-Use this technical checklist to plan an Ethereum integration from protected contract paths through assertion activation and operational recovery. You can write your own assertions; we highly recommend using the [sales engineering guidance included in your subscription](./work-with-phylax) to assess policy fit and integration requirements.
-
-<Note>
-If you are ready to execute deployment, use [Deploy Assertions with the Platform](./deploy-assertions-dapp). If you need background on how the system works, start with the [Architecture Overview](./architecture-overview).
-</Note>
+Plan guard coverage, transaction routing, and recovery with your [FDE](./work-with-phylax). Use this checklist before [deployment](./deploy-assertions-dapp).
 
 ## Prerequisites
 
-Define the initial policy scope and assign implementation and review responsibilities. Confirm the target network, supported assertion specification, and available staging or test environment. Identify protocol owners, assertion managers, contract addresses, and the team responsible for transaction submission.
-
-Use this plan before deployment to agree on implementation ownership, review scope, and recovery responsibilities.
-
-<Note>
-Assertion management requires authorization for the target contracts. Confirm the supported verifier or approved [manual registration process](./manual-verification) for your deployment. Registration does not install an enforcement gate or configure transaction routing.
-</Note>
+Agree on the policy scope and review responsibilities. Identify the protected contracts, policy signers, and transaction submitters. Confirm the network, supported assertion specification, and test environment.
 
 ## Adoption Workflow
 
-Start with the agreed policy requirements, including legitimate exceptions and explicit coverage gaps. The assigned engineers use the CLI to implement and test assertions, while the platform supports release review, activation, and monitoring.
+Your team approves the policies and exceptions. Engineers implement and test assertions, then prepare a release with `pcl apply`. Your signers authorize activation.
 
-- **Policy review**: your team resolves the requirements and reviews the evidence, with sales engineering support if you choose
-- **Implementation**: assigned engineers write and test assertions, then prepare a release with `pcl apply`
-- **Activation and operation**: authorized signers approve lifecycle actions; the agreed operators monitor and respond
+See [Work with Phylax](./work-with-phylax#the-integration-process) for the delivery process.
 
 ## End-to-End Flow
 
@@ -50,68 +38,46 @@ flowchart LR
 
 ## What You Control
 
-- Which assertions protect which contracts
-- Staging vs production deployments
-- Invalidation notification routing and monitoring
+Your team controls policy assignments, deployment environments, and notification settings. Deployment authority remains separate from project membership and protocol administration.
 
 ## Map Coverage and Required Contract Changes
 
-Map the surfaces you intend to protect before implementing custom assertions. Sales engineering can help review this scope:
+Identify the protected operations, relevant state, dependencies, and coverage gaps. Every protected execution path must reach a suitable guard.
 
-- Protected contracts and external entry points
-- Privileged roles and admin operations
-- Critical state variables and accounting relationships
-- Oracle, bridge, vault, and downstream market dependencies
-- High-risk user flows, such as borrows, withdrawals, upgrades, and parameter changes
-- Known gaps that the first assertion release will not cover
+Include alternative entry points and wallet modules. A Safe transaction guard alone does not cover module execution. Resolve unguarded paths before claiming coverage.
 
-For Ethereum, identify the guard or gate for every protected path. Include alternative entry points, internal calls, privileged actions, and wallet modules. A Safe transaction guard does not cover module execution by itself. If a path has no suitable gate, record the gap and resolve it before claiming coverage.
-
-Agree on who implements contract changes, who reviews them, and which deployed version the review covers. Review any guard replacement or bypass authority along with the assertions.
+Assign responsibility for contract changes and review the deployed version. Include guard replacement and bypass permissions in that review.
 
 ## Configure Transaction Submission
 
-Inventory every top-level submitter for guarded operations: user wallets, multisig executors, keepers, bots, relayers, and bridge or settlement services. Configure the required Credible RPC route for each. Off-chain multisig signers and internally called contracts do not choose the final submission route.
+Configure the Credible RPC on each top-level submitter of protected transactions. This includes automated submitters and multisig executors. Off-chain signers and internally called contracts do not select the route.
 
-Keep ordinary reads and unprotected traffic on their existing providers where appropriate. Test simulations and actual submission separately; a successful RPC simulation does not establish that production assertions pass.
+Ordinary reads and unprotected traffic can retain their existing providers. Test actual submission separately from RPC simulation. Simulation success does not establish that production assertions pass.
 
-For Ethereum bridge and relayer operations, check the submitted transaction and its actual contract path. L2 delayed queues and forced-inclusion rules are covered separately in [L2 Integration Planning](./l2-integrations/network-integration#transaction-source-coverage).
+For L2 queues and forced inclusion, see [L2 Integration Planning](./l2-integrations/network-integration#transaction-source-coverage).
 
 ## Authorization Requirements
 
-Confirm the Protocol Manager authorized by the State Oracle for each contract. Use the supported automatic verifier or [manual verification](./manual-verification) process. Distinguish this authority from platform membership, transaction submission, protocol upgrades, and guard administration.
-
-Document the signing policy and recovery path for each privileged role. Verify the deployed lifecycle delays rather than assuming immediate activation or rollback.
+Confirm the Protocol Manager for each contract through [Managing Policy Deployments](./managing-policy-deployments). Record the signing policy, recovery path, and deployed delays for each privileged role.
 
 ## Deployment Modes
 
-- **Staging**: observe assertion behavior against a mirrored chain environment without dropping live transactions; this does not test every production guard and routing path
-- **Production**: participating Ethereum builders enforce active assertions, with guard coverage and routing configured for the protected operations
-
-Learn more about ownership checks in [Ownership Verification](/credible/ownership-verification).
+- **Alerting** records violations in a mirrored environment without blocking live transactions. It does not test every production guard or route.
+- **Production** enforces active policies through participating builders. Protected operations require configured guards and routing.
 
 ## Test Availability and Recovery
 
-Test both allowed and rejected operations, including batch failures and exceptional administrative actions. For guarded integrations, test credible and noncredible blocks, the exact fail-open boundary, Registry errors, and any authorized bypass.
+Follow the [testing strategy](./testing-strategy) and [guard tests](./testing-credible-block-guard). Include blocked recovery transactions and lost keys.
 
-Rehearse lost keys, restrictive assertions, and blocked recovery transactions. A block-gap fallback may not help if builders continue producing credible blocks. Confirm how submitters reconcile exclusions and retry safely; do not assume automatic resubmission.
-
-See [Testing Strategy](./testing-strategy), [Guard Testing](./testing-credible-block-guard), and the [FAQ](./faq).
+A block-gap fallback may not resolve false positives if credible blocks continue. Define how submitters investigate exclusions and retry. Do not assume automatic resubmission.
 
 ## What Users Can Verify
 
-- Which assertions are active for a protocol
-- On-chain registry entries and views in The Phylax Explorer
-- Publicly exposed posture and invalidation information; private traces and payloads remain restricted
-- Guard coverage, recovery conditions, and administrative authority disclosed for the integration
+Users can inspect active policies and onchain state. Where public [Explorer views](./dapp-explorer) are available, they show selected protection details. Private transaction traces require project access.
 
 ## What Successful Rollout Looks Like
 
-- Reviewed assertions cover the agreed invariants and operational cases
-- Every protected path reaches the required enforcement boundary or guard
-- Actual submitters can route transactions successfully, and rejected operations are reconciled
-- Staging, integration, and recovery checks pass before production activation
-- Teams monitor invalidations, lifecycle changes, and periods of reduced enforcement
+Activate production after policy, guard, routing, and recovery tests pass. Assign responsibility for alerts, policy changes, and periods of reduced enforcement.
 
 ## Next Steps
 

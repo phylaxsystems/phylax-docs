@@ -3,9 +3,9 @@ title: 'L2 and Sequencer Integrations'
 description: 'Sequencer-based enforcement, Linea and OP Stack architecture, and earlier platform workflows.'
 ---
 
-This section contains the sequencer and L2 integration model previously described throughout the main documentation. The main documentation now follows [Ethereum enforcement](../architecture-overview): participating builders, the Credible Registry, on-chain guards, and transaction routing.
+These pages describe sequencer integration designs and earlier L2 workflows. Confirm network support, the deployed client, and the assertion specification before use.
 
-These L2 pages describe integration designs and earlier workflows. They are not a live support matrix or a claim that a particular network is currently available. Confirm the deployed client, assertion specification, and operational policy for a rollout.
+For Ethereum, see [Ethereum Architecture](../architecture-overview).
 
 ## The Sequencer Enforcement Boundary
 
@@ -13,14 +13,16 @@ An integrated sequencer can validate candidate transactions at the network's inc
 
 Coverage must account for bridge-originated, delayed, system, and forced-inclusion paths. Their inclusion rules can differ from ordinary user transactions. An integration must specify where checks run and what happens when they fail or time out.
 
-Ethereum has no single sequencer that enforces assertions for all builders. Registering assertions or using the Credible RPC alone does not prevent another builder from including a transaction. Ethereum's on-chain guard supplies that execution restriction while its gate is active.
-
 ## Integration Designs
 
 - [Plan an L2 integration](./network-integration): transaction-source policies, inclusion boundaries, and operational requirements.
 - [Linea / Besu](./architecture-linea): plugin-based validation during block building.
 - [OP Stack](./architecture-op-stack): the Rollup-Boost integration design.
 - [Validation pipelines](./validation-pipeline): speculative execution, rollback, bounded response windows, and backpressure.
+
+## How Policy Management Works on L2s
+
+For L2 deployments that support manual registration, use [Request Manual Verification on L2s](./manual-verification) to prepare evidence of protocol control and confirm the intended Protocol Manager. Check support for your target network before preparing a request.
 
 ## Earlier Platform Workflows
 

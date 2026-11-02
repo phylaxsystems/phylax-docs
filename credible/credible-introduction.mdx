@@ -1,6 +1,6 @@
 ---
 title: 'Overview'
-description: 'Write your own security assertions or develop them with guidance included in your Phylax subscription.'
+description: 'Getting started with Phylax'
 ---
 
 Phylax helps Ethereum protocols enforce custom security policies before settlement. Policies are implemented as Solidity assertions, checked by participating builders, and paired with guards on protected operations.
@@ -8,8 +8,8 @@ Phylax helps Ethereum protocols enforce custom security policies before settleme
 You can write assertions yourself. We highly recommend working with **Phylax sales engineering** to find the policies and integration approach that best fit your protocol. This support is included in your Phylax subscription at no additional cost. You can bring existing assertion code or start with a discussion of your protection needs.
 
 <CardGroup cols={2}>
-  <Card title="Plan Your Integration" icon="users" href="./work-with-phylax">
-    Understand the engagement, responsibilities, and path to production.
+  <Card title="Should you use Phylax?" icon="circle-question" href="./should-you-use-phylax">
+    Work through the questions your team will have, from the first call to live protection.
   </Card>
   <Card title="Explore an Example Policy" icon="flask-vial" href="./pcl-quickstart">
     Optionally run a local example to see how assertions behave.
@@ -20,21 +20,25 @@ You can write assertions yourself. We highly recommend working with **Phylax sal
 
 Policies can constrain asset outflows, administrative changes, collateralization, oracle deviations, and relationships between balances or positions. The appropriate rules depend on your protocol and its normal operations.
 
-For example, a rule that rejects every ownership change would also reject a planned transfer to a new governance contract. Policy design must account for legitimate exceptions as well as harmful behavior. The [Assertions Book](../assertions-book/assertions-book-intro) provides patterns to discuss with the team.
+For example, a rule that rejects every ownership change would also reject a planned transfer to a new governance contract. Policy design must account for legitimate exceptions as well as harmful behavior. Check out the [Assertions Book](../assertions-book/assertions-book-intro), it has patterns and logic for this.
 
 ## How Ethereum Enforcement Works
 
-Participating builders evaluate assertions against candidate transactions and exclude candidates that violate active production rules. An on-chain guard restricts protected operations to credible blocks while its gate is active. The Credible RPC routes submissions to participating builders.
+Builders that agree to run the Phylax enforcement engine evaluate transactions against your circuit breakers and exclude violating transactions from the blocks they build. Your team defines and approves the rules, which are deployed onchain under a signer set that only you control. No other party can activate or change your rules without your authorization.
+
+Once you protect functions with Phylax circuit breakers, an onchain guard checks that each protected call executes in a credible block. Calls included in a non-participating builder's block revert while the guard's enforcement gate is active. If a transaction interacting with your smart contract and it's routed to a builder that does not evaluate it, the transaction will revert. This ensures that incoming transactions can only settle if it's evaluated by the enforcement engine.
 
 Protection depends on the agreed policies, covered execution paths, deployed guards, and operational configuration. Learn about [Ethereum enforcement](./credible-layer-overview) and its [trust and recovery assumptions](./trust-model).
 
 ## From Evaluation to Operation
 
-An integration involves defining coverage and policies, reviewing implementation and test evidence, preparing guards and transaction routing, and establishing activation and recovery procedures. Sales engineering can help you work through these decisions.
+Our forward deployed engineers (FDEs) work closely with your team to define, implement, and thoroughly test your circuit breakers. We study your protocol and existing mitigations, then work through the failure scenarios, legitimate exceptions, and thresholds that matter to you.
 
-Your team provides protocol context and approves the intended behavior. Authorized protocol signers retain control of on-chain actions under the deployed permissions. You choose whether to author assertions independently or work with sales engineering. Establish implementation and review responsibilities for either approach.
+Within the agreed integration scope, we write assertions, prepare contract and transaction-routing changes for your review, and test a replica of your protocol on a fork of Ethereum. We run backtests, test legitimate and violating transactions, investigate false positives, and rehearse recovery.
 
-Use [Prepare for Your Integration](./evaluate-credible-layer) to gather the information for that discussion. The [FAQ](./faq) covers engineering effort, authority, availability, and policy changes.
+Your team reviews the policies and evidence, approves protocol changes, and controls production signing. We prepare and simulate activation transactions for your signers to authorize and execute, then verify the live protection. Monitoring, incident response, and ongoing policy changes follow the operating plan agreed with your team.
+
+Use [Prepare for Your Integration](./evaluate-credible-layer) to gather the information for that discussion. The [Enforcement FAQ](./faq) covers builder behavior, routing, transaction rejection, and recovery.
 
 ## Technical Documentation
 

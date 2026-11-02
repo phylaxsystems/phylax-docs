@@ -3,7 +3,7 @@ title: 'Credible Layer Contracts'
 description: 'Ethereum assertion lifecycle, builder authorization, credible-block markers, and contract guards.'
 ---
 
-Ethereum enforcement uses separate contracts for assertion policy and guarded execution. The State Oracle records which assertions apply; the Credible Registry records authorized builders and credible blocks; a guard restricts protected operations using that Registry.
+The State Oracle records assertion policy. The Credible Registry records authorized builders and credible blocks. Guards check the Registry before protected operations execute.
 
 Registering an assertion does not install a guard or configure transaction routing. See [Ethereum Architecture](./architecture-overview) for the complete execution path.
 
@@ -26,7 +26,7 @@ In the [public State Oracle implementation](https://github.com/phylaxsystems/cre
 
 ### Protocol Admin Verification
 
-An approved verifier establishes authority during registration. Supported paths depend on the deployment and can include ownership interfaces, an initial-manager interface, or approved manual verification. Platform membership alone does not grant on-chain manager authority. See [Ownership Verification](./ownership-verification).
+An approved verifier establishes authority during registration. Supported paths depend on the deployment and can include ownership interfaces or an initial-manager interface. Platform membership alone does not grant on-chain manager authority. See [Managing Policy Deployments](./managing-policy-deployments).
 
 ### Data Availability Verification
 

@@ -3,31 +3,21 @@ title: Aave V3 Suite
 description: Credible Layer Assertions for Aave V3
 ---
 
-We've taken a deep dive into the Aave V3 protocol and have created a suite of assertions that can be used to increase the security of the protocol.
-
-In general, the Aave V3 smart contracts are very well written and follow best practices with regard to security.
-We chose Aave V3 because it's a popular and battle-tested protocol that would serve as a good case study for writing real-world assertions.
-
-Link to the Phylax fork of Aave V3: [https://github.com/phylaxsystems/aave-v3-origin/tree/main](https://github.com/phylaxsystems/aave-v3-origin/tree/main)
+This suite implements Aave V3 invariants as assertions. See the [Phylax fork](https://github.com/phylaxsystems/aave-v3-origin/tree/main) for code and tests.
 
 ## Approach
 
-One of the most common ways of writing assertions is by expressing the protocol invariants as assertions.
+Most assertions follow [Aave's invariant specifications](https://github.com/aave-dao/aave-v3-origin/tree/main/tests/invariants/specs).
 
-Aave V3 has put a lot of effort into invariants, as can be seen in the [Aave V3 Invariants](https://github.com/aave-dao/aave-v3-origin/tree/main/tests/invariants) documentation.
-Specifically, the [invariants specification](https://github.com/aave-dao/aave-v3-origin/tree/main/tests/invariants/specs) was helpful for writing assertions, and most of the assertions we wrote are based on the invariants.
-
-We have mocked parts of the protocol in order to properly test the assertions and ensure that they only revert transactions that break the invariants. The mocks are located in the [mocks](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/mocks) directory.
+[Mocks](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/mocks) create invalid states to test assertion failures.
 
 ## Maturity
 
-The Aave V3 assertion suite has been tested quite thoroughly given the early stage of the Credible Layer testing capabilities. We feel confident that the production assertions could be added to an Aave V3 deployment and add value to the security and robustness of the protocol.
-
-Before production promotion, create a release in the Phylax platform and review its automatic backtesting result. The platform tests the release against transactions from the last 20,000 blocks so you can identify benign activity that the assertion would have invalidated. See [How to Review Backtesting Results](/credible/backtesting).
+The suite includes local tests. Before production, review [release backtesting](../../credible/backtesting) for false positives against recent protocol activity.
 
 ## Here Be Dragons 🐲
 
-In order to showcase the real power of assertions, we have introduced a bug in the protocol.
+The example fork contains an intentional bug.
 
 Anyone borrowing exactly `333e6` tokens will receive double the amount of tokens they would normally receive if they borrowed any other amount.
 
@@ -37,30 +27,11 @@ The bug can be found in the [BorrowLogic.sol](https://github.com/phylaxsystems/a
 
 ## Key Features
 
-- Protocol violation detection
-- Comprehensive operation coverage (supply, borrow, repay, withdraw, liquidation, flash loans)
-- Based on Aave's official invariants
-- Extensive test suite
+The suite covers supply, borrow, repay, withdrawal, liquidation, and flash-loan operations.
 
 ## Assertion Types
 
-### Production Assertions (High Value)
-
-These assertions provide unique value beyond pure Solidity capabilities:
-
-- **Cross-transaction validation**: Verify invariants across multiple operations
-- **Price consistency**: Detect manipulated or inconsistent pricing inputs
-- **Complex state relationships**: Validate accounting integrity
-- **Proxy/delegatecall resilience**: Use event logs for robust verification
-
-### Showcase Assertions (Demonstrative)
-
-These demonstrate assertion capabilities but could be implemented in Solidity:
-
-- **Basic balance validation**: Simple balance change checks
-- **Health factor validation**: Standard health factor maintenance
-- **Reserve state validation**: Basic reserve condition checks
-- **Cap validation**: Supply/borrow cap enforcement
+The repository separates production assertions from showcase assertions. Showcase checks illustrate behavior that protocol Solidity can also enforce.
 
 ## Assertion Collections
 
@@ -89,7 +60,7 @@ These demonstrate assertion capabilities but could be implemented in Solidity:
   - Fee payment validation
   - Reserve state integrity
 
-#### Robust Verification
+#### Log-Based Verification
 
 - **[LogBasedAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/LogBasedAssertions.a.sol)** - Proxy/delegatecall resilient validation:
   - Balance change verification using event logs
@@ -127,19 +98,7 @@ These demonstrate assertion capabilities but could be implemented in Solidity:
 
 ## Testing
 
-### Structure
-
-- Positive tests: Valid operations pass
-- Negative tests: Invalid operations fail
-- Integration tests: Multi-operation sequences
-- Edge cases: Boundary conditions
-
-### Categories
-
-- Individual operation tests
-- Batch operation tests
-- Error condition tests
-- Mock protocol tests
+The tests cover valid and invalid operations, sequences, batches, and boundary conditions. Mocks provide controlled failure cases.
 
 ## Intentional Bugs
 

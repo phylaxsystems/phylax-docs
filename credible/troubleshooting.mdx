@@ -3,7 +3,7 @@ title: 'Troubleshooting'
 description: 'Common errors and solutions when writing and testing assertions'
 ---
 
-This guide helps you diagnose and fix common errors when writing and testing assertions. If you encounter an error, check the quick reference table below or browse the detailed sections.
+Find the error below, then check its cause and solution.
 
 ## Quick Reference
 
@@ -33,11 +33,11 @@ Use [Ethereum Integration Planning](./dapp-integration) and [Guard Testing](./te
 
 ### "Expected 1 assertion to be executed, but 0 were executed"
 
-This error means your assertion never ran on the target transaction. This can occur in local tests, staging, production, or a platform release backtest.
+This error means your assertion never ran on the target transaction. This can occur in local tests, alerting, production, or a platform release backtest.
 
 **Common Causes:**
 
-**In staging, production, or a platform release backtest:**
+**In alerting, production, or a platform release backtest:**
 - The transaction that triggers the assertion fails or reverts before the assertion runs
 - The function selector in the trigger doesn't match the function being called
 
@@ -400,7 +400,7 @@ If you've tried the solutions above and still can't resolve your issue:
 
 **Related Documentation:**
 
-- [Writing Assertions Guide](/credible/write-first-assertion) - Learn assertion patterns
+- [Writing Your Own Policies](./writing-your-own-policies) - Learn assertion patterns
 - [Testing Assertions](/credible/testing-assertions) - Testing best practices
 - [pcl Reference](/credible/cli-reference) - Command-line tool documentation
 - [Cheatcodes Reference](/credible/cheatcodes-reference) - Available Phylax cheatcodes

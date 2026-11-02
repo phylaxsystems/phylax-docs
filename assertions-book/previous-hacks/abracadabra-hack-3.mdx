@@ -3,8 +3,6 @@ title: Abracadabra CauldronV4 Cook Function Exploit
 description: Logic flaw in the cook() function allowed bypassing solvency checks, enabling $1.8M in uncollateralized borrowing
 ---
 
-This case study explains how the Abracadabra CauldronV4 cook function exploit worked and which assertion pattern could have constrained the invalid state transition.
-
 ## What Happened
 
 A logic flaw in Abracadabra's `cook()` function allowed an attacker to borrow $1.8M in MIM tokens without posting any collateral.
@@ -27,21 +25,7 @@ By chaining [Action 5, Action 0], the borrow executes and marks that a solvency 
 
 ## Assertion Pattern
 
-This exploit could have been prevented by enforcing a fundamental invariant: **users cannot borrow without sufficient collateral**.
-
-The beauty of this approach is that it doesn't require understanding the exploit's specific mechanism. Developers don't need to know about:
-- The `CookStatus` struct and how it tracks solvency checks
-- The `_additionalCookAction()` helper function that resets flags
-- The specific action sequence [Action 5, Action 0] that triggers the bug
-- How the internal solvency check logic works
-
-Instead, an assertion simply states the protocol's core rule: after any transaction, if a user's borrow increased, their collateral must cover the debt. This works regardless of which code path led to the borrow or what internal checks were bypassed.
-
-**Why This Matters:**
-
-Complex protocols like Abracadabra have many functions and execution paths. The `cook()` function alone can execute dozens of different action combinations. Trying to secure each path individually is error-prone - as this exploit demonstrates, one forgotten check or edge case can drain millions.
-
-Assertions flip this model. Rather than validating each execution path, you validate the outcome. The protocol can have 100 different ways to borrow, but only one invariant to check: collateral >= required collateral.
+If borrowing increases, the caller must have enough collateral to cover the debt. The assertion checks this outcome after `cook()`, including when internal flags skip the protocol's solvency check.
 
 **Implementation:**
 
@@ -139,8 +123,3 @@ The assertion triggers on every `cook()` call and:
 3. If borrowing increased, calculates their collateral value using oracle prices
 4. Validates that collateral meets the required threshold for their debt
 5. Reverts if insufficient collateral is detected
-
-This approach validates the outcome rather than the execution path:
-
-- **Without assertion**: Developers must remember to add solvency checks in every function that modifies debt, handle complex state transitions, and guard against flag manipulation
-- **With assertion**: Define the invariant once. It catches any bug that results in undercollateralized positions, whether from flag manipulation, reentrancy, rounding errors, or future code changes

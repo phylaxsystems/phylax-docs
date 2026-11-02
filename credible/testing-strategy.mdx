@@ -3,31 +3,31 @@ title: 'How to Plan Ethereum Assertion Testing'
 description: 'Validate assertion logic, release evidence, Ethereum guards, RPC routing, and recovery before production.'
 ---
 
-Plan testing around the parts of Ethereum enforcement: the rule, the participating builder, the on-chain guard, and the actual transaction route. Staging provides useful evidence about rule behavior, but it does not exercise every production dependency.
+Test assertion logic, builder enforcement, guards, and transaction routing. Alerting checks rule behavior but does not exercise every production dependency.
 
 ## Prerequisites
 
-Identify the protected contracts and entry points, assertion specification, intended guard implementation, transaction submitters, Protocol Manager, and recovery roles. Confirm the test environment available for the deployment; staging is not itself a public Ethereum testnet.
+Identify the protected contracts and entry points, assertion specification, intended guard implementation, transaction submitters, Protocol Manager, and recovery roles. Confirm the test environment available for the deployment; alerting is not itself a public Ethereum testnet.
 
 ## 1. Test Rules Locally
 
 Use [local assertion tests](./testing-assertions) for allowed actions and intended failures. Cover trigger matching, snapshot selection, boundary values, gas limits, and exceptional legitimate operations such as migrations and upgrades.
 
-Include a failure case that would pass if the assertion were absent. A test that only observes the protocol's existing revert does not demonstrate added assertion protection. Reuse protocol fixtures and add focused regression tests for findings from staging or historical replay.
+Include a failure case that would pass if the assertion were absent. A test that only observes the protocol's existing revert does not demonstrate added assertion protection. Reuse protocol fixtures and add focused regression tests for findings from alerting or historical replay.
 
 ## 2. Review the Release Evidence
 
 Creating a release with `pcl apply` starts the platform's verification, source-code, and backtesting checks. Review the actual target contracts and assertion changes, then investigate each backtesting finding before deployment.
 
-A clean historical window establishes that the tested transactions did not violate the release under the replay conditions. It does not cover every possible future operation or prove that a guard is installed. See [Backtesting](./backtesting) and [Release Review Checks](./release-review-checks).
+A clean backtest applies only to the tested history and replay conditions. See [Backtesting](./backtesting) and [Release Review Checks](./release-review-checks).
 
-## 3. Observe Staging Behavior
+## 3. Observe Alerting Behavior
 
-Deploy the reviewed release to staging on the [Ethereum platform](https://ethereum.phylax.systems). Wait for the configured activation time and monitor matching activity and invalidations.
+Deploy the reviewed release to alerting on the [Ethereum platform](https://ethereum.phylax.systems). Wait for the configured activation time and monitor matching activity and invalidations.
 
-Check representative ordinary traffic and important exceptional operations. Low traffic or no matching triggers can produce a quiet dashboard without establishing useful coverage. Choose a review period based on the scenarios observed, rather than a fixed number of days or a percentage of testing effort.
+Test ordinary activity and legitimate exceptions. Check that transactions exercised the assertions. Choose the review period based on the scenarios covered.
 
-Investigate false positives, add local regression cases, and review a new release after changes. Staging does not drop live transactions, so it does not prove that production rejection or recovery works.
+Investigate false positives, add local regression cases, and review a new release after changes. Alerting does not drop live transactions, so it does not prove that production rejection or recovery works.
 
 ## 4. Test Guards and the Submission Path
 
@@ -55,12 +55,6 @@ Test restrictive assertions while builders continue producing credible blocks. T
 
 ## 6. Review Production Readiness
 
-Before activating production rules, verify:
+Resolve findings from the tests above before production. Record coverage gaps, activation delays, and conditions that reduce enforcement.
 
-- Rule behavior, trigger coverage, and resource usage are understood.
-- Release and staging findings have been resolved.
-- Every claimed protected path reaches the required guard.
-- All actual submitters can route protected transactions.
-- Authority, activation delays, monitoring, and recovery have been reviewed and tested.
-
-Record remaining gaps and reduced-enforcement conditions. Production activation changes assertion policy; it does not complete missing contract or routing work. See [Ethereum Integration Planning](./dapp-integration).
+Complete the [integration plan](./dapp-integration), including monitoring and recovery responsibilities.

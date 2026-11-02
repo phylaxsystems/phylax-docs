@@ -1,46 +1,46 @@
 ---
 title: 'Prepare for Your Integration'
-description: 'Gather protocol context and protection requirements for a scoping conversation with Phylax sales engineering.'
+description: 'Prepare protocol context, failure scenarios, and existing mitigations for your first meeting with Phylax.'
 ---
 
-Use this guide to prepare for a technical scoping conversation with Phylax sales engineering. Bring what you already know and record the open questions. You do not need to write Solidity assertions or complete a tutorial first.
+Prepare your protocol context and the failure scenarios you want to address. Bring what you have. Our FDEs help define the policies and integration.
 
 ## Prerequisites
 
-Identify a technical contact who understands your protocol and the operations you want to protect. If you are still evaluating the model, start with [How Ethereum Enforcement Works](./credible-layer-overview).
+Identify a technical contact who understands the protocol and the operations you want to protect.
 
 ## 1. Describe the Protection Need
 
-List the assets and operations in scope, the harmful outcomes you want to prevent, and any known gaps in existing controls. Include examples of normal activity and exceptional operations that must remain possible, such as migrations, large withdrawals, or governance changes.
+Describe the assets and operations to protect, the harmful outcomes to prevent, and gaps in existing controls. Include normal activity and exceptions that must remain possible, such as migrations or large withdrawals.
 
-You can describe these in plain language. Work with sales engineering to turn them into precise policy requirements, including thresholds and exceptions where appropriate.
+Our FDEs help turn these requirements into policies for your team to approve.
 
 ## 2. Gather Technical Context
 
-Prepare the information available to your team:
+Prepare the available information:
 
-- Target networks, contract addresses, source repositories, and relevant documentation.
-- Contract architecture, upgrade mechanisms, privileged roles, and external dependencies.
-- Transaction submitters, including wallets, multisig executors, keepers, bots, and relayers.
-- Existing tests, invariants, audit findings, and examples of legitimate operational activity.
-- Known restrictions on contract changes, routing, governance timing, or availability.
+- Networks, contract addresses, source code, and architecture.
+- Upgrade mechanisms, privileged roles, and dependencies.
+- Systems that submit transactions and restrictions on changing their routes.
+- Tests, audit findings, and examples of legitimate activity.
+- Constraints on contract changes, governance timing, or availability.
 
-Use the agreed private channel for proprietary materials. Credentials and signing keys are not needed for scoping.
+Use the agreed private channel for proprietary materials. We do not need credentials or signing keys.
 
 ## 3. Identify the People and Decisions Needed
 
-Name the people who can explain protocol behavior, approve policy requirements, implement contract or routing changes, authorize lifecycle actions, and respond to incidents. One person may hold several roles; their permissions remain distinct.
+Identify who reviews policies, approves contract changes, signs deployments, and responds to incidents. Agree on the initial coverage and the evidence required before activation.
 
-With Phylax, agree on implementation and review responsibilities, the initial coverage, and the evidence required before activation. Record unresolved questions instead of treating assumptions as approved behavior.
+Our FDEs prepare and test the integration. Your team retains authority over its policies and protocol. See [Work with Phylax](./work-with-phylax#the-integration-process) for responsibilities.
 
 ## 4. Review Ethereum Integration Feasibility
 
-Use the [technical integration plan](./dapp-integration) with sales engineering to assess guard coverage, supported deployments, routing, authority, and recovery. A protected operation that can bypass the required gate needs a resolved integration change or an explicitly narrower coverage claim.
+Review [guard coverage, routing, and recovery](./dapp-integration) with our FDEs. An immutable contract without a suitable guard cannot gain Ethereum protection through assertion registration alone.
 
-An immutable contract without a suitable gate cannot gain Ethereum protection simply by registering assertions. Review fail-open behavior, legitimate exceptions, and blocked recovery paths before deciding on a rollout.
+Record the required contract changes and any unresolved coverage gaps.
 
 ## Ready for the Discussion
 
-You are ready to start when you can explain the protection need, identify a technical contact, and share the context available so far. Use [Work with Phylax](./work-with-phylax#start-a-conversation) to start the conversation and understand the next stages.
+[Contact Phylax](./work-with-phylax#start-a-conversation) when you can describe the protection need and identify a technical contact.
 
-Ethereum infrastructure operators should use [Builder Integration Planning](./ethereum-builder-integration). Sequencer-based integrations have a separate [L2 guide](./l2-integrations/overview).
+Infrastructure operators should use [Builder Integration Planning](./ethereum-builder-integration) or the [L2 guide](./l2-integrations/overview).

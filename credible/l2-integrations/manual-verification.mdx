@@ -1,0 +1,34 @@
+---
+title: 'How to Request Manual Verification on L2s'
+description: 'Prepare an assertion-manager authorization request for an L2 deployment that supports manual registration.'
+---
+
+Use this guide for L2 deployments that support manual verification when your contracts do not fit the network's automatic verification path. Confirm support for your target network before preparing a request.
+
+## Prerequisites
+
+- Identify the L2 network and contracts requiring assertion-management authorization.
+- Identify the intended Protocol Manager address and its signing policy.
+- Be able to demonstrate that the protocol authorizes that manager for those contracts.
+
+## 1. Confirm the Verification Path
+
+Check the supported verifier with Phylax. Existing contracts without a supported automatic verification path may require manual review.
+
+Do not change contract ownership or add an interface solely to satisfy an assumed requirement. Confirm the requirements for your L2 deployment first.
+
+## 2. Prepare the Request
+
+Provide the target network, contract addresses, intended manager, and an explanation of the protocol's ownership and governance structure. Include evidence demonstrating control and consent, such as an authorization from the existing admin multisig or governance process and control of the official codebase.
+
+Confirm the required evidence with Phylax. Public codebase access alone should not be treated as authority to change a protocol's security policy.
+
+## 3. Review Registration and Recovery
+
+Agree on the contract set, authorization path, applicable delays, and how manager changes or key loss will be handled. Review any separate protocol and network administration powers. Manual approval is not a substitute for this authority review.
+
+## 4. Verify the On-Chain Result
+
+After an approved registration is executed, verify that the State Oracle associates the intended manager with the agreed contracts. Check any pending activation time and confirm the manager can perform the expected lifecycle actions.
+
+Continue with the [L2 platform and compatibility notes](./platform-and-compatibility). Registration alone does not establish sequencer enforcement or transaction-source coverage; see [L2 Integration Planning](./network-integration).

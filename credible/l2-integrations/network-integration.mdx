@@ -3,20 +3,13 @@ title: 'How to Plan an L2 Integration'
 description: 'High-level integration path for networks and sequencers adopting the Credible Layer'
 ---
 
-Use this page when your goal is to scope a network integration and identify the infrastructure surfaces your team will need.
+Plan where the sequencer validates transactions and how it handles failures. Each L2 needs its own coverage and failure policy.
 
-<Note>
-This page describes the sequencer-based L2 integration model. Each network needs its own coverage and failure policy. Ethereum builder-and-guard integration is documented in [Ethereum Builder Integration](../ethereum-builder-integration).
-</Note>
-
-This page explains how networks integrate the Credible Layer at a high level. It focuses on the
-interface surfaces and operational expectations without internal implementation details.
+For Ethereum, use [Builder Integration Planning](../ethereum-builder-integration).
 
 ## Who This Is For
 
-- L2 networks and sequencers evaluating integration
-- Infrastructure teams operating L2 block-production components
-- Security teams defining network-level enforcement goals
+L2 sequencer, infrastructure, and security teams.
 
 ## High-Level Flow
 
@@ -49,67 +42,27 @@ Networks provide the following integration surfaces:
 
 ## Integration Policy Decisions
 
-Network integrations should define how enforcement is applied across the network's transaction paths and traffic management layers.
-
 ### Transaction Source Coverage
 
-Some networks include transaction paths beyond ordinary user RPC flow. Examples include bridge-originated actions, delayed queues, scheduled system transactions, or forced-inclusion-style paths. The integration policy should specify how assertion validation fits into each path.
+For each transaction source, record the validation boundary, inclusion rules, timeout behavior, and invalidation metadata. Include bridge, system, delayed, and forced-inclusion transactions.
 
-Before production rollout, define:
-
-- Which transaction sources the integration covers
-- Where assertion validation runs for each source
-- Whether validation happens before admission, before inclusion, during block building, or at another documented boundary
-- How validation results are routed into sequencing, block-building, or preflight policy
-- Which application-layer response options protocols can use when the integration provides a response window
-- Timeout and fallback behavior when validation cannot classify a transaction in time
-- What invalidation metadata is sent to affected protocols
-
-Transaction-source policy is integration-specific and should be documented before production enforcement.
+If a response window exists, define the protocol actions it permits before inclusion.
 
 ### Bounded Response Windows
 
-Some architectures can create a bounded window between detecting an unsafe transaction and the point where network rules require a final inclusion decision. If the integration uses such a window, document:
-
-- The maximum delay or response budget
-- What happens when the budget expires
-- Whether the transaction is retried, released, rejected, or escalated
-- Which protocol mitigations can be used, such as pausing a contract path, changing a risk parameter, quarantining a known unsafe origin, or invalidating off-chain orders or intents
-- What observability is required for every delayed, retried, or released transaction
-
-The goal is bounded risk management before settlement, not an unbounded halt condition.
+If the design delays an inclusion decision, define the maximum delay and expiry behavior. Specify permitted protocol responses and record every delayed, retried, or released transaction.
 
 ### Ingress traffic management
 
-Networks can pair assertion validation with ingress-level caching and rate-limit policies for repeated invalid submissions.
-
-Common controls include exact invalid-transaction caching, broader short-lived fingerprints for repeated attempts against the same assertion and target contract or function, peer or sender budgets, and clear TTLs for any broad match. Exact matches can usually be blocked aggressively; broader fingerprints should use thresholds and short expiration windows to avoid suppressing legitimate traffic.
+Cache repeated invalid submissions or use short-lived fingerprints and sender budgets. Broader matches need conservative thresholds and expiry times to avoid suppressing legitimate traffic.
 
 ## Operational Expectations
 
 - The enforcer runs alongside the block builder and does not change consensus rules
 - Validation is deterministic for the same assertion, state, and execution context
-- Protocol teams choose whether assertions are staged or enforced; networks honor the registry status during validation
+- Protocol teams choose whether assertions run in alerting mode or are enforced; networks honor the registry status during validation
 - Network operators define continuity behavior for maintenance windows, degraded dependencies, and validation timeouts
 - Production integrations keep assertion work bounded through admission review, trigger scoping, runtime limits, and operational monitoring
-
-## Integration Checklist (High Level)
-
-- Identify the block-building hook for transaction validation
-- Configure access to registry data and assertion bytecode
-- Ensure the enforcer respects staged vs enforced assertions as set by protocol teams
-- Define validation policy for every supported transaction source
-- Define timeout, fallback, and bounded response-window behavior where applicable
-- Configure ingress controls for repeated invalid submissions
-- Set up monitoring and invalidation review workflows
-
-## Integration Requirements (Public)
-
-- **Block-building hook** that can query the enforcer before inclusion
-- **Transaction-source policy** that describes where validation runs for each supported path
-- **Registry access** for assertion discovery (on-chain events indexed locally)
-- **DA access** for assertion bytecode retrieval
-- **Invalidation visibility** through the Phylax platform
 
 ## Next Steps
 
@@ -123,7 +76,7 @@ Common controls include exact invalid-transaction caching, broader short-lived f
   <Card title="Trust Model" icon="shield-check" href="/credible/trust-model">
     Guarantees, trust boundaries, and operational assumptions
   </Card>
-  <Card title="Invalidations" icon="warning" href="/credible/dapp-invalidations">
-    Review transactions that violated assertions
+  <Card title="Managing Your Circuit Breakers" icon="warning" href="../managing-your-circuit-breakers#investigate-a-rejected-transaction">
+    Review releases, authorize changes, and investigate rejected transactions.
   </Card>
 </CardGroup>

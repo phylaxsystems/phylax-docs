@@ -32,16 +32,16 @@ flowchart TD
 | Builder → Credible Registry | Mark blocks under the authorized builder policy | Builder and Registry administrators |
 | Guard → Credible Registry | Check whether the protected operation may execute | Protocol integrators and contracts maintainers |
 
-A validation report is not a transaction inclusion guarantee. A block marker is not a proof of assertion execution. A platform project is not an on-chain enforcement gate.
+See [Trust Model](./trust-model) for the guarantees and assumptions at each interface.
 
 ## Product and Protocol Boundaries
 
-The State Oracle coordinates assertion authority and timing. The Credible Registry coordinates builder authorization and block credibility. Protocol guards consume the latter and preserve the protocol's ordinary checks.
+The State Oracle controls assertion authority and timing. The Credible Registry records builder authorization and block markers. Guards check the Registry while preserving ordinary protocol checks.
 
-The platform, release backtesting, staging, and Assertion DA support authoring, review, operations, and artifact delivery. Public Explorer views expose selected posture and evidence; private traces and project records remain access-controlled. A platform view does not replace checking deployed contract configuration.
+The platform coordinates release review and operation. Assertion DA supplies artifacts.
 
 ## Changes Requiring Review
 
-Coordinate changes to contract ABIs, event indexing, assertion specifications, guard implementations, builder software, and routing. Test both successful execution and degraded dependencies against the exact deployment. Review [Trust Model](./trust-model) and [Integration Planning](./dapp-integration).
+Review interface changes against the deployed contracts and software. Test successful execution and dependency failures. Use [Integration Planning](./dapp-integration) for protocol changes.
 
-Sequencer hooks, delayed queues, and Rollup-Boost interfaces are covered under [L2 and Sequencer Integrations](./l2-integrations/overview).
+Sequencer interfaces are covered under [L2 and Sequencer Integrations](./l2-integrations/overview).

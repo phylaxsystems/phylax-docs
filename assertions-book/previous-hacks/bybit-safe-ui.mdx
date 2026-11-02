@@ -3,8 +3,6 @@ title: Bybit - Compromised Safe Wallet UI
 description: Safe Wallet UI was compromised by gaining access to the host machine.
 ---
 
-This case study explains how the Bybit compromised Safe Wallet UI attack worked and which assertion pattern could have constrained the invalid state transition.
-
 ## What Happened
 
 Bybit suffered from a security breach in Safe's hosting infrastructure losing 1.4bn USD.
@@ -51,18 +49,11 @@ of the contract.
 Therefore it was possible to be able to drain all the assets of the Safe without the need of any
 additional approvals by the original owners.
 
-It should be highlighted that even if there is no logic to change the implemenation address in the
-implementation by safe, delegate calls can modify storage slots of the calling contract.
-This allows for full flexibility but opens up the possibility for attacks.
+A delegate call can modify the caller's storage, including the implementation slot, even without a dedicated upgrade function.
 
 ### How the Assertion Would Have Prevented It
 
-It might be fair to assume that most users of safes would never actually want to change the
-implementation address of their safe, but they have no way to express their preferences.
-
-Assertions give users the ability to express additional invariants on the state of the contract.
-A change of the implementation address could be prevented by analyzing the state changes within
-a transaction.
+An assertion can reject changes to the Safe implementation slot.
 
 PhEvm precompiles used:
 
@@ -106,9 +97,7 @@ contract SafeAssertion is Assertion {
 }
 ```
 
-To even enhance security properties, a complentary assertion could enforce transfers to a whitelist
-of addresses. In the below example, the assertion checks if the balance of the safe decreased while
-the balance of the whitelisted addresses increased with the respective amount.
+A second assertion can restrict transfers to approved addresses. This example compares the Safe's balance decrease with the recipients' balance increases.
 
 ```solidity
  function assertionSafeDrain() external {

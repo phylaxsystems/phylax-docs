@@ -3,15 +3,9 @@ title: 'OP Stack'
 description: 'OP Stack specific implementation of the Credible Layer'
 ---
 
-This page preserves the OP Stack integration design, which uses [Rollup-Boost](https://github.com/flashbots/rollup-boost) to connect assertion validation to an L2 sequencer through a proxy. It is separate from [Ethereum builder-and-guard enforcement](../architecture-overview); confirm the implementation and support status before using this design.
+This L2 design connects assertion validation to an OP Stack sequencer through [Rollup-Boost](https://github.com/flashbots/rollup-boost). Confirm implementation and support status before use.
 
-<Note>
-For the general integration path, see [Network Integration Overview](/credible/l2-integrations/network-integration).
-</Note>
-
-<Note>
-Looking for the Besu/Linea pattern? See [Linea / Besu Integration](/credible/l2-integrations/architecture-linea).
-</Note>
+See [L2 Integration Planning](./network-integration) for requirements.
 
 ## Architecture Diagram
 
@@ -107,11 +101,6 @@ The bottom section illustrates **assertion execution**, a component shared with 
 
 ## Integration Benefits
 
-This solution provides several advantages for OP Stack networks:
+Rollup-Boost connects an external builder without sequencer code changes. Assertion workers can run separately. Measure latency and backpressure for the deployment.
 
-1. **Non-invasive**: No modifications required to the sequencer code
-2. **Modular**: Assertion validation runs as a separate, upgradable component
-3. **Parallel execution**: Assertion workers can run separately; measure latency and backpressure for the actual deployment
-4. **Configurable policy**: Changes to enforcement require review of coverage, lifecycle timing, and continuity behavior
-
-For more details on the general architecture and other implementations, see the [Architecture Overview](/credible/architecture-overview).
+Review coverage, activation timing, and failure handling before changing enforcement policy.

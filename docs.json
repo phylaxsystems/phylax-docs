@@ -19,7 +19,7 @@
     },
     {
       "source": "/credible/dapp-incidents",
-      "destination": "/credible/dapp-invalidations"
+      "destination": "/credible/managing-your-circuit-breakers"
     },
     {
       "source": "/credible/accelerate-with-ai",
@@ -36,9 +36,50 @@
     {
       "source": "/credible/network-integrations/architecture-op-stack",
       "destination": "/credible/l2-integrations/architecture-op-stack"
+    },
+    {
+      "source": "/credible/manual-verification",
+      "destination": "/credible/l2-integrations/manual-verification"
+    },
+    {
+      "source": "/credible/ownership-verification",
+      "destination": "/credible/managing-policy-deployments"
+    },
+    {
+      "source": "/credible/write-first-assertion",
+      "destination": "/credible/writing-your-own-policies"
+    },
+    {
+      "source": "/credible/invariant-to-assertion",
+      "destination": "/credible/writing-your-own-policies"
+    },
+    {
+      "source": "/credible/explorer-security-posture",
+      "destination": "/credible/dapp-explorer"
+    },
+    {
+      "source": "/credible/dapp-projects",
+      "destination": "/credible/managing-your-circuit-breakers"
+    },
+    {
+      "source": "/credible/dapp-invalidations",
+      "destination": "/credible/managing-your-circuit-breakers"
+    },
+    {
+      "source": "/credible/dapp-integrations",
+      "destination": "/credible/setting-up-alerting"
     }
   ],
   "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Request a demo",
+          "icon": "calendar",
+          "href": "https://forms.fillout.com/t/sJ1sHJMEnwus"
+        }
+      ]
+    },
     "anchors": [
       {
         "anchor": "Credible Layer",
@@ -48,33 +89,27 @@
             "group": "Start Here",
             "pages": [
               "credible/credible-introduction",
+              "credible/should-you-use-phylax",
               "credible/credible-layer-overview",
-              "credible/work-with-phylax",
-              "credible/evaluate-credible-layer",
               "credible/faq"
-            ]
-          },
-          {
-            "group": "Tutorials",
-            "pages": [
-              "credible/pcl-quickstart",
-              "credible/test-policy-behavior"
             ]
           },
           {
             "group": "How-to Guides",
             "pages": [
               {
-                "group": "Developer Setup",
+                "group": "Work with Phylax",
+                "root": "credible/work-with-phylax",
                 "pages": [
-                  "credible/credible-install"
+                  "credible/evaluate-credible-layer",
+                  "credible/use-the-platform"
                 ]
               },
               {
-                "group": "Advanced Policy Development",
+                "group": "Writing Your Own Policies",
+                "root": "credible/writing-your-own-policies",
                 "pages": [
-                  "credible/write-first-assertion",
-                  "credible/invariant-to-assertion"
+                  "credible/credible-install"
                 ]
               },
               {
@@ -90,8 +125,7 @@
                 "pages": [
                   "credible/apply-assertions",
                   "credible/release-review-checks",
-                  "credible/deploy-assertions-dapp",
-                  "credible/manual-verification"
+                  "credible/deploy-assertions-dapp"
                 ]
               },
               {
@@ -103,7 +137,6 @@
                   "credible/fuzz-testing",
                   "credible/backtesting",
                   "credible/ci-cd-integration",
-                  "credible/dapp-integrations",
                   "credible/troubleshooting"
                 ]
               },
@@ -112,7 +145,7 @@
                 "pages": [
                   "credible/dapp-integration",
                   "credible/ethereum-builder-integration",
-                  "credible/ownership-verification"
+                  "credible/managing-policy-deployments"
                 ]
               }
             ]
@@ -154,10 +187,16 @@
             "group": "Platform",
             "pages": [
               "credible/dapp-overview",
-              "credible/dapp-explorer",
-              "credible/explorer-security-posture",
-              "credible/dapp-projects",
-              "credible/dapp-invalidations"
+              "credible/setting-up-alerting",
+              "credible/managing-your-circuit-breakers",
+              "credible/dapp-explorer"
+            ]
+          },
+          {
+            "group": "Try It Yourself",
+            "pages": [
+              "credible/pcl-quickstart",
+              "credible/test-policy-behavior"
             ]
           },
           {
@@ -205,7 +244,13 @@
               "credible/l2-integrations/architecture-linea",
               "credible/l2-integrations/architecture-op-stack",
               "credible/l2-integrations/validation-pipeline",
-              "credible/l2-integrations/platform-and-compatibility"
+              "credible/l2-integrations/platform-and-compatibility",
+              {
+                "group": "How Policy Management Works on L2s",
+                "pages": [
+                  "credible/l2-integrations/manual-verification"
+                ]
+              }
             ]
           }
         ]

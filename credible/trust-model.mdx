@@ -3,7 +3,7 @@ title: 'Trust Model & Guarantees'
 description: 'Enforcement scope, builder and guard assumptions, authorization, and recovery tradeoffs.'
 ---
 
-On Ethereum, the Credible Layer relies on participating builders, credible-block markers, and guards covering protected operations. This page explains the rule coverage, authority, and availability assumptions of that model.
+Ethereum enforcement depends on participating builders, valid block markers, and complete guard coverage. This page defines those assumptions and the recovery tradeoffs.
 
 ## Enforcement Scope
 
@@ -11,7 +11,7 @@ On Ethereum, the Credible Layer relies on participating builders, credible-block
 - **Validation before inclusion**: the enforcer reports failures before inclusion; the enforcing integration excludes those candidate transactions.
 - **Assertion-defined coverage**: rules protect only the behavior their logic and triggers capture. Passing a rule is not proof of safety against other failures.
 - **Configured lifecycle**: the State Oracle determines assertion assignments and activation or removal times.
-- **Execution-path coverage**: every protected Ethereum operation must reach the guard, including calls submitted by relayers, bridges, bots, and wallet modules where applicable.
+- **Execution-path coverage**: every protected Ethereum operation must reach the guard, regardless of its submitter or entry point.
 
 Assertions do not replace ordinary chain validity, protocol checks, or finality rules. Their execution is subject to resource limits and the integration's timeout and error policies.
 
@@ -19,7 +19,7 @@ For the separate sequencer inclusion boundary, see [L2 and Sequencer Integration
 
 ## Decentralized Builders
 
-On Ethereum, only participating builders run assertions; assertion validation is not a consensus rule. Protected operations need an unavoidable on-chain gate that checks a credible-block marker. Routing through the Credible RPC makes transactions available to participating builders, but routing alone cannot prevent another builder from including them.
+Assertion validation is not an Ethereum consensus rule. Protected operations need an unavoidable guard. The Credible RPC routes transactions to participating builders but cannot prevent inclusion by other builders.
 
 The model relies on:
 
@@ -61,10 +61,10 @@ Each integration should define:
 
 ## Evidence and Assurance
 
-Assertion code and registry state support public review. They do not establish complete protocol coverage on their own. Review the actual contract paths, deployed versions, active policies, and administrative powers alongside [Explorer posture](./dapp-explorer). Private invalidation payloads and traces remain subject to project access controls.
+Review deployed contract paths, active policies, and administrative powers to assess coverage. Public code and registry state alone do not establish it. Project permissions control access to private invalidation data.
 
 Assertion DA and local caches supply the bytecode used by enforcers. Integrations need defined behavior when artifacts cannot be prepared or validation cannot complete; hot-path validation should not depend on a live artifact fetch.
 
-Local tests, release backtesting, and staging provide evidence about rule behavior. End-to-end guard, routing, and recovery tests establish different parts of the integration. Audit reports apply to their stated revision and scope, not automatically to later changes or protocol-specific wiring.
+Local tests, release backtesting, and alerting provide evidence about rule behavior. End-to-end guard, routing, and recovery tests establish different parts of the integration. Audit reports apply to their stated revision and scope, not automatically to later changes or protocol-specific wiring.
 
-See [Testing Strategy](./testing-strategy), [Integration Planning](./dapp-integration), and the [FAQ](./faq).
+See [Testing Strategy](./testing-strategy), [Integration Planning](./dapp-integration), and the [Enforcement FAQ](./faq).

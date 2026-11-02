@@ -1,46 +1,46 @@
 ---
 title: 'Work with Phylax'
-description: 'Sales engineering guidance included in your Phylax subscription for policy fit and Ethereum integration.'
+description: 'Work with our engineers to scope, review, test, and activate your protocol protection.'
 ---
 
-You can write your own assertions. We highly recommend working with Phylax sales engineering to find the policies and integration approach that best fit your protocol. This support is included in your Phylax subscription at no additional cost.
+Our forward deployed engineers (FDEs) help define, implement, and test your circuit breakers. Sales engineering is included in your Phylax subscription. You can also [write your own policies](./writing-your-own-policies).
 
-Sales engineering can help you examine intended behavior, legitimate exceptions, and operational constraints, whether you bring existing assertions or start with a protection goal.
+For product fit, see [Should you use Phylax?](./should-you-use-phylax).
 
 ## Start a Conversation
 
-[Request a demo](https://forms.fillout.com/t/sJ1sHJMEnwus) to discuss your protection needs, or contact your existing Phylax sales engineering counterpart. You can begin with a description of your protocol and the operations you are concerned about. A completed assertion project is not required.
+[Contact us through our website](https://phylax.systems) or your Phylax contact. Our first meeting covers your protocol, the scenarios that concern you, and existing mitigations.
 
-The [preparation guide](./evaluate-credible-layer) lists useful context for the discussion. Share proprietary materials through the channel agreed with your Phylax contact.
+Use the [preparation guide](./evaluate-credible-layer) to gather the context.
 
 ## The Integration Process
 
-| Stage | Work done together | Outcome to agree on |
-| --- | --- | --- |
-| Scope protection | Identify assets, critical operations, dependencies, existing controls, and paths that could bypass enforcement. | A coverage description, including explicit gaps. |
-| Define policies | Specify prohibited effects, legitimate exceptions, thresholds, and recovery behavior. | Policy specifications that your team can review in plain language. |
-| Implement and validate | Assign implementation and review responsibilities; test allowed activity, violations, and exceptions; inspect historical and staging evidence. | Reviewed assertions and evidence of what was tested. |
-| Integrate enforcement | Prepare guards, submission routes, manager authorization, monitoring, and recovery procedures. | An integration plan with named owners and verification steps. |
-| Activate and operate | Review readiness, authorize the lifecycle actions, and establish how changes and incidents are handled. | An activation record and operational runbook. |
+When you work with our forward deployed engineers, here's what you get.
 
-These stages describe the work to scope. The implementation plan and division of responsibilities depend on your contracts, governance, and intended protection.
+| Stage | What our FDEs deliver | What your team reviews or authorizes |
+| --- | --- | --- |
+| Scope protection | Study your contracts, assets, critical operations, existing mitigations, and failure scenarios. | The protected operations, legitimate exceptions, and coverage gaps. |
+| Define policies | Translate agreed scenarios into policies, thresholds, and recovery behavior. | Intended policy behavior and acceptable exceptions. |
+| Implement and validate | Write assertions, run backtests, test a replica of your protocol on an Ethereum fork, and investigate false positives. | Assertion code and evidence for legitimate, violating, and exceptional activity. |
+| Integrate enforcement | Prepare tested contract guards, transaction-routing changes, and recovery procedures. | Protocol changes, customer-controlled signing, and integration evidence. |
+| Activate and operate | Prepare and simulate activation transactions, verify live protection, and set up the agreed monitoring and response process. | Production authorization and execution by your signers, plus the operating plan. |
+
+We agree the delivery scope and operating plan with your team.
 
 ## Who Does What
 
-Your team explains protocol behavior, identifies acceptable exceptions, and approves the intended policies. Involve engineers who understand contract changes and transaction submission, plus the people responsible for governance and incident response.
+Your team explains protocol behavior, identifies acceptable exceptions, and approves the policies and test results. Involve the people responsible for contract changes, transaction submission, governance, and incident response.
 
-When you work with Phylax sales engineering, agree on who writes each assertion, implements protocol changes, reviews the code and evidence, and maintains the resulting controls. You can also develop assertions independently using the documentation and tools. In either case, generated code and passing tests still need review against the intended policy.
+Your team controls its policies and protocol. Our FDEs prepare and simulate changes. Your signers authorize and execute them. See [Managing Policy Deployments](./managing-policy-deployments) for deployment permissions.
 
-Platform access, assertion management, protocol upgrades, and transaction submission are separate authorities. Working with Phylax does not itself grant signing access: lifecycle actions still require the authorized Protocol Manager, and other changes follow the relevant protocol permissions.
+## Before you activate your first circuit breaker
 
-## What You Review Before Activation
+Our FDEs run [backtests](./backtesting) and test a replica of your protocol on an Ethereum fork. Review normal activity, policy violations, legitimate exceptions, and recovery behavior with us.
 
-The review should establish which operations are protected, which remain outside the scope, and what happens during failures or recovery. Evidence should cover normal activity, rejected activity, legitimate exceptions, guard behavior, and the actual transaction submission path.
+The [testing strategy](./testing-strategy) covers guards and transaction routing. After your signers activate protection, we verify it with you.
 
-Passing local tests or staging checks alone does not establish Ethereum production coverage. Use the [integration plan](./dapp-integration), [testing strategy](./testing-strategy), and [release checks](./release-review-checks) to assess readiness with the team.
+## Fallback paths and recovery
 
-## Changes After Launch
+We designed onchain recovery paths to work independently of us. Define who can use them and test them before activation.
 
-Review policies when protocol behavior, dependencies, thresholds, or governance change. We recommend involving sales engineering to assess their effect on policy fit and coverage. Review the changed rules and their test evidence before authorized activation. Assertion changes follow the deployed lifecycle delays; guards and protocol upgrades can have separate procedures.
-
-Define monitoring, escalation, and incident responsibilities during integration. The [FAQ](./faq) explains false positives, fail-open behavior, policy updates, and recovery limits.
+During fail-open periods, mandatory assertion protection is reduced. A restrictive assertion may still block legitimate activity. See the [Enforcement FAQ on recovery](./faq#availability-false-positives-and-recovery).

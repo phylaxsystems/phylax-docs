@@ -3,8 +3,6 @@ title: Compound Upgrade Bug
 description: Compound comptroller contract had a one letter bug that allowed users to receive massive amounts of COMP rewards
 ---
 
-This case study explains how the Compound upgrade bug worked and which assertion pattern could have constrained the invalid state transition.
-
 ## What Happened
 
 Compound upgraded their comptroller contract to https://etherscan.io/address/0x374abb8ce19a73f2c4efad642bda76c797f19233 which had a one letter bug on L1217.
@@ -26,10 +24,7 @@ The previous version worked because supplyIndex started at 0 instead of 1e36, th
 
 ## Assertion Pattern
 
-It would have made sense for the developers to make sure that the COMPS accrual never exceeds the maximum possible rate.
-This way even if a bug is introduced, it will be caught by the assertion.
-
-The assertion below calculates the maximum possible rate of COMP accrual and checks that a distribution does not exceed this rate.
+The assertion calculates the maximum COMP accrual rate and rejects distributions above it.
 
 <Warning>
 The code below is **conceptual pseudo code** to illustrate the invariant that should be enforced. It uses simplified syntax for accessing storage mappings (`compound.compAccrued[supplier]`) that would not compile in actual Solidity. A real implementation would need to use proper getter functions or storage slot calculations via `ph.loadStateAt()`.

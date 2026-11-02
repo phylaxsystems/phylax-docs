@@ -20,21 +20,21 @@ For a shorter introduction, see [How Ethereum Enforcement Works](./credible-laye
 | Contract or wallet guard | Restricts protected operations to credible blocks while its gate is active. |
 | Credible RPC | Routes top-level transaction submissions to participating builders. |
 
-The State Oracle and Credible Registry have different jobs. Registering an assertion does not install a guard, authorize a builder, or configure a wallet's submission route.
+Assertion registration, guard installation, and transaction routing are separate integration steps.
 
 ## How the Credible Layer Works
 
 ### Release and Activation
 
-Developers write and test assertions, then create a release with [`pcl apply`](./apply-assertions). The [Ethereum platform](https://ethereum.phylax.systems) coordinates artifacts and release review. An authorized Protocol Manager signs the lifecycle action; the State Oracle determines when it takes effect.
+Developers create a release with [`pcl apply`](./apply-assertions). The platform stores artifacts and coordinates review. An authorized Protocol Manager signs the change. The State Oracle determines when it takes effect.
 
-The enforcer indexes lifecycle events and prepares the active assertion bytecode in its cache. Creating a release or passing backtesting is not production activation.
+The enforcer indexes lifecycle events and caches active assertion bytecode. A pending release does not enforce policies.
 
 ### Validation During Block Building
 
-A participating builder supplies candidate transaction context to the [Assertion Enforcer](./assertion-enforcer). [PhEVM](./phevm) evaluates the assertions whose triggers match, using transaction and call snapshots where needed.
+A participating builder sends candidate transaction context to the [Assertion Enforcer](./assertion-enforcer). [PhEVM](./phevm) executes matching assertions against the required state snapshots.
 
-The enforcer returns a validation report. The builder excludes a candidate that fails active production rules. Passing assertions makes the candidate eligible for inclusion; it does not guarantee selection, ordering, or finality. A failure means a rule was violated, which can also happen to legitimate activity under a restrictive rule.
+The builder excludes candidates that fail active production rules. Passing assertions permits consideration for inclusion. It does not guarantee inclusion or finality.
 
 ## Transaction Flow
 
@@ -54,29 +54,27 @@ The guard allows execution in a credible block, or when its configured fail-open
 
 ## Decentralized Block Building
 
-Ethereum has builders that do not run the Assertion Enforcer. Sending through the Credible RPC helps a transaction reach participating builders, but routing alone cannot prevent inclusion elsewhere. An unavoidable on-chain gate supplies the restriction on protected execution paths.
+The Credible RPC routes transactions to participating builders. A guard restricts protected execution paths when another builder includes a transaction.
 
-The authorized builder places a marker transaction before protected operations execute. The marker is bound to the expected block timestamp and updates the **Credible Registry**. The guard checks that marker; it does not re-run assertions or verify a cryptographic proof of their execution.
+The builder marks the block in the **Credible Registry** before protected operations execute. The marker is bound to the expected block timestamp. The guard checks this attestation. It does not execute assertions or verify a cryptographic proof.
 
-The design therefore relies on authorized builder behavior, marker publication assumptions, Registry administration, and correct guard coverage. See [Trust Model](./trust-model).
+The [Trust Model](./trust-model) describes the builder, marker, Registry, and guard assumptions.
 
 ### Guard Coverage and Routing
 
-Every path in the protected scope must reach a suitable gate. This can require a protocol upgrade, a supported wallet guard, or an existing hook. A Safe transaction guard covers owner-authorized execution; module paths need separate controls or an unavoidable downstream gate.
+Every protected path must reach a guard. A Safe transaction guard covers owner-authorized execution. Modules need separate controls or a downstream guard.
 
-Configure the actual top-level submitter to use the Credible RPC: the wallet, Safe executor, keeper, bot, or relayer. Off-chain signers and internally called contracts do not choose that route. Reads and unprotected traffic can continue using ordinary providers.
+Configure the Credible RPC on the top-level transaction submitter. Off-chain signers and internally called contracts do not select the route. See [Integration Planning](./dapp-integration).
 
 ### Exclusion, Reverts, and Availability
 
-A builder exclusion happens before inclusion and consumes no on-chain execution gas. An included transaction can instead revert at an on-chain guard and consume gas. A transaction timeout alone does not distinguish these outcomes from ordinary inclusion delays.
+Builder exclusion occurs before inclusion and consumes no onchain execution gas. An included transaction that reverts at a guard consumes gas. A timeout alone cannot distinguish these outcomes.
 
-A configured gap in credible blocks or an authorized bypass can relax a guard's requirement. During fail-open, operations may execute through nonparticipating builders; participating builders can continue enforcing assertions. Registry-error behavior differs between guard implementations.
-
-A restrictive assertion can block legitimate operations even while credible blocks continue to be produced. A block-gap fallback is therefore not a universal recovery mechanism. See the [FAQ](./faq#availability-false-positives-and-recovery).
+A guard can relax enforcement under its fallback or bypass conditions. A restrictive assertion may still reject legitimate operations while credible blocks continue. See [Availability and Recovery](./trust-model#availability-and-recovery).
 
 ## Invalidation Lifecycle (Public View)
 
-The integration reports assertion invalidations to the platform for project review and configured alerts. Public views expose selected posture information; transaction payloads, traces, and staging records are not automatically public.
+The integration reports invalidations to the platform and configured alerts. Transaction details remain subject to project access permissions.
 
 ```mermaid
 flowchart LR
@@ -86,7 +84,7 @@ flowchart LR
     P --> X["Public posture where shared"]
 ```
 
-An invalidation report, an on-chain guard revert, and a submission failure are separate events. Operators should reconcile them using the transaction status, assertion result, and contract state.
+Use the [investigation guide](./managing-your-circuit-breakers#investigate-a-rejected-transaction) to distinguish assertion failures from guard reverts and submission failures.
 
 ## System Components
 

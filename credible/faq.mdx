@@ -1,266 +1,114 @@
 ---
-title: 'FAQ'
-description: 'Answers about enforcement, decentralized block building, integration, recovery, and testing.'
+title: 'Enforcement FAQ'
+description: 'Technical answers about Ethereum builders, guards, routing, transaction rejection, and recovery.'
 ---
 
-Use this page to look up Ethereum enforcement, integration requirements, and recovery when a rule blocks legitimate activity. Deployed versions and configuration determine the exact behavior. Earlier network-specific designs are in [L2 and Sequencer Integrations](./l2-integrations/overview).
+Find answers about how Ethereum policies are enforced and what happens when transactions are rejected or enforcement is interrupted. Exact behavior depends on the deployed contracts and configuration.
 
-## Working with Phylax
+For integration fit, FDE support, testing, and signer setup, see [Should you use Phylax?](./should-you-use-phylax).
 
-### How do we start a custom policy integration?
+## Enforcement and Block Building
 
-Start by defining your protection needs, intended behavior, exceptions, coverage, and rollout requirements. You can write assertions yourself; we highly recommend working with Phylax sales engineering to find the best policies and integration approach for your protocol. See [Work with Phylax](./work-with-phylax) and [Prepare for Your Integration](./evaluate-credible-layer).
+### When are transactions checked against my policies?
 
-### Can we write assertions ourselves, and is sales engineering required?
+Participating builders run the Phylax enforcement engine while building a block. The engine simulates candidate transactions and evaluates the applicable assertions against their effects. Builders exclude candidates that violate active production rules.
 
-Yes, you can write assertions yourself using the public documentation and tools. Working with sales engineering is optional and highly recommended to find the best fit for your protocol. This support is included in your Phylax subscription at no additional cost.
-
-### Do we need to write Solidity assertions before speaking with Phylax?
-
-No. You can start with a plain-language description of the operations and outcomes you want to constrain. Your team needs to explain legitimate protocol behavior and approve the intended requirements. Assertion implementation responsibilities are agreed during scoping. The tutorials are optional learning exercises.
-
-### Who approves the policies and controls activation?
-
-Your team approves the intended policy behavior, whether you develop assertions independently or with sales engineering. On-chain lifecycle actions still require the authorized Protocol Manager under the deployed permissions. Platform membership, protocol upgrades, and guard administration are separate authorities; the engagement itself does not grant signing access. See [Ownership Verification](./ownership-verification).
-
-## Assertions and Coverage
-
-### What does an assertion check?
-
-An assertion is a Solidity rule evaluated against a candidate transaction. It can inspect transaction effects, compare state before and after execution, and check relationships across contracts. Triggers determine when the rule runs.
-
-An assertion failure means the transaction violates the encoded rule. It does not, by itself, prove that the transaction is an exploit. A rule can be incorrect, too restrictive, or missing context about legitimate activity. Passing assertions also does not prove safety against risks the rules do not cover.
-
-See [Assertions Overview](./assertions-overview) and [Triggers](./triggers).
-
-### Why use assertions if the protocol already has on-chain checks?
-
-Keep existing access controls and accounting checks. Assertions can add checks that need transaction-wide effects, before-and-after snapshots, or state from several contracts. Their execution happens off-chain during block building, subject to execution limits.
-
-A simple condition that the protocol can reliably enforce in its own contracts may belong there. Identify what additional failure an assertion can detect beyond the controls already present.
-
-### Do assertions replace audits?
-
-No. Audits review implementation and design; assertions enforce selected rules at runtime. Assertions, guards, authorization, and recovery paths all need review. An assertion cannot compensate for a missing trigger, an unguarded path, or a rule that permits the harmful state.
-
-### Can assertions protect immutable contracts without code changes?
-
-On Ethereum, routing to participating builders is insufficient on its own. Protected operations need an unavoidable on-chain gate that rejects execution outside credible blocks while the gate is active. That may require a contract upgrade, a supported wallet guard, or an existing hook covering every protected path. An immutable contract with no suitable gate cannot obtain that protection simply by registering assertions.
-
-### Can I reuse an assertion from another protocol?
-
-Use compatible examples as starting points for your own custom policies. Sales engineering can help you assess their fit. Review their assumptions: storage layout, token behavior, privileged roles, trigger coverage, and legitimate state transitions. Test them against your contracts before activation. The [Assertions Book](../assertions-book/assertions-book-intro) provides starting points.
-
-## Enforcement and Decentralized Block Building
-
-### Who runs assertions, and when?
-
-A participating Ethereum builder invokes the Assertion Enforcer while building a block. The enforcer executes relevant assertions against candidate transaction state and reports the result. The integration uses that report to exclude transactions that fail active production rules.
-
-Assertions run before inclusion, but transactions are simulated to obtain the effects being checked. Passing validation makes a transaction eligible for inclusion; it does not guarantee inclusion, ordering, or finality. See [Architecture](./architecture-overview).
+Passing the checks makes a transaction eligible for inclusion; it does not guarantee selection, ordering, or finality. See [Ethereum Architecture](./architecture-overview).
 
 ### How does enforcement work when not every builder participates?
 
-The integration combines three parts:
+An onchain guard requires protected calls to execute in a credible block while its gate is active. An authorized builder records the block's marker in the Credible Registry. Protected calls in noncredible blocks revert, regardless of how they were submitted.
 
-1. Participating builders validate candidate transactions against active assertions.
-2. An authorized builder marks the block credible in the Credible Registry before protected operations execute.
-3. An on-chain guard permits protected operations only in a credible block, unless its configured fail-open or authorized bypass condition applies.
-
-The Credible RPC routes submissions to participating builders. The guard makes the restriction apply even when someone submits through another route. Without that gate, a nonparticipating builder could include a transaction without assertion checks.
-
-This does not make assertions part of the chain's consensus validity rules.
+The Credible RPC routes transactions to participating builders. Configure the [actual transaction submitters](./dapp-integration#configure-transaction-submission) to use that route. Assertion validation is not part of Ethereum's consensus rules; enforcement depends on the builders and guards, including their configured recovery conditions.
 
 ### Is a credible-block marker proof that all assertions passed?
 
-No. The marker records an authorized builder's attestation. It is not a cryptographic proof of assertion execution. The guard checks the block marker; it does not execute assertions itself.
+No. The marker records an authorized builder's attestation. It is not a cryptographic proof of assertion execution. The guard checks the marker; it does not execute assertions itself.
 
-The model relies on authorized builders checking the applicable rules and binding the marker to the block they build. Builder authorization, signing, and publication assumptions are part of the [Trust Model](./trust-model).
+The model relies on authorized builders checking the applicable rules and binding the marker to the block they build. See the [Trust Model](./trust-model#decentralized-builders).
 
 ### What is the difference between the State Oracle and the Credible Registry?
 
 The **State Oracle** records which assertions apply to which contracts, who can manage them, and when lifecycle changes take effect.
 
-The **Credible Registry** records credible-block markers and controls which builders may submit them. Guards consult it to decide whether an operation may execute in the current block. Registering an assertion does not install a guard or route transactions.
+The **Credible Registry** records credible-block markers and controls which builders may submit them. Guards consult it to decide whether an operation may execute in the current block. Registering an assertion does not install a guard or configure transaction routing.
 
-### Does one protocol's failed assertion stop other protocols or the entire block?
+### What happens if a transaction calls several protocols or batches operations?
 
-A failed assertion invalidates the candidate transaction to which it applies. It does not automatically invalidate unrelated transactions or the whole block.
+A transaction must pass all applicable assertions. One failure excludes the entire candidate transaction, including other operations in the same batch. It does not automatically exclude unrelated transactions or invalidate the whole block.
 
-A transaction calling several protocols must pass all applicable assertions. If a batch combines multiple operations in one transaction, one failed assertion can exclude that entire transaction. Separate transactions can still proceed if they satisfy their checks and network inclusion requirements.
-
-### What happens if a protected call is inside a batch or another contract call?
-
-Assertion rejection excludes the whole candidate transaction at the builder; the builder cannot commit only its successful portion.
-
-An on-chain guard revert is different. A caller may catch a failed subcall and continue, depending on its code. Review batching, settlement, retry queues, and error handling so blocking one operation does not accidentally stop unrelated work or leave it unprocessed.
-
-### Are bridge, system, or forced-inclusion transactions protected?
-
-On Ethereum, review the actual submitted transaction and contract path for bridge or relayer operations. A protected path must reach the required gate, regardless of the caller or frontend.
-
-L2 system transactions and forced-inclusion queues have separate network rules. Their coverage is described in [L2 Transaction Source Coverage](./l2-integrations/network-integration#transaction-source-coverage); do not infer it from Ethereum support.
-
-## Integration and Transaction Routing
-
-### What work does a protocol integration require?
-
-The scope includes assertion design and testing, authorization, contract-path coverage, transaction routing, rollout, and recovery. On decentralized-builder networks, it also includes reviewing and installing the required guard or gate.
-
-Plan engineering involvement around your existing contracts, routing, governance, and operational needs. Sales engineering can help you scope this work. Agree on who supplies and reviews each contract change, who signs deployments, and who operates the controls; there is no universal effort estimate. See [Integration Planning](./dapp-integration) and [Development Effort](./development-effort).
-
-### Who needs to use the Credible RPC?
-
-For operations requiring a credible block, configure the component submitting the top-level transaction: a user wallet, Safe executor, keeper, bot, relayer, or service submitting bridge or settlement transactions.
-
-A contract called internally cannot choose an RPC. For a multisig, collecting signatures off-chain is separate from the executor submitting the final transaction. Changing only the frontend RPC leaves other paths unchanged. Ordinary reads and operations outside the protected scope can continue using their existing providers.
-
-### What happens if someone uses an ordinary RPC?
-
-While the guard is active and no bypass applies, a protected call in a noncredible block reverts. It may succeed if it reaches a credible block and satisfies all applicable checks. An ordinary RPC therefore does not reliably provide an inclusion path for guarded operations.
-
-An attacker cannot bypass an unavoidable active guard merely by changing RPCs. Protection still depends on complete guard coverage, builder behavior, and the configured recovery conditions.
-
-### Does routing guarantee transaction privacy or inclusion?
-
-No. Routing delivers a transaction to the configured builder path; it does not establish a general privacy, inclusion, or latency guarantee. Confirm the endpoint's forwarding and retention behavior, builder coverage, and retry policy for your deployment.
-
-### Does a successful RPC simulation mean the transaction will pass assertions?
-
-No. RPC simulation and assertion validation are separate checks. A simulation may account for the credible-block marker so guarded calls can be simulated, without running the full production assertion set.
-
-Even an assertion preflight result applies to the simulated state. Active rules, ordering, and chain state can change before inclusion. Validate both routing and actual enforcement.
+An onchain guard revert is different: a caller may catch a failed subcall and continue, depending on its code. Account for that behavior in batching, settlement, and retry logic.
 
 ### Does installing a Safe transaction guard cover modules too?
 
 No. The Safe transaction guard covers the owner-authorized transaction path. Module execution is separate and needs its own reviewed control or an unavoidable downstream gate.
 
-An assertion rejecting module activity at a participating builder does not prevent a nonparticipating builder from including an unguarded module transaction. Include enabled modules, delegatecalls, guard changes, and recovery paths in the integration review.
+An assertion rejecting module activity at a participating builder does not prevent another builder from including an unguarded module transaction. See [Guard Testing](./testing-credible-block-guard).
 
-### Do rejected transactions consume gas? What about latency?
+## Routing and Transaction Outcomes
 
-A transaction excluded before inclusion consumes no on-chain execution gas. An included transaction that reverts at a guard does consume gas. Guard and marker operations also have on-chain costs, separate from off-chain assertion execution.
+### Does the Credible RPC guarantee privacy, inclusion, or latency?
 
-Latency depends on routing, participating builders, block opportunities, assertion workload, and failure policies. Measure the actual deployment; there is no universal zero-overhead or fixed-speedup guarantee.
+No. Routing delivers a transaction to the configured builder path. Privacy depends on the endpoint's forwarding and retention behavior. Inclusion and latency depend on participating builders, block opportunities, assertion workload, and retry behavior. Confirm and measure these properties for your deployment.
 
-## Authority and Trust
+### Does a successful RPC simulation mean the transaction will pass assertions?
 
-### Who can add, change, or remove assertions for my contracts?
+No. RPC simulation and assertion validation are separate checks. A simulation may account for the credible-block marker so guarded calls can be simulated without running the full production assertion set.
 
-The authorized Protocol Manager controls the assertion lifecycle for registered contracts through the State Oracle. Authorization depends on a supported verifier or an approved manual process. Anyone may write assertion code; that does not grant permission to activate it for someone else's contract.
+Even an assertion preflight result applies only to the simulated state. Active rules, ordering, and chain state can change before inclusion.
 
-Platform access, transaction submission, assertion management, and protocol upgrade authority are distinct permissions. Confirm which addresses hold each role. See [Ownership Verification](./ownership-verification).
+### Do rejected transactions consume gas?
 
-### What if my contract does not expose owner()?
+A transaction excluded by a builder before inclusion consumes no onchain execution gas. An included transaction that reverts at a guard does consume gas. Guard and marker operations also have onchain costs, separate from offchain assertion execution.
 
-Check the verifier supported by the target deployment. Integrations may use an explicit initial Protocol Manager interface or an approved manual registration process for existing contracts. A contract does not always need `owner()` to integrate on Ethereum.
+### Are bridge, system, or forced-inclusion transactions protected?
 
-Confirm eligibility and authorization evidence with Phylax before changing contracts. Manager registration is separate from proving that protected execution paths are enforceable. See [Manual Verification](./manual-verification).
+On Ethereum, coverage depends on the submitted transaction and contract path. A bridge or relayer operation must reach the required guard, regardless of its caller or frontend.
 
-### Does the Credible Layer add trust assumptions?
+L2 system transactions and forced-inclusion queues have separate network rules. See [L2 Transaction Source Coverage](./l2-integrations/network-integration#transaction-source-coverage).
 
-Yes. Their scope depends on the integration. You rely on correct assertions, authorized management, the enforcer, and the integration honoring active policy. On decentralized-builder networks, you also rely on authorized builders' attestations, the Registry, and the guard implementation and configuration.
+### Does protection on one chain cover the same protocol on other chains?
 
-See [Trust Model](./trust-model) for Ethereum assumptions. The separate sequencer model is documented in [L2 and Sequencer Integrations](./l2-integrations/overview).
+No. Each chain needs its own supported integration, assertion deployment, and enforcement path. Deploying an assertion for one contract does not automatically protect its counterparts elsewhere. See [L2 and Sequencer Integrations](./l2-integrations/overview) for the separate network model.
+
+## Authority and Rule Changes
 
 ### What can a compromised assertion manager do?
 
-A compromised manager can use its lifecycle permissions to propose restrictive rules or remove protections, subject to deployed authorization and timing rules. This can threaten availability or weaken protection; it does not automatically grant permission to transfer assets.
+A compromised manager can use its lifecycle permissions to propose restrictive rules or remove protections, subject to authorization and timing rules. This can affect availability or weaken protection; the role does not itself grant permission to transfer protocol assets.
 
-Timelocks provide time to observe and respond to changes. They are not a complete recovery mechanism and do not necessarily constrain separate guard, upgrade, guardian, or Registry-admin powers. Review those authorities together.
+Assertion timelocks do not necessarily constrain separate guard, upgrade, guardian, or Registry-admin powers. See [Authority Boundaries](./trust-model#authority-boundaries) for those distinctions.
 
-### What can users or security reviewers verify publicly?
+### Which rules apply while an update is pending?
 
-They can inspect assertion code, identifiers, active registry state, and the posture exposed in [The Phylax Explorer](./dapp-explorer). A useful review also covers guarded operations, excluded paths, manager authority, timelocks, and fail-open conditions.
+Existing assertions remain active until their scheduled removal takes effect. New assertions begin applying after their activation delay. The State Oracle determines those times.
 
-An Explorer entry is not proof that every action is protected. Private invalidation payloads, traces, and project records are not automatically public.
-
-### Are the integration contracts audited?
-
-Audit status applies to a specific revision and scope. Obtain reports for the versions you plan to deploy and compare them with your guard, Registry, and protocol changes. An audit of a shared component does not cover every customization or assertion policy.
+Review additions and removals together to avoid a gap in protection or conflicting rules during the transition. Guard changes and protocol upgrades follow their own authorization and timing. See [Deploy Assertions](./deploy-assertions-dapp#step-4-deploy-the-assertion).
 
 ## Availability, False Positives, and Recovery
 
 ### What happens if participating builders stop producing credible blocks?
 
-While the gate remains active, protected operations cannot succeed in noncredible blocks. A configured fail-open condition can restore access after a gap in credible blocks, trading mandatory assertion enforcement for availability.
+While the gate remains active, protected operations cannot succeed in noncredible blocks. A configured fail-open condition can restore access after a gap in credible blocks. The block-gap condition opens only when the gap is **greater than** the configured threshold.
 
-The block-gap condition in the guard implementations opens only when the gap is **greater than** the configured threshold; reaching the threshold is insufficient. Evaluate the deployed guard's configuration and other failure conditions rather than assuming a fixed duration.
+Fail-open relaxes the guard's block requirement. Existing protocol checks still apply, and participating builders can continue enforcing assertions, but transactions may also execute through builders that do not run them.
 
-### Does fail-open disable assertions everywhere?
-
-No. Fail-open relaxes the guard's requirement for a credible block. Transactions may then execute through builders that do not run assertions. Participating builders can continue enforcing active assertions.
-
-Existing protocol checks still apply, but mandatory assertion protection for the affected path is reduced. Monitor fail-open periods and include them in the protocol's published security posture.
+A block-gap fallback does not resolve a restrictive rule when builders continue producing credible blocks. Use the recovery procedure agreed for your integration; see [Recovery Testing](./testing-strategy#5-rehearse-recovery).
 
 ### Do all guards handle Registry failures the same way?
 
 No. The Safe guard includes fail-open handling for failed or malformed Registry responses. The generic contract guard does not provide the same catch-and-continue behavior; a failed Registry read can revert the protected call.
 
-Check the deployed implementation, including overrides and bypass permissions. A builder outage, a Registry read failure, and a bad assertion are different incidents and may need different recovery procedures.
+Check the deployed implementation, including overrides and bypass permissions. A builder outage, a Registry read failure, and a restrictive assertion can require different recovery actions.
 
-### Can fail-open rescue a protocol from an overly restrictive assertion?
+### How does approving one transaction differ from raising a limit?
 
-Not necessarily. A block-gap fail-open condition depends on credible-block production, not on whether your transactions succeed. Builders may continue producing credible blocks while your assertion rejects legitimate activity.
+A reviewed exception authorizes a specific transaction through your protocol's approval process. Raising a threshold changes what the policy permits for other transactions too. Resetting a counter, disabling an assertion, and bypassing a guard each have different effects on protection.
 
-Recovery may require correcting or removing the assertion through its lifecycle, or a separately authorized recovery path. Test that path before enforcement begins.
-
-### Can a legitimate operation trigger a circuit breaker?
-
-Yes. Large withdrawals, migrations, liquidations, settlement batches, or administrative changes may violate a rule that lacks context. Backtesting and staging help identify these cases but cannot prove all future legitimate activity will pass.
-
-Define the accounting precisely: gross or net flows, assets included, time window, treatment of inflows, and current-transaction effects. Test ordinary activity and exceptional operations.
-
-### Is a circuit-breaker threshold a guaranteed maximum loss?
-
-No. A threshold limits the quantity measured by that rule under its enforcement assumptions. Actual exposure depends on accounting semantics, prices, covered assets and paths, bypasses, and periods without mandatory enforcement.
-
-Describe what the rule measures and which scenarios it constrains instead of presenting its threshold as a blanket guarantee.
-
-### Can we allow one legitimate transaction or temporarily raise a limit?
-
-That requires a deliberately designed and reviewed policy. A narrowly scoped authorization may constrain the action, parameters, executor, and expiry. Raising a threshold, resetting a counter, disabling a rule, and bypassing a guard have different effects.
-
-Do not assume a universal one-click exception or automatic reset is available. Confirm what the deployed assertion and management flow support, including authorization, timelocks, and restoration of the original policy.
-
-### Can an approved upgrade proceed without allowing arbitrary upgrades?
-
-An assertion can permit a specific reviewed transition, such as changing from an expected implementation to an approved replacement. The rule must encode the intended bounds and account for other sensitive changes in the same transaction.
-
-Review the policy before scheduling the upgrade. Broadly disabling protection creates a different exposure from authorizing a specific transition.
+Review the scope, duration, and restoration of protection for the action your integration supports.
 
 ### Will a rejected transaction automatically run after we fix the rule?
 
-Do not assume so. Exclusion is not an on-chain queue or a guarantee of later resubmission. The submitting wallet, relayer, or service must determine whether to retry.
+No. Exclusion does not put a transaction in an onchain queue. The submitting wallet, relayer, or service determines whether to retry.
 
-Before retrying, recheck nonce, expiry, state, slippage, and whether the action is still appropriate. Test retry and reconciliation behavior alongside enforcement.
-
-### How do we avoid permanent lockout if keys are lost or rules block recovery?
-
-Define recovery authority before rollout and test it against active assertions and guards. Include lost signers, a compromised manager, blocked upgrades, builder outages, and Registry failures.
-
-Recovery requiring the same unavailable key or operation blocked by an assertion may not work. A separate recovery role also introduces authority that must be disclosed and secured. Do not rely on contacting a builder as an undocumented bypass.
-
-## Testing and Lifecycle
-
-### How should assertions and the integration be tested?
-
-Test intended failures and legitimate behavior locally, including boundaries and exceptional operations. Use historical backtesting and staging to review false positives, then test the complete submission-to-enforcement path.
-
-For guarded integrations, exercise credible and noncredible blocks, routing, Safe modules where applicable, assertion updates, fail-open boundaries, and recovery. Confirm supported networks and test environments for the target deployment. See [Testing Strategy](./testing-strategy) and [Guard Testing](./testing-credible-block-guard).
-
-### Is staging a testnet, and does it prove production protection?
-
-Staging observes assertion behavior against a mirrored chain environment without dropping live transactions. It is not itself a separate public testnet or a test of every production guard and routing path.
-
-Production applies active assertions at the integrated enforcement boundary. Activating rules does not install missing guards or configure submitters. Both modes follow the configured assertion lifecycle.
-
-### How do we update assertions, and how long do changes take?
-
-Review changed custom policy requirements and legitimate exceptions. We recommend involving sales engineering to assess their effect on policy fit. Prepare and test a new release, review its differences and backtesting results against the agreed requirements, and schedule additions and removals through the authorized deployment flow. Review their effective times together to avoid a protection gap or conflicting rules.
-
-The State Oracle's configured timelocks determine when assertion changes become active. Do not assume immediate rollback or a universal delay. Guard replacement, Registry administration, and protocol upgrades can follow separate rules. See [Deploy Assertions](./deploy-assertions-dapp).
-
-### Does support on one chain cover the same protocol on other chains?
-
-No. Confirm the network integration, assertion specification, Registry and guard availability where required, RPC path, and operational support on each chain. Deploying an assertion for one address does not automatically protect its counterparts elsewhere.
+Before retrying, recheck nonce, expiry, state, slippage, and whether the action is still appropriate. See [Managing Your Circuit Breakers](./managing-your-circuit-breakers#investigate-a-rejected-transaction) for investigating the rejection.

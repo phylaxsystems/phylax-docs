@@ -3,7 +3,7 @@ title: 'Development Effort'
 description: 'What determines assertion development, integration, and operational effort.'
 ---
 
-You can write assertions yourself. We highly recommend working with [Phylax sales engineering](./work-with-phylax) to find the best policy fit; this support is included in your subscription at no additional cost. Your team contributes protocol expertise, reviews legitimate behavior and exceptions, and assigns integration and operational responsibilities.
+Development effort depends on the policy requirements, existing tests, and required integration changes. Your [FDE](./work-with-phylax) helps scope this work.
 
 ## Effort Factors
 
@@ -11,28 +11,19 @@ Assertion authoring effort depends on how well the protocol invariants are defin
 
 ### Invariants Defined
 
-When invariants exist, writing assertions is similar to writing Forge invariant tests:
-
-- **Workflow**: Write Solidity, test with `pcl test`(fork of `forge`), deploy via the [platform](https://ethereum.phylax.systems)
-- **Learning curve**: A small set of [cheatcodes](/credible/cheatcodes-overview) for snapshot reads (`PhEvm.ForkId`, `ph.loadStateAt`, etc.)
-- **Familiarity**: Developers who write Forge tests can write assertions
+Developers familiar with Forge can write assertions in Solidity and test them with `pcl test`. They also need the [snapshot and inspection APIs](./cheatcodes-overview).
 
 ### Invariants Not Defined
 
-You can write assertions without pre-defined invariants, but having them makes the process easier, more structured, and lowers the risk of overlooking attack vectors.
+Define prohibited states, required relationships, and legitimate exceptions before implementation. Use existing engineering and audit work to identify them.
 
-Defining invariants involves identifying:
-
-- States that should never occur
-- Relationships that must always hold (e.g., total supply = sum of balances)
-
-Refine these requirements using existing engineering, security, and audit work where available. Sales engineering can help you assess which policies best fit your protocol. For guidance, see [Intro to Invariants ↗](https://jstcz.eth.link/blog/2025/08/13/intro-to-invariants/).
+See [Writing Your Own Policies](./writing-your-own-policies).
 
 ## Testing Assertions
 
-Testing can take longer than authoring. Existing Forge fixtures can help, but assertions need explicit tests for trigger coverage, snapshot behavior, legitimate exceptions, and failures. Historical backtesting and staging add evidence without replacing those tests.
+Testing can take longer than authoring. Existing Forge fixtures can help, but assertions need explicit tests for trigger coverage, snapshot behavior, legitimate exceptions, and failures. Historical backtesting and alerting add evidence without replacing those tests.
 
-See [Testing Assertions](/credible/testing-assertions) for patterns and best practices.
+See [Testing Assertions](./testing-assertions) for test patterns.
 
 ## Integration and Operations
 
@@ -48,8 +39,8 @@ See [Integration Planning](./dapp-integration) for the work to scope before roll
   <Card title="Prepare for Your Integration" icon="users" href="./evaluate-credible-layer">
     Gather protocol context and identify implementation responsibilities.
   </Card>
-  <Card title="Assertion Guide" icon="code" href="/credible/write-first-assertion">
-    Step-by-step guide to writing assertions
+  <Card title="Writing Your Own Policies" icon="code" href="./writing-your-own-policies">
+    Define, implement, and test policies for your protocol.
   </Card>
   <Card title="Cheatcodes" icon="wand-magic-sparkles" href="/credible/cheatcodes-overview">
     Learn the additional tools available

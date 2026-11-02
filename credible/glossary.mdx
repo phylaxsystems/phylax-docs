@@ -1,21 +1,21 @@
 ---
 title: 'Glossary'
-description: 'This glossary contains terms and concepts specific to the Credible Layer and related technologies.'
+description: 'Credible Layer terms, components, and lifecycle states.'
 ---
 
-Use this reference to look up Credible Layer terms, component names, lifecycle states, and platform concepts.
+Definitions of Credible Layer components, policy states, and platform terms.
 
 ## Core Concepts
 
 ### The Credible Layer
 Ethereum security infrastructure combining protocol-authored assertions, participating builders, credible-block markers, and on-chain guards. Builders exclude candidates that fail active rules; guards restrict protected operations while their gate is active.
 
-See the [Introduction](/credible/credible-introduction) for a comprehensive overview.
+See the [Overview](./credible-introduction).
 
 ### Assertion
 A smart contract that verifies specific properties or behaviors of other smart contracts. Assertions are the fundamental building blocks of the Credible Layer, used to enforce security properties and invariants.
 
-Learn more: [What are Assertions?](/credible/assertions-overview) | [Assertion Guide](/credible/write-first-assertion)
+Learn more: [What are Assertions?](/credible/assertions-overview) | [Writing Your Own Policies](./writing-your-own-policies)
 
 ### Protocol Invariants
 Critical conditions or properties that must always be maintained within a protocol, such as ensuring total assets ≥ total liabilities or maintaining specific ownership rules. These invariants can be:
@@ -73,7 +73,7 @@ Learn more: [Assertion Enforcer](/credible/assertion-enforcer)
 The [Phylax platform](https://ethereum.phylax.systems) is the web application interface for interacting with the Credible Layer. It allows protocol teams and end-users to deploy, manage, and view assertions and projects.
 
 ### The Phylax Explorer
-A public dashboard that displays the security and operational risk posture of protocols that have opted into runtime enforcement. It can show summaries of actions protected by circuit breakers and assertions, scenarios the assertions prevent, assertion and circuit breaker behavior, admin multisig details, contract upgradeability documentation, and deployed-vs-audited code context where available. Detailed project management data, staging invalidations, transaction payloads, and traces are only available in private project views.
+A public view of a small selection of featured projects. Where available, project pages show protected contracts, circuit-breaker summaries, operational authority, and supporting evidence. Detailed project information and transaction replays remain subject to access permissions.
 
 ### Sidecar
 A software architecture pattern where a component runs alongside the main application without changing core protocol rules. The Credible Layer operates as a sidecar to the network's block builder, intercepting and validating transactions during the block building process.
@@ -106,13 +106,8 @@ Modifications to contract storage that occur during transaction execution. These
 See the [Cheatcodes Reference](/credible/cheatcodes-reference) for state tracking functions.
 
 ### Callstack
-The sequence of function calls that occur during a transaction's execution. PCL's ability to inspect state changes across the entire callstack is a powerful feature that enables assertions to:
-- Track state modifications through complex contract interactions
-- Monitor cross-contract dependencies
-- Detect unauthorized changes in deeply nested calls
-- Enforce invariants that span multiple contract boundaries
 
-See the [Cheatcodes Reference](/credible/cheatcodes-reference) for callstack inspection capabilities.
+The sequence of function calls during a transaction. Assertions can inspect nested calls and state changes across contract boundaries.
 
 ### Assertion Bytecode
 The compiled form of an assertion contract that is stored in the Assertion DA and executed by the PCL network.
@@ -183,9 +178,9 @@ The ability to inspect the rules and registry state behind a protocol's Credible
 ## Prevention
 
 ### Invalidation
-A report that a candidate transaction violated an assertion. Production enforcement excludes the transaction at the integrated boundary. Staging records the violation without blocking the live transaction; ordinary network validity and inclusion rules still apply.
+A report that a candidate transaction violated an assertion. Production enforcement excludes the transaction at the integrated boundary. Alerting records the violation without blocking the live transaction; ordinary network validity and inclusion rules still apply.
 
-Learn more: [Invalidations](/credible/dapp-invalidations)
+Learn more: [Managing Your Circuit Breakers](./managing-your-circuit-breakers#investigate-a-rejected-transaction)
 
 ### Revert
 An EVM execution failure. An assertion revert occurs off-chain during validation and can cause builder exclusion. A guard revert occurs in the protocol execution path; if included on-chain, the transaction consumes gas. A caller may catch a subcall revert, depending on its code.
@@ -204,28 +199,28 @@ The process of creating a release on the platform using `pcl apply`. This comman
 Learn more: [Apply Assertions](/credible/apply-assertions) | [pcl Reference](/credible/cli-reference#apply)
 
 ### Deployment
-The process of reviewing an assertion, linking it to a contract, and signing the transaction to deploy it on-chain. Deployment includes choosing whether to deploy to Staging or Production environment. The deployment transaction must succeed for the assertion to be deployed on-chain.
+The process of reviewing an assertion, linking it to a contract, and signing the transaction to deploy it on-chain. Deployment includes choosing whether to deploy to the Alerting or Production environment. The deployment transaction must succeed for the assertion to be deployed on-chain.
 
-### Staging
-A mirrored chain environment used for testing assertions without affecting production. Assertions run on staging to observe behavior, but transactions are not dropped if they break assertion rules. This allows protocol teams to test assertions safely before deploying to production.
+### Alerting
+A mirrored chain environment used for testing assertions without affecting production. Assertions run in alerting mode to observe behavior, but transactions are not dropped if they break assertion rules. This allows protocol teams to test assertions safely before deploying to production.
 
 ### Production
 The enforcement environment where participating Ethereum builders exclude candidates violating active assertions. Guard coverage and routing are also required for the protected operations; fail-open or bypass conditions can reduce mandatory protection.
 
 ### Timelock
-A period enforced by the on-chain State Oracle contracts between an assertion change and when that change takes effect. The timelock applies when you add an assertion and when you remove one. It exists for two reasons: (1) to provide latency for the enforcer to index on-chain state and prepare for enforcement changes, and (2) to give users time to expect changes to protocol behavior. During the timelock period, newly added assertions are marked for enforcement or staging but are not yet active, and removed assertions remain active until the timelock finishes.
+A period enforced by the on-chain State Oracle contracts between an assertion change and when that change takes effect. The timelock applies when you add an assertion and when you remove one. It exists for two reasons: (1) to provide latency for the enforcer to index on-chain state and prepare for enforcement changes, and (2) to give users time to expect changes to protocol behavior. During the timelock period, newly added assertions are marked for enforcement or alerting but are not yet active, and removed assertions remain active until the timelock finishes.
 
 ### Marked for Enforcement
 The state of an assertion deployed to production during the timelock period. The assertion is deployed but not yet actively preventing hacks. After the timelock expires, the assertion becomes enforced.
 
-### Marked for Staging
-The state of an assertion deployed to staging during the timelock period. The assertion is deployed but not yet running on the staging environment. After the timelock expires, the assertion becomes staged.
+### Marked for Alerting
+The state of an assertion deployed to alerting during the timelock period. The assertion is deployed but not yet running on the alerting environment. After the timelock expires, the assertion becomes active in alerting mode.
 
 ### Enforced
 The state of an assertion in production after the timelock period has expired. An enforced assertion is active at the integrated enforcement boundary and causes violating candidate transactions to be excluded there. This term is only used for production assertions.
 
-### Staged
-The state of an assertion in staging after the timelock period has expired. A staged assertion is running on the mirrored chain environment, allowing protocol teams to observe how it behaves without transactions being dropped if they violate the assertion.
+### Active in Alerting
+The state of an assertion in alerting after the timelock period has expired. An assertion active in alerting mode is running on the mirrored chain environment, allowing protocol teams to observe how it behaves without transactions being dropped if they violate the assertion.
 
 ### Removal
-The process of removing an assertion from active enforcement or staging. Removal is scheduled through the State Oracle contracts and requires the configured timelock to expire before the assertion stops being enforced or staged.
+The process of removing an assertion from active enforcement or alerting. Removal is scheduled through the State Oracle contracts and requires the configured timelock to expire before the assertion stops running in its selected environment.

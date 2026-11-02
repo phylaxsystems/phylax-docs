@@ -3,8 +3,6 @@ title: Euler Finance Donation Hack
 description: Euler Finance forgot to add a health check to the donation function
 ---
 
-This case study explains how the Euler Finance donation hack worked and which assertion pattern could have constrained the invalid state transition.
-
 ## What Happened
 
 The Euler Finance hack exploited two key protocol features:
@@ -58,9 +56,7 @@ Attack was carried out for several different assets, including DAI, WETH, and US
 
 ## Assertion Pattern
 
-Proper health checks should be performed on the account that is performing the donation.
-It is worth noting that the below assertion checks for modifications made by the user in the transaction.
-The user should never be allowed to make changes to their own collateral or debt that brings their positions under water.
+Check the health of accounts modified by the transaction. Reject changes that leave the caller's position undercollateralized.
 
 <Warning>
 The code below is **conceptual pseudo code** to illustrate the invariant that should be enforced. The `getModifiedAccounts()` cheatcode does not currently exist. In practice, you would need to identify affected accounts through other means, such as parsing logs with `getLogs()` or tracking call inputs with `getCallInputs()`.
@@ -84,14 +80,8 @@ function assertionNoUnsafeDebt() external view {
 }
 ```
 
-The key insight is that the **invariant itself is simple**: after any transaction, no account should have more debt than collateral. The challenge is identifying which accounts to check, which in a real implementation might require parsing transaction logs or call inputs.
+Identify affected accounts from transaction logs or call inputs, then check their collateral against their debt.
 
 ## Additional Considerations
 
-The Euler devs forgot to add a health check to the `donateToReserves` function, so why would they have added an assertion for this?
-
-The answer is that they wouldn't. They would have added the assertion way in the beginning when the protocol was deployed first as an additional layer of security.
-They would have done that to exactly prevent what happened. Someone forgot to perform basic invariant checks at a protocol extension, and that's why the assertion acts as an additional layer of security which enforces protocol wide invariants, exactly to prevent insufficient checks in protocol extensions.
-
-In other words, regardless of whether the devs simply forgot to do the checks or if they thought they don't need to do the checks, it shows that extensions are prone to forgetting protocol wide checks.
-Whereas assertions implicitly check protocol wide assertions by default.
+A protocol-wide health assertion can check new operations that omit local health checks. Its triggers and account selection must cover those operations.

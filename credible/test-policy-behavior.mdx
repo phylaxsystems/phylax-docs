@@ -3,11 +3,7 @@ title: 'Test a Policy’s Allowed and Rejected Cases'
 description: 'Run an example policy’s tests and identify a legitimate operation the rule would reject.'
 ---
 
-In this tutorial, you will run the ownership policy's allowed and rejected cases, then record a legitimate exception the rule cannot distinguish. You will finish with a small behavior table you can use when reviewing policy requirements.
-
-<Note>
-This is an optional local exercise. You can develop your own assertions, and we highly recommend the [sales engineering support included in your subscription](./work-with-phylax) for policy fit. These tests do not establish production coverage.
-</Note>
+Run the ownership policy's allowed and rejected cases. Then identify a legitimate transfer that the rule would reject.
 
 ## Prerequisites
 
@@ -33,7 +29,33 @@ Open `assertions/test/OwnableAssertion.t.sol` and locate this test. Notice that 
 pcl test --match-contract TestOwnableAssertion --match-test test_assertionOwnershipChanged
 ```
 
-This test attempts to transfer ownership to another address and expects the assertion to revert. The output should include:
+Open `assertions/test/OwnableAssertion.t.sol` and find `test_assertionOwnershipChanged()`. Here, `assertionAdopter` is the example `Ownable` contract, `initialOwner` is its current owner, and `newOwner` is a different address:
+
+```solidity
+function test_assertionOwnershipChanged() public {
+    assertEq(assertionAdopter.owner(), initialOwner);
+
+    cl.assertion({
+        adopter: address(assertionAdopter),
+        createData: type(OwnableAssertion).creationCode,
+        fnSelector: OwnableAssertion.assertionOwnershipChange.selector
+    });
+
+    // Simulate a transaction that changes ownership
+    vm.prank(initialOwner);
+    vm.expectRevert("Ownership has changed");
+    assertionAdopter.transferOwnership(newOwner);
+
+    // Check that owner didn't change
+    assertEq(assertionAdopter.owner(), initialOwner);
+}
+```
+
+`cl.assertion()` registers the ownership rule for the transfer under test. `vm.prank(initialOwner)` makes the call as the current owner, so it satisfies the contract's `onlyOwner` check. The assertion still rejects the transfer because the owner would change.
+
+`vm.expectRevert("Ownership has changed")` checks for that specific rejection. The final `assertEq` confirms that the attempted transfer was rolled back and the original owner remains in place.
+
+The output should include:
 
 ```text
 [PASS] test_assertionOwnershipChanged()
@@ -53,16 +75,16 @@ Record the results:
 | Transfer to a different owner | Rejected in the local test. | The rule detects a changed owner. |
 | Approved transfer to new governance | Would also be rejected by the same comparison. | The rule does not encode this legitimate exception. |
 
-The third row is a conclusion from the rule's logic, not an additional executed test. The test suite establishes the first two outcomes; it does not establish that the policy is suitable for a live protocol.
+The first two rows are test results. The third follows from the rule's logic and is not an executed test.
 
 ## 4. Record the Requirement to Review
 
-Write down how an approved ownership change should be distinguished from an unauthorized one: who approves it, which destination is permitted, when it may occur, and how that approval can be verified. Record what should happen if the approval cannot be verified.
+Define how the policy identifies an approved ownership transfer. Specify the approver, permitted destination, timing, and proof of approval. Define the result when approval cannot be verified.
 
-Resolve those policy requirements before implementation. Sales engineering can help you assess the exceptions and their effect on protection. Simply removing the assertion would also remove its restriction on harmful ownership changes.
+Resolve the exception with your FDE before implementation. Removing the assertion also removes its restriction on harmful transfers.
 
 ## What You Have Verified
 
-You ran one allowed case and one rejected case, then identified a legitimate exception the policy does not handle. This is the starting point for reviewing coverage, rather than evidence that all normal and harmful activity has been classified correctly.
+The tests show one allowed case and one rejected case. Your review identified an exception the policy needs.
 
-Use this behavior table when you [prepare for your integration](./evaluate-credible-layer). For implementation detail, see [Write Your First Assertion](./write-first-assertion).
+Use the behavior table when you [prepare for integration](./evaluate-credible-layer). See [Writing Your Own Policies](./writing-your-own-policies) for implementation.
