@@ -143,11 +143,9 @@
                 ]
               },
               {
-                "group": "Test and Operate",
+                "group": "Test Circuit Breakers",
                 "pages": [
                   "credible/testing-assertions",
-                  "credible/testing-credible-block-guard",
-                  "credible/testing-strategy",
                   "credible/fuzz-testing",
                   "credible/backtesting",
                   "credible/ci-cd-integration",
@@ -159,7 +157,9 @@
                 "pages": [
                   "credible/dapp-integration",
                   "credible/ethereum-builder-integration",
-                  "credible/managing-policy-deployments"
+                  "credible/managing-policy-deployments",
+                  "credible/testing-credible-block-guard",
+                  "credible/testing-strategy"
                 ]
               }
             ]
