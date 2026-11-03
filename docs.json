@@ -1,6 +1,9 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
+  "fonts": {
+    "family": "Inter Tight"
+  },
   "name": "Phylax Credible Layer Documentation",
   "colors": {
     "primary": "#2DA2F6",
