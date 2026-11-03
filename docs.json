@@ -113,6 +113,7 @@
                 "group": "Managing Circuit Breakers",
                 "pages": [
                   "credible/dapp-overview",
+                  "credible/assign-protocol-manager",
                   "credible/setting-up-alerting",
                   "credible/managing-your-circuit-breakers",
                   "credible/dapp-explorer"

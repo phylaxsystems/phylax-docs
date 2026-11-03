@@ -9,9 +9,7 @@ Your team manages policy deployments through the Protocol Manager authorized for
 
 The State Oracle associates a Protocol Manager with registered contracts. This address can perform the assertion lifecycle actions permitted by that deployment. Anyone can author assertion code; only authorized accounts can activate it for the registered contracts.
 
-<Frame caption="View your project's manager under Settings → Protocol Manager">
-  <img src="/images/platform/protocol-manager.png" alt="Protocol Manager settings showing the current manager address and the Continue in wallet button to connect before changing it" />
-</Frame>
+For wallet selection and setup, follow [Assign a protocol manager](./assign-protocol-manager).
 
 Possible authorization paths include a supported ownership interface such as `owner()` or an explicit initial Protocol Manager interface. Confirm the supported path before changing protocol contracts. A contract does not always need to expose `owner()` to integrate.
 
