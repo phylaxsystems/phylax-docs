@@ -36,13 +36,16 @@ import {OwnerChangeAssertion} from "../assertions/src/ass5-owner-change.a.sol";
 contract OwnedTarget {
     address public owner; // slot 0, as required by the example
     uint256 public operations;
+    address public observedOwner;
 
     constructor(address owner_) { owner = owner_; }
     function operate() external { operations++; }
     function changeOwner(address next) external { owner = next; }
+    function recordOwner() external { observedOwner = owner; }
     function changeAndRestore(address next) external {
         address previous = owner;
         owner = next;
+        this.recordOwner();
         owner = previous;
         operations++;
     }
@@ -79,6 +82,7 @@ contract OwnerPolicyTest is Test, CredibleTest {
         target.changeAndRestore(address(0xBEEF));
         assertEq(target.owner(), address(this));
         assertEq(target.operations(), 1);
+        assertEq(target.observedOwner(), address(0xBEEF));
     }
 }
 ```
@@ -99,7 +103,7 @@ Expected result: **3 passed, 0 failed**.
 | --- | --- |
 | `testAllowsNormalOperation` | A covered operation can succeed without changing the owner |
 | `testRejectsOwnerChangeAndRollsBack` | A permanent change is rejected and the original owner remains |
-| `testEndpointCheckAllowsChangeAndRestore` | Equal endpoints do not detect a temporary authority change |
+| `testEndpointCheckAllowsChangeAndRestore` | An external call observes the temporary owner, but equal endpoints still pass |
 
 ## Adapt the example
 
