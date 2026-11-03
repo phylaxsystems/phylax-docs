@@ -3,15 +3,15 @@ title: 'Managing Policy Deployments'
 description: 'Control who can deploy, update, and remove policies for your Ethereum contracts.'
 ---
 
-Your team manages policy deployments through the Protocol Manager authorized for each protected Ethereum contract. The State Oracle records this authority and applies the configured activation and removal delays.
+Your Protocol Manager is the wallet responsible for signing releases that deploy, update, or remove circuit breakers. Do not hold funds in this wallet.
 
-## Protocol Manager Authorization
+## Release Signing
 
 The State Oracle associates a Protocol Manager with registered contracts. This address can perform the assertion lifecycle actions permitted by that deployment. Anyone can author assertion code; only authorized accounts can activate it for the registered contracts.
 
-For wallet selection and setup, follow [Assign a protocol manager](./assign-protocol-manager).
+We recommend a multisig wallet with a diversified signer set. Some customers prefer to gate deployments with hardware. Phylax can help you set this up.
 
-Possible authorization paths include a supported ownership interface such as `owner()` or an explicit initial Protocol Manager interface. Confirm the supported path before changing protocol contracts. A contract does not always need to expose `owner()` to integrate.
+For wallet selection and setup, follow [Assign a protocol manager](./assign-protocol-manager).
 
 Registration establishes assertion-management authority for the agreed contracts. It does not install guards, configure RPC routing, or prove that all intended operations are protected.
 

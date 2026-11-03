@@ -3,11 +3,13 @@ title: 'Assign a protocol manager'
 description: 'Choose the signing account that authorizes circuit breaker deployments and updates.'
 ---
 
-Assign a Protocol Manager to sign releases that deploy, update, or remove your circuit breakers. Your team controls this account and its signing policy.
+Assign a Protocol Manager wallet to sign releases that deploy, update, or remove your circuit breakers. Your team controls this wallet and its signing policy. Do not hold funds in it.
 
 ## Choose the signing account
 
-Use dedicated keys that are entirely independent of the keys used to manage any other component of your business. A multisig such as Safe lets your team require several approvals. Choose its signers and threshold before setup.
+Use dedicated keys that are entirely independent of the keys used to manage any other component of your business. We recommend a multisig wallet with a diversified signer set. Choose its signers and threshold before setup.
+
+Some customers prefer to gate deployments with hardware. Phylax can help you set this up.
 
 When using a Safe, assign the Safe address as Protocol Manager, not an individual owner's address. Connect through the Safe so signatures represent the multisig.
 
@@ -26,7 +28,7 @@ Sign in to the [Phylax platform](https://ethereum.phylax.systems) as a project a
   <img src="/images/platform/protocol-manager.png" alt="Protocol Manager settings showing the assigned address and the Continue in wallet button for changing the manager" />
 </Frame>
 
-This setup verifies the wallet and records it for the project. The protected contracts must also authorize that manager through the supported [registration path](./managing-policy-deployments). Project access alone does not grant onchain authority.
+This setup verifies the wallet and records it for the project. See [Managing Policy Deployments](./managing-policy-deployments) for deployment authority and timing.
 
 ## Sign and deploy circuit breakers
 
