@@ -1,0 +1,114 @@
+---
+title: "Run an Ownership Policy Locally"
+description: "Test a permitted operation, a rejected ownership change, and the limit of an endpoint check"
+---
+
+In this tutorial, you will run an ownership assertion against a small contract. You will see a normal operation succeed, an ownership change revert, and a temporary change escape an endpoint-only check.
+
+## Prerequisites
+
+Install [PCL and Foundry](/credible/credible-install). This walkthrough was tested with PCL `1.6.0`. It uses local contracts and needs no wallet or RPC connection.
+
+## 1. Check out the reviewed library
+
+```bash
+git clone https://github.com/phylaxsystems/credible-std.git
+cd credible-std
+git checkout fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0
+git submodule update --init --recursive
+FOUNDRY_PROFILE=assertions-book forge build
+```
+
+The profile compiles the book's examples. Compilation does not execute assertions. At this revision, the book profile has no supplied behavior tests; add the test below before running `pcl test`.
+
+## 2. Add a target and three tests
+
+Save this file as `examples/assertions-book/test/OwnerPolicy.t.sol`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {Test} from "forge-std/Test.sol";
+import {CredibleTest} from "credible-std/CredibleTest.sol";
+import {OwnerChangeAssertion} from "../assertions/src/ass5-owner-change.a.sol";
+
+contract OwnedTarget {
+    address public owner; // slot 0, as required by the example
+    uint256 public operations;
+    address public observedOwner;
+
+    constructor(address owner_) { owner = owner_; }
+    function operate() external { operations++; }
+    function changeOwner(address next) external { owner = next; }
+    function recordOwner() external { observedOwner = owner; }
+    function changeAndRestore(address next) external {
+        address previous = owner;
+        owner = next;
+        this.recordOwner();
+        owner = previous;
+        operations++;
+    }
+}
+
+contract OwnerPolicyTest is Test, CredibleTest {
+    OwnedTarget target;
+
+    function setUp() public { target = new OwnedTarget(address(this)); }
+
+    function arm() internal {
+        cl.assertion(
+            address(target),
+            type(OwnerChangeAssertion).creationCode,
+            OwnerChangeAssertion.assertionOwnerChange.selector
+        );
+    }
+
+    function testAllowsNormalOperation() public {
+        arm();
+        target.operate();
+        assertEq(target.operations(), 1);
+    }
+
+    function testRejectsOwnerChangeAndRollsBack() public {
+        arm();
+        vm.expectRevert(bytes("Owner changed"));
+        target.changeOwner(address(0xBEEF));
+        assertEq(target.owner(), address(this));
+    }
+
+    function testEndpointCheckAllowsChangeAndRestore() public {
+        arm();
+        target.changeAndRestore(address(0xBEEF));
+        assertEq(target.owner(), address(this));
+        assertEq(target.operations(), 1);
+        assertEq(target.observedOwner(), address(0xBEEF));
+    }
+}
+```
+
+The target deliberately has an unrestricted ownership setter so the assertion has a violating transaction to reject. Its owner occupies slot `0`, matching the example. It is a test fixture, not a contract to deploy.
+
+`cl.assertion` arms the selected assertion function for the next monitored call. This test selects the owner check. The source also has an admin check, which needs its own fixture and tests.
+
+## 3. Run the tests
+
+```bash
+RUST_MIN_STACK=16777216 FOUNDRY_PROFILE=assertions-book   pcl test --match-contract OwnerPolicyTest
+```
+
+Expected result: **3 passed, 0 failed**.
+
+| Test | What it proves |
+| --- | --- |
+| `testAllowsNormalOperation` | A covered operation can succeed without changing the owner |
+| `testRejectsOwnerChangeAndRollsBack` | A permanent change is rejected and the original owner remains |
+| `testEndpointCheckAllowsChangeAndRestore` | An external call observes the temporary owner, but equal endpoints still pass |
+
+## Adapt the example
+
+Replace the teaching target with your deployed contract's layout and call paths. Keep the accepted, rejected, and restored-state cases. If temporary authority changes are prohibited, an endpoint equality check is insufficient; the policy must observe the relevant writes or operations.
+
+For a constructor with configuration arguments, append `abi.encode(...)` to its creation code when calling `cl.assertion`. Do not fetch protocol state in that constructor: the assertion deployment runtime is isolated from the test's contract state. Pass addresses explicitly and read protocol state during assertion execution.
+
+Continue with the [ERC-4626 policy](./vault-policies). Test each selected assertion function through a matching trigger. Before deployment, run historical backtests and scenarios on a replica of your protocol in [alerting](/credible/testing-strategy).

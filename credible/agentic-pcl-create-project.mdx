@@ -1,18 +1,16 @@
 ---
-title: 'How to Create a PCL Project with an Agent'
+title: 'Create a Policy Project with an AI Agent'
 description: 'Guide an AI coding agent through creating and testing a Credible Layer assertion project'
 ---
 
-This guide shows you how to use the `pcl-assertion-workflow` skill to create a local assertion project in an existing protocol repository and verify it with `pcl`.
+Use `pcl-assertion-workflow` to create and test an assertion project in your protocol repository.
 
 ## Prerequisites
 
-Before you begin, make sure you have:
-
-- Completed the [Agentic PCL setup](./agentic-pcl)
+- Completed the [AI agent setup](./agentic-pcl)
 - [`pcl` installed](./credible-install)
 - A Foundry-based protocol repository
-- Written definitions of the invariants you want to protect
+- Agreed policy requirements and review responsibilities
 
 ## 1. Start the agent in the protocol repository
 
@@ -28,7 +26,7 @@ Use a prompt like this:
 Use the pcl-assertion-workflow skill to create a Credible Layer assertion
 project in this repository.
 
-The invariants are defined in: <path or description>
+The policy requirements approved by our team are in: <path>
 The protected contracts are: <contract paths or names>
 
 Before editing:
@@ -44,8 +42,6 @@ pcl tests and report the exact results.
 Do not authenticate, create platform resources, or deploy anything.
 ```
 
-The explicit boundary at the end keeps project creation separate from deployment.
-
 ## 3. Review the proposed invariants
 
 Before allowing implementation, confirm that each proposed assertion:
@@ -60,7 +56,7 @@ If an invariant is ambiguous, refine it before the agent writes Solidity.
 
 ## 4. Review the generated project
 
-The exact structure should follow the host repository, but a typical result includes:
+Follow the host repository structure. A typical project contains:
 
 ```text
 assertions/
@@ -96,11 +92,11 @@ Passing tests do not prove that the chosen invariant is correct or complete. Rev
 
 ## 6. Prepare for deployment
 
-Before handing the project to a deployment agent:
+Review the implementation and test evidence against your requirements. Before deployment:
 
 - Commit or otherwise preserve the reviewed local changes
 - Confirm that `assertions/credible.toml` names every protected contract and assertion
-- Decide on staging or production
+- Decide on alerting or production
 - Identify the target chain and protocol manager wallet
 
-Continue with [How to Deploy Projects Through Agentic PCL](./agentic-pcl-deploy).
+Continue with [Deploy Policies with an AI Agent](./agentic-pcl-deploy).

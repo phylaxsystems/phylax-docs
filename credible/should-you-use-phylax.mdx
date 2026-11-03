@@ -1,0 +1,194 @@
+---
+title: 'Should you use Phylax?'
+description: 'What to consider before adding runtime enforcement to your protocol.'
+---
+
+We often hear a version of the same concern:
+
+> “We want protection against drains and unexpected asset loss, but our engineers are busy and legitimate withdrawals need to keep working.”
+
+This guide explains the protection Phylax can add, the work involved, and the operational tradeoffs, so you can decide when to opt into runtime enforcement. It’s always a good time to think through additional safeguards for your protocol.
+
+## How much time does it take?
+
+The timeline depends on the complexity of your protocol, but the policies themselves can be simple and highly effective. With Phylax's forward deployed engineers (FDEs), you can go from onboarding to a live integration in a few days to a few weeks.
+
+<AccordionGroup>
+  <Accordion title="Do we have to build this ourselves?">
+    You can write your own assertions, but you do not need to arrive with code. Our FDEs help define policies, write assertions, and prepare and test the agreed integration. Your team contributes protocol knowledge, reviews the work, and controls production signing.
+  </Accordion>
+  <Accordion title="How much time will you need from our engineers?">
+    Our FDEs handle implementation and testing. We need your engineers for the initial protocol walkthrough, review of our changes and test results, and launch approval. We agree on your team's expected time commitment during scoping.
+  </Accordion>
+  <Accordion title="What can make the integration take longer?">
+    A simple policy may still require careful integration and testing. The timeline also depends on:
+
+    - **Contract and routing changes:** upgrades, guard installation, alternative entry points, and the wallets, keepers, or relayers submitting transactions.
+    - **Testing and exceptions:** representative activity, planned migrations or large withdrawals, and any false positives that need investigation.
+    - **Reviews and approvals:** security reviews, governance processes, signer availability, and configured activation delays.
+
+    Share these constraints early so your FDE can plan the rollout with your team.
+  </Accordion>
+  <Accordion title="Can we start with a smaller scope?">
+    Yes. Agree on an initial set of operations and policies, then expand coverage through reviewed releases. A focused first integration still needs guard and routing coverage, testing, and recovery checks. Record what remains outside its scope so your team knows exactly what is protected.
+  </Accordion>
+  <Accordion title="What will this cost?">
+    Phylax subscriptions range from \$50,000 to \$150,000, depending on scope, with FDE support included. That's not much more than detection-only software, which alerts you to threats but does not prevent exploit transactions.
+  </Accordion>
+</AccordionGroup>
+
+Read [Work with Phylax](./work-with-phylax) for the engagement and responsibilities, and [Development Effort](./development-effort) for what affects the work.
+
+## What do we need for the first call?
+
+Bringing a technical team member and some thoughts on the failure scenarios you want to prevent is a good starting point. We’ll help you work through what your existing security measures cover, the issues that concern you most, and the operational and engineering tradeoffs.
+
+<AccordionGroup>
+  <Accordion title="Do we need to define all our invariants first?">
+    No. Existing tests, audits, and invariants help, but our FDEs can work from the failure scenarios you want to address. Include legitimate operations that must remain possible, such as large withdrawals, migrations, and upgrades.
+  </Accordion>
+  <Accordion title="What materials and access should we share?">
+    Share the available contract addresses, source repositories, architecture, and relevant tests or audits through the agreed channel. Identify restrictions on upgrades, routing, and governance timing. Credentials and signing keys are not needed for scoping.
+  </Accordion>
+</AccordionGroup>
+
+See [Prepare for Your Integration](./evaluate-credible-layer) for the context and people to bring.
+
+## Can Phylax protect our existing contracts?
+
+Yes. You can add Phylax policies to contracts that are already deployed. This can include immutable contracts with a suitable hook or configurable dependency. Our FDEs review your existing architecture and identify how enforcement can cover the operations you want to protect.
+
+| Existing deployment | Integration possibility |
+| --- | --- |
+| Upgradeable contract | Add the required guard through an upgrade and register the policies. |
+| Immutable contract with a suitable hook or configurable dependency | Integrate enforcement through that hook or dependency, potentially using a proxy. |
+| Immutable contract with no suitable integration point | Not supported. |
+
+<AccordionGroup>
+  <Accordion title="What if our contracts are immutable?">
+    Immutable contracts can be supported when their existing architecture provides a suitable integration point.
+
+    For a hook or dependency to be suitable, protected operations must pass through its guard and must not be able to complete if the guard rejects them. Our FDEs check alternative entry points and other paths that could bypass enforcement.
+  </Accordion>
+  <Accordion title="Will our users, keepers, and integrations still work?">
+    The actual submitters of protected transactions need a route to participating builders. Review wallets, multisig executors, keepers, bots, and relayers. A protected call included in a noncredible block reverts while the gate is active. Ordinary reads and unprotected operations can keep their existing providers.
+  </Accordion>
+  <Accordion title="What new trust assumptions are we accepting?">
+    Ethereum protection relies on authorized builders checking the rules, the Registry and guard behaving as intended, and complete coverage of the protected paths. A credible-block marker is a builder attestation, not a cryptographic proof. Availability and recovery settings also affect when protection applies.
+  </Accordion>
+</AccordionGroup>
+
+Review [Ethereum Integration Planning](./dapp-integration) and the [Trust Model](./trust-model). Support must be assessed for each network; [L2 integrations](./l2-integrations/overview) have a separate model.
+
+## What makes Phylax a truly independent security layer?
+
+Phylax checks transaction effects against policies defined separately from your protocol's code. A transaction that passes your protocol's own checks can still be rejected by a participating builder if it violates those policies. On Ethereum, guards require protected operations to execute in a credible block while enforcement is active.
+
+Your team controls policy activation through its own signer set, and every protocol's policy configuration is stored onchain. If Phylax's platform or services are down, your authorized signers can still manage existing policies directly through the [onchain contracts](./credible-layer-contracts#state-oracle) and use the configured recovery paths. These actions follow the deployed permissions and delays without requiring Phylax's platform or team to be online.
+
+<AccordionGroup>
+  <Accordion title="Can we recover if Phylax is unavailable?">
+    Your authorized signers can use the onchain recovery paths agreed for your integration, subject to the deployed permissions and delays. Before activation, we test those paths with your team, including provider outages, unavailable signers, and rules that might block the recovery action itself.
+  </Accordion>
+  <Accordion title="What if a circuit breaker blocks a legitimate transaction?">
+    Your team may need to correct or remove the rule, or use a separately authorized recovery path. Agree on who can act and how long each action takes before activation. Test recovery against the assertions and guards that will be active; a recovery transaction must remain executable under those rules.
+  </Accordion>
+  <Accordion title="Will fail-open automatically fix a bad rule?">
+    Not necessarily. A block-gap fallback depends on credible blocks stopping, not on your transactions succeeding. Builders can keep producing credible blocks while a restrictive assertion rejects legitimate activity. Correcting or removing the rule can involve lifecycle delays; other recovery paths must be separately authorized and tested.
+  </Accordion>
+</AccordionGroup>
+
+Enforcement still relies on participating builders, the Registry, and correctly configured guards. Read [Policy Control and Decentralization](./neutrality) and the [Trust Model](./trust-model) for those dependencies, and the [recovery testing guidance](./testing-strategy#5-rehearse-recovery) for what to rehearse.
+
+## What kind of policies do you support?
+
+The range of policy patterns is wide. The most popular choices tend to be stopping abnormally large asset outflows and unexpected changes to administrative controls.
+
+Our FDEs study your protocol, existing safeguards, and the failure scenarios you care about to identify where an additional policy can have the most impact. We then define and test that policy with your team, including the legitimate activity and exceptions it must allow.
+
+Explore these examples:
+
+- [ERC20 Cumulative Outflow Breaker](../assertions-book/assertions/ass20-erc20-drain): limit token outflows over a rolling window.
+- [Owner Change](../assertions-book/assertions/ass05-ownership-change): reject unexpected changes to contract ownership.
+- [Implementation Address Change](../assertions-book/assertions/ass01-impl-addr-change): constrain changes to a proxy's implementation, such as permitting only approved upgrades.
+
+<AccordionGroup>
+  <Accordion title="How do we choose a threshold without blocking normal activity?">
+    Define the assets, contracts, measurement window, and accounting first. Gross outflows and net outflows describe different behavior. Review normal activity alongside exceptional withdrawals, liquidations, and migrations, then test the proposed threshold against those cases.
+  </Accordion>
+  <Accordion title="Does triggering a circuit breaker pause the whole protocol?">
+    A failed assertion excludes the candidate transaction at a participating builder. It does not automatically pause unrelated transactions or the whole protocol. Whether later operations pass depends on the rule and state. Reset behavior and temporary exceptions must be deliberately designed; there is no universal one-click override.
+  </Accordion>
+  <Accordion title="Can we update policies as our protocol changes?">
+    Yes. You can adjust thresholds, add coverage, or revise policies as your protocol evolves. Our FDEs help prepare and test the changes with backtests and fork tests. Your team reviews the results and authorizes the new release, which takes effect after the configured activation delay.
+  </Accordion>
+</AccordionGroup>
+
+See the [Enforcement FAQ on exceptions and recovery](./faq#availability-false-positives-and-recovery) for how these actions affect enforcement.
+
+## Who builds it, and what does our team approve?
+
+Within the agreed scope, our FDEs implement assertions and prepare tested contract and routing changes. Your team reviews the intended behavior, code, and evidence. The people who approve protocol changes and control production signing need to be involved before activation.
+
+<AccordionGroup>
+  <Accordion title="Are we giving Phylax control of our protocol?">
+    No. Our FDEs help you identify and implement your policies. Management of your policies and protocol remains entirely under your authority.
+  </Accordion>
+  <Accordion title="What signer setup is best?">
+    We support a wide range of signer setups. We recommend using dedicated keys for policy management that are entirely independent of the keys used to manage any other component of your business.
+  </Accordion>
+</AccordionGroup>
+
+See [Who Does What](./work-with-phylax#who-does-what) and [Managing Policy Deployments](./managing-policy-deployments) for responsibilities and authority.
+
+## How do we know it works before going live?
+
+Our FDEs run backtests, fork tests, and custom stress scenarios before you go live.
+
+<AccordionGroup>
+  <Accordion title="What evidence should we review?">
+    Your forward-deployed engineer will take you through various scenarios so that you get comfortable reading different types of transaction rejections. We keep the protections on a replica of your protocol on a live fork of Ethereum so that you can tune your policies to catch bad behaviour while allowing intended behaviour to continue as normal.
+
+    Before signing, confirm that the release targets the intended contracts and contains the code you tested. Investigate each backtest finding, particularly any legitimate transaction the policy would reject. See [Release Review Checks](./release-review-checks) for the platform's verification results.
+  </Accordion>
+  <Accordion title="How long do you recommend running my policies and protocol in alerting mode?">
+    It depends on your protocol and the policies being tested, but we typically spend one week running through various scenarios in alerting mode. We review flagged activity with you and tune the policies before enabling production enforcement.
+  </Accordion>
+  <Accordion title="Can we green-light a transaction that is proven benign?">
+    Yes. We support green-lighting specific transactions after review confirms they are benign. Approval follows your protocol's authorization process and applies to the reviewed transaction.
+  </Accordion>
+</AccordionGroup>
+
+Use [Testing Strategy](./testing-strategy) to assess the evidence and [Use the Phylax Platform](./use-the-platform#2-review-a-release) to review it in your project.
+
+## What will our signers need to do?
+
+Your signers authorize the reviewed production actions. Phylax prepares and simulates them with you. The rollout must coordinate assertion activation with the separately installed guards and configured transaction routes.
+
+<AccordionGroup>
+  <Accordion title="What are we approving when we sign?">
+    Check the target network, contracts, assertion additions and removals, environment, and review results. Confirm the authority used for each action. A platform account does not itself grant permission to change production policy; the authorized Protocol Manager controls assertion lifecycle actions.
+  </Accordion>
+  <Accordion title="Does signing make protection active immediately?">
+    No. The State Oracle applies configured lifecycle delays. Review the activation time and the sequence of contract, routing, and assertion changes together. Assertion activation does not install a missing guard, and removing a rule later is also subject to the configured delay.
+  </Accordion>
+</AccordionGroup>
+
+Follow [production authorization in the platform](./use-the-platform#4-authorize-production-and-verify-protection) and [Deploy Assertions](./deploy-assertions-dapp) with your FDE.
+
+## How do we know we are live, and who looks after it?
+
+After activation, our FDEs verify live protection with you. The active rules, covered contract paths, transaction routes, and monitoring must match the integration you approved.
+
+<AccordionGroup>
+  <Accordion title="What proves we are protected?">
+    The Phylax platform shows when your policies are live and enforcing against your protocol.
+  </Accordion>
+  <Accordion title="Who responds to alerts and keeps the policies current?">
+    Monitoring, incident response, and ongoing policy changes follow the operating plan agreed with your team. Phylax can be on-call for your team or join the signer set to help in emergencies. Just remind us of this during our setup call.
+  </Accordion>
+</AccordionGroup>
+
+See [live enforcement checks](./deploy-assertions-dapp#verify-ethereum-enforcement), [Setting Up Alerting](./setting-up-alerting), and [Use the Phylax Platform](./use-the-platform) for day-to-day operation.
+
+Ready to discuss your protocol? [Work with Phylax](./work-with-phylax#start-a-conversation) explains how to get started.

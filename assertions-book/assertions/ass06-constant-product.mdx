@@ -1,36 +1,34 @@
 ---
-title: Constant Product
-description: Assert that a constant product is maintained in an AMM pool
+title: "Reserve Product Floor"
+description: "Reject a decrease in the product of two recorded reserves"
 ---
 
-import ass6ConstantProduct from "/snippets/ass6-constant-product.a.mdx";
+import Example from "/snippets/ass6-constant-product.a.mdx";
 
-## When to Use This Pattern
+A swap should not reduce the reserve product of a constant-product pool. This template compares the recorded reserve product before and after a transaction.
 
-Ensures the constant product (k = x * y) is maintained in AMM pools, preventing unauthorized manipulation of pool reserves and potential flash loan attacks. Critical for Uniswap V2-style AMMs, DEX aggregators, lending protocols using AMM price oracles, and yield farming protocols providing liquidity.
+## Behavior
 
-The constant product formula is fundamental to many AMM designs - any deviation could indicate a serious security issue or potential exploit.
+`ConstantProductAssertion` reads separate reserve slots `0` and `1` at transaction boundaries. It requires `postReserve0 × postReserve1 >= preReserve0 × preReserve1`.
 
-## What This Pattern Checks
+## Configuration
 
-Monitors the product of reserves (k) in AMM pools to ensure it remains constant after transactions using:
+Replace the slots and decode packed reserves if necessary. Real Uniswap V2 reserves do not occupy these two independent slots. The template runs at transaction end, so a deployment that permits liquidity removal needs operation-specific coverage or an explicit policy for those removals.
 
-- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Compare reserve product before and after transaction
-- `ph.loadStateAt()`: Load reserve slots before and after the transaction
-- Direct validation that k = reserve0 * reserve1 remains unchanged
+## Scenarios
 
-The assertion verifies both initial/final states and detects potential manipulations during transaction execution.
+| Transaction | Result |
+| --- | --- |
+| Reserves 100/100 become 90/112 | Accepted: product rises from 10,000 to 10,080 |
+| Reserves 100/100 become 90/110 | Rejected: product falls to 9,900 |
+| Proportional liquidity removal leaves 90/90 | Rejected, although it can be legitimate |
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+## Coverage limits
 
-## Assertion Pattern
+Stored reserves are not proof of token custody or a fair market price. A manipulated swap can preserve the product. Bound reserve values to avoid multiplication overflow, and test fee-on-transfer behavior.
 
-<ass6ConstantProduct />
+## Source
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+The [reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass6-constant-product.a.sol) is a teaching template. The [example setup guide](./run-an-example) provides the pinned checkout and test procedure.
 
-## Related Patterns
-- [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations)
-- [ERC20 Cumulative Outflow Breaker](/assertions-book/assertions/ass20-erc20-drain)
-- [Panic State Validation](/assertions-book/assertions/ass17-panic-state-validation)
-- [ERC20 Cumulative Inflow Breaker](/assertions-book/assertions/ass22-erc20-inflow-breaker)
+<Example />

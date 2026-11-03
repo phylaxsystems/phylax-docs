@@ -1,225 +1,61 @@
 ---
-title: 'Quickstart Tutorial'
-description: 'Tutorial: write, test, and deploy your first assertion with `pcl`'
+title: 'Run an Example Policy Locally'
+description: 'Optional tutorial: run an example assertion and inspect its allowed and rejected behavior.'
 ---
 
-Use this tutorial when you are new to the Credible Layer and want one guided, happy-path run from local project setup to an enforced assertion.
-
-By the end of this tutorial, you will:
-
-1. Set up your project structure
-2. Test your assertion
-3. Deploy your contract
-4. Authenticate with `pcl`
-5. Create a project
-6. Configure `credible.toml`
-7. Create a release with `pcl apply`
-8. Review and activate your assertion
-9. Verify that the assertion is working
-
-<Note>
-If you already know the overall flow and only need one task, use the dedicated guides for [installation](./credible-install), [applying assertions](./apply-assertions), or [deployment in the platform](./deploy-assertions-dapp).
-</Note>
+Run an example policy that rejects ownership changes. Inspect its passing and failing cases in local tests.
 
 ## Prerequisites
 
-Before you begin, make sure you have:
+- [pcl installed](./credible-install)
+- Git and Foundry available locally
 
-- `pcl` installed (see the [Installation Guide](./credible-install))
-- Solidity compiler [installed](https://docs.soliditylang.org/en/latest/installing-solidity.html)
-- Foundry installed (see the [Foundry Installation Guide](https://book.getfoundry.sh/getting-started/installation))
-- A Phylax platform account (sign in via wallet, email, Google, or GitHub). A connected wallet is required to manage contracts — the platform verifies on-chain ownership.
-- Access to the Credible Layer Demo, reach out to us on [Telegram](https://t.me/phylax_credible_layer) if you're interested in getting access
+No wallet or live transaction is required.
 
-## 1. Project Setup
+## 1. Clone the Starter
 
-We've created an example project that contains complete assertion examples that work out of the box and can serve as a starting point for your own projects.
-
-The project can be found [here](https://github.com/phylaxsystems/credible-layer-starter).
-
-For a detailed understanding of what an assertion is and how it works, see the [Assertion Guide](./write-first-assertion). For testing assertions, see the [Testing Assertions](./testing-assertions) guide.
-
-<Note>
-    The `credible-layer-starter` repo has several examples that you can deploy and try out once you're done with this guide.
-    Specific instructions can be found in the [README](https://github.com/phylaxsystems/credible-layer-starter/blob/main/README.md).
-</Note>
-
-You can clone the example project by running the following command:
+Clone the example project with its dependencies:
 
 ```bash
 git clone --recurse-submodules https://github.com/phylaxsystems/credible-layer-starter.git
 cd credible-layer-starter
 ```
 
-Once cloned you have a repository with all required dependencies.
+The project contains example protocol contracts in `src`, assertions in `assertions/src`, and tests in `assertions/test`.
 
-## 2. Running Tests
+## 2. Run the Tests
 
-Use the `pcl` CLI to run your tests:
+From the repository root, run:
 
 ```bash
 pcl test
 ```
 
-This command will compile your assertion and run the tests.
-You should see output looking like this indicating that the tests have passed:
+The command compiles the project and runs the assertion tests. The output includes these two Ownable cases; gas values and timing vary:
 
-```bash
-Ran 2 tests for assertions/test/OwnableAssertion.t.sol:TestOwnableAssertion
-[PASS] test_assertionOwnershipChanged() (gas: 806650)
-[PASS] test_assertionOwnershipNotChanged() (gas: 804708)
-Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 648.17ms (1.11s CPU time)
+```text
+[PASS] test_assertionOwnershipChanged()
+[PASS] test_assertionOwnershipNotChanged()
 ```
 
-## 3. Deploy Your Contract
+A passing ownership-change test means the test correctly observed the expected assertion rejection. It does not mean the rule permits ownership changes.
 
-First, import your private key into an encrypted Foundry keystore so you never have to expose it as an environment variable:
+## 3. Inspect the Rule and Its Tests
 
-```bash
-cast wallet import <account_name> --interactive
-```
+Open `assertions/src/OwnableAssertion.a.sol` and `assertions/test/OwnableAssertion.t.sol`.
 
-You'll be prompted to paste your private key and set a password. Foundry stores the encrypted key locally and will prompt for the password when you sign transactions.
+The rule compares the owner before and after the candidate operation. In the test, `cl.assertion()` registers the assertion for the next external call. One case attempts a change and expects the assertion to revert; the other leaves the owner unchanged and passes.
 
-Now deploy the Ownable contract:
+This rule rejects legitimate ownership transfers too. For a real protocol, define which changes should be allowed before adapting the example.
 
-```bash
-forge script script/DeployOwnable.s.sol --rpc-url <RPC_URL> --account <account_name> --broadcast
-```
+## 4. Understand What You Have Verified
 
-Explanation of the arguments:
+The tests check ownership changes in the local harness. The starter contract has no Ethereum guard, so these tests do not establish production protection.
 
-- `<RPC_URL>`: The RPC URL of the network you're deploying to
-- `<account_name>`: The name you chose when importing your key above
+Use the current [Ethereum integration guide](./dapp-integration) instead of the starter's earlier deployment instructions.
 
-Make sure to note down the address of the deployed contract as you'll need it to configure `credible.toml` in a later step.
-It will be the `Deployed to:` address in the output of the command.
+## Continue Exploring
 
-## 4. Authenticating with Credible Layer
+Next, [test the allowed and rejected cases](./test-policy-behavior) and examine how the same rule treats a legitimate ownership transfer.
 
-Here's a full video that you can use to follow the full process from authentication to activating the assertion:
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/MrDVLp5UDZ0?si=tdgQEJ3Tkps2LwJA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-Before deploying your assertion, you need to authenticate:
-
-```bash
-pcl auth login
-```
-
-<Note>
-    Your account must be linked to the wallet address that owns the contract on-chain. The platform verifies ownership before allowing assertion deployment. See [Ownership Verification](./ownership-verification) for details.
-</Note>
-
-This displays a device code and verification URL. Press Enter to open the URL in your browser, then authenticate via wallet, email, Google, or GitHub and approve the request.
-
-<Note>
-If authentication fails, first confirm that your wallet is on the correct network and that `pcl` is using the expected auth URL. Then use the [Troubleshooting guide](./troubleshooting) for common setup issues.
-</Note>
-
-## 5. Create a Project
-
-Once you have deployed your contract, you'll need to create a project in the platform if you don't have one already. Navigate to [app.phylax.systems](https://app.phylax.systems) and create a new project. When asked to link your contract, use the address of the contract you deployed in the previous step.
-
-For a more detailed overview of how to use the platform and manage projects, see the [Deploy Assertions guide](./deploy-assertions-dapp).
-
-## 6. Configure `credible.toml`
-
-The `credible.toml` file defines which assertions protect which contracts. The starter project already includes one at `assertions/credible.toml`. Update it with the address of the contract you deployed:
-
-```toml
-environment = "production"
-
-[contracts.ownable]
-address = "<ADDRESS_OF_DEPLOYED_CONTRACT>"
-name = "Ownable"
-
-[[contracts.ownable.assertions]]
-file = "assertions/src/OwnableAssertion.a.sol"
-```
-
-Replace `<ADDRESS_OF_DEPLOYED_CONTRACT>` with the address from step 3.
-
-<Tip>
-You can also set `project_id` in `credible.toml` to skip the interactive project selection prompt. Find your project ID in the platform URL or project settings.
-</Tip>
-
-For details on all `credible.toml` fields, see the [pcl Reference](./cli-reference#credibletoml-configuration).
-
-## 7. Create a Release with `pcl apply`
-
-Create a release for your assertion in the platform with a single command:
-
-```bash
-pcl apply
-```
-
-This command:
-1. Reads your `credible.toml` configuration
-2. Builds and compiles the assertion contracts
-3. Creates a release on the platform
-
-You'll be prompted to confirm the release. After confirmation, `pcl apply` returns a release number and a link to review that release in the platform.
-
-<Note>
-If `project_id` is not set in your `credible.toml`, `pcl apply` prompts you to select a project interactively.
-</Note>
-
-## 8. Review and Activate Your Assertion
-
-Open the release link returned by `pcl apply`, or go to [app.phylax.systems](https://app.phylax.systems) and navigate to the project where the release was created.
-
-You'll notice that the release is ready for review. Go ahead and proceed to review and deploy it. During the review process, you'll choose whether to deploy to **Staging** (for testing) or **Production** (for active protection).
-
-<Note>
-After deployment, your assertion enters a timelock period. During this period, it is marked for enforcement (production) or marked for staging (staging environment). After the timelock expires, the assertion becomes enforced (production) or staged (staging), actively protecting your contract. See the [Glossary](./glossary#timelock) for details about timelocks.
-</Note>
-
-For a more detailed overview of how to use the platform, see the [Deploy Assertions guide](./deploy-assertions-dapp).
-
-## 9. Verify That The Assertion Is Working
-
-Now that your assertion is deployed and enforced (after the timelock period), let's verify that it's working as expected. We'll do this by attempting to change the ownership of the contract, which should trigger our assertion and prevent the change.
-
-First, let's check the current owner of the Ownable contract. Replace `ADDRESS_OF_OWNABLE_CONTRACT` with the address of your deployed Ownable contract and `RPC_URL` with your network's RPC URL:
-
-```bash
-cast call <ADDRESS_OF_OWNABLE_CONTRACT> "owner()" --rpc-url <RPC_URL>
-```
-
-This command should return the initial owner address that was set when we deployed the contract.
-
-Next, let's attempt to transfer ownership to a new address. Make sure you replace `NEW_OWNER_ADDRESS` with an address that is not the initial owner. This transaction should cause the assertion to revert, which will result in the transaction being dropped:
-
-```bash
-cast send <ADDRESS_OF_OWNABLE_CONTRACT> "transferOwnership(address)" <NEW_OWNER_ADDRESS> --rpc-url <RPC_URL> --account <account_name>
-```
-
-The transaction should timeout, which means that the assertion reverted and the transaction was dropped:
-
-```bash
-Error: transaction was not confirmed within the timeout
-```
-
-To confirm that the ownership hasn't changed, let's check the owner again:
-
-```bash
-cast call <ADDRESS_OF_OWNABLE_CONTRACT> "owner()" --rpc-url <RPC_URL>
-```
-
-The owner should still be the original address, confirming that our assertion successfully prevented the ownership change.
-
-## Conclusion
-
-Congratulations! You've successfully created, tested, deployed, and verified your first assertion using `pcl`. You can now go ahead and start implementing assertions in your own projects.
-
-### Next Steps
-
-1. **Read the Assertions Book**: Check out the [Assertions Book](../assertions-book/assertions-book-intro) for more detailed explanations and a collection of assertions for various use cases
-2. **Try more complex assertions**: We've created some more assertions in the [credible-layer-starter](https://github.com/phylaxsystems/credible-layer-starter) repo that are ready to be deployed and used with a couple of commands
-3. **Integrate with your own projects**: Apply assertions to your existing smart contracts
-4. **Join the community**: Share your assertions and learn from others in the [Phylax Telegram](https://t.me/phylax_credible_layer)
-
-For more detailed information about `pcl` and its commands, see [Apply Assertions](./apply-assertions) and [pcl Reference](./cli-reference).
-
-For a comprehensive list of terms and concepts used in the Credible Layer, see the [Glossary](./glossary).
+To adapt the policy, see [Writing Your Own Policies](./writing-your-own-policies).

@@ -1,74 +1,72 @@
 ---
 title: 'Trust Model & Guarantees'
-description: 'Credible Layer enforcement guarantees, scope, and operational model'
+description: 'Enforcement scope, builder and guard assumptions, authorization, and recovery tradeoffs.'
 ---
 
-This page summarizes the Credible Layer trust model in plain language.
+Ethereum enforcement depends on participating builders, valid block markers, and complete guard coverage. This page defines those assumptions and the recovery tradeoffs.
 
-## Core Guarantees
+## Enforcement Scope
 
-- **Deterministic enforcement**: given the same on-chain state and assertion code, enforcement
-  results are deterministic
-- **Pre-execution validation**: the enforcer reports assertion failures before block inclusion;
-  enforcing network integrations can exclude those transactions
-- **Transparent rules**: assertions are public Solidity code and can be audited by anyone
-- **Observable outcomes**: invalidations, release activity, and project changes are recorded for project review and public reporting where appropriate
-- **Bounded execution**: production assertions are admitted with trigger scope and resource limits so enforcement remains predictable
+- **Deterministic checks**: the same assertion, execution context, and state produce the same result.
+- **Validation before inclusion**: the enforcer reports failures before inclusion; the enforcing integration excludes those candidate transactions.
+- **Assertion-defined coverage**: rules protect only the behavior their logic and triggers capture. Passing a rule is not proof of safety against other failures.
+- **Configured lifecycle**: the State Oracle determines assertion assignments and activation or removal times.
+- **Execution-path coverage**: every protected Ethereum operation must reach the guard, regardless of its submitter or entry point.
 
-## Scope of Guarantees
+Assertions do not replace ordinary chain validity, protocol checks, or finality rules. Their execution is subject to resource limits and the integration's timeout and error policies.
 
-- **Assertion-defined coverage**: enforcement applies to the behaviors captured by active assertions
-- **Protocol-authored rules**: protocol teams define and maintain the rules that protect their contracts
-- **Integrated environments**: enforcement applies on networks and environments where the enforcer is integrated and the assertion is active
-- **On-chain coordination**: the State Oracle contracts remain the source of truth for assertion lifecycle state and timelocks
-- **Documented transaction paths**: each integration must define how ordinary, bridge-originated, system-originated, delayed, or forced-inclusion-style paths are validated
+For the separate sequencer inclusion boundary, see [L2 and Sequencer Integrations](./l2-integrations/overview).
 
-## Operational Model
+## Decentralized Builders
 
-- The network runs the Assertion Enforcer during block building
-- The enforcer can access registry data (from on-chain events) and assertion bytecode
-- The network follows its normal transaction validity rules alongside enforcement
-- Production assertions are admitted with bounded triggers and resource limits before they become part of the active execution set
-- Network integrations define continuity behavior for maintenance windows and degraded components
+Assertion validation is not an Ethereum consensus rule. Protected operations need an unavoidable guard. The Credible RPC routes transactions to participating builders but cannot prevent inclusion by other builders.
 
-## Trust Boundaries
+The model relies on:
 
-The Credible Layer adds protocol-defined validation to an integrated network's transaction inclusion process. It does not remove the trust users already place in that network for ordering, liveness, and ordinary transaction validity.
+- **Authorized builders** validating applicable assertions and marking only blocks they build under that policy.
+- **Marker integrity**: the marker is bound to the expected timestamp. The publication design relies on keeping the marker transaction private until the block header is signed and on validators not signing conflicting blocks for the same slot.
+- **Registry administration** controlling builder authorization and any upgrade or emergency powers according to the deployed contracts.
+- **Complete guard coverage**: protected entry points, internal paths, modules, and alternative execution routes must not bypass the intended gate.
+- **Correct guard behavior** for credible blocks, noncredible blocks, Registry errors, fail-open conditions, and authorized bypasses.
 
-The main trust boundaries are:
+A marker is an authorized attestation, not a cryptographic proof that assertions ran. A guard checks the marker rather than independently executing the rules. See [Architecture](./architecture-overview#decentralized-block-building).
 
-- Protocol teams are responsible for writing and maintaining assertions that express the risks they want to prevent
-- Project manager wallets control assertion releases, staging, production promotion, rollback, and collaborator access
-- Network operators are responsible for running the integration, honoring active registry state, and documenting timeout or degraded-component behavior
-- Assertion DA and local enforcer caches make assertion bytecode available before production execution; hot-path validation should not depend on live network fetches
-- Private invalidation payloads and traces are visible only to project members unless the project opts in to share them with support or network security teams
+## Authority Boundaries
 
-## Failure and Continuity Policies
+| Role | Responsibility and risk |
+| --- | --- |
+| Protocol Manager | Controls assertion lifecycle for registered contracts. Compromise can permit restrictive rules or removal of protections, subject to authorization and timelocks. |
+| Platform project members | Have the project permissions assigned to them. Platform access is separate from on-chain authority. |
+| Protocol owners and upgrade admins | Control protocol changes and any guard installation, replacement, or bypass powers granted by the protocol. |
+| Registry admins and guardians | In the reviewed Registry, admins schedule builder changes and guardians can cancel them. Changes wait at least seven days; guardians have no immediate builder-removal power. See [Registry governance](./credible-layer-contracts#credible-registry). |
+| Transaction submitters | Deliver transactions through the intended route. Submission access does not itself confer assertion-management authority. |
 
-Each production integration should define what happens when a dependency is unavailable, assertion workers fall behind, or validation cannot complete before the publication boundary. Those policies are integration-specific, but they should be explicit before production rollout.
+Assertion timelocks provide time to observe and respond to changes. They do not necessarily constrain separate guard, protocol-upgrade, Registry-admin, or guardian powers. Lost keys and compromised roles need a recovery design that remains executable under the active policy.
 
-Useful policy questions include:
+## Availability and Recovery
 
-- Does the integration fail open, fail closed, or apply a bounded fallback for a specific transaction source?
-- What timeout applies to assertion execution?
-- What happens to transactions that cannot be classified in time?
-- How are delayed, retried, released, or rejected transactions reported?
-- What rollback path exists if a production assertion creates false positives?
+A guard can trade mandatory enforcement for availability by failing open after a configured gap in credible blocks. The block-gap condition opens when the gap is strictly greater than the threshold. During fail-open, protected operations can execute in blocks whose builders do not enforce assertions. Existing protocol checks remain in force, and participating builders can continue enforcing assertions.
 
-## Assurance Practices
+The Registry also permits [zero-gas-price calls](./credible-layer-contracts#zero-gas-price-calls) without a marker. This supports simulation but also applies to real zero-price transactions where a chain permits them. Simulation success alone is not evidence of enforcement.
 
-Teams build confidence by validating assertions locally, reviewing the automatic backtesting check attached to each platform release, running assertions in staging, and promoting to production only after sufficient review. See [How to Plan Assertion Testing](/credible/testing-strategy) for the recommended workflow.
+Registry-error behavior is implementation-specific. The Safe guard includes fail-open handling for failed or malformed Registry responses; the generic contract guard can propagate a failed Registry read as a revert. Overrides and authorized bypasses can further change behavior.
 
-## Next Steps
+A block-gap fallback does not necessarily resolve false positives. Builders may keep producing credible blocks while a restrictive assertion rejects a protocol's transactions. Rule updates, removal, or separately authorized recovery may be needed, with their own delays and permissions.
 
-<CardGroup cols={2}>
-  <Card title="Architecture Overview" icon="diagram-project" href="/credible/architecture-overview">
-    Understand the system components and flows
-  </Card>
-  <Card title="Assertion Enforcer" icon="shield" href="/credible/assertion-enforcer">
-    Enforcement details and validation process
-  </Card>
-  <Card title="FAQ" icon="circle-question" href="/credible/faq">
-    Common questions about the Credible Layer
-  </Card>
-</CardGroup>
+Each integration should define:
+
+- How missing assertion artifacts, validation errors, timeouts, and overloaded workers affect inclusion.
+- Which operations remain available during degraded service and which protections are relaxed.
+- Who can change rules, guards, and recovery settings, and how those changes are monitored.
+- How excluded transactions are reported, reconciled, and retried by submitters.
+- How recovery works if a key is lost or an active rule rejects the recovery transaction.
+
+## Evidence and Assurance
+
+Review deployed contract paths, active policies, and administrative powers to assess coverage. Public code and registry state alone do not establish it. Project permissions control access to private invalidation data.
+
+Assertion DA and local caches supply the bytecode used by enforcers. Integrations need defined behavior when artifacts cannot be prepared or validation cannot complete; hot-path validation should not depend on a live artifact fetch.
+
+Local tests, release backtesting, and alerting provide evidence about rule behavior. End-to-end guard, routing, and recovery tests establish different parts of the integration. Audit reports apply to their stated revision and scope, not automatically to later changes or protocol-specific wiring.
+
+See [Testing Strategy](./testing-strategy), [Integration Planning](./dapp-integration), and the [Enforcement FAQ](./faq).

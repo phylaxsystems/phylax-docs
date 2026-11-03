@@ -1,34 +1,34 @@
 ---
-title: ERC4626 Assets to Shares
-description: Make sure that the total shares are not more than the total assets
+title: "Asset and Share Units"
+description: "Understand the limits of a raw assets-to-shares comparison"
 ---
 
-import ass12Erc4626AssetsShares from "/snippets/ass12-erc4626-assets-shares.a.mdx";
+import Example from "/snippets/ass12-erc4626-assets-shares.a.mdx";
 
-## When to Use This Pattern
+A simple receipt token issues one share per asset unit. This template requires recorded assets to cover the raw share count.
 
-Enforces a critical ERC4626 vault invariant: total shares must never exceed total assets converted to shares, preventing share price manipulation and fund loss. Critical for yield aggregators, lending protocols implementing ERC4626, liquidity pools using ERC4626 for LP tokens, and staking protocols with ERC4626 vaults.
+## Behavior
 
-Any violation could allow unauthorized share minting that dilutes existing holders or enables withdrawal of more assets than deposited, potentially leading to protocol insolvency.
+`ERC4626AssetsSharesAssertion` reads total assets from slot `0` and total shares from slot `1` at transaction end. Its entire inequality is `assets >= shares`.
 
-## What This Pattern Checks
+## Configuration
 
-Verifies the fundamental ERC4626 share-to-asset relationship using a basic approach:
+Use this inequality only for an explicitly defined one-to-one accounting model with the same numeric scale. General ERC-4626 vaults can have different decimals, virtual offsets, and exchange rates. For those vaults, use the [share-price and asset-flow components](./vault-policies).
 
-- `registerTxEndTrigger()`: Trigger when total supply storage slot changes
-- Verify total assets are sufficient to back all outstanding shares
-- Ensure share value is preserved and users can withdraw their assets
+## Scenarios
 
-This ensures there are always enough assets to back all shares, maintaining accurate share values and preventing value extraction from the vault.
+| Transaction | Result |
+| --- | --- |
+| 1,000 asset units back 900 same-scale receipt units | Accepted |
+| 900 asset units back 1,000 same-scale receipt units | Rejected |
+| A valid vault uses 6 asset decimals and 18 share decimals | Raw comparison can reject healthy deposits |
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+## Coverage limits
 
-## Assertion Pattern
+This is not a general ERC-4626 compliance or solvency invariant. A share price below one can be valid. The example also trusts recorded total assets; it does not independently value strategies or verify token custody.
 
-<ass12Erc4626AssetsShares />
+## Source
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+The [reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass12-erc4626-assets-shares.a.sol) is a teaching template. The [example setup guide](./run-an-example) provides the pinned checkout and test procedure.
 
-## Related Patterns
-
-- [ERC4626 Deposit and Withdraw Share Price](./ass13-erc4626-deposit-withdraw): deposit and withdraw share-price checks
+<Example />

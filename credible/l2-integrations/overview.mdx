@@ -1,0 +1,29 @@
+---
+title: 'L2 and Sequencer Integrations'
+description: 'Sequencer-based enforcement, Linea and OP Stack architecture, and earlier platform workflows.'
+---
+
+These pages describe sequencer integration designs and earlier L2 workflows. Confirm network support, the deployed client, and the assertion specification before use.
+
+For Ethereum, see [Ethereum Architecture](../architecture-overview).
+
+## The Sequencer Enforcement Boundary
+
+An integrated sequencer can validate candidate transactions at the network's inclusion boundary. Within the paths it covers, this can enforce assertions without changing the protected contract. Users still rely on the sequencer for ordering and availability, and on the assertion integration for correct validation.
+
+Coverage must account for bridge-originated, delayed, system, and forced-inclusion paths. Their inclusion rules can differ from ordinary user transactions. An integration must specify where checks run and what happens when they fail or time out.
+
+## Integration Designs
+
+- [Plan an L2 integration](./network-integration): transaction-source policies, inclusion boundaries, and operational requirements.
+- [Linea / Besu](./architecture-linea): plugin-based validation during block building.
+- [OP Stack](./architecture-op-stack): the Rollup-Boost integration design.
+- [Validation pipelines](./validation-pipeline): speculative execution, rollback, bounded response windows, and backpressure.
+
+## How Policy Management Works on L2s
+
+For L2 deployments that support manual registration, use [Request Manual Verification on L2s](./manual-verification) to prepare evidence of protocol control and confirm the intended Protocol Manager. Check support for your target network before preparing a request.
+
+## Earlier Platform Workflows
+
+[Platform and compatibility notes](./platform-and-compatibility) retain the Linea platform selection and earlier walkthrough. Use the Ethereum platform and deployment path in the main guides when integrating on Ethereum.

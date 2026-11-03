@@ -1,24 +1,22 @@
 ---
-title: 'Agentic PCL'
-description: 'Use an AI coding agent to create, test, and deploy Credible Layer assertion projects with pcl'
+title: 'Build and Manage Policies with AI'
+description: 'Use AI coding agents to build, test, and deploy policies with pcl.'
 ---
 
-This guide shows you how to equip an AI coding agent to operate `pcl`, from creating an assertion project through deploying it with the Phylax platform.
+Use an AI coding agent to implement, test, and prepare policy releases with `pcl`. Review its output against the agreed requirements.
 
-Phylax publishes reusable instructions in the [agent-skills repository](https://github.com/phylaxsystems/agent-skills). These skills give compatible agents the project structure, safety boundaries, and `pcl` workflows needed to complete a task instead of relying on a large one-off prompt.
+Phylax provides reusable workflows in the [agent-skills repository](https://github.com/phylaxsystems/agent-skills).
 
 ## Prerequisites
-
-Before you begin, make sure you have:
 
 - [`pcl` installed](./credible-install)
 - An agent that supports the [Agent Skills format](https://agentskills.io), such as Codex or Claude Code
 - A local protocol repository the agent can inspect and edit
-- Clearly defined protocol invariants
+- For custom integration work, defined policy requirements and assigned review responsibilities
 
 For deployment, you also need a target chain, an RPC endpoint, and access to the protocol manager wallet.
 
-Authenticate with the platform for your target network before starting the agent. See [How to Deploy Projects Through Agentic PCL](./agentic-pcl-deploy#1-authenticate-manually) for the Linea and Ethereum commands.
+Authenticate with the platform for your target network before starting the agent. See [Deploy Policies with an AI Agent](./agentic-pcl-deploy#1-authenticate-manually) for explicit Ethereum platform selection. The earlier L2 workflow is in [L2 Platform Notes](./l2-integrations/platform-and-compatibility).
 
 <Warning>
 An agent can edit code, create platform resources, and broadcast on-chain transactions. Review its plan and local changes before authorizing remote mutations. Require a successful dry run and explicit approval before any production deployment.
@@ -42,7 +40,7 @@ npx github:phylaxsystems/agent-skills#851cd274972efa6047393eaa61a935ed56f66b3b i
 
 </CodeGroup>
 
-The commit pin ensures that both commands install the reviewed skill versions shown in this guide.
+Both commands pin the skill version.
 
 The [agent-skills repository](https://github.com/phylaxsystems/agent-skills) also includes focused skills for invariant design, assertion implementation, testing, trigger optimization, and troubleshooting.
 
@@ -61,25 +59,23 @@ Use the skill name in your request so the intended workflow is unambiguous.
 
 ## Start with a high-level prompt
 
-You can describe the intended outcome and let the skills determine the required `pcl` workflow. Include the protocol, target environment, authoritative sources, release contents, and verification boundary.
+Give the agent the approved policies, target contracts, and test requirements. Require review of unresolved requirements and proposed policy changes.
 
 For example:
 
 ```text
-Use the Agentic PCL skills to deploy an Aave V3 Horizon project end to end on
-staging.
+Use the Phylax agent skills to implement and test the agreed custom policies.
 
-Find and verify the authoritative deployed contract addresses on-chain. Create
-credible.toml using the latest reviewed Aave V3 assertions. Create the platform
-project and release. Verify that the release is correct, then set the project
-profile image from the specified official brand asset and deploy it.
+Policy specification approved by our team: <path>
+Protocol contracts and deployment records: <paths>
+Required allowed, rejected, and exception cases: <path>
 
-RPC: <RPC URL or secure location>
-Signer: <keystore or secure credential location>
-Project branding: <official asset source and requested profile image>
+Explain how the implementation maps to the specification. Surface any missing
+requirements, uncovered paths, or proposed behavior changes for review.
+Run the relevant pcl tests and report their results and limitations.
 
-Do not print, copy, or commit signing credentials. Ask for clarification if
-sources conflict or any requested project metadata is ambiguous.
+Do not change the policy requirements, create platform resources, access
+signing credentials, or deploy anything as part of this task.
 ```
 
 ## Orient the agent with the installed CLI
@@ -93,16 +89,11 @@ as the source of truth. Prefer top-level workflow commands, structured JSON
 output, and the next actions returned by pcl.
 ```
 
-This prevents the agent from inventing flags or relying on a workflow from another `pcl` version.
+This gives the agent guidance for the installed CLI version.
 
 ## Keep a human in the approval loop
 
-Authenticate with the target platform yourself before starting the deployment agent. Then give the agent autonomy for inspection, local file changes, builds, and tests. Require it to pause for:
-
-- Any choice between staging and production
-- Access to a signer or keystore
-- Platform mutations
-- On-chain broadcasts
+Authenticate before starting the deployment agent. Allow local inspection, edits, builds, and tests. Approve the environment, platform changes, and signer use before deployment.
 
 Do not paste a private key into the conversation or commit it to the repository. Prefer a Foundry keystore and provide its password through a file outside the project.
 
@@ -110,7 +101,7 @@ Do not paste a private key into the conversation or commit it to the repository.
   <Card title="Create a Project with an Agent" icon="folder-plus" href="./agentic-pcl-create-project">
     Bootstrap and validate an assertion project locally
   </Card>
-  <Card title="Deploy Projects Through Agentic PCL" icon="rocket" href="./agentic-pcl-deploy">
+  <Card title="Deploy Policies with an AI Agent" icon="rocket" href="./agentic-pcl-deploy">
     Create a platform project and activate a release on-chain
   </Card>
 </CardGroup>

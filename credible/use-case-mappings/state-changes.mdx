@@ -7,9 +7,7 @@ Variable state change mappings describe how assertions can track writes to a spe
 
 ## Status
 
-- [x] Supported
-- [ ] Partially Supported
-- [ ] Not Supported Yet
+**Supported.**
 
 ## Implementation Details
 
@@ -69,13 +67,7 @@ contract StateChangesAssertion is Assertion {
 
 ## Example Use Cases
 
-- Make sure that a variable never changes its value:
-    - Implementation slot of a proxy
-    - Owner of a contract
-
-- Make sure assigned values meet certain criteria:
-    - Price oracle increases/decreases max by x%
-    - Address changed to a whitelisted value
+Reject changes to fixed values, such as an owner or proxy implementation. For mutable values, check each assigned value against the policy's limits or allowlist.
 
 ## Implementation Considerations
 

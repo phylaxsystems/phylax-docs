@@ -1,200 +1,65 @@
 ---
-title: 'High-Level Overview'
-description: 'High-level overview of the Credible Layer system that explains how exploit prevention works, without requiring deep technical knowledge.'
+title: 'How Ethereum Enforcement Works'
+description: 'How Phylax circuit breakers protect Ethereum operations through assertions, participating builders, and onchain guards.'
 ---
 
-This explanation describes how the Credible Layer prevents invalid transactions before execution and why that model matters for protocol teams and networks.
+Phylax circuit breakers enforce the security policies your team defines and approves. The rules are implemented as Solidity assertions and evaluated before settlement by builders that run the Phylax enforcement engine.
 
-## Introduction
+An onchain guard checks that protected functions execute in a credible block. While its enforcement gate is active, calls in a non-participating builder's block revert. This ties successful execution to builders evaluating the transaction against your rules.
 
-Phylax's real-time security system detects and pre-emptively removes exploits before losses can be realized.
+## The Three Parts of Enforcement
 
-![System Overview](/images/overview-step-0.png)
+1. **Assertions encode your policies.** A rule can compare state before and after a transaction, inspect calls, or check relationships across contracts.
+2. **Participating builders run the enforcement engine.** They evaluate transactions against your circuit breakers and exclude violating transactions from the blocks they build.
+3. **Onchain guards enforce the block requirement.** A guard checks the Credible Registry's block marker and makes protected calls revert in a noncredible block while its enforcement gate is active.
 
-<Info>
-**The Credible Layer** is a network extension that lets protocols define security rules and enforces them at the network level. Transactions that would violate these rules are dropped *before* they can execute, preventing exploits rather than detecting them after the damage is done.
-</Info>
+The Credible RPC routes submissions to participating builders. Routing and guarding serve different purposes: a route helps a transaction reach an enforcing builder; a guard constrains where the operation may execute.
 
-At a glance:
+The marker is a builder attestation, not a cryptographic proof that assertions ran. The [Trust Model](./trust-model) explains builder, Registry, guard, and recovery assumptions.
 
-- **Security rules** are defined by the protocol team as [assertions](/credible/glossary#assertion), with assertion IDs registered on-chain and bytecode served through [Assertion DA](/credible/assertion-da)
-- **The network** validates every transaction against relevant assertions before adding them to blocks
-- **Invalid transactions** are [dropped](/credible/glossary#drop). If an assertion fails, the transaction never executes
+## What Rules Can Protect
 
-<Check>
-**Easy to adopt**
-- Written in Solidity with familiar Forge patterns
-- No contract modifications or downtime required
-- Works with immutable contracts
-- All rules are publicly reviewable in [The Phylax Explorer](/credible/glossary#the-phylax-explorer)
-- [Implementation effort](/credible/development-effort) is comparable to writing Forge invariant tests
-</Check>
+Assertions can check administrative changes, asset flows, collateralization, oracle deviations, and relationships between balances or positions. The useful rule describes a harmful effect rather than attempting to enumerate every way it could arise.
 
-## Use Cases
+For example, an assertion can detect an unexpected change in a pool's state across a transaction. The [Balancer V2 case study](../assertions-book/previous-hacks/balancer-v2-stable-rate-exploit) demonstrates an exploit replay using that approach. Production protection also requires active rules, matching triggers, and the guarded execution path.
 
-Assertions enable a wide range of security and compliance use cases:
+An assertion failure is a rule violation, not proof of an attack. Legitimate migrations, withdrawals, or upgrades can also violate a rule that lacks the required context. Test those operations alongside known failure cases.
 
-<CardGroup cols={2}>
-  <Card title="Parameter Protection" icon="shield-halved">
-    Prevent unauthorized changes to critical protocol parameters such as owner and implementation addresses
-  </Card>
-  <Card title="Market Integrity" icon="chart-line">
-    Ensure market prices don't move beyond specified thresholds inside of a single transaction
-  </Card>
-  <Card title="Lending Protocol Safety" icon="building-columns">
-    Guarantee lending positions maintain the required collateralization ratios
-  </Card>
-  <Card title="Oracle Monitoring" icon="satellite-dish">
-    Verify oracle prices stay within specified ranges to detect price manipulation
-  </Card>
-  <Card title="Balance Invariants" icon="scale-balanced">
-    Ensure that the sum of all positions match the total balance of a protocol
-  </Card>
-  <Card title="Compliance Rules" icon="clipboard-check">
-    Enforce KYC/AML requirements by validating that transaction participants meet regulatory criteria
-  </Card>
-</CardGroup>
+## What Integration Requires
 
-For concrete examples and implementations, explore the [Assertions Book](/assertions-book/assertions-book-intro).
+Our forward deployed engineers (FDEs) work with you to define policies, write assertions, and implement the agreed guard and routing changes. Your team reviews the policies, code, and test evidence and approves protocol changes. You can also develop assertions independently. See [Work with Phylax](./work-with-phylax) for the process and responsibilities.
 
-## Who It's For
+Assertion code is separate from protocol logic, but Ethereum enforcement may require contract changes. Protected operations need a suitable gate: a contract guard, a supported wallet guard, or an unavoidable existing hook. An immutable contract with no suitable gate cannot obtain this protection simply by registering assertions.
 
-<CardGroup cols={2}>
-  <Card title="Protocol Teams" icon="code" href="/credible/dapp-integration">
-    Deploy and manage assertions to protect your contracts
-  </Card>
-  <Card title="Networks & Sequencers" icon="sitemap" href="/credible/network-integration">
-    Integrate enforcement into block building
-  </Card>
-</CardGroup>
+The actual transaction submitters need the intended route. This includes user wallets, multisig executors, keepers, bots, and relayers. A contract called internally cannot select an RPC.
 
-## How It Works
+A Safe transaction guard covers its owner-authorized execution path; modules require separate review and controls. See [Integration Planning](./dapp-integration) for coverage and rollout requirements.
 
-### Defining Security Rules
+## From Assertion to Enforcement
 
-![Mapping and defining invariants](/images/overview-step-1.png)
+Before activation, our FDEs run backtests and test a replica of your protocol on a fork of Ethereum, including legitimate activity, violations, guard behavior, and recovery. Your team reviews the evidence against the intended policies.
 
-Security rules (technically called [invariants](/credible/glossary#protocol-invariants)) are statements about your contract that must remain true no matter how users interact with it. They express the essential conditions that keep your system secure and functional.
+We prepare releases on the [Ethereum platform](https://ethereum.phylax.systems) and simulate the activation transactions. Management of your policies and protocol remains entirely under your authority. Your signers authorize and execute the actions, and we verify the live protection. No other party can activate or change your rules without your authorization.
 
-Instead of exhaustively predicting every exploit path, you define the _states that must never occur_. If one of these states is violated, something fundamental has gone wrong.
+The State Oracle records which assertions apply and when additions or removals take effect. Assertion DA supplies the artifacts used by enforcers.
 
-These rules are then implemented as [assertions](/credible/glossary#assertion), which are Solidity smart contracts that verify the rules hold true. For a deeper understanding of how assertions work, see the [Assertions Overview](/credible/assertions-overview).
+Alerting observes assertion behavior without dropping live transactions. Production rules affect inclusion at participating builders. Neither mode installs missing guards or configures submission routes.
 
-**Beyond Security Rules**
+When a transaction touches several protected contracts, all applicable assertions must pass at the enforcing builder. Passing makes the transaction eligible for inclusion; selection and finality remain separate. An assertion failure excludes the whole candidate transaction, including a batch containing multiple operations.
 
-While invariants are the most common use case, assertions also enable:
-- **Timelocks and Access Control**: Add time-based restrictions or multi-factor authentication requirements for sensitive functions like contract upgrades
-- **Business Logic Enforcement**: Ensure operational rules are followed, such as transaction limits or authorized contract interactions
+## Availability and Recovery
 
-### Real-World Example: Balancer V2
+We designed onchain recovery paths to work independently of us. Your team defines who can use them, and we test them before activation.
 
-In November 2025, an attacker exploited Balancer V2 stable pools through a complex rounding error attack, causing over $120M in losses. Through 84 crafted swap operations, pool rates changed by 20x in a single transaction.
+A guard can fail open after a configured gap in credible blocks. This restores access by allowing execution in blocks whose builders may not run assertions. Existing protocol checks remain in force, but mandatory assertion protection is reduced.
 
-**The key insight:** While the root cause was complex (involving rounding errors and specific balance configurations), the security rule violation was simple:
+Recovery from a restrictive rule or lost manager key needs its own tested procedure. Builders can keep producing credible blocks while a particular protocol's transactions fail, so a block-gap fallback does not solve every lockout.
 
-> _"Pool rates should not change drastically within a single transaction"_
+## Choose Your Next Step
 
-A simple assertion checking that pool rates don't change by more than 3x would have detected and prevented this attack, regardless of the specific exploit mechanism used.
-
-<Accordion title="View the assertion code">
-
-```solidity
-import {AssertionSpec} from "credible-std/SpecRecorder.sol";
-
-contract BatchSwapDeltaAssertion is Assertion {
-    uint256 constant MAX_RATE_CHANGE_MULTIPLIER = 3e18; // 3.0x
-
-    constructor() {
-        registerAssertionSpec(AssertionSpec.Reshiram);
-    }
-
-    function triggers() external view override {
-        registerFnCallTrigger(this.assertionBatchSwapRateManipulation.selector, IVault.batchSwap.selector);
-    }
-
-    function assertionBatchSwapRateManipulation() external view {
-        address vault = ph.getAssertionAdopter();
-        PhEvm.TriggerContext memory ctx = ph.context();
-
-        // Get affected pools from swap parameters
-        bytes32[] memory uniquePoolIds = _getUniquePoolIds(swaps);
-
-        for (uint256 i = 0; i < uniquePoolIds.length; i++) {
-            (address poolAddress, ) = IVault(vault).getPool(uniquePoolIds[i]);
-            PhEvm.ForkId memory preCall = PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart});
-            PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd});
-
-            uint256 preRate = uint256(ph.loadStateAt(poolAddress, RATE_SLOT, preCall));
-            uint256 postRate = uint256(ph.loadStateAt(poolAddress, RATE_SLOT, postCall));
-
-            require(
-                (postRate * 1e18) / preRate <= MAX_RATE_CHANGE_MULTIPLIER,
-                "BatchSwap: Extreme pool rate manipulation detected"
-            );
-        }
-    }
-}
-```
-
-</Accordion>
-
-This demonstrates the power of assertions: by focusing on *what should never happen* rather than *how it might happen*, you protect against both known and unknown attack vectors.
-
-Read the [full Balancer V2 exploit analysis](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit) to see how this assertion was tested against the actual exploit transaction.
-
-### Network Enforcement
-
-Once assertions are defined, they need to be deployed to protect your contracts. This involves submitting the assertion to your project, then linking it to your contract address.
-
-![Submitting assertions for enforcement](/images/overview-step-2.png)
-
-The [Phylax platform](https://app.phylax.systems) creates releases and submits assertion changes to the Credible Layer smart contracts. Those contracts are the source of truth for which assertion IDs protect which contract addresses and when changes become active. Assertion bytecode is stored in [Assertion DA](/credible/assertion-da) and fetched by the enforcer before validation.
-
-#### How Enforcement Works
-
-A network node running the Credible Layer [sidecar](/credible/glossary#sidecar) does not care _how_ a transaction violates the protocol's rule. All that matters is _whether_ the assertion passes or fails. If the assertion fails, the node drops the transaction before it can be included in a block.
-
-When a user opens a position on a yield protocol, the transaction may touch multiple contracts:
-
-![A single transaction can interact with multiple contracts](/images/phylax-multi-contract-interaction.png)
-
-Each contract that has assertions is checked by the sidecar, which simulates the cumulative end states:
-
-![Each contract with assertions is checked by the sidecar](/images/phylax-assertion-checking.png)
-
-#### Validation Process
-
-1. User submits a transaction to the network
-2. The network node passes it to the sidecar for validation
-3. The sidecar simulates the transaction and checks all relevant assertions
-4. If all assertions pass, the transaction is included in the block
-5. If any assertion fails, the transaction is dropped
-
-The validation path is designed to keep assertion lookup and execution bounded for each network integration. The Credible Layer adapts to each network's architecture while preserving the same core model: protocol-authored assertions inform the block inclusion decision.
-
-For the full technical flow, see [Architecture](/credible/architecture-overview).
-
-<Note>
-The Credible Layer is designed as neutral middleware that preserves decentralization for both protocols and networks. Learn more about [why neutrality matters](/credible/neutrality).
-</Note>
-
-For interface boundaries and integration touchpoints, see [Interface Overview](/credible/interfaces-overview).
-
-## Next Steps
-
-Ready to dive deeper?
-
-<CardGroup cols={2}>
-  <Card title="Architecture" icon="gears" href="/credible/architecture-overview">
-    Technical deep dive into system architecture and transaction flow
-  </Card>
-  <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
-    Write and deploy your first assertion
-  </Card>
-  <Card title="Assertions" icon="diagram-project" href="/credible/assertions-overview">
-      How assertions work and how to write them
-  </Card>
-  <Card title="FAQ" icon="circle-question" href="/credible/faq">
-    Common questions about the Credible Layer
-  </Card>
-</CardGroup>
+- [Ethereum Architecture](./architecture-overview): components, markers, and transaction flow.
+- [Work with Phylax](./work-with-phylax): policy development, responsibilities, and the integration process.
+- [Integration Planning](./dapp-integration): protocol changes, routing, authority, and recovery.
+- [Run an Example Policy Locally](./pcl-quickstart): an optional learning exercise.
+- [Enforcement FAQ](./faq): technical questions about builders, guards, routing, and recovery.
+- [L2 and Sequencer Integrations](./l2-integrations/overview): the separate sequencer-based model and earlier workflows.

@@ -1,60 +1,47 @@
 ---
 title: 'Interface Overview'
-description: 'High-level interface boundaries between Credible Layer components'
+description: 'Boundaries between Ethereum routing, builders, assertion state, credible-block marking, and guards.'
 ---
 
-This page summarizes the public interface boundaries between Credible Layer components.
-It is intentionally high-level and does not expose internal endpoints or configuration details.
+Ethereum enforcement has two linked paths: preparing assertion policy, and validating and gating protected transactions. The interfaces below keep assertion management, block marking, and contract execution distinct.
 
 ## Interface Map
 
 ```mermaid
----
-title: Public Interface Boundaries
----
-flowchart LR
-  CLI[pcl CLI] <--> DappAPI[Platform API]
-  DappUI[Platform UI] <--> Contracts[Credible Layer Contracts]
-  DappUI <--> Indexer[Transparency Indexer]
-  Enforcer[Assertion Enforcer] <--> Builder[Block Builder]
-  Enforcer <--> Registry["Registry Data<br/>(On-Chain Events)"]
-  Enforcer <--> DA[Assertion DA]
+flowchart TD
+    CLI["pcl / Ethereum platform"] --> SO["State Oracle"]
+    CLI --> DA["Assertion DA"]
+    SO --> E["Assertion Enforcer"]
+    DA --> E
+    RPC["Credible RPC"] --> B["Participating builder"]
+    B <-->|"Candidate / report"| E
+    B -->|"Authorized marker"| CR["Credible Registry"]
+    G["Protected operation's guard"] -->|"Current block check"| CR
 ```
 
-## What Changes Require Coordination
+## Responsibilities
 
-| Interface | Depends On | Coordinate With |
+| Interface | Responsibility | Coordination |
 | --- | --- | --- |
-| CLI ↔ Platform API | Assertion submission and auth flows | Platform + CLI maintainers |
-| Platform UI ↔ Contracts | Contract ABI + events | Platform + contracts maintainers |
-| Platform UI ↔ Indexer | GraphQL schema | Platform + indexer maintainers |
-| Enforcer ↔ Block Builder | Transaction validation hook | Network integrators |
-| Enforcer ↔ Registry | Registry events + schema | Network + contracts maintainers |
-| Enforcer ↔ Assertion DA | Bytecode storage API | DA + enforcer maintainers |
+| CLI ↔ Platform API | Authentication, project selection, and releases | Platform and CLI maintainers |
+| Authorized manager ↔ State Oracle | Assertion assignments and lifecycle actions | Protocol team and contracts maintainers |
+| Enforcer ↔ State Oracle | Index active rules and their effective times | Enforcer and contracts maintainers |
+| Enforcer ↔ Assertion DA | Prepare and cache assertion artifacts | DA and enforcer maintainers |
+| Credible RPC → Builder | Route top-level submissions | RPC and builder operators |
+| Builder ↔ Enforcer | Supply candidate context and apply validation reports | Builder and enforcer operators |
+| Builder → Credible Registry | Mark blocks under the authorized builder policy | Builder and Registry administrators |
+| Guard → Credible Registry | Check whether the protected operation may execute | Protocol integrators and contracts maintainers |
+
+See [Trust Model](./trust-model) for the guarantees and assumptions at each interface.
 
 ## Product and Protocol Boundaries
 
-The Credible Layer combines protocol components with Phylax-operated product surfaces. This boundary matters when evaluating trust, availability, and operational ownership.
+The State Oracle controls assertion authority and timing. The Credible Registry records builder authorization and block markers. Guards check the Registry while preserving ordinary protocol checks.
 
-| Component | Purpose | Layer |
-| --- | --- | --- |
-| Credible Layer contracts | On-chain registry, protocol admin authority, assertion windows, and timelocks | Core protocol |
-| Assertion Enforcer | Executes active assertions and returns inclusion decisions during block production | Network enforcement |
-| Assertion DA | Stores assertion bytecode and source code for enforcers and public verification | Phylax-operated storage today |
-| `pcl` CLI | Builds, tests, authenticates, and submits assertion releases | Local developer tooling |
-| Backtesting | Tests a platform release against transactions from the last 20,000 blocks before deployment | Phylax-operated release review service |
-| Staging | Runs assertions against live network activity without dropping transactions | Phylax-operated validation environment |
-| Platform | Manages releases, invalidations, audit logs, collaborators, alerts, and project metadata | Phylax product |
+The platform coordinates release review and operation. Assertion DA supplies artifacts.
 
-## Guidance
+## Changes Requiring Review
 
-- Keep interface changes backward compatible when possible
-- If a breaking change is needed, update all dependent components in the same release window
-- Ensure public docs reflect any new interface expectations
+Review interface changes against the deployed contracts and software. Test successful execution and dependency failures. Use [Integration Planning](./dapp-integration) for protocol changes.
 
-## Related Docs
-
-- [Architecture Overview](/credible/architecture-overview)
-- [Trust Model & Guarantees](/credible/trust-model)
-- [How to Plan a Platform Integration](/credible/dapp-integration)
-- [Network Integration Overview](/credible/network-integration)
+Sequencer interfaces are covered under [L2 and Sequencer Integrations](./l2-integrations/overview).

@@ -1,35 +1,34 @@
 ---
-title: Timelock Verification
-description: Make sure that a timelock has been correctly triggered for governance actions
+title: "Timelock Activation Bounds"
+description: "Check the delay configured when a timelock becomes active"
 ---
 
-import ass9TimelockVerification from "/snippets/ass9-timelock-verification.a.mdx";
+import Example from "/snippets/ass9-timelock-verification.a.mdx";
 
-## When to Use This Pattern
+A setup transaction activates a timelock with an accidentally short delay. This example rejects activation unless the stored delay is within the configured range.
 
-Ensures timelocks are correctly triggered for governance actions, enforcing delays between proposal and execution to allow community review. Critical for DeFi lending protocols, DEX protocols, yield aggregators, cross-chain bridges, and DAOs that use timelocks to prevent flash loan attacks, allow security review periods, and protect against governance attacks.
+## Behavior
 
-Timelocks provide a buffer against malicious governance actions - without proper enforcement, changes could be executed immediately.
+At transaction end, `TimelockVerificationAssertion` reads delay slot `0` and active flag slot `1`. On an inactive-to-active transition, it requires a delay from one day through two weeks, inclusive. If the timelock was already active, it returns without checking the delay.
 
-## What This Pattern Checks
+## Configuration
 
-Verifies timelock integrity by comparing timelock state and parameters before and after transactions:
+Replace the two slots and the minimum and maximum delays with your deployment's layout and policy. The example has no constructor arguments. It assumes the active flag is decoded from a dedicated slot.
 
-- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Compare timelock state before and after transaction
-- `registerTxEndTrigger()`: Monitor changes to timelock storage slot
-- Ensures timelock delay is within acceptable bounds (1 day to 2 weeks)
-- Confirms timelock activation follows proper procedures
+## Scenarios
 
-The assertion performs both pre/post state comparison and parameter validation to ensure governance changes follow proper timelock procedures.
+| Transaction | Result |
+| --- | --- |
+| Activate with a one-day delay | Accepted |
+| Activate with a one-hour delay | Rejected |
+| Change an already-active timelock to a one-hour delay | Not checked |
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+## Coverage limits
 
-## Assertion Pattern
+This does not verify that an operation was queued, that its waiting period elapsed, or that execution used the approved payload. Those properties require the timelock's operation ID, schedule, and execution state. Rename the policy accordingly when you adapt it; a valid activation delay is not proof of delayed execution.
 
-<ass9TimelockVerification />
+## Source
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+The [reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass9-timelock-verification.a.sol) is a teaching template. The [example setup guide](./run-an-example) provides the pinned checkout and test procedure.
 
-## Related Patterns
-- [Owner Change](/assertions-book/assertions/ass05-ownership-change)
-- [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)
+<Example />

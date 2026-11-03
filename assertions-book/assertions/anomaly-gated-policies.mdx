@@ -1,0 +1,78 @@
+---
+title: "Anomaly-Gated Policies"
+description: "Combine an anomaly trigger with explicit transaction-effect checks"
+---
+
+An anomaly-gated policy runs its effect checks only when the model flags a transaction at the configured sensitivity. It rejects the transaction only if those checks also confirm the configured condition. This differs from an unconditional invariant or rolling outflow cap.
+
+## Example: reserve loss or proxy change
+
+This policy checks a pool's anomaly signal, then rejects if either a reserve loses at least 2.5% of its pre-transaction token balance or the pool's ERC-1967 implementation/admin address changes.
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {Sensitivity} from "credible-std/Sensitivity.sol";
+import {AnomalyCompositeAssertion} from "credible-std/protection/anomaly/AnomalyCompositeAssertion.sol";
+
+contract BookAnomalyPolicy is AnomalyCompositeAssertion {
+    constructor(address pool, address custody, address token)
+        AnomalyCompositeAssertion(Config({
+            target: pool,
+            sensitivity: Sensitivity.RECOMMENDED,
+            requireAll: false,
+            bareGateBaseline: false,
+            useDrain: true,
+            outflowTarget: custody,
+            outflowToken: token,
+            outflowFracBps: 250,
+            useUpgrade: true,
+            upgradeTarget: address(0),
+            ownerSlot: bytes32(0),
+            useAccounting: false,
+            accountingVault: address(0),
+            shareToleranceBps: 0,
+            useOracle: false,
+            oracle: address(0),
+            oracleQuery: "",
+            oracleToleranceBps: 0
+        }))
+    {}
+}
+```
+
+`pool` is the scored contract; `custody` is the address holding the reserve token. These can differ, as when a lending pool's assets are held by an aToken. `upgradeTarget: address(0)` selects the scored pool. `ownerSlot: bytes32(0)` disables the optional owner-slot check; it does not request a check of storage slot zero.
+
+Save the contract under `examples/assertions-book/assertions/src/` in the [reviewed checkout](./run-an-example#1-check-out-the-reviewed-library) and compile with `FOUNDRY_PROFILE=assertions-book forge build`.
+
+## Outcomes
+
+Assume 100,000 reserve tokens before the transaction. The enabled drain condition is met at a net loss of 2,500 tokens, including equality.
+
+| Anomaly trigger fires? | Observed effects | Outcome |
+| --- | --- | --- |
+| Yes | 3,000 tokens leave; proxy unchanged | Reject |
+| Yes | No drain; implementation changes | Reject |
+| Yes | 1,000 tokens leave; proxy unchanged | Callback returns without rejection |
+| No | 3,000 tokens leave | This gated policy does not run |
+
+With `requireAll: false`, either enabled condition can reject. With `requireAll: true`, both must be met. Deploying separate rejecting assertions produces OR behavior; it cannot reproduce the composite's AND behavior.
+
+The loss fraction here is per transaction and uses a greater-than-or-equal comparison. A [cumulative outflow watcher](./ass20-erc20-drain) uses a rolling baseline and strict threshold breach. Pair them if the policy needs both conditions.
+
+## Sensitivity and availability
+
+`Sensitivity.RECOMMENDED` is level 7 on the library's 1–10 ladder. Higher levels fire more often. The library associates level 7 with a 1% trigger budget; this is not a promise of detection accuracy or a 1% rejection rate.
+
+An unscored contract or an unresolved sensitivity level does not trigger the policy. Confirm model availability and measure the selected level on the contract's own traffic before depending on the gate. If a condition must always hold, use an unconditional assertion for that condition.
+
+## Other conditions
+
+The composite can also enable a vault share-price check and an oracle-deviation check. Supply the vault or oracle address, tolerance, and full oracle query calldata for each enabled condition. A configuration with no enabled condition is rejected unless `bareGateBaseline` explicitly permits model-only rejection. Keep that baseline mode separate from a policy that requires corroborating effects.
+
+## Validation limits
+
+The complete example compiles against the reviewed library. Its [component tests](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/test/protection/anomaly) use a transaction-end trigger in place of the anomaly trigger because the released local CLI does not implement anomaly dispatch. They test effect checks, composition, and configuration bounds, not model selection or detection performance.
+
+[Source and configuration reference](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/src/protection/anomaly).

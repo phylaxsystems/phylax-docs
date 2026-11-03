@@ -1,0 +1,54 @@
+---
+title: 'Writing Your Own Policies'
+description: 'Define, implement, and test Solidity assertions for your protocol.'
+---
+
+Write your policies as Solidity assertions with `credible-std`, then test them with `pcl` before deployment. You can develop them independently or work with our [forward deployed engineers](./work-with-phylax) to define and implement the policies.
+
+## Set Up Your Project
+
+Start with [Installation](./credible-install). To try a working project, follow [Run an Example Policy Locally](./pcl-quickstart), then [Test a Policy's Allowed and Rejected Cases](./test-policy-behavior).
+
+Keep assertion contracts in `assertions/src/` and their tests in `assertions/test/`. Pin the `credible-std` version used by your project and confirm that your target deployment supports the assertion specification you choose. See the [library reference](./credible-std-overview) and [published releases](https://github.com/phylaxsystems/credible-std/releases).
+
+## Define the Policy and Its Exceptions
+
+Describe the behavior your policy should reject and the legitimate operations it must allow. Identify:
+
+- The protected contracts, assets, and execution paths.
+- The property being checked, including units, thresholds, and any measurement window.
+- Approved exceptions, such as migrations, ownership transfers, or large withdrawals.
+
+For example, rejecting every ownership change also rejects an approved transfer. The policy needs enough context to distinguish those cases. The [Use Cases Book](../assertions-book/assertions-book-intro) provides patterns to adapt to your protocol.
+
+## Implement the Assertion
+
+Inherit from `Assertion` and register the assertion functions in `triggers()`. For Reshiram assertions, call `registerAssertionSpec(AssertionSpec.Reshiram)` in the constructor.
+
+Match the trigger to the property:
+
+- Use `registerTxEndTrigger` for a property that must hold after the complete transaction.
+- Use `registerFnCallTrigger` for a check around each matching function call. Its call context is available through `ph.context()`.
+- Use the supported token-change or cumulative-flow triggers when the policy concerns token movements or rolling limits.
+
+Use explicit snapshots when comparing state. `_preTx()` and `_postTx()` identify transaction boundaries; `_preCall()` and `_postCall()` identify call boundaries. Read values through `ph.loadStateAt` or `ph.staticcallAt`, and derive storage slots from the actual contract layout.
+
+Keep each assertion focused on one property. Check helper mutability when calling it from a `view` function, and decode events and calldata according to the protocol's interfaces. Use [Triggers](./triggers), the [Cheatcodes Reference](./cheatcodes-reference), and your pinned library source for exact signatures.
+
+## Test Allowed and Rejected Transactions
+
+Use `CredibleTest` and register the assertion with `cl.assertion(...)` immediately before the monitored external call. Run the assertion tests with:
+
+```bash
+pcl test
+```
+
+Cover ordinary activity, intended violations, approved exceptions, and threshold boundaries. Confirm that a rejected transaction rolls back its changes, and include a violating transaction that the protocol would otherwise allow. Test batching and alternative entry points where they affect coverage.
+
+See [Testing Assertions](./testing-assertions) for the test harness and [Testing Strategy](./testing-strategy) for backtests, fork tests, and recovery checks.
+
+## Review and Deploy
+
+Follow [Review and Deploy Policies](./deploy-assertions-dapp) to create a release, review its checks, and observe the policy in alerting mode. Investigate unexpected rejections and retest changes before production.
+
+Your team controls policy deployment through its authorized signers. See [Managing Policy Deployments](./managing-policy-deployments) for authorization. Ethereum protection also requires the agreed [guard and routing integration](./dapp-integration).

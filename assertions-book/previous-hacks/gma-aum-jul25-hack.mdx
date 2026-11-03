@@ -3,8 +3,6 @@ title: GMX v1 AUM Manipulation Hack
 description: Explanation of the GMX v1 AUM manipulation exploit and assertion patterns that could have constrained it.
 ---
 
-This case study explains how the GMX v1 AUM manipulation attack worked and which assertion patterns could have constrained the invalid state transition.
-
 ## What Happened
 
 On July 9, 2025, [GMX v1 lost around ~\$42 million to an attack](https://x.com/GMX_IO/status/1942989975814820347) that exploited how the protocol calculated its total value (Assets Under Management or AUM). This was GMX's second hack of 2025, following a $13 million loss in March. The attacker used a reentrancy vulnerability to manipulate pricing data, artificially inflating the protocol's apparent value, then immediately withdrew tokens at the inflated price.
@@ -52,9 +50,7 @@ The critical part is how short positions affect AUM:
 
 ## Critical Invariants That Could Have Prevented the Attack
 
-Multiple invariants could have detected this attack, but **AUM manipulation bounds** is probably the most obvious and versatile detection method, because it defines a behavior that should never happen.
-
-Here are some invariants that could have prevented the attack:
+Possible checks include AUM bounds, state consistency, and position limits:
 
 ### 1. AUM Manipulation Bounds Invariant
 Implement a simple check that AUM changes must be reasonable. This invariant ensures that any change in the protocol's total value is bounded by actual token flows and reasonable market movements.
@@ -73,9 +69,7 @@ Individual positions must not exceed a maximum percentage of total pool value. T
 
 ## Assertion Pattern
 
-A Credible Layer assertion similar to the one below could have prevented an attack like this.
-We have simplified the assertion for brevity, but a real world assertion would check for each call in the call stack that the invariant holds. In the example we just show the logic that would be checked for one call.
-Being able to inspect the call stack is a powerful feature of the Credible Layer and it allows for detection of attacks that are carried out in a single transaction.
+This example checks AUM changes for one call. A complete implementation must check the relevant calls throughout the transaction.
 
 ```solidity
 function assertSimplifiedAUMBounds() external {
@@ -116,27 +110,10 @@ function assertSimplifiedAUMBounds() external {
 
 ### How the Assertion Would Have Prevented It
 
-This assertion implements a simple but powerful economic sanity check that would have prevented the GMX attack:
+The assertion compares AUM before and after execution. Its example limits are a 5% deviation and a $10M increase. The attack's artificial increase exceeded both limits.
 
-**What it does:**
-1. **Captures AUM before and after** the transaction using Phylax's state forking
-2. **Calculates the percentage change** in AUM during the transaction
-3. **Enforces a 5% maximum deviation** - any AUM change larger than 5% triggers a revert (example value, could be higher or lower depending on the protocol)
-4. **Adds an absolute cap** of $10M for any single AUM increase (example value, could be higher or lower depending on the protocol)
-
-**Why it catches the exploit:**
-The GMX attacker artificially inflated AUM by a massive amount with only a small real deposit. This created an enormous percentage deviation that would immediately trigger the assertion:
-
-- **Percentage check**: The artificial AUM increase represented a huge percentage change, far exceeding the 5% limit
-- **Absolute check**: The artificial increase also exceeded the $10M absolute cap
-- **Economic logic**: Real market movements rarely cause such extreme AUM swings in a single transaction
-
-**Key insight**: This assertion doesn't need to understand the technical details of the reentrancy attack. It simply enforces the economic principle that "protocol value should match actual assets at any point in the call stack" - a rule that the attack fundamentally violated.
+Tune these values to the protocol and test legitimate operations before deployment.
 
 ## Key Takeaways
 
-The GMX attack succeeded because the protocol trusted its internal accounting without validating that value changes matched actual asset movements. A simple economic sanity check - "did our total value increase by more than our deposits?" - would have prevented this $42M loss.
-
-**Multiple invariants could have detected this attack, but AUM manipulation bounds was the most obvious and effective detection method.** The key insight is that financial protocols must maintain strict mathematical properties throughout all state transitions, with no intermediate states that violate these properties. By defining invariants and protecting against transactions that violate them with something like the Credible Layer assertions, protocols can prevent a wide range of attacks while maintaining intended functionality.
-
-This principle applies to any DeFi protocol: **if your system's reported value doesn't match your actual holdings, something is wrong.**
+AUM checks can constrain accounting changes that exceed the configured limits. Their coverage depends on the selected thresholds and inspected execution states.

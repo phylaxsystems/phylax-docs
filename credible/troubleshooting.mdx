@@ -3,7 +3,7 @@ title: 'Troubleshooting'
 description: 'Common errors and solutions when writing and testing assertions'
 ---
 
-This guide helps you diagnose and fix common errors when writing and testing assertions. If you encounter an error, check the quick reference table below or browse the detailed sections.
+Find the error below, then check its cause and solution.
 
 ## Quick Reference
 
@@ -17,15 +17,27 @@ This guide helps you diagnose and fix common errors when writing and testing ass
 | Test contract address in error | Inline function call consumed `vm.prank()` | Store view function results before `vm.prank()` |
 | Cheatcode fails in constructor | Cheatcodes not available in constructors | Move logic to assertion function |
 
+## Ethereum Submission and Enforcement
+
+| Symptom | What to check |
+| --- | --- |
+| Protected transaction times out | Confirm the submitter uses the intended Credible RPC, inspect invalidation evidence and transaction status, and check nonce and fees. A timeout alone does not prove rejection. |
+| Included transaction reverts at the guard | Check the current block marker, Registry address, guard configuration, and whether the actual executor used the intended route. |
+| Rule is active but an operation succeeds elsewhere | Review every protected entry point, module, bypass, and fail-open condition. An active assertion alone cannot constrain nonparticipating builders. |
+| Simulation passes but submission is rejected | RPC simulation may not run the production assertion set; state and ordering can also change before inclusion. |
+| Legitimate operations remain blocked | Review false positives and the recovery path. A block-gap fallback may not activate while credible blocks continue. |
+
+Use [Ethereum Integration Planning](./dapp-integration) and [Guard Testing](./testing-credible-block-guard) to isolate coverage from assertion-logic issues.
+
 ## Assertion Not Executing
 
 ### "Expected 1 assertion to be executed, but 0 were executed"
 
-This error means your assertion never ran on the target transaction. This can occur in local tests, staging, production, or a platform release backtest.
+This error means your assertion never ran on the target transaction. This can occur in local tests, alerting, production, or a platform release backtest.
 
 **Common Causes:**
 
-**In staging, production, or a platform release backtest:**
+**In alerting, production, or a platform release backtest:**
 - The transaction that triggers the assertion fails or reverts before the assertion runs
 - The function selector in the trigger doesn't match the function being called
 
@@ -35,8 +47,8 @@ This error means your assertion never ran on the target transaction. This can oc
 - **Trigger function call fails or reverts** - The transaction may fail for various reasons. Write a test without `cl.assertion()` to isolate the issue.
 
 **Production Behavior:**
-- If an assertion reverts, the Enforcer returns an invalid result and the network applies its inclusion policy
-- If the assertion never executes (trigger doesn't match), the transaction proceeds normally without assertion validation
+- If an active assertion reverts, the enforcer reports the failure to the participating builder for exclusion
+- If its trigger does not match, that assertion provides no check for the candidate; other assertions, the guard, and ordinary protocol validity still apply
 
 **Solution (Testing):**
 
@@ -388,7 +400,7 @@ If you've tried the solutions above and still can't resolve your issue:
 
 **Related Documentation:**
 
-- [Writing Assertions Guide](/credible/write-first-assertion) - Learn assertion patterns
+- [Writing Your Own Policies](./writing-your-own-policies) - Learn assertion patterns
 - [Testing Assertions](/credible/testing-assertions) - Testing best practices
 - [pcl Reference](/credible/cli-reference) - Command-line tool documentation
 - [Cheatcodes Reference](/credible/cheatcodes-reference) - Available Phylax cheatcodes

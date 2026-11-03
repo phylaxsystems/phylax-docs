@@ -1,15 +1,13 @@
 ---
 title: Call Frame Context
-description: Gain fine-grained context about a call frame in order to improve the precision of assertions by allowing to access pre and post call frame states.
+description: Inspect state before and after a matched function call.
 ---
 
 Call frame context mappings describe how assertions can use matched call context and call-scoped snapshots to validate state around a specific function call.
 
 ## Status
 
-- [x] Supported
-- [ ] Partially Supported
-- [ ] Not Supported Yet
+**Supported.**
 
 ## Implementation Details
 
@@ -90,22 +88,11 @@ contract CallFrameContextAssertion is Assertion {
 
 ### Implementation Notes
 
-- **Call frame isolation:**
-    - Use `registerFnCallTrigger()` to execute once for each matched call
-    - Use `ph.context()` to read the matched call's `callStart` and `callEnd`
-    - Construct `PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart})` and `PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd})` for call-scoped snapshots
-    - This allows validation at the individual function call level, not just transaction level
+Use `registerFnCallTrigger()` for each matched call. Read `callStart` and `callEnd` through `ph.context()`.
 
-- **Benefits over transaction-level assertions:**
-    - Provides more precise state validation at the individual function call level
-    - Allows validation of intermediate states within a transaction
-    - Makes complex, multi-function transactions easier to validate
-    - Can catch issues that would be masked by transaction-level checks
+Construct call snapshots with `PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart})` and `PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd})`.
 
-- **When to use call frame context vs transaction context:**
-    - Use call-scoped `ForkId` values when you need to validate individual calls within a transaction
-    - Use transaction-scoped `ForkId` values when you only need to compare overall transaction state
-    - Call frame context is especially useful for batch operations, multi-step protocols, or when validating intermediate states
+Use these snapshots to check intermediate states. Use transaction snapshots when only the overall change matters.
 
 ## Example Use Cases
 

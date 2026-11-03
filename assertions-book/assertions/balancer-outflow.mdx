@@ -1,0 +1,51 @@
+---
+title: "Balancer Vault Outflow Breaker"
+description: "Configure a token-level net outflow budget for the Balancer V3 Vault"
+---
+
+[`BalancerV3VaultOutflowAssertion`](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/balancer/src/BalancerV3VaultOutflowAssertion.sol) limits the net outflow of one ERC-20 from the Balancer V3 Vault singleton. Attach it to the Vault that holds the tokens, not an individual pool address.
+
+## Constructor
+
+```solidity
+constructor(
+    address vault_,
+    address token_,
+    uint256 thresholdBps_,
+    uint256 windowDuration_
+)
+```
+
+For a one-day 20% policy, configure the actual Vault address, the watched token address, `2_000`, and `86_400`. Both addresses must be nonzero. The threshold must be from 1 through 9,999 bps; the window must be at least 10 seconds and no greater than `type(uint64).max`.
+
+The callback verifies that the configured Vault is the adopter, then reverts whenever the executor reports a threshold breach. A 10,000-bps threshold is rejected because dispatch requires a strict breach: reaching 100% would not trigger it.
+
+## Scenarios
+
+Assume a 1,000,000-token window baseline and a 20% limit. Each row is an independent scenario.
+
+| Activity | Result |
+| --- | --- |
+| 200,000 tokens leave with no inflow | At the limit; no breach |
+| 150,000 leave, then another 50,001 would leave | The second transaction breaches the limit |
+| 250,000 leave while 100,000 enter | Net outflow is 150,000; no breach |
+| A different pool receives the same token | Its inflow offsets outflow because the Vault shares custody |
+| Underlying tokens move into an ERC-4626 buffer wrapper | Underlying outflow can trip the breaker even though wrapped value remains |
+
+The threshold applies to the Vault's aggregate custody for that token. It does not assign a separate budget to each pool or measure gross withdrawals.
+
+## Operational fit
+
+Size the policy around legitimate swaps, liquidity removals, buffer operations, and fee collection. Protocol-fee collection can transfer an accumulated ledger in one operation; do not assume it can be split to fit the limit. Test those operations with your FDE before choosing the threshold and window.
+
+The breaker does not value wrapped positions or compensate for rebasing behavior. A different custody model needs a different policy. See the [adapter's scope notes](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/balancer/README.md).
+
+## Run the supplied tests
+
+From the [reviewed library checkout](./run-an-example#1-check-out-the-reviewed-library):
+
+```bash
+FOUNDRY_PROFILE=balancer pcl test --match-contract BalancerV3VaultOutflowAssertionTest
+```
+
+The suite has 12 tests covering constructor bounds, adopter binding, and callback rejection. Its `ArmedOutflowBreaker` test variant replaces the cumulative watcher with a call trigger to execute the callback locally. It does **not** test rolling aggregation or threshold dispatch. Test the table above against the actual executor before production activation.

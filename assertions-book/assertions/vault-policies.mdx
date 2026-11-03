@@ -1,0 +1,87 @@
+---
+title: "ERC-4626 Policies"
+description: "Combine call-level share-price checks with a cumulative token outflow limit"
+---
+
+Use the components in [`src/protection/vault`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/src/protection/vault) to build a policy for a specific vault. The example below combines two independent conditions: standard vault operations must not dilute holders, and net underlying-token outflow must stay within a rolling budget.
+
+## Example policy
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {ERC4626BaseAssertion} from "credible-std/protection/vault/ERC4626BaseAssertion.sol";
+import {ERC4626SharePriceAssertion} from "credible-std/protection/vault/ERC4626SharePriceAssertion.sol";
+import {ERC4626CumulativeOutflowAssertion} from "credible-std/protection/vault/ERC4626CumulativeOutflowAssertion.sol";
+
+contract BookVaultPolicy is ERC4626SharePriceAssertion, ERC4626CumulativeOutflowAssertion {
+    constructor(address vault_, address asset_)
+        ERC4626BaseAssertion(vault_, asset_)
+        ERC4626SharePriceAssertion(0)
+        ERC4626CumulativeOutflowAssertion(1_000, 24 hours)
+    {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+    }
+
+    function triggers() external view override {
+        _registerPerCallSharePriceTriggers();
+        _registerCumulativeOutflowTriggers();
+    }
+}
+```
+
+Save the contract as `examples/assertions-book/assertions/src/BookVaultPolicy.sol` in the [reviewed checkout](./run-an-example#1-check-out-the-reviewed-library), then compile it with `FOUNDRY_PROFILE=assertions-book forge build`.
+
+| Configuration | Value in this example |
+| --- | --- |
+| `vault_` | The protected ERC-4626 vault; it must also be the assertion adopter |
+| `asset_` | The vault's underlying ERC-20 address |
+| Share-price tolerance | `0` bps: no decrease across a covered call |
+| Outflow threshold | `1_000` bps: 10% of the rolling balance baseline |
+| Window | `24 hours` |
+
+Pass the asset explicitly. The constructor cannot read `vault.asset()` from the isolated assertion deployment runtime. The share-price check validates the configured vault and asset at the operation's post-call snapshot.
+
+## Share-price scenarios
+
+`_registerPerCallSharePriceTriggers()` covers `deposit`, `mint`, `withdraw`, and `redeem`. Each comparison uses the triggering call's pre- and post-state, reads `totalAssets()` and `totalSupply()`, and checks the asset-per-share ratio with the library's ratio helper.
+
+| Before → after | Result with zero tolerance |
+| --- | --- |
+| 100 assets / 100 shares → 110 / 110 | Accepted: proportional deposit |
+| 100 / 100 → 110 / 120 | Rejected: excess shares dilute holders |
+| 100 / 100 → 90 / 90 | Accepted: proportional withdrawal |
+| 100 / 100 → 110 / 100 | Accepted: an increase is permitted |
+| Zero supply at either endpoint | Share-price comparison is skipped |
+
+Rounding, fees, and loss recognition can justify a nonzero tolerance or a different policy. An increase can also be manipulation, so this check alone does not prevent donation attacks. Custom selectors need explicit triggers.
+
+## Outflow behavior
+
+The cumulative component watches the configured asset at the vault address. With a 100,000-token baseline, 10,000 tokens of net outflow reaches the limit; the next unit above it triggers rejection. Opposite-direction flows offset outflow.
+
+The supplied callback binds the adopter to the configured vault and always reverts on a breach. It does not validate the vault's asset getter itself. The share-price component performs that check on its covered calls.
+
+A vault that moves funds into external strategies can have low idle custody while retaining substantial managed assets. This watcher measures the vault's token balance, not its `totalAssets()`. Do not apply a percentage of idle custody as if it were a percentage of total portfolio value.
+
+## Other vault components
+
+| Component | Property | Adaptation requirement |
+| --- | --- | --- |
+| `ERC4626PreviewAssertion` | Operation return matches the pre-call preview within the component's bound | Exact preview equality is stricter than the ERC-4626 minimum/maximum guarantees; match your vault |
+| `ERC4626AssetFlowAssertion` | Change in recorded assets matches observed net ERC-20 flow | Include external strategy movements and valuation changes in the accounting model |
+| `ERC4626SharePriceAssertion` transaction-end checks | Compare transaction endpoints, including paths outside standard vault operations | Choose one-sided non-dilution or the two-sided bounded envelope deliberately |
+
+The code above registers only call-level share-price checks and cumulative outflow. Inheriting a component does not activate every function it contains.
+
+## Validation
+
+The example compiles against the reviewed revision. The library's protection test suite exercises its vault components:
+
+```bash
+RUST_MIN_STACK=16777216 FOUNDRY_PROFILE=ci pcl test --match-path 'test/protection/vault/**'
+```
+
+Local tests do not simulate cumulative window dispatch. Validate that part in the executor-backed environment described in [the outflow guide](./ass20-erc20-drain#test-and-adapt). Before activating a composed policy, test the exact vault implementation and all registered functions together.

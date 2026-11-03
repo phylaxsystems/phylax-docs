@@ -3,7 +3,7 @@ title: 'How to Review Backtesting Results'
 description: 'Review historical transactions that your assertions would have invalidated before you deploy a release'
 ---
 
-This guide shows you how to review the automatic backtest for a release, inspect a matched historical transaction, and decide whether an assertion is ready to deploy or needs further tuning.
+Review a release backtest to find policy violations in historical transactions and investigate false positives.
 
 **Prerequisites**:
 
@@ -13,25 +13,25 @@ This guide shows you how to review the automatic backtest for a release, inspect
 
 ## What backtesting checks
 
-Backtesting is included in the platform's pre-release checks. When you create a release and open it for review, the platform tests every assertion in the release against transactions from the last 20,000 blocks. The results identify historical transactions that would have been prevented from settling if the current assertion set had been active.
+The platform evaluates release assertions against a historical block range. Findings identify transactions that would violate the proposed rules. Use the block range reported by the backtest to assess its coverage.
 
-Use these findings to measure how an assertion behaves against real protocol activity before you deploy it. This is especially important for probabilistic or threshold-based protections, such as outflow circuit breakers and anomaly detection, where a threshold that is too restrictive can block benign behavior and one that is too permissive can miss harmful behavior.
+Use the results to check policy behavior against real activity. A passing result does not cover untested operations or future exploits.
 
 ## Open the release
 
-In the platform, open your project, select **Releases**, and choose the release you want to review. The release overview shows the proposed assertion changes and three pre-release checks: assertion verification, source code, and backtesting. See [Release Review Checks](./release-review-checks) for the fields and purpose of each check.
+Open your project and select the release under **Releases**. Review its proposed changes and [release checks](./deploy-assertions-dapp#step-4-review-release-checks).
 
-Review the release diff first so you know which contracts and assertions are included. Then check the status beside **Backtesting**. A passed check means the backtest found no historical transaction that the release would have invalidated. **Issue found** means at least one transaction needs your review.
+Select **Backtesting** and check the block range, watched assertion IDs, and **Transactions With Assertions**. **Passed** reports no violations in the tested activity. **Issue found** means a transaction needs review.
 
-<Frame caption="Review the release diff and the status of each pre-release check">
-  <img src="/images/release-overview.png" alt="Release overview for the MetaMorpho Top 5 Vaults project with assertion verification, source code, and backtesting checks" />
+<Frame caption="This backtest passed, but zero transactions exercised its assertions">
+  <img src="/images/platform/release-review-backtest.png" alt="Release 3 backtest marked Passed, showing its start and end blocks, eight watched assertion IDs, and Transactions With Assertions equal to zero" />
 </Frame>
+
+A zero count does not demonstrate that the policies allow intended behavior or reject violations. Exercise those cases in your [local and integration tests](./testing-strategy) before deployment.
 
 ## Review a backtesting finding
 
-Select **Backtesting** to open the complete result. The summary shows the tested block range and whether the assertions invalidated any historical transactions. When the backtest finds an invalidation, the result identifies the matched transaction hash, assertion ID, block number, assertion adopter, and all assertion IDs watched during the replay.
-
-Start with the **Matched TX Hash**, **Matched Assertion ID**, and **Matched Assertion Adopter**. Together, these fields tell you which transaction was rejected, which assertion failed, and which protected contract it was evaluating. The attempt history records when the check ran, while **Transactions With Assertions** shows how many transactions in the range exercised the assertion set.
+For a finding, check **Matched TX Hash**, **Matched Assertion ID**, and **Matched Assertion Adopter**. These identify the transaction, failed rule, and protected contract. The result also shows the block number and check history.
 
 <Frame caption="A backtesting finding with the matched transaction, assertion, block, and adopter">
   <img src="/images/backtesting-ui.png" alt="Backtesting result for a release showing one historical transaction that would have been invalidated" />
@@ -39,9 +39,9 @@ Start with the **Matched TX Hash**, **Matched Assertion ID**, and **Matched Asse
 
 ## Inspect the invalidated transaction
 
-Copy the **Matched TX Hash** and paste it into the block explorer for the project's network. Review the sender and recipient, decoded function call, calldata, transferred value, token transfers, event logs, and internal calls. Compare that activity with the assertion's intended invariant and the matched adopter address. The goal is to explain why the assertion would have rejected a transaction that previously settled: the transaction might contain behavior you want to prevent, or it might reveal a legitimate protocol operation that the assertion does not yet handle.
+Open **Matched TX Hash** in the network's block explorer. Compare the transaction's calls and state changes with the intended policy. Determine whether the activity should be permitted.
 
-Next, inspect the **Matched Incident Payload** in the backtesting result. The failure entry maps the revert data to the assertion function, assertion ID, and adopter address. For assertions that depend on cumulative flows, an outflow window, or anomaly-detection context, also expand the previous transactions and review the block environment. The matched transaction alone may look benign even though the preceding activity caused the assertion's threshold or model to fire.
+Inspect **Matched Incident Payload** to map the revert data to the assertion function and adopter. For policies with historical context, inspect previous transactions and the block environment. Earlier activity can explain a threshold violation.
 
 <Frame caption="Use the incident payload and preceding transactions to understand why the assertion failed">
   <img src="/images/backtesting-payload.png" alt="Matched incident payload with revert data, assertion metadata, and previous transactions from the backtest" />
@@ -49,13 +49,11 @@ Next, inspect the **Matched Incident Payload** in the backtesting result. The fa
 
 ## Decide what to do next
 
-If the matched transaction represents behavior the assertion is intended to prevent, record why the finding is expected and continue reviewing the other release checks. A historical match can be useful evidence that the assertion detects the targeted behavior, but it does not prove that the assertion covers every harmful transaction.
+- **Expected violation:** record why the policy should reject it, then review the remaining release checks.
+- **False positive:** revise the policy and add a regression test. Create a new release with `pcl apply` to repeat the checks.
+- **Unexplained result:** investigate the payload and replay context before deployment. See [Troubleshooting](./troubleshooting).
 
-If the matched transaction is benign, treat it as a false positive. Adjust the assertion's thresholds, trigger scope, time window, or handling of normal protocol operations, then add the transaction as a regression case in your assertion tests. Create a new release with `pcl apply`; the platform will run the pre-release checks and backtest the updated assertion set again.
-
-If the matched transaction and assertion metadata do not explain the finding, inspect the **Matched Incident Payload** and expand the previous transactions. Decode the revert data, review the block environment, and confirm that the assertion ran against the intended adopter and state. Do not deploy the release until you can explain the finding from the transaction, assertion, and platform evidence. See [Troubleshooting](./troubleshooting) for common assertion failures.
-
-When the backtest passes, finish reviewing assertion verification and source code, then deploy the release to staging. Continue monitoring staging invalidations before promoting the assertion to production. A passing backtest confirms that the tested historical activity did not trigger the release; it is not a substitute for focused tests, known-exploit coverage, or staging observation.
+After review, deploy to alerting and follow the [testing strategy](./testing-strategy).
 
 ## Next steps
 
@@ -66,10 +64,7 @@ When the backtest passes, finish reviewing assertion verification and source cod
   <Card title="Apply Assertions" icon="code-branch" href="./apply-assertions">
     Create a new release after tuning an assertion
   </Card>
-  <Card title="Deploy with the Platform" icon="rocket" href="./deploy-assertions-dapp">
-    Deploy a reviewed release to staging
-  </Card>
-  <Card title="Release Review Checks" icon="list-check" href="./release-review-checks">
-    Review assertion verification, source code, and backtesting
+  <Card title="Review and Deploy Policies" icon="rocket" href="./deploy-assertions-dapp">
+    Review release checks and authorize deployment.
   </Card>
 </CardGroup>

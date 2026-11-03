@@ -1,38 +1,35 @@
 ---
-title: 'Harvest Increases Balance'
-description: 'Make sure that the balance increases after a harvest'
+title: "Harvest Balance and Share Price"
+description: "Check two recorded values before and after a harvest call"
 ---
 
-import ass18HarvestIncreasesBalance from "/snippets/ass18-harvest-increases-balance.a.mdx";
+import Example from "/snippets/ass18-harvest-increases-balance.a.mdx";
 
-## When to Use This Pattern
+A strategy harvest should retain or increase the vault's recorded balance and price per share. This example rejects a harvest that lowers either value.
 
-Ensures harvest operations in yield farming protocols maintain integrity by preventing balance decreases and price per share manipulation. Critical for yield farming protocols (Beefy, Yearn, Harvest), liquidity mining programs, staking protocols with reward distribution, and auto-compounding vaults.
+## Behavior
 
-Incorrect harvest implementations could lead to loss of user funds, price per share manipulation enabling flash loan attacks, or protocol insolvency through improper reward distribution.
+`BeefyHarvestAssertion` registers the teaching interface `harvest(bool badHarvest)`. It compares balance slot `0` and price-per-share slot `1` across the matched call. Both post-call values must be greater than or equal to their pre-call values.
 
-## What This Pattern Checks
+## Configuration
 
-Implements multi-layered approach to verify harvest operations:
+Replace the selector and storage reads with the deployed vault's ABI and accounting. The boolean argument is a mock control, not a production Beefy interface. Define whether harvest may realize losses, pay fees, or move assets into a strategy before choosing these inequalities.
 
-- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Capture vault balance and price per share before/after harvest
-- `ph.loadStateAt()`: Read balance and price-per-share slots before and after the harvest call
-- `registerFnCallTrigger()`: Trigger on harvest function calls
-- Ensures balance hasn't decreased (can stay same if harvested recently)
-- Confirms price per share hasn't decreased
-- Prevents manipulation through multiple harvest calls
+## Scenarios
 
-The assertion verifies each balance change is valid relative to previous state, ensuring no balance decreases occur at any point and maintaining protocol solvency.
+| Transaction | Result |
+| --- | --- |
+| Balance and price per share both increase | Accepted |
+| Both remain unchanged | Accepted |
+| Balance increases but price per share decreases | Rejected |
+| Harvest reports a real strategy loss | Rejected under this policy |
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+## Coverage limits
 
-## Assertion Pattern
+Recorded values can be manipulated together. These checks do not independently value rewards or verify custody. If losses are a supported operation, use a bounded-loss or operation-specific policy instead of treating every decrease as an exploit.
 
-<ass18HarvestIncreasesBalance />
+## Source
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+The [reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass18-harvest-increases-balance.a.sol) is a teaching template. The [example setup guide](./run-an-example) provides the pinned checkout and test procedure.
 
-## Related Patterns
-- [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
-- [ERC20 Cumulative Outflow Breaker](/assertions-book/assertions/ass20-erc20-drain)
-- [Price Within Ticks](/assertions-book/assertions/ass15-price-within-ticks)
+<Example />

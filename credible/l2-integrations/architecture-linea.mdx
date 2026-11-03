@@ -3,8 +3,7 @@ title: 'Linea / Besu Integration'
 description: 'High-level integration of the Credible Layer with Linea via Besu plugins'
 ---
 
-This page summarizes the Linea integration pattern at a high level. It focuses on interface boundaries
-and the enforcement flow without internal implementation details.
+This page preserves the Linea / Besu sequencer integration design. It describes interface boundaries, not a live network-support or version matrix. For Ethereum, use [Ethereum Architecture](../architecture-overview).
 
 ## Integration Pattern
 
@@ -54,7 +53,7 @@ flowchart LR
 1. The block builder selects a candidate transaction.
 2. The plugin sends the transaction to the sidecar for assertion validation.
 3. The sidecar executes applicable assertions and returns a decision.
-4. The block builder includes valid transactions and drops invalid ones.
+4. The integration excludes failing candidates. Passing validation makes a candidate eligible for inclusion.
 
 ## Notes
 
@@ -64,7 +63,7 @@ flowchart LR
 
 ## Related Docs
 
-- [Network Integration Overview](/credible/network-integration)
+- [Network Integration Overview](/credible/l2-integrations/network-integration)
 - [Assertion Enforcer](/credible/assertion-enforcer)
 - [Assertion DA](/credible/assertion-da)
-- [OP Stack](/credible/network-integrations/architecture-op-stack)
+- [OP Stack](/credible/l2-integrations/architecture-op-stack)

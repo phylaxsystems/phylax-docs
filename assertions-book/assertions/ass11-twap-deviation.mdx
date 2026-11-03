@@ -1,34 +1,37 @@
 ---
-title: TWAP Deviation
-description: Assert that the TWAP price doesn't deviate more than X% from the pre-state TWAP price
+title: "TWAP Deviation"
+description: "Limits of the legacy spot-to-TWAP comparison"
 ---
 
-import ass11TwapDeviation from "/snippets/ass11-twap-deviation.a.mdx";
+import Example from "/snippets/ass11-twap-deviation.a.mdx";
 
-## When to Use This Pattern
+A price-sensitive operation should reject a spot price far from an independent time-weighted reference. This legacy template illustrates that goal but needs correction before use.
 
-Prevents TWAP (Time-Weighted Average Price) price manipulation by ensuring oracle prices don't deviate more than X% from pre-state TWAP prices. Critical for AMMs and DEXs (price discovery), lending protocols (collateral valuation), yield aggregators (rebalancing), options protocols (settlement), and cross-chain bridges (asset pricing).
+<Warning>
+The reviewed upstream example needs correction before production use. The limitation below is present in the linked source; the imported code is preserved for comparison.
+</Warning>
 
-Sudden price deviations could indicate manipulation through flash loan attacks or oracle failures, potentially leading to protocol insolvency or fund extraction.
+## Source limitation
 
-## What This Pattern Checks
+The template creates pre- and post-transaction fork identifiers, then calls `twap()` and `price()` directly. The identifiers are not passed into those reads. Its deviation calculation also divides to a whole percentage before comparison: a 5.9% deviation rounds down to 5% and passes the nominal 5% limit.
 
-Monitors TWAP price changes using a two-stage approach to ensure price stability:
+## Adaptation requirements
 
-- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Compare post-transaction price against pre-transaction TWAP
-- `getStateChangesUint()`: Track all price changes during transaction execution
-- `registerTxEndTrigger()`: Trigger when price storage slot changes
+Bind the spot and reference reads to explicit snapshots. Compare scaled products before division, with overflow-safe arithmetic, and define how a zero reference is handled. Validate the reference window, decimals, and independence from the operation being protected.
 
-The assertion verifies both the final price and any intermediate price updates against the initial TWAP to detect flash loan attacks and price manipulation throughout the transaction.
+## Scenarios
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+| Scenario | Meaning |
+| --- | --- |
+| Spot 105; reference 100 | At the intended 5% boundary |
+| Spot 105.9; reference 100 | The arithmetic truncates to 5%; a correct 5% comparison must reject it |
+| Reference is zero | The template divides by zero |
+| Price spikes and is restored before transaction end | Requires observation at the consumed-price boundary |
 
-## Assertion Pattern
+Use the [oracle reduce-only pattern](./reusable-patterns#oracle-reduce-only-gate) for a simpler pre-call comparison. That pattern uses the smaller price as its percentage denominator; it is not the same formula as deviation from a fixed TWAP.
 
-<ass11TwapDeviation />
+## Legacy source
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+[Reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass11-twap-deviation.a.sol). See [running and adapting examples](./run-an-example) for the pinned library revision.
 
-## Related Patterns
-- [Intra-tx Oracle Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation)
-- [Liquidation Health Factor](/assertions-book/assertions/ass16-liquidation-health-factor)
+<Example />

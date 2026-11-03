@@ -1,99 +1,52 @@
 ---
-title: 'Introduction'
-description: 'Block exploits before they execute by linking security rules to your smart contracts on-chain.'
+title: 'Overview'
+description: 'Getting started with Phylax'
 ---
 
-Use this page to understand what the Credible Layer is and choose the right documentation path for your goal.
+Phylax helps Ethereum protocols enforce custom security policies before settlement. Policies are implemented as Solidity assertions, checked by participating builders, and paired with guards on protected operations.
 
-## What is the Credible Layer?
-
-The Credible Layer is security infrastructure that enables developers to link security rules to their smart contracts on-chain. Then, the network validates every transaction that interacts with their smart contracts against their security rules, dropping any invalidating transaction.
-
-<Note>
-Use this page to choose the right kind of documentation for what you need next:
-
-- Learn by doing: [Quickstart Tutorial](./pcl-quickstart)
-- Complete a specific task: [How-to Guides](./credible-install)
-- Understand the system: [High-Level Overview](./credible-layer-overview)
-- Look up commands and APIs: [Reference](./cli-reference)
-</Note>
-
-## How It Works
-
-<Steps>
-  <Step title="Define rules in Solidity">
-    Write assertions—security rules that define states your protocol should never reach. No contract modifications required.
-  </Step>
-  <Step title="Network validates every transaction">
-    The network checks each transaction against your assertions before inclusion in a block.
-  </Step>
-  <Step title="Invalid transactions are dropped">
-    Transactions that violate your rules are dropped by the network and never execute.
-  </Step>
-</Steps>
-
-## Choose the Right Path
+You can write assertions yourself. We highly recommend working with **Phylax sales engineering** to find the policies and integration approach that best fit your protocol. This support is included in your Phylax subscription at no additional cost. You can bring existing assertion code or start with a discussion of your protection needs.
 
 <CardGroup cols={2}>
-  <Card title="Learn by Doing" icon="rocket" href="./pcl-quickstart">
-    Follow a guided tutorial to write, test, and deploy your first assertion end to end.
+  <Card title="Should you use Phylax?" icon="circle-question" href="./should-you-use-phylax">
+    Work through the questions your team will have, from the first call to live protection.
   </Card>
-  <Card title="Complete a Task" icon="list-check" href="./apply-assertions">
-    Jump straight to task-focused guides for installation, deployment, testing, and operations.
-  </Card>
-  <Card title="Understand the System" icon="compass" href="./architecture-overview">
-    Read the explanation docs for architecture, trust model, assertions, and the platform.
-  </Card>
-  <Card title="Look Up Details" icon="book" href="./cheatcodes-reference">
-    Use the reference docs for commands, cheatcodes, glossary entries, and use-case mappings.
+  <Card title="Explore an Example Policy" icon="flask-vial" href="./pcl-quickstart">
+    Optionally run a local example to see how assertions behave.
   </Card>
 </CardGroup>
 
-## By Audience
+## What You Can Protect
 
-<CardGroup cols={2}>
-  <Card title="Protocol Teams" icon="browser" href="./dapp-integration">
-    See the adoption path for writing assertions, deploying them, and monitoring invalidations.
-  </Card>
-  <Card title="Networks and Sequencers" icon="sitemap" href="./network-integration">
-    See the high-level integration path for enforcement during block building.
-  </Card>
-  <Card title="Security Engineers" icon="shield-halved" href="../assertions-book/assertions-book-intro">
-    Browse pattern catalogs and exploit case studies in the Assertions Book.
-  </Card>
-  <Card title="Researchers and Auditors" icon="magnifying-glass" href="./dapp-explorer">
-    Inspect deployed assertions, invalidations, and public protocol coverage.
-  </Card>
-</CardGroup>
+Policies can constrain asset outflows, administrative changes, collateralization, oracle deviations, and relationships between balances or positions. The appropriate rules depend on your protocol and its normal operations.
 
-## Key Benefits
+For example, a rule that rejects every ownership change would also reject a planned transfer to a new governance contract. Policy design must account for legitimate exceptions as well as harmful behavior. Check out the [Use Cases Book](../assertions-book/assertions-book-intro), it has patterns and logic for this.
 
-- **Pre-execution prevention** — Exploits are blocked before they execute, not detected after
-- **No contract changes** — Add protection to any contract, including immutable ones
-- **Transparent & verifiable** — All rules are public Solidity, auditable by anyone
-- **Readable security posture** — Understand circuit breakers and verifiable operational risks through clear, plain-English breakdowns
-- **No external execution services** — Enforcement runs within the network’s block-building flow
-- **Deterministic decisions** — Binary enforcement based on your rules, not opaque scoring
+## How Ethereum Enforcement Works
 
-## Community & Support
+Builders that agree to run the Phylax enforcement engine evaluate transactions against your circuit breakers and exclude violating transactions from the blocks they build. Your team defines and approves the rules, which are deployed onchain under a signer set that only you control. No other party can activate or change your rules without your authorization.
 
-Have questions or want to connect with the Phylax community?
+Once you protect functions with Phylax circuit breakers, an onchain guard checks that each protected call executes in a credible block. Calls included in a non-participating builder's block revert while the guard's enforcement gate is active. If a transaction interacting with your smart contract and it's routed to a builder that does not evaluate it, the transaction will revert. This ensures that incoming transactions can only settle if it's evaluated by the enforcement engine.
 
-- Join our [Telegram](https://t.me/phylax_credible_layer)
-- Follow us on [X/Twitter](https://x.com/phylaxsystems)
-- Explore our [GitHub](https://github.com/phylaxsystems)
-- Visit the [Phylax Website](https://phylax.systems)
+Protection depends on the agreed policies, covered execution paths, deployed guards, and operational configuration. Learn about [Ethereum enforcement](./credible-layer-overview) and its [trust and recovery assumptions](./trust-model).
 
-## Learn More
+## From Evaluation to Operation
 
-For the visual learners, here's a video introduction to the Credible Layer:
+Our forward deployed engineers (FDEs) work closely with your team to define, implement, and thoroughly test your circuit breakers. We study your protocol and existing mitigations, then work through the failure scenarios, legitimate exceptions, and thresholds that matter to you.
 
-<iframe
-  className="w-full aspect-video rounded-xl"
-  src="https://www.youtube.com/embed/J7uPS1ruR04?si=GkQEASccP6BHoPGt"
-  title="YouTube video player"
-  frameBorder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-  referrerPolicy="strict-origin-when-cross-origin"
-  allowFullScreen
-></iframe>
+Within the agreed integration scope, we write assertions, prepare contract and transaction-routing changes for your review, and test a replica of your protocol on a fork of Ethereum. We run backtests, test legitimate and violating transactions, investigate false positives, and rehearse recovery.
+
+Your team reviews the policies and evidence, approves protocol changes, and controls production signing. We prepare and simulate activation transactions for your signers to authorize and execute, then verify the live protection. Monitoring, incident response, and ongoing policy changes follow the operating plan agreed with your team.
+
+Use [Prepare for Your Integration](./evaluate-credible-layer) to gather the information for that discussion. The [Enforcement FAQ](./faq) covers builder behavior, routing, transaction rejection, and recovery.
+
+## Technical Documentation
+
+The technical guides remain available throughout evaluation and integration:
+
+- [Ethereum Architecture](./architecture-overview) explains the components and execution path.
+- [Integration Planning](./dapp-integration) covers guards, routing, authority, and recovery.
+- [Release Review Checks](./release-review-checks) explains the evidence attached to a release.
+- [CLI and API references](./cli-reference) support engineers implementing the agreed plan.
+
+Ethereum builders can use the [builder integration guide](./ethereum-builder-integration). Earlier sequencer designs and workflows live in [L2 and Sequencer Integrations](./l2-integrations/overview).
