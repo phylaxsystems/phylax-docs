@@ -13,7 +13,7 @@ Review a release backtest to find policy violations in historical transactions a
 
 ## What backtesting checks
 
-The platform tests release assertions against transactions from the last 20,000 blocks. Findings identify transactions that would violate the proposed rules.
+The platform evaluates release assertions against a historical block range. Findings identify transactions that would violate the proposed rules. Use the block range reported by the backtest to assess its coverage.
 
 Use the results to check policy behavior against real activity. A passing result does not cover untested operations or future exploits.
 
@@ -21,15 +21,15 @@ Use the results to check policy behavior against real activity. A passing result
 
 Open your project and select the release under **Releases**. Review its proposed changes and [release checks](./deploy-assertions-dapp#step-4-review-release-checks).
 
-Check **Backtesting**. **Passed** means no tested transaction violated the rules. **Issue found** means a transaction needs review.
+Select **Backtesting** and check the block range, watched assertion IDs, and **Transactions With Assertions**. **Passed** reports no violations in the tested activity. **Issue found** means a transaction needs review.
 
-<Frame caption="Review the release diff and the status of each pre-release check">
-  <img src="/images/release-overview.png" alt="Release overview for the MetaMorpho Top 5 Vaults project with assertion verification, source code, and backtesting checks" />
+<Frame caption="This backtest passed, but zero transactions exercised its assertions">
+  <img src="/images/platform/release-review-backtest.png" alt="Release 3 backtest marked Passed, showing its start and end blocks, eight watched assertion IDs, and Transactions With Assertions equal to zero" />
 </Frame>
 
-## Review a backtesting finding
+A zero count does not demonstrate that the policies allow intended behavior or reject violations. Exercise those cases in your [local and integration tests](./testing-strategy) before deployment.
 
-Select **Backtesting**. Check the block range and watched assertions. **Transactions With Assertions** shows how many transactions exercised the rules.
+## Review a backtesting finding
 
 For a finding, check **Matched TX Hash**, **Matched Assertion ID**, and **Matched Assertion Adopter**. These identify the transaction, failed rule, and protected contract. The result also shows the block number and check history.
 

@@ -193,13 +193,16 @@ Blocking a rule-violating effect through the integrated enforcement path. Protec
 
 ## Assertion Lifecycle
 
+### Release
+The complete policy set reviewed and deployed together for a project's selected environment. Individual assertions cannot be removed from an active release. Change the set by deploying a replacement release, or remove the whole release.
+
 ### Apply
 The process of creating a release on the platform using `pcl apply`. This command reads your `credible.toml` configuration, compiles assertion contracts, and creates a release. The platform handles storing assertion bytecode in [Assertion DA](/credible/glossary#assertion-da-data-availability) automatically.
 
 Learn more: [Apply Assertions](/credible/apply-assertions) | [pcl Reference](/credible/cli-reference#apply)
 
 ### Deployment
-The process of reviewing an assertion, linking it to a contract, and signing the transaction to deploy it on-chain. Deployment includes choosing whether to deploy to the Alerting or Production environment. The deployment transaction must succeed for the assertion to be deployed on-chain.
+The process of reviewing a release and signing its onchain transaction for the selected Alerting or Production environment. Transaction confirmation and assertion activation are separate: new assertions begin applying after the configured delay.
 
 ### Alerting
 A mirrored chain environment used for testing assertions without affecting production. Assertions run in alerting mode to observe behavior, but transactions are not dropped if they break assertion rules. This allows protocol teams to test assertions safely before deploying to production.
@@ -223,4 +226,4 @@ The state of an assertion in production after the timelock period has expired. A
 The state of an assertion in alerting after the timelock period has expired. An assertion active in alerting mode is running on the mirrored chain environment, allowing protocol teams to observe how it behaves without transactions being dropped if they violate the assertion.
 
 ### Removal
-The process of removing an assertion from active enforcement or alerting. Removal is scheduled through the State Oracle contracts and requires the configured timelock to expire before the assertion stops running in its selected environment.
+The scheduled deactivation of a release's assertions in the selected environment. They remain active until their deactivation blocks. To omit individual assertions, deploy a replacement release with the policies to retain. See [Replace or Remove a Release](./managing-your-circuit-breakers#replace-or-remove-a-release).

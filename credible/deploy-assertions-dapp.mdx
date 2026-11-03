@@ -3,7 +3,7 @@ title: 'Review and Deploy Policies'
 description: 'Review release verification and backtests, then authorize your policies for alerting or production.'
 ---
 
-Prepare a release, review its checks, and authorize deployment in the [Phylax platform](https://ethereum.phylax.systems).
+Prepare a release, review its checks, and authorize deployment in the [Phylax platform](https://ethereum.phylax.systems). A release contains the complete intended policy set. To change or remove individual assertions, deploy a replacement release.
 
 ## Before You Start
 
@@ -46,7 +46,7 @@ Review the preview and confirm to create a pending release. See [Apply Assertion
 
 ## Step 4: Review Release Checks
 
-Open the release under **Releases**. Compare its target contracts, environment, and policy additions and removals with the approved changes. Review all three checks below.
+Open the release under **Releases → Needs your review**. Compare its target contracts, environment, and policy additions and removals with the approved changes. **All passed** does not mean the release is deployed. Review all three checks below; see the [screenshot walkthrough](./managing-your-circuit-breakers#review-a-release).
 
 ### Assertion verification
 
@@ -64,7 +64,7 @@ Confirm that every **Assertion ID** in the release has a **Passed** source resul
 
 ### Backtesting
 
-The **Backtesting** check tests every assertion in the release against transactions from the last 20,000 blocks. Review the tested block range and watched assertion IDs. Check how many transactions exercised the assertions.
+The **Backtesting** check evaluates the release against historical transactions. Review the reported block range, watched assertion IDs, and **Transactions With Assertions**. A **Passed** result with zero transactions exercising assertions does not demonstrate policy behavior.
 
 Open each **Issue found** result to inspect the matched transaction, assertion, adopter, and replay data. Determine whether the rejection is intended or a false positive. Use [How to Review Backtesting Results](./backtesting) for the investigation workflow.
 
@@ -79,7 +79,7 @@ Resolve failed verification checks and unexpected backtesting findings before si
 3. Select **Deploy to Alerting** or **Deploy to Production**.
 4. Authorize the transaction through your signing process.
 
-The [State Oracle](./credible-layer-contracts#state-oracle) applies the configured delay before activation. Removals follow the same delay mechanism. Platform membership does not grant signing authority.
+The [State Oracle](./credible-layer-contracts#state-oracle) applies the configured delay before activation. After the transaction confirms, check **Assertions** for **Awaiting activation** and the remaining block count. Confirm enforcement after the delay; a signed deployment alone is insufficient. See the [deployment and activation screenshots](./managing-your-circuit-breakers#authorize-the-change). Platform membership does not grant signing authority.
 
 ## Verify Ethereum Enforcement
 
@@ -91,12 +91,12 @@ Test a protected call in a noncredible block while the guard is active. Include 
 
 ## Step 6: Monitor Your Policies
 
-Use [Review and deploy changes](./managing-your-circuit-breakers) to check active policies, investigate violations, and review updates or removals.
+Use [Review and deploy changes](./managing-your-circuit-breakers) to check active policies and investigate violations. To change the policy set or stop a release, follow [Replace or Remove a Release](./managing-your-circuit-breakers#replace-or-remove-a-release).
 
 ## Troubleshooting
 
 | Error | Solution |
 | --- | --- |
 | Contract registration is not authorized | Confirm the supported admin verifier and manager authorization for the target Ethereum deployment; see [Managing Policy Deployments](./managing-policy-deployments) |
-| "Assertion already exists" | Use a different name or update the existing assertion |
+| "Assertion already exists" | Check the existing assertion IDs and release diff before preparing a replacement release |
 | "Authentication expired" | Run `pcl auth -u https://ethereum.phylax.systems login` to refresh |
