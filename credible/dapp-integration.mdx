@@ -27,8 +27,8 @@ flowchart LR
   Scope --> Assertion[Implement and Test Assertions]
   Assertion --> Platform[Phylax Platform]
   Platform --> DA[Assertion DA]
-  Platform --> Registry[On-Chain Registry]
-  Registry --> Enforcer[Assertion Enforcer]
+  Platform --> StateOracle[State Oracle]
+  StateOracle --> Enforcer[Assertion Enforcer]
   Enforcer --> Builder[Participating Ethereum Builder]
   Builder --> Outcome[Candidate Inclusion Decision]
   Dev --> Guard[Guard Coverage + RPC Routing]
@@ -44,15 +44,24 @@ Your team controls policy assignments, deployment environments, and notification
 
 Identify the protected operations, relevant state, dependencies, and coverage gaps. Every protected execution path must reach a suitable guard.
 
-Include alternative entry points and wallet modules. A Safe transaction guard alone does not cover module execution. Resolve unguarded paths before claiming coverage.
+Choose the integration path that fits the contract:
 
-Assign responsibility for contract changes and review the deployed version. Include guard replacement and bypass permissions in that review.
+| Contract structure | Integration |
+| --- | --- |
+| You can change the implementation | Inherit [Credible Block Guard](./credible-layer-contracts#credible-block-guard) and guard the protected entry points. |
+| A compatible proxy can change its implementation target | Install [Credible Proxy](./credible-layer-contracts#credible-proxy) with the protected selectors. UUPS proxies are not supported. |
+| Operations use Safe owner transactions | Install [Credible Safe Guard](./credible-layer-contracts#credible-safe-guard). Review module paths separately. |
+| The protocol exposes an unavoidable hook | Call an [Assertion Adapter](./credible-layer-contracts#assertion-adapter) and attach assertions to it. |
+
+Include alternative entry points, internal dispatch, and wallet modules. A guarded selector does not protect another selector that reaches the same operation. Resolve unguarded paths before claiming coverage.
+
+Assign responsibility for contract changes and review the deployed version. Include guard replacement, proxy configuration, and bypass permissions. These remain separate from the Protocol Manager wallet that signs policy releases.
 
 ## Configure Transaction Submission
 
 Configure the Credible RPC on each top-level submitter of protected transactions. This includes automated submitters and multisig executors. Off-chain signers and internally called contracts do not select the route.
 
-Ordinary reads and unprotected traffic can retain their existing providers. Test actual submission separately from RPC simulation. Simulation success does not establish that production assertions pass.
+Ordinary reads and unprotected traffic can retain their existing providers. Test actual submission separately from RPC simulation. The Registry permits [zero-gas-price simulations](./credible-layer-contracts#zero-gas-price-calls), so simulation success does not establish that a paid transaction passes the guard or active assertions.
 
 For L2 queues and forced inclusion, see [L2 Integration Planning](./l2-integrations/network-integration#transaction-source-coverage).
 

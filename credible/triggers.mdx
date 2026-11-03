@@ -37,9 +37,18 @@ function triggers() external view override {
 }
 ```
 
-<Warning>
-Legacy `registerCallTrigger`, `registerStorageChangeTrigger`, and `registerBalanceChangeTrigger` helpers remain documented for older assertions, but new assertions should prefer `registerFnCallTrigger` and `registerTxEndTrigger`.
-</Warning>
+### State and Flow Triggers
+
+Choose a narrower trigger when it still covers every mutation that matters:
+
+| Policy | Trigger | Example |
+| --- | --- | --- |
+| Configuration must remain approved | `registerStorageChangeTrigger`, optionally restricted to a slot | [Safe configuration](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/src/protection/safe/SafeConfigLockAssertion.sol) |
+| Check accounting when an ERC20 balance changes | `registerErc20ChangeTrigger` | [Vault policies](../assertions-book/assertions/vault-policies) |
+| Bound net token flow over a rolling window | `watchCumulativeOutflow` or `watchCumulativeInflow` | [Cumulative flow](../assertions-book/assertions/ass20-erc20-drain) |
+| Run a damage check when activity is unusual | `watchAnomaly` | [Anomaly policies and runtime limits](../assertions-book/assertions/anomaly-gated-policies) |
+
+Storage triggers remain supported in current patterns. Use `registerFnCallTrigger` instead of legacy `registerCallTrigger` for new call-scoped policies. See the [library reference](./credible-std-overview#assertion-helpers) for helper signatures and specification requirements.
 
 ## Best Practices
 

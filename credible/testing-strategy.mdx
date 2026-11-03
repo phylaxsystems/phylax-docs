@@ -37,15 +37,17 @@ Use local or fork-based guard tests, then the approved end-to-end environment wi
 | --- | --- |
 | Allowed transaction in a credible block | Marker present before the operation, correct guard decision, and expected protocol state change. |
 | Candidate failing an active assertion | Assertion result and invalidation evidence, exclusion by the participating builder, and unchanged protected state. |
-| Protected operation in a noncredible block | Guard rejection while fail-open and bypass conditions are inactive. |
+| Paid protected operation in a noncredible block | Guard rejection while fail-open and bypass conditions are inactive. Use a nonzero gas price. |
 | Alternative entry point or Safe module | The intended on-chain gate is unavoidable, or the gap is explicitly excluded from coverage. |
-| RPC simulation and actual submission | The submitter uses the intended endpoint and the actual builder result agrees with the tested expectation. |
+| RPC simulation and actual submission | Test zero-price simulation separately from paid execution. Confirm the submission endpoint, builder result, and final protocol state. |
 | Batch containing a protected operation | Expected whole-transaction rejection or on-chain subcall handling, with application reconciliation. |
 | Guard or protocol upgrade | Correct wiring, storage layout where relevant, and preserved coverage after the change. |
 
 A timeout alone is not rejection evidence. Check transaction status, builder or platform evidence, and contract state. Distinguish a pre-inclusion exclusion from an included guard revert, which consumes gas.
 
 See [Guard Testing](./testing-credible-block-guard) for the local harness. Its fixture proves the harness behavior; target your actual contract to validate its integration.
+
+For a proxy guard, test guarded and unguarded selectors, selector collisions, and internal routes to protected operations. For a hook adapter, verify that every covered operation reaches `check(true)` through the authorized caller. If proxy queue mode is enabled, verify the event, unchanged state, retry identity, and caller behavior after a successful return with no effect.
 
 ## 5. Rehearse Recovery
 

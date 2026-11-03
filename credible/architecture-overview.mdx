@@ -50,7 +50,7 @@ flowchart TD
     G -->|"Blocked"| R["Revert"]
 ```
 
-The guard allows execution in a credible block, or when its configured fail-open or authorized bypass condition applies. Otherwise it rejects the protected operation. Ordinary protocol authorization and accounting checks still run.
+For paid transactions, the guard allows execution in a credible block, or when its configured fail-open or authorized bypass condition applies. Otherwise it rejects the protected operation. The Registry also permits [zero-gas-price calls](./credible-layer-contracts#zero-gas-price-calls) without a marker. Ordinary protocol authorization and accounting checks still run.
 
 ## Decentralized Block Building
 

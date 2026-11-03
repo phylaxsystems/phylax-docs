@@ -146,6 +146,8 @@ Exceeding the limit causes `OutOfGas` and invalidates the candidate, even if the
 
 Successful checks often cost more gas because loops and checks run to completion. Failure cases can exit early.
 
+Match the compiler and optimizer settings used for deployment. The `credible-std` protection tests use `FOUNDRY_PROFILE=ci`, which enables optimization. With the reviewed library and PCL 1.6.0, the Safe configuration test with 32 modules exceeds the assertion gas limit under the default unoptimized profile and passes under `ci`.
+
 ### Testing Recommendations
 
 - Test with realistic data volumes - if your assertion loops through items, test with the maximum expected count

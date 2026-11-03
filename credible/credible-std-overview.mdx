@@ -13,14 +13,19 @@ Choose the assertion specification supported by your target Ethereum deployment.
 
 ## Package and Configuration
 
-`credible-std` is distributed as a Foundry library.
+This reference follows [source revision `fe49de6`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0). Pin your dependency; a Solidity interface in the library does not establish support in your CLI or deployed enforcer.
 
 | Item | Value |
 | --- | --- |
 | Repository | `phylaxsystems/credible-std` |
 | Stable dependency | `phylaxsystems/credible-std@0.8.1` |
-| Development dependency | `phylaxsystems/credible-std` |
+| Reviewed source | `phylaxsystems/credible-std@fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0` |
+| npm package | `@phylax-systems/credible-std@0.8.1` |
 | Foundry remapping | `credible-std/=lib/credible-std/src/` |
+
+The npm package includes raw ABI arrays under `artifacts/`, such as `artifacts/PhEvm.json` and `artifacts/protection/safe/SafeTxShapeAssertion.json`. Paths mirror `src/`; additional interfaces in one source file use `SourceName.InterfaceName.json`. These files contain ABI arrays, not deployment bytecode.
+
+Protocol guards live in [`credible-registry`](./credible-layer-contracts#credible-block-guard), separately from this assertion library.
 
 ## Core Contracts
 
@@ -32,16 +37,17 @@ Choose the assertion specification supported by your target Ethereum deployment.
 | `TriggerRecorder.sol` | Interface used by `Assertion` to register assertion triggers. |
 | `SpecRecorder.sol` | Defines `AssertionSpec` and records whether an assertion uses `Legacy`, `Reshiram`, or `Experimental` precompile access. |
 | `StateChanges.sol` | Typed helpers for legacy state-change arrays. |
-| `ForkUtils.sol` | Helper functions for Reshiram-style snapshot reads and ERC20 balance delta workflows. |
-| `CredibleTest.sol` | Forge test base that exposes `cl.assertion(...)`. |
+| `utils/ForkUtils.sol` | Snapshot getter calls, typed return decoding, and ERC20 balance delta helpers. |
+| `Sensitivity.sol` | Anomaly trigger levels from 1 to 10; higher levels fire more often. |
+| `CredibleTest.sol` | Test base for `pcl test` that exposes `cl.assertion(...)`. |
 
 ## Assertion Helpers
 
 `Assertion.sol` provides internal helpers for registering when assertion functions run.
 
-### Legacy Trigger Helpers
+### Call, Storage, and Balance Helpers
 
-Use these helpers for the pre-Reshiram trigger APIs:
+These helpers predate Reshiram. Storage triggers remain useful for configuration policies; the current Safe configuration assertion uses one.
 
 ```solidity
 function registerCallTrigger(bytes4 fnSelector) internal view;
@@ -73,9 +79,15 @@ function watchCumulativeInflow(
 ) internal view;
 ```
 
-The cumulative flow helpers collect inflow or outflow into one bucket per block and evaluate those per-block buckets over the configured rolling window.
+The cumulative flow helpers aggregate net flow into per-block buckets over a rolling window. They trigger when the measured flow strictly exceeds the threshold, based on the balance at the window start. See [Cumulative Flow Policies](../assertions-book/assertions/ass20-erc20-drain) for accounting and boundary behavior.
 
 `registerFnCallTrigger` pairs with `ph.context()` so an assertion can inspect the matched call's selector and call range.
+
+### Anomaly Triggers
+
+`watchAnomaly(target, fnSelector, sensitivity)` registers a check at a sensitivity level from 1 to 10. `Sensitivity.RECOMMENDED` is level 7. The trigger decides whether to run the assertion; the assertion's logic decides whether to reject the transaction.
+
+Anomaly dispatch requires runtime support. The released PCL version tested in the [anomaly guide](../assertions-book/assertions/anomaly-gated-policies) does not dispatch these triggers; compiling the interface is insufficient.
 
 ## Fork and Snapshot Helpers
 
@@ -101,6 +113,16 @@ function loadStateAt(address target, bytes32 slot, PhEvm.ForkId calldata fork)
 ```
 
 For packed storage or mappings, calculate the exact slot before calling `loadStateAt`.
+
+A `ForkId` identifies a snapshot; constructing one does not switch EVM state. Ordinary getter calls and native `.balance` reads do not become snapshot reads. Use `ph.staticcallAt` for protocol getters, or these inherited [`ForkUtils` helpers](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/src/utils/ForkUtils.sol):
+
+| Helper | Result |
+| --- | --- |
+| `_viewAt(target, data, fork)` | Raw return bytes from the getter call. |
+| `_readUintAt`, `_readUint8At`, `_readAddressAt`, `_readBoolAt` | A decoded value; each takes `(target, data, fork)`. |
+| `_readBalanceAt(token, account, fork)` | The ERC20 `balanceOf(account)` result at that snapshot. |
+
+The helpers forward 500,000 gas and revert if the snapshot call fails. Typed helpers also revert if the returned bytes cannot be decoded. When calling `ph.staticcallAt` directly, check `result.ok` before decoding `result.data`.
 
 ## ERC20 Delta Helpers
 
@@ -184,7 +206,7 @@ Available specs:
 
 ## Testing Contracts
 
-`CredibleTest` is the base contract for local Forge tests. It exposes `cl.assertion(...)`, which registers an assertion against a target contract for the next transaction in a test.
+`CredibleTest` is the base contract for tests run with `pcl test`. It exposes `cl.assertion(...)`, which registers an assertion against a target for the next call and selects one assertion function. This does not reproduce production dispatch of every matching assertion. Use the repository's optimized `ci` profile for its protection tests; see [gas-limit testing](./testing-assertions#gas-limits).
 
 ```solidity
 interface VmEx {
