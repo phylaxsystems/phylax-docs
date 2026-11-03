@@ -157,7 +157,6 @@
                 "group": "Ethereum Integration",
                 "pages": [
                   "credible/dapp-integration",
-                  "credible/ethereum-builder-integration",
                   "credible/managing-policy-deployments",
                   "credible/testing-credible-block-guard",
                   "credible/testing-strategy"
