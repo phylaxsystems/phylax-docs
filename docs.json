@@ -19,7 +19,7 @@
     },
     {
       "source": "/credible/dapp-incidents",
-      "destination": "/credible/managing-your-circuit-breakers"
+      "destination": "/credible/investigate-rejected-transaction"
     },
     {
       "source": "/credible/accelerate-with-ai",
@@ -63,7 +63,7 @@
     },
     {
       "source": "/credible/dapp-invalidations",
-      "destination": "/credible/managing-your-circuit-breakers"
+      "destination": "/credible/investigate-rejected-transaction"
     },
     {
       "source": "/credible/dapp-integrations",
@@ -116,6 +116,7 @@
                   "credible/assign-protocol-manager",
                   "credible/setting-up-alerting",
                   "credible/managing-your-circuit-breakers",
+                  "credible/investigate-rejected-transaction",
                   "credible/dapp-explorer"
                 ]
               },

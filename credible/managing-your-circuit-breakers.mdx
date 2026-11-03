@@ -1,6 +1,6 @@
 ---
 title: 'Review and deploy changes'
-description: 'Review, deploy, replace, and remove circuit-breaker releases, and investigate rejected transactions.'
+description: 'Review, deploy, replace, and remove circuit-breaker releases.'
 ---
 
 Use the [Phylax platform](https://ethereum.phylax.systems) to review and deploy circuit-breaker releases. Your Protocol Manager signs deployments and removals. Assertions are managed as a complete release; you cannot remove them individually from an active release.
@@ -96,29 +96,6 @@ Assertions remain enforced until their deactivation blocks. A removed release ca
 
 For an emergency, follow your agreed [fallback and recovery procedure](./work-with-phylax#fallback-paths-and-recovery).
 
-## Investigate a Rejected Transaction
+<span id="investigate-a-rejected-transaction" />
 
-Open **All invalidations**. **Prevented** lists transactions blocked by enforcement; **Alert-only** lists violations observed without blocking live transactions; **Simulated** lists simulation results. Filter by assertion name and select an event.
-
-<Frame caption="Invalidations are grouped by outcome; this example has alert-only and simulated events">
-  <img src="/images/platform/invalidations.png" alt="All invalidations showing no prevented events, two alert-only events, and five simulated events" />
-</Frame>
-
-Open the transaction replay. Read the rejection reason in **Replay overview**, then compare **Transaction Execution** with **Assertion Evaluation** under **Execution evidence**.
-
-<Tabs>
-  <Tab title="Rejection Reason">
-    <Frame caption="The replay identifies the assertion and its outflow-limit rejection reason">
-      <img src="/images/platform/invalidation-replay.png" alt="Replay overview showing a withdrawal rejected by TradingVaultOutflowAssertion because the outflow limit was exceeded" />
-    </Frame>
-  </Tab>
-  <Tab title="Execution Evidence">
-    <Frame caption="The transaction succeeds in the replay, but the assertion rejects its outcome">
-      <img src="/images/platform/invalidation-evidence.png" alt="Replay evidence showing a 1,000 demoUSD transfer, successful transaction execution, and a rejected assertion evaluation" />
-    </Frame>
-  </Tab>
-</Tabs>
-
-This event is **Alert-only**. The **Transaction rejected** badge describes the replay result, not a live transaction being blocked. **What changed** shows the transfers and other events from that replay. An onchain guard revert is a separate event from an assertion rejection.
-
-To send violations to your team, follow [Setting Up Alerting](./setting-up-alerting).
+For invalidation analysis, follow [Investigate a Rejected Transaction](./investigate-rejected-transaction).
