@@ -17,7 +17,7 @@ The legacy `IntraTxOracleDeviationAssertion` intends to compare each update with
 
 ## Adaptation requirements
 
-For a writable oracle, bind each observed update to its call ID and read at that call's boundary. For a lending operation, inspect the oracle result actually consumed by that operation. A consumed value can differ from both stored endpoints. The [Aave adapters](./protocol-adapters#aave) illustrate version-specific consumed-price checks.
+For a writable oracle, bind each observed update to its call ID and read at that call's boundary. For a lending operation, inspect the oracle result actually consumed by that operation. A consumed value can differ from both stored endpoints. The [Aave oracle examples](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/aave/README.md) illustrate version-specific consumed-price checks.
 
 ## Scenarios
 

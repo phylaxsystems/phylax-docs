@@ -30,7 +30,7 @@ These outcomes describe the timestamp comparison once the read is bound to the c
 | Timestamp is in the future | Unsigned subtraction reverts |
 | Fresh timestamp accompanies a manipulated price | Freshness alone does not reject it |
 
-Use [oracle checks on risk-increasing calls](./reusable-patterns#oracle-reduce-only-gate) for an independent reference comparison. Protocols with in-transaction price updates need a check on the consumed price, as in the [Aave adapters](./protocol-adapters#aave).
+Use [oracle checks on risk-increasing calls](./reusable-patterns#oracle-reduce-only-gate) for an independent reference comparison. Protocols with in-transaction price updates need a check on the consumed price, as in the [Aave oracle examples](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/aave/README.md).
 
 ## Legacy source
 

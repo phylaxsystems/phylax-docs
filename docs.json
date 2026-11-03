@@ -307,7 +307,6 @@
               "assertions-book/assertions/use-cases-index",
               "assertions-book/assertions/run-an-example",
               "assertions-book/assertions/reusable-patterns",
-              "assertions-book/assertions/protocol-adapters",
               {
                 "group": "Access Control and Administrative Changes",
                 "pages": [

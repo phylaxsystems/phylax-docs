@@ -5,7 +5,7 @@ description: "Choose a circuit breaker or assertion pattern for the operation yo
 
 Choose a pattern by the transaction you need to constrain. Each reference describes the measured quantity, configuration, expected outcomes, and coverage limits.
 
-This edition is reviewed against [credible-std at `fe49de6`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0), dated October 28, 2026. Examples are starting points for a policy tied to your deployed contracts. **A contract with no registered triggers enforces nothing.** The [protocol adapter reference](./protocol-adapters) identifies these quarantined examples.
+This edition is reviewed against [credible-std at `fe49de6`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0), dated October 28, 2026. Examples are starting points for a policy tied to your deployed contracts. **A contract with no registered triggers enforces nothing.**
 
 ## Start with a working example
 
@@ -13,7 +13,6 @@ This edition is reviewed against [credible-std at `fe49de6`](https://github.com/
 - [Compose an ERC-4626 policy](./vault-policies): combine call-level share-price checks with a rolling outflow cap.
 - [Configure a Balancer Vault breaker](./balancer-outflow): select the custody address, token, threshold, and window.
 - [Reusable patterns](./reusable-patterns): accounting, call results, account health, oracle gates, configuration, and tiered limits.
-- [Protocol adapters](./protocol-adapters): find version-specific implementations and their current restrictions.
 
 ## Limit token flow
 

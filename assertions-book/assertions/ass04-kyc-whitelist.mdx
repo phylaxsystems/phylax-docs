@@ -29,7 +29,7 @@ The source calls the registry directly. Adapt that lookup to an explicit snapsho
 
 ## Coverage limits
 
-The template does not check recipients or the original transaction sender. Its `CALL` filter and bounded scan are not complete coverage of arbitrary proxy or batch traces. Test the deployed call structure, including batches above the scan bound. For address-argument screening, see the [Cap adapter](./protocol-adapters#cap).
+The template does not check recipients or the original transaction sender. Its `CALL` filter and bounded scan are not complete coverage of arbitrary proxy or batch traces. Test the deployed call structure, including batches above the scan bound. For address-argument screening, see the [Cap example](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/cap/src/CapOfacComplianceAssertion.sol).
 
 ## Source
 

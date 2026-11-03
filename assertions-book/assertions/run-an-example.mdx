@@ -111,4 +111,4 @@ Replace the teaching target with your deployed contract's layout and call paths.
 
 For a constructor with configuration arguments, append `abi.encode(...)` to its creation code when calling `cl.assertion`. Do not fetch protocol state in that constructor: the assertion deployment runtime is isolated from the test's contract state. Pass addresses explicitly and read protocol state during assertion execution.
 
-Continue with the [ERC-4626 policy](./vault-policies) or a [protocol adapter](./protocol-adapters). Test each selected assertion function through a matching trigger. Before deployment, run historical backtests and scenarios on a replica of your protocol in [alerting](/credible/testing-strategy).
+Continue with the [ERC-4626 policy](./vault-policies). Test each selected assertion function through a matching trigger. Before deployment, run historical backtests and scenarios on a replica of your protocol in [alerting](/credible/testing-strategy).
