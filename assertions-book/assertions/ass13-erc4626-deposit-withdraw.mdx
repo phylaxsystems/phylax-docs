@@ -1,33 +1,34 @@
 ---
-title: ERC4626 Deposit and Withdraw Share Price
-description: Reference pattern for checking ERC4626 deposit and withdraw calls against share-price dilution
+title: "Deposit and Withdrawal Share Price"
+description: "Check share-price endpoints around two ERC-4626 operations"
 ---
 
-import ass13Erc4626DepositWithdraw from "/snippets/ass13-erc4626-deposit-withdraw.a.mdx";
+import Example from "/snippets/ass13-erc4626-deposit-withdraw.a.mdx";
 
-## When to Use This Pattern
+A deposit mints too many shares, diluting existing holders. This template rejects a lower asset-per-share ratio after a deposit or withdrawal.
 
-Use this pattern when ERC4626 deposit or withdraw calls must not dilute existing or remaining shares. It applies to yield aggregators, lending protocols with ERC4626 interest-bearing tokens, liquidity pools using ERC4626 shares, and staking protocols with ERC4626 receipt tokens.
+## Behavior
 
-This pattern checks share-price monotonicity around matched deposit and withdraw calls. It does not cover mint/redeem entry points or batch-wide preview-function validation.
+`ERC4626DepositWithdrawAssertion` registers standard `deposit(uint256,address)` and `withdraw(uint256,address,address)` selectors. With assets in slot `0` and supply in slot `1`, it requires `postAssets × preSupply >= preAssets × postSupply`. It skips the comparison when either share supply is zero.
 
-## What This Pattern Checks
+## Configuration
 
-Checks ERC4626 share-price safety around deposit and withdraw calls:
+Replace the toy slots with the vault's actual accounting. For real vaults, prefer the [reusable ERC-4626 policy](./vault-policies), which reads the interface at explicit snapshots, includes mint and redeem, and supports a tolerance.
 
-- `registerAssertionSpec(AssertionSpec.Reshiram)`: Registers the assertion as a Reshiram assertion.
-- `registerFnCallTrigger()`: Runs the assertion around `deposit` and `withdraw` calls.
-- `ph.context()`: Reads the current call frame.
-- `PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart})` / `PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd})`: Reads pre-call and post-call snapshots.
-- `ph.loadStateAt()`: Loads total assets and total supply at each snapshot.
+## Scenarios
 
-## Assertion Pattern
+| Transaction | Result |
+| --- | --- |
+| 100 assets/100 shares becomes 110/110 | Accepted: ratio remains 1 |
+| 100/100 becomes 110/120 | Rejected: existing shares are diluted |
+| First deposit starts from zero supply | Ratio check is skipped |
 
-<ass13Erc4626DepositWithdraw />
+## Coverage limits
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+The example has no rounding tolerance, omits mint and redeem, and uses potentially overflowing products. It permits share-price increases and does not prove that tokens reached the vault. Legitimate fees or loss recognition can lower the ratio; test those paths before applying a no-decrease policy.
 
-## Related Patterns
+## Source
 
-- [ERC4626 Assets to Shares](./ass12-erc4626-assets-to-shares): simple base invariant check
-- [Harvest Increases Balance](./ass18-harvest-increases-balance): yield operation validation
+The [reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass13-erc4626-deposit-withdraw.a.sol) is a teaching template. The [example setup guide](./run-an-example) provides the pinned checkout and test procedure.
+
+<Example />

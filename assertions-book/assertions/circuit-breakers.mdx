@@ -1,140 +1,68 @@
 ---
-title: 'Circuit breakers'
-description: 'Overview of cumulative and rate-of-change circuit breakers for ERC20 balance changes'
+title: "Circuit Breakers"
+description: "How cumulative flow, rate, and anomaly-gated policies constrain transactions"
 ---
 
-Circuit breakers enforce configured limits on ERC20 balance changes. They can reject a candidate transaction before it settles. This page compares cumulative and rate-of-change controls.
+A circuit breaker rejects a candidate transaction when its configured condition is met. The policy must identify the custody address, measured asset, observation period, and permitted operations. A rejected transaction does not itself set a persistent pause flag in your protocol.
 
-## What they watch
+## Choose the measured condition
 
-- **Adopter:** The contract protected by the assertion.
-- **Token:** The ERC20 balance being watched.
-- **Direction:** Tokens entering or leaving the adopter.
-- **Time:** Balance changes across blocks and transactions.
-
-## Circuit breaker types
-
-<CardGroup cols={3}>
-  <Card title="Cumulative outflow" icon="arrow-up-right-from-square" href="./ass20-erc20-drain">
-    Limits net tokens leaving the adopter over a rolling window.
-  </Card>
-  <Card title="Cumulative inflow" icon="arrow-down-to-square" href="./ass22-erc20-inflow-breaker">
-    Limits net tokens entering the adopter over a rolling window.
-  </Card>
-  <Card title="Rate of change" icon="gauge-high" href="./rate-of-change-circuit-breakers">
-    Lets an assertion limit how quickly the watched balance changes.
-  </Card>
-</CardGroup>
-
-## How cumulative and rate limits work together
-
-Cumulative and rate-of-change limits use different semantics. A cumulative limit measures total net flow over a rolling window, while a rate limit measures how quickly the balance changes. An assertion can enforce either policy or both. Both policies use a matching cumulative watcher to invoke the assertion. For a rate limit, the assertion reads the rolling-window rate data during that callback.
-
-| Risk | Circuit breaker |
-| --- | --- |
-| Too many tokens leave over time | Cumulative outflow |
-| Too many tokens enter over time | Cumulative inflow |
-| The balance changes too quickly | Rate of change |
-| Total flow and flow speed must both be bounded | Cumulative and rate of change |
-
-When checks are combined, the assertion can reject a transaction when either limit is exceeded.
-
-## Why use a Phylax circuit breaker
-
-A protocol-integrated circuit breaker protects the execution paths wired through it.
-
-A Phylax circuit breaker runs as an assertion before the transaction settles. It watches the actual ERC20 balance change of the adopter.
-
-| | Protocol-integrated circuit breaker | Phylax circuit breaker |
+| Policy | Observation | Example |
 | --- | --- | --- |
-| Coverage | Covers paths integrated with the breaker | Covers observed changes to the adopter's watched ERC20 balance |
-| Measurement | Defined by the protocol integration | Uses the observed balance change |
-| Time window | May require counters or buckets in protocol storage | Keeps rolling buckets outside the protected protocol |
-| Protocol code | Adds hooks, state, and audit surface | Adds no breaker code or storage to the protocol |
-| User gas | May include breaker calls and storage writes | Adds no protocol-side gas for breaker accounting |
-| Changes | Integration may require a protocol upgrade or wrapper | Uses an assertion release without changing protocol code |
+| [Cumulative outflow](./ass20-erc20-drain) | Net ERC-20 outflow over a rolling window | Limit withdrawals accumulated across several transactions |
+| [Cumulative inflow](./ass22-erc20-inflow-breaker) | Net ERC-20 inflow over a rolling window | Limit sudden deposits or donations |
+| [Flow rate](./rate-of-change-circuit-breakers) | Directional block and window rates during cumulative dispatch | Reject a rapid movement that also clears the dispatch threshold |
+| [Anomaly-gated effects](./anomaly-gated-policies) | Transaction effects, checked only after an anomaly trigger | Reject a model-flagged transaction that also drains reserves or changes a proxy |
 
-Because enforcement runs as an assertion, the protocol does not need breaker-specific hooks or storage. The assertion can reject a candidate transaction when it exceeds the configured policy.
+Use the [Balancer example](./balancer-outflow) for a concrete shared-custody policy, or the [ERC-4626 example](./vault-policies) to combine flow limits with operation checks.
+
+## What a cumulative limit measures
+
+A cumulative watcher measures one ERC-20 balance at the assertion adopter. The executor records block buckets and compares directional **net** flow with the balance baseline for the retained window, exposed as `tvlSnapshot`.
+
+For outflow, incoming tokens offset outgoing tokens. For inflow, outgoing tokens offset incoming tokens. The limit is not a sum of gross transfers, a USD valuation, or the protocol's reported `totalAssets()`.
+
+The callback runs when net flow is **strictly greater** than the configured basis-point threshold. It decides whether to reject. The simple hard-breaker examples always revert when invoked.
+
+For a 100,000-token baseline and a 1,000-bps outflow threshold:
+
+| Window activity | Net outflow | Result |
+| --- | ---: | --- |
+| 10,000 tokens leave | 10,000 | At the threshold; no breach |
+| 6,000 leave, then 4,001 would leave | 10,001 | The second transaction breaches the threshold |
+| 15,000 leave and 5,000 enter | 10,000 | At the threshold after netting |
+
+As old buckets expire, both the retained flow and its baseline can change. A new budget can therefore become available without an administrative reset. Choose the window around the time your team needs to investigate and act.
+
+## Match the custody boundary
+
+A watcher on a pool address cannot measure assets held by a different vault. A watcher on a shared vault combines flows from its pools. Strategy deposits can look like outflow from idle custody even when total portfolio value is unchanged.
+
+Use the actual ERC-20 and custody addresses, and test the token's transfer behavior. Native ETH, rebases, external strategies, and asynchronous settlement need an accounting model that represents those movements. A threshold does not by itself guarantee a maximum loss.
 
 ## Bucket ingestion and balance reconstruction
 
-On mainnet, the per-block buckets behind a cumulative watcher are not written while a block is being built. The executor ingests each complete canonical block after it has been executed, using the block's ERC20 `Transfer` logs and the adopter's post-block token balance. Ingestion runs concurrently with block building, so bucket history can lag the chain tip and a candidate transaction can be validated before the buckets for one or more recent blocks exist. Ingested blocks can also land partway through building a block. Each transaction reads the latest ingested history at the time it is validated, so two transactions in the same block can be evaluated against different histories: an earlier one against reconstructed buckets and a later one against exact buckets.
+The executor ingests completed canonical blocks using ERC-20 transfer logs and post-block balances. Ingestion can lag block building. During evaluation, missing history is reconstructed from the difference between the latest recorded balance and the candidate's pre-transaction balance, spread across the missing blocks. These reconstructed buckets are temporary; canonical ingestion supplies the durable history.
 
-We do not expect history to be behind by more than one block on a regular basis, and any practical window is far longer than that. The missing blocks are always the newest blocks before the candidate transaction, so they lie inside the rolling window. The rest of this section assumes that.
+The reconstructed gap preserves its total net balance change. It cannot recover offsetting transfers or their exact timing. If the gap crosses the rolling cutoff, its allocation between expired and retained buckets can also differ from the original history.
 
-When the history is behind, the executor still runs the check. It reconstructs the missing buckets for that evaluation only:
-
-1. It derives the adopter's token balance immediately before the candidate transaction from the current state and compares it with the balance recorded in the latest known bucket.
-2. It treats the difference as the net flow of the gap and spreads it evenly across the missing blocks, interpolating bucket timestamps between the last known block and the candidate block. If only earlier transactions in the current block are missing, the difference is added to the current block's bucket instead.
-3. It evaluates the threshold against the reconstructed window plus the candidate transaction's own transfers.
-
-Reconstructed buckets are never persisted. Durable history is updated only by block ingestion, so as soon as the missing blocks are ingested, later transactions are evaluated against the exact per-block data.
-
-### Effect on the circuit breaker trigger
-
-When a transaction arrives at block N and the last stored bucket is block M with M < N-1, the blocks in between are missing. We pick the last stored bucket as the anchor, and we fill the gap like this:
-1. Compare the anchor's end-of-block balance with the candidate's pre-transaction balance.
-2. Divide the difference evenly across the missing blocks.
-3. Splice those fake buckets into a clone of the state and evaluate on it. The fake buckets are thrown away and not persisted.
-
-Because the missing blocks lie inside the window, the reconstructed buckets sum exactly to the real net balance change of the gap, and the cumulative check sees the same net flow it would see with complete buckets.
-
-**False triggers can only occur at the window boundary.** If a missing block has already aged out of the window, the even split still drops a share of that block's movement into the later gap blocks, which are inside the window. This requires history to be behind by more than the window itself, which we do not expect to happen:
-
-```mermaid
-flowchart LR
-    B1["Bucket 1 · stored anchor<br>expired"]
-    B2["Bucket 2 · missing<br>actual: 150 out<br>reconstructed: 50<br>expired"]
-
-    subgraph WINDOW["Active window · buckets 3–5"]
-        direction LR
-        B3["Bucket 3 · missing<br>actual: 0<br>reconstructed: 50"]
-        B4["Bucket 4 · missing<br>actual: 0<br>reconstructed: 50"]
-        B5["Bucket 5 · candidate<br>current flow: ε ≥ 0"]
-
-        B3 --> B4 --> B5
-    end
-
-    RESULT["Threshold 100<br>actual in window: ε · PASS<br>reconstructed: 100 + ε ≥ 100 · FALSE TRIGGER"]
-
-    B1 --> B2
-    B2 -. "150 delta is split evenly<br>across blocks 2–4" .-> B3
-    B5 --> RESULT
-
-    classDef expired fill:#E2E8F0,stroke:#475569,color:#0F172A,stroke-width:1.5px
-    classDef reconstructed fill:#FEF3C7,stroke:#B45309,color:#78350F,stroke-width:2px
-    classDef current fill:#DBEAFE,stroke:#1D4ED8,color:#1E3A8A,stroke-width:1.5px
-    classDef failure fill:#FEE2E2,stroke:#B91C1C,color:#7F1D1D,stroke-width:2px
-
-    class B1,B2 expired
-    class B3,B4 reconstructed
-    class B5 current
-    class RESULT failure
-
-    style WINDOW fill:#EFF6FF,stroke:#2563EB,color:#1E3A8A,stroke-width:1px
-```
-
-Gross flow is a separate matter. Inflows and outflows that offset each other inside the gap cancel out in the balance difference, so the reconstructed gross outflow is always less than or equal to the real gross outflow. A limit on gross flow can therefore undercount while history is behind. We don't recommend any direct changes to your circuit breaker design for this edge case.
-
-### Effect on trigger context
-
-Reconstruction recovers the exact net balance change, but not the individual transfers behind it. Inflows and outflows that offset each other within the gap cancel out and cannot be recovered.
-
-| Context fields | Under reconstruction |
+| Observation | Reconstruction limit |
 | --- | --- |
-| `cumulativeOutflow`, `cumulativeInflow` | Exact. Net flow is derived from the balance difference. |
-| `absoluteOutflow`, `absoluteInflow` | May undercount. Only the net direction of the gap is attributed as gross flow. |
-| `peakRateBps`, `lastRateBps`, `meanRateBps` | Approximate. Gap flow is spread evenly across the missing blocks. |
-| `tvlSnapshot`, `windowStart`, `currentBps` | Approximate when the earliest retained bucket falls inside the gap. |
+| Net flow across the entire gap | Preserves the observed balance difference |
+| Gross inflow and outflow | Can undercount transfers that cancel in the balance difference |
+| Peak, latest, and mean rates | Approximate because movement is spread across missing blocks |
+| Window baseline and percentage | Can differ when the earliest retained bucket is reconstructed |
 
-<Warning>
-An assertion that enforces a limit on `absoluteOutflow` or `absoluteInflow` can miss gross flow that occurred while bucket history was behind, so it may accept a transaction it would reject with complete buckets.
-</Warning>
+Do not treat gross-flow or rate context as an exact replay when history was reconstructed. The [rate reference](./rate-of-change-circuit-breakers) gives the field definitions and formulas.
 
-If your circuit breaker uses `absoluteOutflow` or `absoluteInflow` to get the total token flow values, please be aware that the values you are reading might be derived from the above mechanism and approximate. Please keep this in mind when designing the limits, as the gross figures can undercount.
+## Test the condition and dispatch separately
+
+A callback test can prove that the assertion rejects a particular context. It cannot prove that the executor invokes the callback at the correct rolling threshold. Local `pcl test` does not simulate cumulative window dispatch.
+
+Use an executor-backed environment for multiple transactions, threshold equality, opposite-direction flow, expired buckets, and zero balance baselines. Test legitimate strategy movements and emergency operations alongside violating transactions. A tiered policy must prove that an exception caused the allowed effect; the presence of a liquidation call alone is insufficient.
 
 ## Monitoring and incident response
 
-Circuit breakers constrain token flow rather than a specific attack path, so they can limit the impact of different exploit classes, including attacks that begin with oracle manipulation. They bound flow within the configured rolling window; they do not replace monitoring or incident response.
+Choose limits from observed protocol activity and the scenarios your team needs to stop. Backtest them, then exercise the policy on a replica of your protocol on an Ethereum fork in [alerting](/credible/testing-strategy). Your FDE can help distinguish intended transactions from rejections that require policy changes.
 
-Choose a window long enough for your team to receive an invalidation alert, investigate, and apply mitigation before earlier flow ages out of the window. Before production, [validate the threshold and window in alerting](../../credible/testing-strategy#3-observe-alerting-behavior) and [configure invalidation notifications](../../credible/setting-up-alerting).
+[Configure Slack alerts](/credible/setting-up-alerting) and use the rejection details to investigate before earlier flow ages out of the window. Threshold changes and release updates remain subject to [your team's signing authority](/credible/managing-your-circuit-breakers).

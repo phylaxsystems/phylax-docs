@@ -1,34 +1,36 @@
 ---
-title: Implementation Address Change
-description: Assert that the address of an implementation has not changed unexpectedly
+title: "Implementation Address Lock"
+description: "Detect a change to a configured proxy implementation slot"
 ---
 
-import ass1ImplAddrChange from "/snippets/ass1-implementation-change.a.mdx";
+import Example from "/snippets/ass1-implementation-change.a.mdx";
 
-## When to Use This Pattern
+A proxy must keep its current implementation until your team approves an upgrade. This example rejects a transaction whose final implementation address differs from its initial address.
 
-Prevents unauthorized changes to proxy implementation addresses, which could allow attackers to replace contract logic with malicious code. Critical for proxy-based upgradeable contracts in DeFi protocols (lending pools, yield aggregators), governance systems with timelocks, and cross-chain bridges.
+## Behavior
 
-For example, it's possible to define a whitelist of allowed implementations - any other implementation would be considered an invalid state.
+`ImplementationChangeAssertion` registers a transaction-end check. It reads slot `0` at `_preTx()` and `_postTx()` with `ph.loadStateAt`, then requires the decoded addresses to match.
 
-## What This Pattern Checks
+## Configuration
 
-Monitors changes to the implementation address storage slot in proxy contracts using:
+Replace `IMPLEMENTATION_SLOT` with the slot used by the deployed proxy. Slot `0` is a teaching layout; it is not the ERC-1967 implementation slot. Attach the assertion to the proxy whose storage contains that slot.
 
-- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Compare implementation address before and after transaction
-- `ph.loadStateAt()`: Load the implementation slot at each snapshot
-- `registerTxEndTrigger()`: Trigger when implementation address changes
+The example has no constructor arguments and no approved-upgrader exception. A legitimate upgrade also fails while this lock is active. Coordinate a policy change through [your deployment process](/credible/deploy-assertions-dapp) before the upgrade.
 
-The assertion performs a direct pre/post comparison of the protected implementation slot.
+## Scenarios
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+| Transaction | Result |
+| --- | --- |
+| Implementation A remains A | Accepted |
+| Implementation A becomes B | Rejected, including an authorized upgrade |
+| Implementation changes to B, then returns to A in the same transaction | Accepted by this endpoint check |
 
-## Assertion Pattern
+## Coverage limits
 
-<ass1ImplAddrChange />
+This checks one stored address. It does not prove that the implementation is safe, protect other admin slots, or detect temporary changes restored before transaction end. For Safe configuration, use the [Safe adapter](./protocol-adapters#safe).
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+## Source
 
-## Related Patterns
-- [Owner Change](/assertions-book/assertions/ass05-ownership-change)
-- [Timelock Verification](/assertions-book/assertions/ass09-timelock-verification)
+The [reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass1-implementation-change.a.sol) is a teaching template. The [example setup guide](./run-an-example) provides the pinned checkout and test procedure.
+
+<Example />

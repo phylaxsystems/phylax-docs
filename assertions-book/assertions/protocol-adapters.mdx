@@ -1,0 +1,190 @@
+---
+title: "Protocol Adapters"
+description: "Match current credible-std examples to the deployed protocol and registered checks"
+---
+
+The library's [`examples`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples) directory contains protocol adapters as well as teaching templates. Select an adapter by implementation and behavior, not protocol name alone. Match the chain, proxy implementation, ABI, storage layout, asset set, and custody addresses before using it.
+
+**Registered** below means the source wires the check in `triggers()`. It does not mean the adapter has been approved for your deployment. **Quarantined** means the wrapper registers no triggers and provides no enforcement. An assertion function can remain in a source file without being active.
+
+## Run an adapter's tests
+
+From the [reviewed checkout](./run-an-example#1-check-out-the-reviewed-library), use its Foundry profile. For example:
+
+```bash
+RUST_MIN_STACK=16777216 FOUNDRY_PROFILE=uniswap pcl test
+```
+
+Use `pcl test` for assertion execution. `forge build` verifies compilation only. Local tests use fixtures; they do not establish compatibility with a live deployment or simulate cumulative watcher history.
+
+## Aave
+
+[Source and deployment notes](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/aave/README.md) · profile `aave`.
+
+`AaveV3HorizonOracleAssertion` checks the exact price returns consumed by successful risk-sensitive Pool operations against per-asset pre-transaction baselines. Configure a policy for every active reserve, an asset-specific deviation bound, and a trace limit. It also checks temporary provider, source, and fallback changes. The oracle storage assumptions are tied to Aave v3.3.
+
+For example, a price that is raised for a borrow and restored afterward must still fail if the consumed return exceeds its allowed band. An unchanged final oracle slot is insufficient evidence.
+
+The V4 consumed-oracle adapter follows Spoke-to-oracle calls and their source returns. Its Ethereum Main Spoke variant pins addresses, 14 reserves, and a source graph at block **25,646,732**; review subsequent changes before use.
+
+The V4 Hub and Spoke accounting wrappers, V3 reserve-backing wrapper, and V4 Hub flow-rate breaker are quarantined. Their gaps include fixed scan bounds, token-only mutations that do not trigger a Pool adopter, and directional reversals hidden by net-flow dispatch. The older [Aave V3 case study](./aave-v3-suite) describes a separate repository.
+
+## Aerodrome
+
+[Source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/aerodrome/src/AerodromePoolAssertion.sol) · profile `aerodrome`.
+
+The registered checks compare pool reserves with token custody after covered pool calls, check the swap invariant, and check fee-claim debits from the separate fee custody. Use the pool's stable/volatile math and actual fee contract.
+
+A valid liquidity burn may reduce reserves and custody together. A swap that leaves reported reserves above custody should fail. Fee claims must be checked at the fee holder rather than treated as pool-reserve losses.
+
+## Balancer
+
+[Source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/balancer/README.md) · profile `balancer`.
+
+The current adapter is a per-token net-outflow breaker for the V3 Vault singleton. Pool deposits can offset other pool withdrawals because custody is shared. See [configuration and threshold scenarios](./balancer-outflow).
+
+## Cap
+
+[Source and availability](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/cap/README.md) · profile `cap`.
+
+`CapOfacComplianceAssertion` registers participant checks across supported Cap selectors. It takes an explicit oracle exposing `isListed(address)` and decodes account arguments from the low 160 bits of their ABI words. For example, an unlisted router must not bypass a check on a listed recipient.
+
+It uses `AssertionSpec.Experimental`. Its constructor requires code at the oracle address; confirm that requirement in the isolated assertion deployment runtime before use. Bind the registry and every relevant Cap entry point.
+
+The mint-backing, redemption-gate, liquidation, and OFT-lockbox prototypes are quarantined. Fixed-dollar valuation, netted strategy movements, and incomplete settlement or message attribution prevent those prototypes from serving as deployment policies.
+
+## Curve
+
+[Sources](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/curve/src) · profile `curve`.
+
+| Adapter | Registered scope | Scenario to test |
+| --- | --- | --- |
+| crvUSD controller | Health after risk-increasing operations and liquidation rules | Borrowing lowers health below the required bound |
+| LLAMMA | Post-swap price relative to the active band | A swap finishes outside the permitted band |
+| LlamaLend controller and vault | Available-balance custody, borrow cap, vault previews and controller accounting | A debt increase crosses the cap; a valid Vyper overload still passes |
+| StableSwap NG | Custody, admin balances, fee/oracle bounds, metapool accounting, virtual-price checks | Admin claims exceed token custody |
+| TriCrypto NG | Pool-specific accounting checks | Verify registered checks and tolerances against that pool revision |
+
+These are separate adapters with different assumptions. A helper that scans all loans or bands is not necessarily registered. Check `triggers()` before attributing that coverage to the deployment.
+
+## Euler
+
+[Availability](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/euler/README.md) · profile `euler`.
+
+`EulerUserStorageAccountingAssertion` registers consistency checks between user storage and account views. The separate sandwich example checks call previews, returns, and events; those observations alone do not prove token settlement.
+
+The full EVault bundle, standalone share-price wrapper, and liquidation-quote wrapper are unarmed. Supported pre-operation hooks can change the state used for settlement, so a quote taken before the hook is not always authoritative. Test supported hook behavior before adopting a narrower check.
+
+## Fluid
+
+[Source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/fluid/src/FluidLiquiditySolvencyAssertion.sol) · profile `fluid`.
+
+Despite its name, `FluidLiquiditySolvencyAssertion` registers only monotonicity of persisted supply and borrow exchange prices. Configure the monitored token list and attach it to the Liquidity Layer proxy. Equal prices pass; a persisted decrease fails.
+
+The earlier custody equation was removed because it mixed freshly written totals with prices that had not yet crossed Fluid's persistence threshold. Do not describe this adapter as proof of custody solvency. The other Fluid examples cover fToken conversion rates, vault configuration, and flow policies; match each to its own deployment and supported token model.
+
+## KyberSwap
+
+[Version selection and scope](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/kyber/README.md) · profile `kyber`.
+
+Choose the original or modern MetaAggregationRouter artifact from the verified runtime family. The registered check compares the declared receiver's token balance before and after the exact swap call with its minimum return.
+
+A return value that claims success while the receiver gets too little must fail. Native output, same-token routes, and rebasing/reflection tokens are excluded by this model. Original-family partial-fill exceptions do not apply to the modern artifact. The third-party allowance diagnostic is unarmed because transfer logs do not identify the allowance spender.
+
+## Lido
+
+[Availability](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/lido/README.md) · profile `lido`.
+
+`LidoEasyTrackFlashLoanAssertion` covers `objectToMotion(uint256)`. It uses the motion's actual snapshot block. Same-transaction balance changes matter only when that snapshot is the current block; old motions use historical MiniMe balances. Test both cases so ordinary transfers do not invalidate historical voting.
+
+The generic vault adapters are quarantined. Mellow, Veda, and Lido stVaults have different custody, liability, and withdrawal models; changing an address does not convert one into another.
+
+## Lighter
+
+[Availability](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/lighter/README.md) · profile `lighter`.
+
+The bridge wrapper is quarantined pending implementation binding and proof of root, expiry, and withdrawal causality. The separate ERC-20 outflow breaker remains an explicit flow policy and excludes desert-mode exits. Its arithmetic and constructor tests do not establish cumulative dispatch coverage.
+
+## Mellow
+
+[Availability](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/mellow/README.md) · profile `mellow`.
+
+`MellowSubvaultAllocationAssertion` is an opt-in liquidity policy for a bound Subvault, asset, and aToken. It compares position growth with reserve cash. A position increase can pass that test while later withdrawal is blocked by pause state or account health.
+
+The root-Vault outflow, RiskManager balance, and oracle-report wrappers are quarantined. Idle-custody net flow does not represent the full strategy portfolio, and an accepted report needs a trustworthy prior baseline.
+
+## Nado
+
+[Source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/nado/src/NadoClearinghouseAssertion.sol) · profile `nado`.
+
+The registered Clearinghouse checks cover deposit credit, withdrawal debit, and `rebalanceXWithdraw`. Bind Endpoint, Clearinghouse, SpotEngine, quote asset, and WithdrawPool addresses. Token amounts are converted to the ledger's 18-decimal scale before comparison.
+
+A six-decimal deposit of one token must credit `1e18` ledger units, subject to the configured tolerance. A withdrawal must debit the ledger and release the expected custody. The constructor still accepts flow thresholds, but **flow watchers are not registered**: one address's idle balance does not represent the multi-transaction custody lifecycle.
+
+## Royco
+
+[Availability](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/royco/README.md) · profile `royco`.
+
+The Kernel bundle is narrowed to v1.2-compatible NAV conservation, ordinary non-bypass coverage, and self-liquidation deleveraging. Pin the actual Kernel version before applying those relationships.
+
+The tranche operation and idle-custody flow policies are unarmed. Matching share or return deltas is not enough to prove the official asset movement. Do not apply one formula across mixed v1.2/v1.3 deployments.
+
+## Safe
+
+[Configuration and transaction-shape components](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/src/protection/safe/README.md) · profile `safe`.
+
+`SafeConfigLockAssertion` checks final owner/module sets, minimum owner count and threshold, and configured guard and fallback-handler addresses. Set hashes use ascending-sorted addresses encoded with `abi.encode`. A signer-removal transaction that drops below the configured threshold should fail; an ordinary payment with unchanged configuration can pass.
+
+`SafeTxShapeAssertion` checks direct actions through owner and module entry points, including configured MultiSend batches. Its policy can constrain targets, selectors, native value, delegatecall, module callers, and approval grants. It does not inspect arbitrary effects inside an allowed router. Pair action constraints with effect checks when the router's behavior is part of the risk.
+
+## Spark
+
+[Source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/spark/src/SparkVaultAssertion.sol) · profile `spark`.
+
+The vault adapter registers preview checks, referral overloads, rate accrual, and `take()` accounting. A valid `take()` moves liquidity into managed assets while leaving liabilities and rate state unchanged. A generic rule equating every custody decrease with a decrease in total assets would reject this supported operation.
+
+`SparkLendOraclePriceGuardAssertion` is quarantined until collateral disablement, transfer finalization, and risk-increasing eMode transitions are covered. The SLL stopgap is a separate outflow policy, despite “inflow” in its name: the observed address sends tokens into a venue.
+
+## Symbiotic
+
+[Availability](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/symbiotic/README.md) · profile `symbiotic`.
+
+The vault bundle, standalone flow wrapper, generic rolling breaker, recommended configuration bundle, and relay bundle are quarantined. Outstanding issues include valid self-recipient and fee-on-transfer behavior, batch-claim cost, and unrelated calls used as escape conditions.
+
+The custom configuration contract remains an explicit operator policy. Calibrate it for the deployment. None of these examples can be attached to VaultV2 solely because the names or interfaces resemble V1.
+
+## Tydro
+
+[Version binding](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/tydro/README.md) · profile `tydro`.
+
+The operation-safety adapter is tied to the verified revision-11 L2 Pool on Ink. Its five-argument `finalizeTransfer`, compact amount sentinels, collateral flag, and liquidation receive mode follow that implementation. Test those paths against the pinned Pool; an Aave-like ABI is not sufficient compatibility evidence.
+
+## Uniswap
+
+[V3 adapter](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/uniswap/src/UniswapV3PoolAssertion.sol) · profile `uniswap`.
+
+Registered checks cover active liquidity after mint/burn, oracle accounting, protocol-fee custody, swap price movement, and protocol-fee collection. Test a valid tick crossing, liquidity added outside the current range, and fee collection that leaves pool state consistent.
+
+Do not require the current tick to be divisible by tick spacing. Spacing constrains initialized position ticks. V4 PoolManager checks live separately under [`src/protection/swaps`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/src/protection/swaps); V3 storage and accounting rules do not transfer to V4.
+
+## Veda
+
+[Source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/veda/src/BoringVaultAssertion.sol) · profile `veda`.
+
+`BoringVaultAssertion` registers `enter` and `exit` checks against the configured vault, asset, accountant, and authorized share-only burn callers. Test asset receipt, issued shares, receiver balances, and accountant-rate conversion together.
+
+An exit with zero asset amount is a share-only burn regardless of the supplied asset address. It requires an authorized caller. A malformed asset argument must not turn that path into an unrestricted burn.
+
+## 0x
+
+[Source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/zeroex/src/ZeroExSettlerAssertion.sol) · profile `zeroex`.
+
+The Settler adapter checks registration and the recipient's minimum buy amount on supported execute entry points. Test a route whose reported return is sufficient but whose actual recipient balance increase is too small.
+
+The mainnet swap-introspection wrapper is quarantined and registers no triggers. Its retained parser is research code, not an active guard on every internal venue leg.
+
+## Vault demo
+
+[Example project](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/vault_demo/README.md) · profile `vault-demo`.
+
+Use this small project to study component composition and local testing. For a focused policy that you can compile in the book checkout, see [ERC-4626 Policies](./vault-policies). A demonstration vault does not establish compatibility with a strategy vault's accounting.

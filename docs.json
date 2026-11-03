@@ -301,14 +301,12 @@
             ]
           },
           {
-            "group": "Reference",
+            "group": "Patterns",
             "pages": [
-              {
-                "group": "Assertion Pattern Catalog",
-                "pages": [
-                  "assertions-book/assertions/use-cases-index"
-                ]
-              },
+              "assertions-book/assertions/use-cases-index",
+              "assertions-book/assertions/run-an-example",
+              "assertions-book/assertions/reusable-patterns",
+              "assertions-book/assertions/protocol-adapters",
               {
                 "group": "Access Control and Administrative Changes",
                 "pages": [
@@ -347,9 +345,11 @@
                 "group": "Circuit Breakers",
                 "pages": [
                   "assertions-book/assertions/circuit-breakers",
+                  "assertions-book/assertions/balancer-outflow",
                   "assertions-book/assertions/ass20-erc20-drain",
                   "assertions-book/assertions/ass22-erc20-inflow-breaker",
-                  "assertions-book/assertions/rate-of-change-circuit-breakers"
+                  "assertions-book/assertions/rate-of-change-circuit-breakers",
+                  "assertions-book/assertions/anomaly-gated-policies"
                 ]
               },
               {
@@ -361,6 +361,7 @@
               {
                 "group": "Vault and ERC4626 Security",
                 "pages": [
+                  "assertions-book/assertions/vault-policies",
                   "assertions-book/assertions/ass12-erc4626-assets-to-shares",
                   "assertions-book/assertions/ass13-erc4626-deposit-withdraw",
                   "assertions-book/assertions/ass18-harvest-increases-balance"

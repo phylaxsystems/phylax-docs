@@ -1,33 +1,34 @@
 ---
-title: 'Fee Calculations'
-description: 'Check for unexpected fee changes'
+title: "AMM Fee Allowlist"
+description: "Restrict the fee values stored for stable and volatile pools"
 ---
 
-import ass14FeeVerification from "/snippets/ass14-fee-verification.a.mdx";
+import Example from "/snippets/ass14-fee-verification.a.mdx";
 
-## When to Use This Pattern
+A configuration update sets an unintended trading fee. This template restricts the stored fee to a short allowlist selected by pool type.
 
-Prevents unauthorized fee manipulation in AMMs and DeFi protocols by using a whitelist approach to control fee changes. Critical for AMMs (Velodrome, Aerodrome, Curve), DEX aggregators, lending protocols with origination fees, yield aggregators with performance fees, and cross-chain bridges with transfer fees.
+## Behavior
 
-Unexpected fee changes can lead to unauthorized manipulation, protocol revenue loss, user losses, or market manipulation through fee bypasses.
+At transaction end, `AmmFeeVerificationAssertion` reads fee slot `1` and stable-pool flag slot `2`. Stable pools permit raw fee values `1` or `15`; other pools permit `25` or `30`.
 
-## What This Pattern Checks
+## Configuration
 
-Uses a whitelist approach to control fee changes:
+Replace both slots, the flag decoding, and the allowed values. Confirm the fee denominator in the deployed implementation. A raw value of `30` must not be described as 30 basis points unless the protocol uses a 10,000 denominator.
 
-- `registerTxEndTrigger()`: Detect changes to fee storage slot
-- `ph.loadStateAt()`: Retrieve new fee value after change
-- Maintains hardcoded allowed fee values for stable pools (0.1%, 0.15%) and non-stable pools (0.25%, 0.30%)
+## Scenarios
 
-When triggered, verifies the new fee matches one of the allowed values, preventing unauthorized modifications while allowing proper protocol updates.
+| Transaction | Result |
+| --- | --- |
+| Stable pool stores 15 | Accepted |
+| Stable pool stores 30 | Rejected |
+| Volatile pool stores 30 but sends fees to the wrong recipient | Accepted by this configuration check |
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+## Coverage limits
 
-## Assertion Pattern
+The example does not calculate fees, check recipients, or verify fee distribution. It also permits a transaction to change the pool-type flag and select a fee allowed for the new type. Protect that flag separately if pool type must remain fixed.
 
-<ass14FeeVerification />
+## Source
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+The [reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass14-fee-verification.a.sol) is a teaching template. The [example setup guide](./run-an-example) provides the pinned checkout and test procedure.
 
-## Related Patterns
-- [Price Within Ticks](/assertions-book/assertions/ass15-price-within-ticks)
+<Example />

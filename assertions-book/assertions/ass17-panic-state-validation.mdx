@@ -1,38 +1,34 @@
 ---
-title: 'Emergency State Validation'
-description: 'Ensure protocol behaves correctly during emergency pause states'
+title: "Paused Balance Bound"
+description: "Restrict a recorded balance while the contract was already paused"
 ---
 
-import ass17PanicStateVerification from "/snippets/ass17-panic-state-verificatoin.a.mdx";
+import Example from "/snippets/ass17-panic-state-verificatoin.a.mdx";
 
-## When to Use This Pattern
+A protocol has a paused mode in which a recorded balance may only stay constant or decrease. This template enforces that specific state transition.
 
-Ensures protocols maintain proper security controls during emergency pause states, allowing existing users to withdraw funds while preventing new deposits. Critical for yield aggregators and vaults (Yearn, Beefy), lending protocols with pause mechanisms, DEXs with emergency circuit breakers, cross-chain bridges with pause functionality, and any protocol with emergency pause capabilities.
+## Behavior
 
-Improper handling of pause states can lead to fund lockups, unauthorized access, or users being unable to exit during emergencies.
+`EmergencyStateAssertion` reads the pre-transaction paused flag from slot `0`. If it is false, the check returns. Otherwise, it requires the post-transaction value in balance slot `1` to be no greater than its pre-transaction value.
 
-## What This Pattern Checks
+## Configuration
 
-Monitors protocol balance and pause state to ensure proper emergency behavior using a multi-layered approach:
+Replace both slots and confirm that the direction matches the intended emergency operation. Use a liability counter if the goal is to stop new obligations; do not substitute an asset balance without checking recovery behavior.
 
-- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Capture protocol state before and after transaction
-- `ph.loadStateAt()`: Read the pause and balance slots at pre-transaction and post-transaction snapshots
-- `registerFnCallTrigger()`: Monitor all function calls to the contract
-- Verify protocol balance can only decrease when paused (allowing withdrawals)
-- Detect unauthorized modifications during pause periods
+## Scenarios
 
-The assertion ensures users can withdraw funds during emergencies while preventing new deposits and maintaining protocol state consistency.
+| Transaction | Result |
+| --- | --- |
+| Already paused; recorded balance falls from 100 to 90 | Accepted |
+| Already paused; recorded balance rises from 100 to 110 | Rejected |
+| Unpaused transaction pauses the contract and increases the balance | Not checked |
 
-> **Note:** In the future, this assertion could be optimized with a new trigger type that only fires when a specific storage slot has a specific value (e.g., when the pause flag is true). This would reduce unnecessary assertion checks and improve efficiency.
+## Coverage limits
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+The template does not block withdrawals, prove recovery availability, or measure an ERC-20 balance. Applied to custody, it can permit draining and reject recapitalization. Treat it as a specific stored-counter rule, not a general panic-mode policy.
 
-## Assertion Pattern
+## Source
 
-<ass17PanicStateVerification />
+The [reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass17-panic-state-verificatoin.a.sol) is a teaching template. The [example setup guide](./run-an-example) provides the pinned checkout and test procedure.
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
-
-## Related Patterns
-- [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)
-- [Owner Change](/assertions-book/assertions/ass05-ownership-change)
+<Example />

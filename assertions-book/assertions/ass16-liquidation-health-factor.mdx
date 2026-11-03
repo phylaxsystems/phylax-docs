@@ -1,35 +1,36 @@
 ---
-title: 'Liquidation Health Factor'
-description: 'Permit liquidation only for unhealthy positions'
+title: "Liquidation Health Improvement"
+description: "Use call snapshots to compare health before and after liquidation"
 ---
 
-import ass16LiquidationHealthFactor from "/snippets/ass16-liquidation-health-factor.a.mdx";
+import Example from "/snippets/ass16-liquidation-health-factor.a.mdx";
 
-## When to Use This Pattern
+A liquidation should satisfy the protocol's eligibility and settlement rules. This legacy example intends to require positive repayment and seizure, pre-health at most 100, and post-health above pre-health and at least 120.
 
-Ensures liquidations only occur when positions are unhealthy, preventing unauthorized liquidations of healthy positions and protecting user funds. Critical for lending protocols (Aave, Compound, Morpho), margin trading platforms with position health monitoring, perpetual futures protocols with liquidation mechanisms, and any DeFi protocol using health factors for position solvency.
+<Warning>
+The reviewed upstream example needs correction before production use. The limitation below is present in the linked source; the imported code is preserved for comparison.
+</Warning>
 
-Incorrect health factor validation could lead to unfair liquidations, protocol insolvency, or market manipulation through targeted liquidations.
+## Source limitation
 
-## What This Pattern Checks
+The code creates pre- and post-call fork identifiers but reads `healthFactor` directly both times. Those reads are not bound to different snapshots, so they do not establish health improvement. The constants also use a custom scale of 100, not the usual `1e18`.
 
-Implements multi-layered liquidation health factor verification:
+## Adaptation requirements
 
-- **Pre-liquidation**: `_preTx()` captures health factor before liquidation, verifies position is actually unhealthy
-- **Post-liquidation**: `_postTx()` verifies health factor improves after liquidation
-- **Parameter validation**: `getCallInputs()` monitors liquidation calls, validates seized assets and repaid shares are non-zero, enforces maximum liquidation amounts
-- `registerFnCallTrigger()`: Triggers on liquidation function calls
+Use [PostOperationSolvencyAssertion](./reusable-patterns#post-operation-solvency) as the snapshot-aware starting point. Decode the liquidated account from the exact triggering call, read health at `_preCall(ctx.callStart)` and `_postCall(ctx.callEnd)`, and apply the protocol's scale and liquidation policy.
 
-The assertion ensures only unhealthy positions can be liquidated, liquidations improve position health, and liquidation amounts remain within safe limits for proper protocol risk management.
+## Scenarios
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+| Scenario | Meaning |
+| --- | --- |
+| Health improves from 0.90 to 1.05 on a 1.0 threshold | Meets the newer pattern's improvement and restoration conditions |
+| Health improves from 0.80 to 0.90 | Still fails a full-restoration policy |
+| Collateral is seized without improving health | Should fail an improvement policy |
 
-## Assertion Pattern
+These are scenarios for the replacement policy, not claimed results of the legacy code below. Some protocols permit partial liquidations that remain unhealthy; others can change health discontinuously when debt reaches zero. Test those paths. Health improvement alone does not prove correct repayment, collateral pricing, or liquidation eligibility.
 
-<ass16LiquidationHealthFactor />
+## Legacy source
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+[Reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass16-liquidation-health-factor.a.sol). See [running and adapting examples](./run-an-example) for the pinned library revision.
 
-## Related Patterns
-- [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
-- [Lending Health Factor](/assertions-book/assertions/ass07-lending-health-factor)
+<Example />
