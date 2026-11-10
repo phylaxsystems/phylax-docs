@@ -57,8 +57,8 @@ We welcome contributions to improve our documentation! Here are some ways you ca
    - If adding new pages, add them to `docs.json` to include them in the navigation
    - For Use Cases Book code snippets, update `credible-std/examples/assertions-book/assertions/src` first, then import them into `/snippets`
 4. Test your changes:
+   - Run `pnpm test` to check navigation, redirects, preserved section links, MDX accessibility, broken links, and build validation
    - Run `pnpm dev` to preview locally
-   - Check for broken links using `pnpm broken-links`
 5. Commit your changes with a clear commit message
 6. Push to your fork and create a pull request
 

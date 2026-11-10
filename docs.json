@@ -3,9 +3,9 @@
   "theme": "maple",
   "name": "Phylax Credible Layer Documentation",
   "colors": {
-    "primary": "#2DA2F6",
+    "primary": "#0875C4",
     "light": "#2DA2F6",
-    "dark": "#2DA2F6"
+    "dark": "#0875C4"
   },
   "favicon": "/favicon.png",
   "redirects": [
