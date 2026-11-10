@@ -1,223 +1,101 @@
 ---
-title: 'General Design'
-description: 'How the Credible Layer components work together to enforce security rules'
+title: 'Ethereum Architecture'
+description: 'How participating Ethereum builders, assertions, block markers, and contract guards work together.'
 ---
 
-This page provides an overview of the Credible Layer architecture, how the components fit together and interact to enforce security rules for smart contracts.
+On Ethereum, the Credible Layer combines off-chain assertion validation by participating builders with an on-chain guard on protected operations. The Credible RPC routes submissions to those builders. Ethereum validators do not independently execute Phylax assertions as part of consensus.
 
-<Note>
-Looking for a non-technical introduction? Start with the [Credible Layer Overview](/credible/credible-layer-overview).
-</Note>
+For a shorter introduction, see [How Ethereum Enforcement Works](./credible-layer-overview). The earlier sequencer model is documented separately under [L2 and Sequencer Integrations](./l2-integrations/overview).
 
 ## System Overview
 
-The Credible Layer consists of four core components:
+| Component | Role |
+| --- | --- |
+| Assertions | Solidity rules and triggers that describe the transaction effects a protocol permits. |
+| State Oracle | Records assertion assignments, Protocol Manager authority, and activation or removal timing. |
+| Assertion DA | Supplies assertion bytecode and source artifacts. |
+| Assertion Enforcer / PhEVM | Evaluates applicable assertions against candidate transaction execution state. |
+| Participating builder | Uses validation reports to exclude failing candidates and marks the blocks it builds under that policy. |
+| Credible Registry | Authorizes builders and records credible-block markers. |
+| Contract or wallet guard | Restricts protected operations to credible blocks while its gate is active. |
+| Credible RPC | Routes top-level transaction submissions to participating builders. |
 
-1. **[Assertions](/credible/assertions-overview)**: Security rules written in Solidity that define states that should never occur
-2. **[Assertion Enforcer](/credible/assertion-enforcer)**: Sidecar that validates transactions against assertions during block production
-3. **[Credible Layer Contracts](/credible/credible-layer-contracts)**: On-chain registry that maps assertions to protected contracts
-4. **[Assertion DA](/credible/assertion-da)**: Storage layer for assertion bytecode and source code
+Assertion registration, guard installation, and transaction routing are separate integration steps.
 
 ## How the Credible Layer Works
 
-The Credible Layer is a **sidecar security infrastructure** that validates transactions against developer-defined security rules (assertions) before they are included in blocks. As a sidecar, it runs alongside the L2 network's main components, intercepting transactions during block building and ensuring they don't violate any deployed security rules.
+### Release and Activation
 
-The Assertion Enforcer is operated by the network's block builder or sequencer. Networks that integrate the Credible Layer run this sidecar as part of their block production infrastructure. This means enforcement does not rely on external execution services beyond the network you already trust to include transactions.
+Developers create a release with [`pcl apply`](./apply-assertions). The platform stores artifacts and coordinates review. An authorized Protocol Manager signs the change. The State Oracle determines when it takes effect.
 
-### System Architecture
+The enforcer indexes lifecycle events and caches active assertion bytecode. A pending release does not enforce policies.
 
-```mermaid
----
-title: Credible Layer System Architecture
----
-flowchart LR
-    subgraph dev["Development Tools"]
-        direction TB
-        CLI["pcl"]
-        PLATFORM["Phylax Platform"]
-    end
+### Validation During Block Building
 
-    subgraph storage["Storage"]
-        DA["Assertion DA"]
-    end
+A participating builder sends candidate transaction context to the [Assertion Enforcer](./assertion-enforcer). [PhEVM](./phevm) executes matching assertions against the required state snapshots.
 
-    subgraph network["Network"]
-        direction LR
-        VALIDATOR["Block Builder / Sequencer"]
-        REGISTRY["Credible Layer<br/>Contracts"]
-    end
-
-    subgraph enforcer["Assertion Enforcer (Sidecar)"]
-        direction TB
-        SPACER_E[" "]
-        PhEVM["PhEVM"]
-    end
-
-    CLI -->|"Create release"| PLATFORM
-    PLATFORM -->|"Store"| DA
-    PLATFORM -->|"Coordinate lifecycle"| REGISTRY
-
-    VALIDATOR -->|"Candidate Tx"| PhEVM
-    PhEVM -->|"Valid/Invalid"| VALIDATOR
-    PhEVM -.->|"Fetch"| DA
-    PhEVM -.->|"Check"| REGISTRY
-
-    classDef dev fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
-    classDef storage fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
-    classDef network fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
-    classDef sidecar fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
-    classDef invisible fill:none,stroke:none
-
-    class CLI,PLATFORM dev
-    class DA storage
-    class VALIDATOR,REGISTRY network
-    class PhEVM sidecar
-    class SPACER_E invisible
-```
-
-The diagram shows two main flows:
-
-**Development Flow**: Developers use [`pcl`](/credible/apply-assertions) to develop, test, and prepare assertions for deployment. Running `pcl apply` compiles assertion code and creates a release on the [Phylax platform](https://app.phylax.systems), which handles storing it in [Assertion DA](/credible/assertion-da). An on-chain lifecycle action, such as `pcl deploy` or the platform deployment flow, then activates the release through the [Credible Layer Contracts](/credible/credible-layer-contracts).
-
-**Runtime Flow**: The block builder or sequencer sends transactions to the [Assertion Enforcer](/credible/assertion-enforcer) during block production. The enforcer uses its registry snapshot (from on-chain events) and cached assertion bytecode (from [Assertion DA](/credible/assertion-da)) to execute relevant assertions via [PhEVM](/credible/phevm). The network integration applies its inclusion policy to the resulting validation report.
-
-### How It Works
-
-1. **Assertion Release and Activation**: Developers write assertions and create a release with `pcl apply`. The platform stores the artifact in Assertion DA; a separate on-chain lifecycle action activates it
-2. **Transaction Validation**: The network sends transactions to the Assertion Enforcer during block production
-3. **Assertion Execution**: The Assertion Enforcer simulates each transaction and validates it against relevant assertions using PhEVM
-4. **Validation Results**: The Assertion Enforcer returns valid/invalid results to the block builder or sequencer
-5. **Network Policy**: The network integration uses the validation result when deciding whether to include the transaction
+The builder excludes candidates that fail active production rules. Passing assertions permits consideration for inclusion. It does not guarantee inclusion or finality.
 
 ## Transaction Flow
 
-When a user submits a transaction, it goes through the following validation process:
-
 ```mermaid
----
-title: Transaction Validation Flow
----
-flowchart LR
-    USER["User"] -->|"Submits Transaction"| MP["Mempool"]
-    MP --> BUILDER["Block Builder / Sequencer"]
-    BUILDER -->|"Candidate Tx"| SIDECAR["Assertion Enforcer<br/>(Sidecar)"]
-    SIDECAR -->|"Validation report"| BUILDER
-    BUILDER -->|"Apply inclusion policy"| DECISION{"Include?"}
-    DECISION -->|"Yes"| BLOCK["Block"]
-    DECISION -->|"No"| EXCLUDE["Excluded"]
-
-    classDef user fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
-    classDef mempool fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#fff
-    classDef sidecar fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
-    classDef valid fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
-    classDef invalid fill:#d32f2f,stroke:#b71c1c,stroke-width:2px,color:#fff
-
-    class USER user
-    class MP mempool
-    class SIDECAR sidecar
-    class BLOCK valid
-    class EXCLUDE invalid
+flowchart TD
+    S["Transaction submitter"] --> RPC["Credible RPC"]
+    RPC --> B["Participating builder<br/>runs assertions"]
+    B -->|"Fail"| X["Exclude transaction"]
+    B -->|"Pass and selected"| M["Block with<br/>authorized marker"]
+    M --> G{"On-chain guard"}
+    O["Other builder"] --> G
+    G -->|"Allowed"| P["Protocol checks<br/>and execution"]
+    G -->|"Blocked"| R["Revert"]
 ```
 
-1. **Transaction Submission**: User submits a transaction to the network
-2. **Mempool Entry**: Transaction enters the mempool awaiting selection
-3. **Block Builder Selection**: The block builder picks transactions from the mempool
-4. **Assertion Validation**: Each transaction is validated against deployed assertions
-5. **Inclusion Decision**: The network applies its inclusion policy to the validation report
+For paid transactions, the guard allows execution in a credible block, or when its configured fail-open or authorized bypass condition applies. Otherwise it rejects the protected operation. The Registry also permits [zero-gas-price calls](./credible-layer-contracts#zero-gas-price-calls) without a marker. Ordinary protocol authorization and accounting checks still run.
 
-<Note>
-The Assertion Enforcer is integrated with the block builder. During block production, the block builder invokes the Assertion Enforcer to validate transactions before including them.
-</Note>
+## Decentralized Block Building
+
+The Credible RPC routes transactions to participating builders. A guard restricts protected execution paths when another builder includes a transaction.
+
+The builder marks the block in the **Credible Registry** before protected operations execute. The marker is bound to the expected block timestamp. The guard checks this attestation. It does not execute assertions or verify a cryptographic proof.
+
+The [Trust Model](./trust-model) describes the builder, marker, Registry, and guard assumptions.
+
+### Guard Coverage and Routing
+
+Every protected path must reach a guard. A Safe transaction guard covers owner-authorized execution. Modules need separate controls or a downstream guard.
+
+Configure the Credible RPC on the top-level transaction submitter. Off-chain signers and internally called contracts do not select the route. See [Integration Planning](./dapp-integration).
+
+### Exclusion, Reverts, and Availability
+
+Builder exclusion occurs before inclusion and consumes no onchain execution gas. An included transaction that reverts at a guard consumes gas. A timeout alone cannot distinguish these outcomes.
+
+A guard can relax enforcement under its fallback or bypass conditions. A restrictive assertion may still reject legitimate operations while credible blocks continue. See [Availability and Recovery](./trust-model#availability-and-recovery).
 
 ## Invalidation Lifecycle (Public View)
 
-When an assertion is violated, the invalidation is recorded and exposed for transparency and alerts.
+The integration reports invalidations to the platform and configured alerts. Transaction details remain subject to project access permissions.
 
 ```mermaid
----
-title: Invalidation Lifecycle
----
 flowchart LR
-    ENFORCER["Assertion Enforcer"] --> PLATFORM["Phylax Platform"]
-    PLATFORM --> DASH["The Phylax Explorer"]
-    PLATFORM --> ALERTS["Slack/PagerDuty Alerts"]
-
-    classDef enforcer fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
-    classDef platform fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
-    classDef output fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
-
-    class ENFORCER enforcer
-    class PLATFORM platform
-    class DASH,ALERTS output
+    E["Assertion invalidation"] --> P["Ethereum platform"]
+    P --> V["Private project review"]
+    P --> A["Configured alerts"]
+    P --> X["Public posture where shared"]
 ```
 
-## Integration Paths
-
-<CardGroup cols={2}>
-  <Card title="Plan a Platform Integration" icon="browser" href="/credible/dapp-integration">
-    How protocols deploy and manage assertions
-  </Card>
-  <Card title="Network Integration Overview" icon="sitemap" href="/credible/network-integration">
-    How networks and sequencers integrate enforcement
-  </Card>
-  <Card title="Interface Overview" icon="diagram-project" href="/credible/interfaces-overview">
-    High-level component boundaries and dependencies
-  </Card>
-</CardGroup>
-
-For details on the assertion validation process, see [Assertion Enforcer](/credible/assertion-enforcer#validation-process).
+Use the [investigation guide](./investigate-rejected-transaction) to distinguish assertion failures from guard reverts and submission failures.
 
 ## System Components
 
-### Assertion Enforcer
+- [Assertion Enforcer](./assertion-enforcer): validation, resource limits, and artifact caching.
+- [PhEVM](./phevm): execution and state inspection for assertions.
+- [Assertion DA](./assertion-da): assertion artifacts and availability.
+- [Credible Layer Contracts](./credible-layer-contracts): State Oracle, Credible Registry, guards, and authority.
+- [Interface Overview](./interfaces-overview): the boundaries between these components.
 
-The [Assertion Enforcer](/credible/assertion-enforcer) is a sidecar that orchestrates transaction validation. It identifies which assertions apply to incoming transactions and invokes PhEVM to execute them. The network integration applies its inclusion policy to the resulting validation report.
+## Integration Paths
 
-### PhEVM (Phylax EVM)
-
-[PhEVM](/credible/phevm) is the execution engine that runs assertion bytecode. It extends the standard EVM with [cheatcodes](/credible/glossary#cheatcodes) for state inspection, enabling assertions to compare pre-transaction and post-transaction states.
-
-### Assertion DA
-
-[Assertion Data Availability](/credible/assertion-da) stores assertion bytecode and source code, making them accessible to Assertion Enforcers and providing transparency for users and auditors.
-
-### Credible Layer Contracts
-
-The [Credible Layer Contracts](/credible/credible-layer-contracts) are on-chain smart contracts that manage the assertion registry. The State Oracle coordinates protocol admins with network operators and serves as the source of truth for which assertions protect which contracts.
-
-### Developer Tools
-
-- **[Phylax platform](https://app.phylax.systems)**: Web interface for deploying, managing, and viewing assertions
-- **[`pcl`](/credible/apply-assertions)**: Command-line tool for writing, testing, and deploying assertions
-- **[`credible-std`](/credible/credible-std-overview)**: Standard library exposing cheatcodes and testing utilities
-
-## Network Integrations
-
-The Credible Layer can be implemented on different networks. The core concepts remain the same, but implementation details vary by network architecture.
-
-For specific implementation details, see:
-- [OP Stack Implementation](/credible/network-integrations/architecture-op-stack)
-
----
-
-For concrete assertion examples and real-world use cases, explore the [Assertions Book](/assertions-book/assertions-book-intro).
-
-## Next Steps
-
-<CardGroup cols={2}>
-  <Card title="Quickstart Guide" icon="rocket" href="/credible/pcl-quickstart">
-    Write and deploy your first assertion
-  </Card>
-  <Card title="Installation" icon="download" href="/credible/credible-install">
-    Set up your development environment
-  </Card>
-  <Card title="Assertion Guide" icon="code" href="/credible/write-first-assertion">
-    Comprehensive guide to writing assertions
-  </Card>
-  <Card title="Cheatcodes Reference" icon="book" href="/credible/cheatcodes-reference">
-    Detailed reference for assertion functions
-  </Card>
-  <Card title="Trust Model" icon="shield-check" href="/credible/trust-model">
-    Guarantees, scope, and operational model
-  </Card>
-</CardGroup>
+- [Protocol teams](./dapp-integration): scope assertions, guards, routing, and recovery.
+- [For Ethereum Builders](./ethereum-builder-integration): connect validation, marking, and operations.
+- [L2 and sequencer operators](./l2-integrations/overview): separate network integration designs.

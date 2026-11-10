@@ -1,0 +1,28 @@
+---
+title: 'Sequencer Validation Pipelines'
+description: 'Integration-specific speculative execution, rollback, response windows, and traffic controls.'
+---
+
+These validation designs apply to L2 sequencer integrations. Ethereum builders use a [separate integration](../ethereum-builder-integration).
+
+## Synchronous and Speculative Validation
+
+A sequencer integration can wait for assertion validation before inclusion. Alternatively, it can use bounded speculative execution: create a checkpoint, execute candidate transactions, and run assertions in parallel workers before the publication boundary.
+
+If an assertion rejects a candidate, the integration rolls back to the checkpoint before that transaction, excludes it, and replays later transactions within the speculative window. The Assertion Enforcer returns the report; the sequencer integration owns inclusion, rollback, and replay.
+
+Define the speculative window, publication boundary, validation timeout, and response to worker backlog. Rollback and replay costs must stay bounded under repeated invalid submissions. Parallel workers do not establish a universal zero-latency-overhead guarantee.
+
+## Bounded Response Windows
+
+Some L2 transaction sources can create a window between detection and a required inclusion decision. Define its duration and what happens when it expires. If the design permits protocol responses such as pausing a path or invalidating off-chain orders, test their authorization, latency, and failure behavior.
+
+A response window must not be described as an indefinite ability to reject forced-inclusion transactions. See [Transaction Source Coverage](./network-integration#transaction-source-coverage).
+
+## Resource and Ingress Controls
+
+Keep serial work limited to trace collection, assertion selection, checkpointing where used, scheduling, and applying reports. Monitor trigger rates, tail latency, queue depth, rollback cost, and timeouts.
+
+An integration can cache repeated invalid transactions or use short-lived fingerprints and sender budgets. Broader matches need conservative expiration and thresholds so legitimate traffic is not suppressed. These controls are implementation choices rather than assertion semantics.
+
+For common execution and caching responsibilities, see [Assertion Enforcer](../assertion-enforcer).

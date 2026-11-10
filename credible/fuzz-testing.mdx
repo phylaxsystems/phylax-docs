@@ -3,7 +3,7 @@ title: Fuzz Testing
 description: Test assertions with random inputs to identify edge cases
 ---
 
-Fuzz testing is a technique for testing general robustness of code by running many tests with random inputs. This is useful for assertions as it helps identify edge cases and unexpected behavior. You can use Forge's built-in fuzz testing capabilities to test your assertions with random inputs.
+Use Forge's fuzz tests to check assertion behavior across random inputs.
 
 ## Example
 
@@ -38,10 +38,7 @@ Use `vm.assume()` to filter out invalid inputs that would cause the test to fail
 
 ## Best Practices
 
-1. **Set reasonable bounds** - Use `vm.assume()` to constrain inputs to valid ranges
-2. **Test multiple parameters** - Fuzz multiple inputs simultaneously to catch interaction bugs
-3. **Use meaningful ranges** - Consider the actual values your protocol will encounter
-4. **Check valid edge cases** - Ensure assertions pass for valid edge cases
+Constrain inputs to realistic ranges with `vm.assume()`. Include valid boundary cases and combinations of inputs that affect the policy.
 
 ## Running Fuzz Tests
 

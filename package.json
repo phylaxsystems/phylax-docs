@@ -4,6 +4,7 @@
 		"node": "24.x"
 	},
 	"scripts": {
+		"test": "node --test tests/*.test.mjs && pnpm a11y && pnpm broken-links && pnpm validate",
 		"dev": "./scripts/run-mint.sh dev",
 		"start": "./scripts/run-mint.sh dev",
 		"validate": "./scripts/run-mint.sh validate",

@@ -1,43 +1,34 @@
 ---
-title: Lending Health Factor
-description: Assert that the health factor of updated positions in a lending protocol is above a certain threshold
+title: "Lending Health Factor"
+description: "Check post-call health for a simplified lending interface"
 ---
 
-import ass07LendingHealthFactor from "/snippets/ass7-lending-health-factor.a.mdx";
+import Example from "/snippets/ass7-lending-health-factor.a.mdx";
 
-## When to Use This Pattern
+A borrow or collateral withdrawal can leave an account below the minimum health factor. This template checks a stored health factor after selected lending calls.
 
-Ensures the health factor of updated positions in lending protocols remains above a threshold, preventing unauthorized liquidations and protocol insolvency. Critical for lending protocols (Aave, Compound, Morpho), margin trading platforms, and any DeFi protocol using health factors for position management.
+## Behavior
 
-Focuses on core lending operations (supply, borrow, withdraw, repay) while allowing other functions like liquidations to operate as designed.
+`LendingHealthFactorAssertion` registers supply, borrow, withdraw, and repay selectors with `(uint256 marketId, uint256 amount)` arguments. It reads a nested market/account mapping rooted at slot `0` and requires post-call health of at least `1e18`.
 
-## What This Pattern Checks
+## Configuration
 
-Monitors health factors of positions during specific lending operations using:
+Replace the ABI, mapping layout, account selection, and scale. The current helper selects the first matching successful caller with a one-call limit; it does not resolve the caller by the triggering call ID. For batched or routed operations, use [PostOperationSolvencyAssertion](./reusable-patterns#post-operation-solvency), which matches `ctx.callStart`.
 
-- `getCallInputs()`: Track all function calls to specified protocol functions
-- `registerFnCallTrigger()`: Trigger on lending operations (supply, borrow, withdraw, repay)
-- `_postTx()`: Verify health factor after each operation (used by default if no pre-state specified)
+## Scenarios
 
-The assertion checks each lending operation individually to ensure positions affected by these operations remain healthy.
+| Transaction | Result |
+| --- | --- |
+| Covered call ends with health 1.10 × 10^18 | Accepted for the account selected by the template |
+| Borrow ends with health 0.95 × 10^18 | Rejected |
+| Partial repayment improves health from 0.80 to 0.90 × 10^18 | Rejected, although it improves the position |
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+## Coverage limits
 
-## Assertion Pattern
+A blanket health floor on repayment and supply can block recovery. Select risk-increasing operations deliberately. The toy mapping is not an Aave, Euler, or other production storage layout; adapt the check to the deployed implementation.
 
-<ass07LendingHealthFactor/>
+## Source
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+The [reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass7-lending-health-factor.a.sol) is a teaching template. The [example setup guide](./run-an-example) provides the pinned checkout and test procedure.
 
-<Info>
-**Extending Assertions:** When new functions are added to the protocol that should maintain healthy positions, you can create a new assertion file (e.g., `LendingHealthFactorExtendedAssertion.sol`) that follows the same pattern. This allows you to:
-- Keep the original assertions active for existing functions
-- Add new assertions for new functions without modifying existing code
-- Maintain clear separation of concerns between different protocol features
-</Info>
-
-## Related Patterns
-- [Full Aave Assertion Suite](/assertions-book/assertions/aave-v3-suite)
-- [ERC20 Cumulative Outflow Breaker](/assertions-book/assertions/ass20-erc20-drain)
-- [Panic State Validation](/assertions-book/assertions/ass17-panic-state-validation)
-- [Owner Change](/assertions-book/assertions/ass05-ownership-change)
+<Example />

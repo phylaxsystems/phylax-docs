@@ -1,39 +1,46 @@
 ---
-title: 'Evaluate Credible Layer'
-description: 'A quick checklist for protocol teams and networks evaluating Credible Layer'
+title: 'Prepare for Your Integration'
+description: 'Prepare protocol context, failure scenarios, and existing mitigations for your first meeting with Phylax.'
 ---
 
-This checklist helps teams evaluate whether the Credible Layer is a fit for their protocol or network.
+Prepare your protocol context and the failure scenarios you want to address. Bring what you have. Our FDEs help define the policies and integration.
 
-## For Protocol Teams
+## Prerequisites
 
-- Do we have invariants that should never be violated?
-- Can we encode those rules as assertions in Solidity?
-- Do we want pre-execution protection rather than post-mortem monitoring?
-- Are we comfortable with transparent, public rules?
-- Do we have a team to monitor invalidations and iterate on rules?
+Identify a technical contact who understands the protocol and the operations you want to protect.
 
-## For Networks & Sequencers
+## 1. Describe the Protection Need
 
-- Can we integrate an external enforcer into block building?
-- Do we want a policy layer for transaction admission?
-- Do we want to offer protocol teams optional enforcement?
-- Do we have monitoring and invalidation review workflows?
+Describe the assets and operations to protect, the harmful outcomes to prevent, and gaps in existing controls. Include normal activity and exceptions that must remain possible, such as migrations or large withdrawals.
 
-## Decision Support
+Our FDEs help turn these requirements into policies for your team to approve.
 
-If you answered “yes” to most of the above, Credible Layer is likely a good fit.
+## 2. Gather Technical Context
 
-## Next Steps
+Prepare the available information:
 
-<CardGroup cols={2}>
-  <Card title="Plan a Platform Integration" icon="browser" href="/credible/dapp-integration">
-    High-level adoption for protocol teams
-  </Card>
-  <Card title="Network Integration" icon="sitemap" href="/credible/network-integration">
-    High-level adoption for networks and sequencers
-  </Card>
-  <Card title="Architecture Overview" icon="diagram-project" href="/credible/architecture-overview">
-    System components and transaction flow
-  </Card>
-</CardGroup>
+- Networks, contract addresses, source code, and architecture.
+- Upgrade mechanisms, privileged roles, and dependencies.
+- Systems that submit transactions and restrictions on changing their routes.
+- Tests, audit findings, and examples of legitimate activity.
+- Constraints on contract changes, governance timing, or availability.
+
+Use the agreed private channel for proprietary materials. We do not need credentials or signing keys.
+
+## 3. Identify the People and Decisions Needed
+
+Identify who reviews policies, approves contract changes, signs deployments, and responds to incidents. Agree on the initial coverage and the evidence required before activation.
+
+Our FDEs prepare and test the integration. Your team retains authority over its policies and protocol. See [Work with Phylax](./work-with-phylax#the-integration-process) for responsibilities.
+
+## 4. Review Ethereum Integration Feasibility
+
+Review [guard coverage, routing, and recovery](./dapp-integration) with our FDEs. An immutable contract without a suitable guard cannot gain Ethereum protection through assertion registration alone.
+
+Record the required contract changes and any unresolved coverage gaps.
+
+## Ready for the Discussion
+
+[Contact Phylax](./work-with-phylax#start-a-conversation) when you can describe the protection need and identify a technical contact.
+
+Infrastructure operators should use [For Ethereum Builders](./ethereum-builder-integration) or the [L2 guide](./l2-integrations/overview).

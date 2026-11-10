@@ -1,35 +1,38 @@
 ---
-title: 'Price Within Ticks'
-description: 'Make sure that the price is within the tick range'
+title: "Tick Bounds and Spacing"
+description: "Distinguish current pool ticks from initialized position ticks"
 ---
 
-import ass15PriceWithinTicks from "/snippets/ass15-price-within-ticks.a.mdx";
+import Example from "/snippets/ass15-price-within-ticks.a.mdx";
 
-## When to Use This Pattern
+Concentrated-liquidity pools have a valid tick range and a spacing rule for initialized ticks. Those rules apply to different values.
 
-Ensures prices remain within valid tick boundaries in concentrated liquidity AMMs, preventing price manipulation and maintaining protocol mathematical validity. Critical for AMMs using concentrated liquidity models (Uniswap V3, PancakeSwap V3), protocols with tick-based price calculations, DeFi protocols interacting with tick-based AMMs, and cross-chain bridges using tick-based price feeds.
+<Warning>
+The reviewed upstream example needs correction before production use. The limitation below is present in the linked source; the imported code is preserved for comparison.
+</Warning>
 
-If attackers could push prices outside valid tick ranges, they could execute trades at invalid prices, manipulate liquidity positions, or cause protocol calculations to fail.
+## Source limitation
 
-## What This Pattern Checks
+`PriceWithinTicksAssertion` checks a current tick against ±887,272 and requires `tick % tickSpacing == 0`. The spacing condition is not valid for a general Uniswap V3 current tick: a pool price can move between initialized ticks. The source also creates a fork identifier without using it for the direct pool read.
 
-Implements focused tick integrity verification:
+## Adaptation requirements
 
-- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Capture tick state before and after transaction
-- `registerTxEndTrigger()`: Monitor changes to tick-related storage slots
-- Verify ticks stay within global bounds (-887272 to 887272)
-- Ensure ticks align with pool's tick spacing requirements
+For position boundaries, check that lower and upper ticks are ordered, in range, and divisible by the configured spacing. For the current price, check the protocol's price/tick relationship and chosen price policy without imposing position-boundary alignment. See the [Uniswap V3 example](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/uniswap/src/UniswapV3PoolAssertion.sol) for pool-specific checks.
 
-The assertion maintains proper concentrated liquidity calculations and prevents position management errors by enforcing tick boundaries and spacing rules.
+## Scenarios
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+| Scenario | Meaning |
+| --- | --- |
+| Current tick is 1; spacing is 60 | Can be valid in Uniswap V3, but fails the template's spacing condition |
+| Position lower tick is 1; spacing is 60 | Invalid position boundary |
+| Position bounds are -120 and 120; spacing is 60 | Spacing and ordering pass; valuation is a separate check |
 
-## Assertion Pattern
+Local PCL tests also show that its direct `slot0()` call can revert before reaching the checks. Use snapshot-aware reads.
 
-<ass15PriceWithinTicks />
+Do not deploy this template unchanged as a Uniswap V3 price invariant. A tick within the global range is not proof of a fair price or adequate liquidity.
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+## Legacy source
 
-## Related Patterns
-- [Fee Calculations](/assertions-book/assertions/ass14-fee-calculations)
-- [Liquidation Health Factor](/assertions-book/assertions/ass16-liquidation-health-factor)
+[Reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass15-price-within-ticks.a.sol). See [running and adapting examples](./run-an-example) for the pinned library revision.
+
+<Example />

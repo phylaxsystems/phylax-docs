@@ -1,34 +1,36 @@
 ---
-title: Owner Change
-description: Assert that the owner of a contract has not changed unexpectedly
+title: "Owner and Admin Locks"
+description: "Reject final changes to owner and admin storage slots"
 ---
 
-import ass5OwnerChange from "/snippets/ass5-owner-change.a.mdx";
+import Example from "/snippets/ass5-owner-change.a.mdx";
 
-## When to Use This Pattern
+An administrative function can transfer control of your protocol. This example keeps the configured owner and admin addresses unchanged across a transaction.
 
-Prevents unauthorized ownership transfers, which could allow attackers to take complete control of the protocol. Critical for DeFi protocols with owner-controlled administrative functions, lending protocols, yield aggregators, cross-chain bridges, and governance systems.
+## Behavior
 
-For example, in the [Radiant Capital hack](/assertions-book/previous-hacks/hack1-radiant-capital), the attacker gained control over 3 signers of the multisig, which allowed them to change ownership of the lending pools and ultimately drain the protocol. This assertion would have prevented such an attack.
+`OwnerChangeAssertion` registers separate transaction-end functions for owner slot `0` and admin slot `1`. Each compares its address at `_preTx()` and `_postTx()`.
 
-## What This Pattern Checks
+## Configuration
 
-Monitors changes to the owner address storage slot in contracts using:
+Map both slots to the deployed contract's storage layout. Packed or namespaced access-control storage needs different decoding. Attach the assertion to the contract that holds the authority, which may be a proxy.
 
-- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Compare owner address before and after transaction
-- `ph.loadStateAt()`: Load the owner and admin slots at each snapshot
-- `registerTxEndTrigger()`: Trigger when owner address changes
+The [local walkthrough](./run-an-example) tests the owner function, including rejection and rollback. Test the admin function separately: `cl.assertion` arms only the selected assertion function in each local test.
 
-The assertion performs both direct pre/post comparison and verification of all intermediate state changes to detect unauthorized ownership modifications.
+## Scenarios
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+| Transaction | Result |
+| --- | --- |
+| Ordinary operation leaves both addresses unchanged | Accepted |
+| Owner or admin changes permanently | Rejected by the corresponding check |
+| Owner changes and is restored within one transaction | Accepted by this endpoint check |
 
-## Assertion Pattern
+## Coverage limits
 
-<ass5OwnerChange />
+This is an address lock, not an approval system. It does not distinguish authorized and unauthorized changes, inspect role memberships, or detect temporary authority used and then restored. Your signers must approve policy changes needed for a planned transfer.
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+## Source
 
-## Related Patterns
-- [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)
-- [Timelock Verification](/assertions-book/assertions/ass09-timelock-verification)
+The [reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass5-owner-change.a.sol) is a teaching template. The [example setup guide](./run-an-example) provides the pinned checkout and test procedure.
+
+<Example />

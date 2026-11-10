@@ -3,7 +3,9 @@ title: CI/CD Integration
 description: Automate assertion testing in your CI/CD pipeline
 ---
 
-You can set up CI/CD workflows to ensure all assertion tests pass before merging code. The setup is very similar to standard Foundry/Forge workflows, with the addition of installing `pcl` and running `pcl test` for testing.
+Add `pcl test` to your CI workflow to check assertions before merging.
+
+This workflow validates assertion logic. Add separate checks for your Ethereum guard wiring, upgrade compatibility, and recovery behavior; passing `pcl test` does not prove the live submission route. See [Testing Strategy](./testing-strategy).
 
 ## GitHub Actions Example
 
@@ -47,23 +49,11 @@ jobs:
           pcl test
 ```
 
-This workflow:
-
-- **Triggers on pull requests** to main/develop branches when assertion or source files change
-- **Supports manual runs** with `workflow_dispatch`
-- **Uses the assertions profile** via `FOUNDRY_PROFILE: assertions`
-- **Installs the latest pcl** from GitHub releases
-- **Runs all assertion tests** with `pcl test`
-
-<Tip>
-Use the `FOUNDRY_PROFILE: assertions` environment variable to ensure the correct Foundry profile is used for testing assertions.
-</Tip>
+The workflow runs `pcl test` with the `assertions` profile on matching pull requests or manual dispatch. It installs the latest `pcl`. Pin a version for reproducible runs.
 
 ## Foundry Profile Configuration
 
-Foundry profiles allow you to configure different compilation and testing settings for different parts of your project. For assertions, you typically want separate profiles for unit and fuzz tests so slower suites do not run every time you want quick local feedback.
-
-This configuration goes in your project's `foundry.toml` file, which you should be familiar with if you have used Foundry before.
+Use profiles in `foundry.toml` to separate unit and fuzz tests.
 
 ### Recommended Profile Structure
 
@@ -126,11 +116,7 @@ max_test_rejects = 65536
 
 ### Profile Benefits
 
-- **Unit tests (`unit-assertions`)** - Fast feedback during development
-- **Fuzz tests (`fuzz-assertions`)** - Run separately when testing edge cases
-- **General (`assertions`)** - Runs all tests for comprehensive validation
-
-When using `pcl test` or setting `FOUNDRY_PROFILE=<profile>`, Foundry uses that profile's configuration instead of the default one.
+Use `unit-assertions` for unit tests, `fuzz-assertions` for fuzz tests, and `assertions` for the full suite.
 
 ## Running Tests Locally with Profiles
 

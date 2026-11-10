@@ -3,11 +3,9 @@ title: 'Testing vs. Production'
 description: 'How assertion execution differs between testing and on-chain environments'
 ---
 
-In production, the Assertion Enforcer reports assertion failures to the network integration. An enforcing integration can exclude a failing transaction before block inclusion; the executor itself reports all rejections and does not make the block-inclusion decision.
+On Ethereum, the Assertion Enforcer reports failures to the participating builder, which excludes failing candidates before inclusion. The enforcer does not make the inclusion decision. A separate on-chain guard can revert a protected operation in a noncredible block while its gate is closed.
 
 In testing, failed assertions cause **reverts**. This lets you use `vm.expectRevert()` to verify your assertion catches violations and returns the expected error message.
-
-Understanding this difference is important for writing effective tests and interpreting their results.
 
 ## Quick Comparison
 
@@ -15,9 +13,10 @@ Understanding this difference is important for writing effective tests and inter
 |--------|---------|------------|
 | **When assertion fails** | Transaction reverts | Rejection reported to the network integration |
 | **Which assertion runs** | Specified by `fnSelector` | All matching assertions |
-| **Scope** | Next external call only | All transactions to protected contracts |
+| **Scope** | Next external call only | Matching active assertions for candidates evaluated by participating builders |
+| **Guard behavior** | Requires separate integration tests | On-chain gate checks block credibility; fail-open and bypass conditions depend on the guard |
 
-## Production: Network Integrations Apply the Result
+## Production: Ethereum Builders Apply the Result
 
 In production, the [Assertion Enforcer](/credible/assertion-enforcer) validates transactions during block building:
 
@@ -26,7 +25,7 @@ flowchart LR
     TX[Transaction] --> AE[Assertion Enforcer]
     AE --> |Identify triggers| MATCH{Triggers<br/>match?}
     MATCH --> |Yes| RUN[Run assertions]
-    MATCH --> |No| INCLUDE[Include in block]
+    MATCH --> |No| INCLUDE[Eligible for inclusion]
     RUN --> |All pass| INCLUDE
     RUN --> |Any fails| REPORT[Report rejection]
     
@@ -34,11 +33,7 @@ flowchart LR
     style INCLUDE fill:#27ae60,color:#fff
 ```
 
-Key behaviors:
-- Triggers are evaluated to determine which assertions run
-- All matching assertions for all interacted contracts execute
-- A failing assertion produces a rejection report
-- An enforcing integration can use that report to exclude the transaction before inclusion
+All matching assertions execute. The builder excludes failing candidates. Passing validation does not guarantee inclusion. Guards restrict protected operations in other builders' blocks.
 
 ## Testing: Transactions Revert
 

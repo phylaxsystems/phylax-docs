@@ -1,0 +1,109 @@
+---
+title: "Reusable Patterns"
+description: "Seven small assertion examples with configuration, scenarios, and adaptation limits"
+---
+
+The [`examples/micro-patterns`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/micro-patterns) directory separates recurring checks from protocol-specific adapters. Each example declares a small interface that your target must implement or that you must replace with an adapter.
+
+Build all seven examples from the [reviewed checkout](./run-an-example#1-check-out-the-reviewed-library):
+
+```bash
+FOUNDRY_PROFILE=micro-patterns forge build
+```
+
+This profile has no supplied behavior tests at the reviewed revision. A successful build proves compilation, not trigger coverage. Use the scenarios below to define tests against your protocol.
+
+## Accounting conservation
+
+**Source:** [`AccountingConservation.a.sol`](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/micro-patterns/src/AccountingConservation.a.sol). **Constructor:** no arguments. **Trigger:** transaction end.
+
+The adapter reads five post-transaction getters and requires:
+
+```text
+totalAssets = idleBalance + investedBalance
+totalAssets >= liabilities + pendingWithdrawals
+```
+
+For a vault with 1,000 assets, 200 idle, 800 invested, 850 liabilities, and 100 pending withdrawals, both conditions pass. If invested assets fall to 700 while `totalAssets` remains 1,000, the first fails. If pending withdrawals rise to 200 without reducing liabilities, the second fails.
+
+Define all five values in the same asset unit and at the same valuation time. Pending withdrawals must be excluded from `liabilities` if they are added separately. A strategy transfer should move value between the idle and invested buckets without changing the aggregate. Self-consistent but false getters can still pass; independent custody or valuation reads are needed to prove backing.
+
+## Deposit preview, return, and event
+
+**Source:** [`CallSandwichHonesty.a.sol`](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/micro-patterns/src/CallSandwichHonesty.a.sol). **Constructor:** no arguments. **Trigger:** `deposit(uint256,address)`.
+
+The assertion reads `previewDeposit` immediately before the triggering call, decodes that call's returned shares, and checks its `Deposit` event. It requires exactly one matching event from the vault and agreement on receiver, assets, and shares.
+
+| Deposit of 100 assets | Result |
+| --- | --- |
+| Preview 99 shares; return 99; event reports 100 assets and 99 shares to the receiver | Accepted |
+| Preview 99; return 100 | Rejected by exact equality, even if extra shares would satisfy the ERC-4626 preview guarantee |
+| Return 99; event names another receiver | Rejected |
+| Preview, return, and event agree, but no tokens move | These observations alone do not prove settlement |
+
+Use exact preview equality only when the vault promises it. Add asset and share balance checks when the policy must verify payment and issuance. Test nested deposits because the one-event requirement can conflict with nested call logs.
+
+## Post-operation solvency
+
+**Source:** [`PostOperationSolvency.a.sol`](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/micro-patterns/src/PostOperationSolvency.a.sol). **Constructor:** no arguments.
+
+`borrow(uint256,uint256)` and `withdraw(uint256,uint256)` decode the market ID and identify the immediate caller by matching the trigger's call ID within a bounded trace. Post-call `healthFactor(account, marketId)` must be at least `1e18`.
+
+`liquidate(uint256,address)` reads the named account before and after that call. Health must improve and finish at or above `1e18`.
+
+| Operation | Result |
+| --- | --- |
+| Borrow ends at health `1.10e18` | Accepted |
+| Withdrawal ends at `0.95e18` | Rejected |
+| Liquidation improves `0.90e18` to `1.05e18` | Accepted |
+| Partial liquidation improves `0.80e18` to `0.90e18` | Rejected by the full-restoration condition |
+
+Adapt the account selection for on-behalf-of and subaccount APIs. The example scans at most 16 matching calls to find the trigger frame. It does not check liquidation eligibility, repayment value, or collateral seizure. Match the restoration condition to the protocol's liquidation rules; partial healing may need to remain possible.
+
+## Oracle reduce-only gate
+
+**Source:** [`OracleReduceOnlyGate.a.sol`](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/micro-patterns/src/OracleReduceOnlyGate.a.sol).
+
+The constructor takes the watched asset, denomination asset, market-reference oracle, and tolerance in basis points. The example registers only `borrow(address,uint256,address)` and `withdraw(address,uint256,address)`. It returns without checking calls whose asset argument differs from the watched asset.
+
+Both prices are read at the triggering call's pre-state. With `low = min(reported, market)` and `high = max(reported, market)`, the condition is:
+
+```text
+(high - low) × 10,000 <= low × toleranceBps
+```
+
+With a 500-bps tolerance and a market price of 100, a reported price of 105 passes; 106 fails. If the reported price is 95 and the market is 100, the comparison fails because the denominator is 95. A zero market price also fails. Repayment has no registered trigger and remains outside this gate.
+
+Use independent prices with matching decimals and quote units. The example does not check timestamps or prove that the operation consumes the pre-call price. A callback can change a price after that snapshot; use a consumed-price adapter when that path exists. Test zero values and arithmetic bounds.
+
+## Configuration guard
+
+**Source:** [`ConfigurationGuard.a.sol`](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/micro-patterns/src/ConfigurationGuard.a.sol). **Constructor:** no arguments. **Trigger:** transaction end.
+
+The target must expose `initialized()`, `manager()`, `slasher()`, `epochDuration()`, and `vetoDuration()`. The assertion requires initialization, nonzero manager and slasher addresses, an epoch from one through 30 days, and a veto duration shorter than the epoch.
+
+A seven-day epoch with a one-day veto passes. A seven-day veto with a seven-day epoch fails. Clearing the manager also fails, even if every timing value remains valid.
+
+Adapt the bounds to the actual exit and dispute process. Nonzero addresses do not prove correct implementations or approved authority. Add identity constraints if manager or slasher changes require a specific approved address.
+
+## Tiered circuit breaker
+
+**Source:** [`TieredCircuitBreaker.a.sol`](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/micro-patterns/src/TieredCircuitBreaker.a.sol). **Constructor:** ERC-20 asset and liquidation-target addresses.
+
+Two rolling outflow watchers use a 24-hour window: a 10% soft threshold and a 30% hard threshold. Once the soft callback is invoked, it rejects covered `withdraw(uint256)` and `redeem(uint256)` calls. Otherwise it permits a transaction with no new net outflow, or requires a call to `liquidate(address)` on the configured target. The hard callback always reverts.
+
+This is an illustrative policy, not a complete liquidation exception. A transaction can include an unrelated liquidation call alongside harmful outflow. Call presence does not establish which transfer the liquidation caused. A production exception must bind the permitted recipient and amount to the liquidation's actual effects.
+
+Replace the toy selectors with every relevant exit path. Test an ordinary exit, a healing deposit, a valid liquidation, and a batch containing a decoy liquidation plus unrelated outflow. Local tests of the callback do not verify rolling-window dispatch.
+
+## Participant gate
+
+**Source:** [`ParticipantGate.a.sol`](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/micro-patterns/src/ParticipantGate.a.sol). **Constructor:** a registry implementing `isBlocked(address)`.
+
+The intended policy checks the transaction sender, immediate caller, and selector-specific participants for transfer, transferFrom, mint, and burn.
+
+<Warning>
+The reviewed example's `_addressArg` shifts an ABI address word right by 96 bits. Standard ABI addresses are right-aligned, so this does not decode the intended address. Its registry lookup is also a direct call rather than a snapshot read. Correct both issues before using it for recipient or source screening.
+</Warning>
+
+Correct address decoding before testing blocked senders, routers, recipients, and transferFrom sources. Use full-length addresses whose high and low bytes differ; small fixture addresses can hide decoding errors. The [Cap example](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/cap/src/CapOfacComplianceAssertion.sol) demonstrates low-160-bit decoding, but its own deployment and oracle requirements must also be validated.

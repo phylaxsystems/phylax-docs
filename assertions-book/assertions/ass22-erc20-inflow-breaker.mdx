@@ -1,43 +1,51 @@
 ---
-title: 'ERC20 Cumulative Inflow Breaker'
-description: 'Limit cumulative ERC20 inflows with a Reshiram circuit-breaker trigger'
+title: "ERC-20 Cumulative Inflow Breaker"
+description: "Configure and test a rolling net inflow limit"
 ---
 
-import ass22ERC20InflowBreaker from "/snippets/ass22-erc20-inflow-breaker.a.mdx";
+import Example from "/snippets/ass22-erc20-inflow-breaker.a.mdx";
 
-## When to Use This Pattern
+An unusually large deposit or donation can change a vault's exposure or accounting. A cumulative inflow breaker rejects the candidate transaction that takes net inflow above the rolling limit.
 
-Use this pattern when unexpected inflows can distort protocol accounting, prices, or risk controls. It applies to lending vault donations, AMM reserve stuffing, bridged-asset accounting, staking receipt-token systems, and other protocols where excessive token inflow over a short window is suspicious.
+## Configuration
 
-This is a V2 Reshiram circuit-breaker pattern. The trigger/precompile machinery collects token inflow into one bucket per block and evaluates those per-block buckets over the rolling window. The assertion does not need its own storage for this accounting.
+`ERC20CumulativeInflowBreakerAssertion` takes three constructor arguments:
 
-## What This Pattern Checks
+| Argument | Example | Meaning |
+| --- | --- | --- |
+| `monitoredToken_` | Your underlying ERC-20 address | Token whose balance at the adopter is measured |
+| `inflowThresholdBps_` | `2000` | 20% of the window's balance baseline |
+| `inflowWindowDuration_` | `86400` | Rolling window in seconds: one day |
 
-Registers a percentage-based cumulative inflow limit:
+Attach the assertion to the contract that holds the watched tokens. The adopter is set by deployment; it is not a constructor argument in this template. Use separate registrations for different tokens or custody addresses.
 
-- `registerAssertionSpec(AssertionSpec.Reshiram)`: Registers the assertion as a Reshiram assertion.
-- `watchCumulativeInflow(token, thresholdBps, windowDuration, assertFn)`: Collects ERC20 inflow into one bucket per block and watches the buckets over a rolling window.
-- `ph.inflowContext()`: Reads the token context inside the triggered assertion.
-- Reverts when cumulative inflow breaches the configured threshold.
+The template does not validate constructor inputs. Add checks for the token and policy bounds. The window must be at least 10 seconds and fit in `uint64`. For an outflow cap, a threshold of 10,000 bps cannot reject a drain that only reaches 100%; the [Balancer example](./balancer-outflow) rejects that configuration.
 
-The assertion does not manually store balances or rolling counters. The Reshiram circuit-breaker trigger tracks the per-block buckets across the window and invokes the assertion when the limit is exceeded.
+## Behavior
 
-<Warning>
-The current Phylax app and Linea deployment support the V1 assertion specification. Treat this V2 Reshiram pattern as a local or development example until the target deployment supports V2.
-</Warning>
+`watchCumulativeInflow` maintains the rolling history in the executor. It invokes `assertCumulativeInflow` only when net inflow is **strictly greater** than the threshold. The callback checks the token context and reverts. A revert rejects the candidate transaction; it does not write a persistent pause flag to your protocol.
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+Opposite-direction transfers offset the watched direction. The denominator is the window's `tvlSnapshot`, not the current balance or a USD valuation. See [bucket and baseline semantics](./circuit-breakers).
 
-## Assertion Pattern
+## Scenarios
 
-<ass22ERC20InflowBreaker />
+Assume a 100,000-token baseline, a 20% limit, and all listed transfers within the retained window. Each row starts from that same baseline with no other flow.
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+| Transfers | Net inflow | Result |
+| --- | ---: | --- |
+| 19,999 tokens inflow | 19,999 | No breach |
+| 20,000 tokens inflow | 20,000 | No breach: equality is allowed |
+| 10,000, then 10,001 tokens inflow | 20,001 | Second transaction triggers rejection |
+| 25,000 inflow and 5,000 outflow | 20,000 | No breach after netting |
 
-## Related documentation
+## Test and adapt
 
-- [Circuit breakers](./circuit-breakers)
-- [`outflowRate` and `inflowRate`](./rate-of-change-circuit-breakers)
-- [ERC20 Cumulative Outflow Breaker](/assertions-book/assertions/ass20-erc20-drain)
-- [ERC4626 Assets to Shares](/assertions-book/assertions/ass12-erc4626-assets-to-shares)
-- [Sum of All Positions](/assertions-book/assertions/ass08-sum-of-all-positions)
+Local `pcl test` does not simulate rolling cumulative dispatch. Constructor tests and an armed callback test can verify configuration and rejection behavior, but they do not prove the table's window behavior. Use an executor-backed environment to test accumulated transactions, equality, expiration, offsetting flow, and zero starting balance.
+
+An inflow limit can block deposits and repayments that improve protocol health. Exempting those paths requires a policy that identifies the actual operation and its effects. Token rebases, external strategy custody, and native ETH need their own accounting model. A net flow limit is not a gross-transfer or maximum-loss guarantee.
+
+## Source
+
+[Reviewed template](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass22-erc20-inflow-breaker.a.sol).
+
+<Example />

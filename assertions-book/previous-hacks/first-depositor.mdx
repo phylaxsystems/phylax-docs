@@ -3,8 +3,6 @@ title: First Depositor Bug
 description: First depositor bug in Compound / Aave v2 lending protocols
 ---
 
-This case study explains how the first depositor bug works and which assertion pattern can constrain the invalid state transition.
-
 ## What Happened
 
 Background: https://akshaysrivastav.hashnode.dev/first-deposit-bug-in-compoundv2-and-its-forks
@@ -41,16 +39,9 @@ Traditional prevention:
 
 ## Assertion Pattern
 
-- History has shown that an old vulnerability has found its way into many protocols
-- Many succesfull attacks leveraged this vulnerability
-  - Sonne Finance
-  - Radiant Capital
-  - Hundred Finance
-- Assertions can be used to easily prevent known vulnerabilities in forked protocols
-  - Enforce existing workarounds
-  - I.e. Sonne Finance planned to execute deploying the market and depositing atomically, however,
-    their governance process let the attacker execute the transactions out of order
-- Low entry barrier to enable publicly known assertions for famous protocols to your own fork
+Assertions can require atomic market creation and the initial deposit, or reject deposits that would round to zero shares.
+
+Sonne Finance planned an atomic deployment and deposit, but its governance process allowed the transactions to execute out of order.
 
 ### Example Assertion: Enforce atomically opening the market and depositing first assets
 

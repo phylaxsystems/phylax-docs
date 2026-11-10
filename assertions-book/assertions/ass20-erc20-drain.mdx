@@ -1,44 +1,51 @@
 ---
-title: 'ERC20 Cumulative Outflow Breaker'
-description: 'Limit cumulative ERC20 outflows with a Reshiram circuit-breaker trigger'
+title: "ERC-20 Cumulative Outflow Breaker"
+description: "Configure and test a rolling net outflow limit"
 ---
 
-import ass20ERC20Drain from "/snippets/ass20-erc20-drain.a.mdx";
+import Example from "/snippets/ass20-erc20-drain.a.mdx";
 
-## When to Use This Pattern
+Several withdrawals, each small enough to look routine, can remove a large share of custody. A cumulative outflow breaker rejects the candidate transaction that takes net outflow above the rolling limit.
 
-Monitors and limits cumulative token outflows to prevent catastrophic asset loss during exploits, creating a response window for protocol operators. Use it for lending reserves, vault custody, bridge escrows, treasuries, liquidity pools, and other contracts where rapid ERC20 withdrawals are a critical risk.
+## Configuration
 
-This is a V2 Reshiram circuit-breaker pattern. The trigger/precompile machinery collects token outflow into one bucket per block and evaluates those per-block buckets over the rolling window. The assertion does not need its own storage for this accounting.
+`ERC20CumulativeOutflowBreakerAssertion` takes three constructor arguments:
 
-## What This Pattern Checks
+| Argument | Example | Meaning |
+| --- | --- | --- |
+| `monitoredToken_` | Your underlying ERC-20 address | Token whose balance at the adopter is measured |
+| `outflowThresholdBps_` | `1000` | 10% of the window's balance baseline |
+| `outflowWindowDuration_` | `86400` | Rolling window in seconds: one day |
 
-Registers a percentage-based cumulative outflow limit:
+Attach the assertion to the contract that holds the watched tokens. The adopter is set by deployment; it is not a constructor argument in this template. Use separate registrations for different tokens or custody addresses.
 
-- `registerAssertionSpec(AssertionSpec.Reshiram)`: Registers the assertion as a Reshiram assertion.
-- `watchCumulativeOutflow(token, thresholdBps, windowDuration, assertFn)`: Collects ERC20 outflow into one bucket per block and watches the buckets over a rolling window.
-- `ph.outflowContext()`: Reads the token context inside the triggered assertion.
-- Reverts when cumulative outflow breaches the configured threshold.
+The template does not validate constructor inputs. Add checks for the token and policy bounds. The window must be at least 10 seconds and fit in `uint64`. For an outflow cap, a threshold of 10,000 bps cannot reject a drain that only reaches 100%; the [Balancer example](./balancer-outflow) rejects that configuration.
 
-The assertion does not manually store balances or rolling counters. The Reshiram circuit-breaker trigger tracks the per-block buckets across the window and invokes the assertion when the limit is exceeded.
+## Behavior
 
-<Warning>
-The current Phylax app and Linea deployment support the V1 assertion specification. Treat this V2 Reshiram pattern as a local or development example until the target deployment supports V2.
-</Warning>
+`watchCumulativeOutflow` maintains the rolling history in the executor. It invokes `assertCumulativeOutflow` only when net outflow is **strictly greater** than the threshold. The callback checks the token context and reverts. A revert rejects the candidate transaction; it does not write a persistent pause flag to your protocol.
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+Opposite-direction transfers offset the watched direction. The denominator is the window's `tvlSnapshot`, not the current balance or a USD valuation. See [bucket and baseline semantics](./circuit-breakers).
 
-## Assertion Pattern
+## Scenarios
 
-<ass20ERC20Drain />
+Assume a 100,000-token baseline, a 10% limit, and all listed transfers within the retained window. Each row starts from that same baseline with no other flow.
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+| Transfers | Net outflow | Result |
+| --- | ---: | --- |
+| 9,999 tokens outflow | 9,999 | No breach |
+| 10,000 tokens outflow | 10,000 | No breach: equality is allowed |
+| 5,000, then 5,001 tokens outflow | 10,001 | Second transaction triggers rejection |
+| 15,000 outflow and 5,000 inflow | 10,000 | No breach after netting |
 
-## Related documentation
+## Test and adapt
 
-- [Circuit breakers](./circuit-breakers)
-- [`outflowRate` and `inflowRate`](./rate-of-change-circuit-breakers)
-- [ERC20 Cumulative Inflow Breaker](/assertions-book/assertions/ass22-erc20-inflow-breaker)
-- [Ether Drain](/assertions-book/assertions/ass21-ether-drain)
-- [Ownership Change](/assertions-book/assertions/ass05-ownership-change)
-- [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)
+Local `pcl test` does not simulate rolling cumulative dispatch. Constructor tests and an armed callback test can verify configuration and rejection behavior, but they do not prove the table's window behavior. Use an executor-backed environment to test accumulated transactions, equality, expiration, offsetting flow, and zero starting balance.
+
+Check deposits, repayments, strategy transfers, and emergency withdrawals against the intended custody boundary. Token rebases, external strategy custody, and native ETH need their own accounting model. A net flow limit is not a gross-transfer or maximum-loss guarantee.
+
+## Source
+
+[Reviewed template](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass20-erc20-drain.a.sol).
+
+<Example />

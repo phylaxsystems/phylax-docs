@@ -3,32 +3,21 @@ title: 'Triggers'
 description: 'Understanding assertion triggers and how to use them effectively'
 ---
 
-Triggers determine when assertions should execute. Using the right triggers ensures your assertions run only when necessary, saving gas and computational resources while maintaining security guarantees.
+Triggers select when assertion functions execute. Match the trigger to the state or operation that the policy checks.
 
 ## Why Use Triggers?
 
-It is important to use triggers to make sure that assertions are only called when they are needed in order to save gas and resources. For example, it is a waste to trigger an assertion on every call to a contract if the assertion is only checking a value that can only be changed by a specific function. In this case it would make sense to use a trigger that only triggers on calls to the specific function or updates to the specific storage slot of the value.
+Scoped triggers reduce execution cost. Choose a trigger that covers every path that can violate the policy.
 
 ## Trigger Behavior in Production
 
-When a transaction is validated, the Credible Layer identifies all assertions with triggers matching the transaction. All matching assertions execute - if any fails, the transaction is dropped.
-
-This means:
-- Multiple assertions can protect the same function
-- Each assertion with a matching trigger runs independently
-- A transaction must pass all matching assertions to be included in a block
+Each matching assertion executes independently. A participating builder excludes a candidate if any active production assertion fails.
 
 ## Trigger Types
-
-Different triggers provide different guarantees and should be chosen based on the specific invariant you're trying to enforce.
 
 ### Function Call Triggers
 
 Use `registerFnCallTrigger` when an assertion should run once for each successful call to a specific function. This is the preferred trigger for call-scoped checks because the assertion can read `ph.context()` and construct `PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart})` / `PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd})` snapshots for the matched call.
-
-- You only want to run assertions when specific functions are called
-- You need to verify behavior of particular protocol operations
-- You need call-scoped state reads or call metadata
 
 **Example:**
 ```solidity
@@ -41,10 +30,6 @@ function triggers() external view override {
 
 Use `registerTxEndTrigger` when an assertion should run after any transaction that touches the protected contract. This is the preferred trigger for transaction-wide invariants where the relevant mutation can happen through multiple functions or indirect calls.
 
-- You need broad coverage across many entry points
-- You only need transaction-scoped `ForkId` snapshots
-- Function-specific triggers could miss an unexpected mutation path
-
 **Example:**
 ```solidity
 function triggers() external view override {
@@ -52,33 +37,22 @@ function triggers() external view override {
 }
 ```
 
-<Warning>
-Legacy `registerCallTrigger`, `registerStorageChangeTrigger`, and `registerBalanceChangeTrigger` helpers remain documented for older assertions, but new assertions should prefer `registerFnCallTrigger` and `registerTxEndTrigger`.
-</Warning>
+### State and Flow Triggers
+
+Choose a narrower trigger when it still covers every mutation that matters:
+
+| Policy | Trigger | Example |
+| --- | --- | --- |
+| Configuration must remain approved | `registerStorageChangeTrigger`, optionally restricted to a slot | [Safe configuration](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/src/protection/safe/SafeConfigLockAssertion.sol) |
+| Check accounting when an ERC20 balance changes | `registerErc20ChangeTrigger` | [Vault policies](../assertions-book/assertions/vault-policies) |
+| Bound net token flow over a rolling window | `watchCumulativeOutflow` or `watchCumulativeInflow` | [Cumulative flow](../assertions-book/assertions/ass20-erc20-drain) |
+| Run a damage check when activity is unusual | `watchAnomaly` | [Anomaly policies and runtime limits](../assertions-book/assertions/anomaly-gated-policies) |
+
+Storage triggers remain supported in current patterns. Use `registerFnCallTrigger` instead of legacy `registerCallTrigger` for new call-scoped policies. See the [library reference](./credible-std-overview#assertion-helpers) for helper signatures and specification requirements.
 
 ## Best Practices
 
-### Choose the Right Trigger
-
-Consider what state changes your assertion monitors:
-
-- **Use function call triggers** when monitoring specific functions
-- **Use transaction end triggers** for transaction-wide invariants
-- Consider the trade-off between coverage and efficiency
-
-### Optimize for Performance
-
-- Be as specific as possible with your triggers
-- Avoid triggering on every transaction when a specific function/storage trigger suffices
-- Multiple assertions with specific triggers are often better than one assertion with a broad trigger
-
-### Coverage Considerations
-
-While triggers optimize performance, ensure they don't create gaps in your security coverage:
-
-- Document which scenarios trigger your assertions
-- Consider edge cases where state changes might occur through unexpected paths
-- Test with various transaction patterns to verify trigger behavior
+Test that the trigger covers all relevant state changes, including indirect calls and alternative entry points. Narrow it only when those tests still pass.
 
 ## Related Documentation
 
@@ -89,7 +63,7 @@ While triggers optimize performance, ensure they don't create gaps in your secur
   <Card title="Cheatcodes Reference" icon="book" href="/credible/cheatcodes-reference">
     Complete API reference for trigger registration
   </Card>
-  <Card title="Assertions Book" icon="book-open" href="/assertions-book/assertions-book-intro">
+  <Card title="Use Cases Book" icon="book-open" href="/assertions-book/assertions-book-intro">
     Real-world assertion examples and implementations
   </Card>
   <Card title="Testing Assertions" icon="flask" href="/credible/testing-assertions">

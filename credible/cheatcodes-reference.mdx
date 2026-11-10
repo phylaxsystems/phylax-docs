@@ -16,7 +16,7 @@ Cheatcodes are grouped by API status:
 - **Deprecated cheatcodes**: legacy fork-switching APIs. Do not use them in new assertions.
 
 <Warning>
-The current Phylax app and Linea deployment support the V1 assertion specification. `pcl` warns when an assertion uses the V2 Reshiram specification. Do not assume Reshiram-only precompiles or `onFnCall` and `onTxEnd` triggers are available until the target deployment supports V2.
+Confirm the assertion specification accepted by the target Ethereum enforcer. Reshiram-only precompiles and triggers require V2 support in that deployment; library availability and local tests are not sufficient. Earlier Linea-specific restrictions are in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
 </Warning>
 
 ## Assertion Specs
@@ -902,8 +902,8 @@ Use `loadStateAt(target, slot, fork)` instead.
   <Card title="Cheatcodes Overview" icon="book" href="./cheatcodes-overview">
     Conceptual overview of cheatcodes
   </Card>
-  <Card title="Write Your First Assertion" icon="code" href="./write-first-assertion">
-    Tutorial for writing an assertion
+  <Card title="Writing Your Own Policies" icon="code" href="./writing-your-own-policies">
+    Define, implement, and test policies for your protocol.
   </Card>
   <Card title="Use Case Mappings" icon="map" href="./use-case-mappings/intro-use-case-mapping">
     Examples of assertion capabilities

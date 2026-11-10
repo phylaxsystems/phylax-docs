@@ -3,9 +3,9 @@
   "theme": "maple",
   "name": "Phylax Credible Layer Documentation",
   "colors": {
-    "primary": "#2DA2F6",
+    "primary": "#0875C4",
     "light": "#2DA2F6",
-    "dark": "#2DA2F6"
+    "dark": "#0875C4"
   },
   "favicon": "/favicon.png",
   "redirects": [
@@ -19,14 +19,71 @@
     },
     {
       "source": "/credible/dapp-incidents",
-      "destination": "/credible/dapp-invalidations"
+      "destination": "/credible/investigate-rejected-transaction"
     },
     {
       "source": "/credible/accelerate-with-ai",
       "destination": "/credible/agentic-pcl"
+    },
+    {
+      "source": "/credible/network-integration",
+      "destination": "/credible/l2-integrations/network-integration"
+    },
+    {
+      "source": "/credible/network-integrations/architecture-linea",
+      "destination": "/credible/l2-integrations/architecture-linea"
+    },
+    {
+      "source": "/credible/network-integrations/architecture-op-stack",
+      "destination": "/credible/l2-integrations/architecture-op-stack"
+    },
+    {
+      "source": "/credible/manual-verification",
+      "destination": "/credible/l2-integrations/manual-verification"
+    },
+    {
+      "source": "/credible/ownership-verification",
+      "destination": "/credible/managing-policy-deployments"
+    },
+    {
+      "source": "/credible/write-first-assertion",
+      "destination": "/credible/writing-your-own-policies"
+    },
+    {
+      "source": "/credible/invariant-to-assertion",
+      "destination": "/credible/writing-your-own-policies"
+    },
+    {
+      "source": "/credible/explorer-security-posture",
+      "destination": "/credible/dapp-explorer"
+    },
+    {
+      "source": "/credible/dapp-projects",
+      "destination": "/credible/managing-your-circuit-breakers"
+    },
+    {
+      "source": "/credible/dapp-invalidations",
+      "destination": "/credible/investigate-rejected-transaction"
+    },
+    {
+      "source": "/credible/dapp-integrations",
+      "destination": "/credible/setting-up-alerting"
+    },
+    {
+      "source": "/credible/release-review-checks",
+      "destination": "/credible/deploy-assertions-dapp"
     }
   ],
   "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Request a demo",
+          "icon": "calendar",
+          "href": "https://forms.fillout.com/t/sJ1sHJMEnwus"
+        }
+      ]
+    },
     "anchors": [
       {
         "anchor": "Credible Layer",
@@ -36,28 +93,45 @@
             "group": "Start Here",
             "pages": [
               "credible/credible-introduction",
-              "credible/credible-layer-overview"
-            ]
-          },
-          {
-            "group": "Tutorials",
-            "pages": [
-              "credible/pcl-quickstart",
-              "credible/write-first-assertion"
+              "credible/should-you-use-phylax",
+              "credible/credible-layer-overview",
+              "credible/faq"
             ]
           },
           {
             "group": "How-to Guides",
             "pages": [
               {
-                "group": "Set Up and Evaluate",
+                "group": "Work with Phylax",
+                "root": "credible/work-with-phylax",
                 "pages": [
                   "credible/evaluate-credible-layer",
-                  "credible/credible-install"
+                  "credible/use-the-platform"
                 ]
               },
               {
-                "group": "Agentic PCL",
+                "group": "Managing Circuit Breakers",
+                "pages": [
+                  "credible/dapp-overview",
+                  "credible/assign-protocol-manager",
+                  "credible/setting-up-alerting",
+                  "credible/managing-your-circuit-breakers",
+                  "credible/investigate-rejected-transaction",
+                  "credible/dapp-explorer"
+                ]
+              },
+              {
+                "group": "Writing Your Own Policies",
+                "root": "credible/writing-your-own-policies",
+                "pages": [
+                  "credible/credible-install",
+                  "credible/pcl-quickstart",
+                  "credible/test-policy-behavior",
+                  "credible/deploy-assertions-dapp"
+                ]
+              },
+              {
+                "group": "Policies with AI",
                 "pages": [
                   "credible/agentic-pcl",
                   "credible/agentic-pcl-create-project",
@@ -67,32 +141,26 @@
               {
                 "group": "Build and Deploy",
                 "pages": [
-                  "credible/invariant-to-assertion",
-                  "credible/apply-assertions",
-                  "credible/release-review-checks",
-                  "credible/deploy-assertions-dapp",
-                  "credible/manual-verification"
+                  "credible/apply-assertions"
                 ]
               },
               {
-                "group": "Test and Operate",
+                "group": "Test Circuit Breakers",
                 "pages": [
                   "credible/testing-assertions",
-                  "credible/testing-credible-block-guard",
-                  "credible/testing-strategy",
                   "credible/fuzz-testing",
                   "credible/backtesting",
                   "credible/ci-cd-integration",
-                  "credible/dapp-integrations",
                   "credible/troubleshooting"
                 ]
               },
               {
-                "group": "Integrate Credible Layer",
+                "group": "Ethereum Integration",
                 "pages": [
                   "credible/dapp-integration",
-                  "credible/network-integration",
-                  "credible/ownership-verification"
+                  "credible/managing-policy-deployments",
+                  "credible/testing-credible-block-guard",
+                  "credible/testing-strategy"
                 ]
               }
             ]
@@ -106,14 +174,7 @@
                   "credible/architecture-overview",
                   "credible/trust-model",
                   "credible/interfaces-overview",
-                  "credible/neutrality",
-                  {
-                    "group": "Network Implementations",
-                    "pages": [
-                      "credible/network-integrations/architecture-linea",
-                      "credible/network-integrations/architecture-op-stack"
-                    ]
-                  }
+                  "credible/neutrality"
                 ]
               },
               {
@@ -135,17 +196,6 @@
                   "credible/execution-model"
                 ]
               }
-            ]
-          },
-          {
-            "group": "Platform",
-            "pages": [
-              "credible/dapp-overview",
-              "credible/dapp-explorer",
-              "credible/explorer-security-posture",
-              "credible/dapp-projects",
-              "credible/dapp-invalidations",
-              "credible/faq"
             ]
           },
           {
@@ -184,16 +234,35 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "L2 and Sequencer Integrations",
+            "pages": [
+              "credible/l2-integrations/overview",
+              "credible/l2-integrations/network-integration",
+              "credible/l2-integrations/architecture-linea",
+              "credible/l2-integrations/architecture-op-stack",
+              "credible/l2-integrations/validation-pipeline",
+              "credible/l2-integrations/platform-and-compatibility",
+              {
+                "group": "How Policy Management Works on L2s",
+                "pages": [
+                  "credible/l2-integrations/manual-verification"
+                ]
+              }
+            ]
           }
         ]
       },
       {
-        "anchor": "Assertions Book",
+        "anchor": "Use Cases Book",
         "icon": "book",
         "groups": [
           {
             "group": "Start Here",
-            "pages": ["assertions-book/assertions-book-intro"]
+            "pages": [
+              "assertions-book/assertions-book-intro"
+            ]
           },
           {
             "group": "Explanation",
@@ -233,12 +302,11 @@
             ]
           },
           {
-            "group": "Reference",
+            "group": "Patterns",
             "pages": [
-              {
-                "group": "Assertion Pattern Catalog",
-                "pages": ["assertions-book/assertions/use-cases-index"]
-              },
+              "assertions-book/assertions/use-cases-index",
+              "assertions-book/assertions/run-an-example",
+              "assertions-book/assertions/reusable-patterns",
               {
                 "group": "Access Control and Administrative Changes",
                 "pages": [
@@ -277,18 +345,23 @@
                 "group": "Circuit Breakers",
                 "pages": [
                   "assertions-book/assertions/circuit-breakers",
+                  "assertions-book/assertions/balancer-outflow",
                   "assertions-book/assertions/ass20-erc20-drain",
                   "assertions-book/assertions/ass22-erc20-inflow-breaker",
-                  "assertions-book/assertions/rate-of-change-circuit-breakers"
+                  "assertions-book/assertions/rate-of-change-circuit-breakers",
+                  "assertions-book/assertions/anomaly-gated-policies"
                 ]
               },
               {
                 "group": "Native Asset Protection",
-                "pages": ["assertions-book/assertions/ass21-ether-drain"]
+                "pages": [
+                  "assertions-book/assertions/ass21-ether-drain"
+                ]
               },
               {
                 "group": "Vault and ERC4626 Security",
                 "pages": [
+                  "assertions-book/assertions/vault-policies",
                   "assertions-book/assertions/ass12-erc4626-assets-to-shares",
                   "assertions-book/assertions/ass13-erc4626-deposit-withdraw",
                   "assertions-book/assertions/ass18-harvest-increases-balance"
@@ -296,7 +369,9 @@
               },
               {
                 "group": "Emergency and Special Mode Protection",
-                "pages": ["assertions-book/assertions/ass17-panic-state-validation"]
+                "pages": [
+                  "assertions-book/assertions/ass17-panic-state-validation"
+                ]
               }
             ]
           }
@@ -329,8 +404,8 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Quickstart",
-      "href": "https://docs.phylax.systems/credible/pcl-quickstart"
+      "label": "Plan your integration",
+      "href": "/credible/work-with-phylax"
     }
   },
   "footer": {

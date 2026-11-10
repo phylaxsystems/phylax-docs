@@ -6,7 +6,7 @@ description: 'Reference documentation for `pcl` commands, options, configuration
 `pcl` is the Credible CLI for building, testing, verifying, deploying, and downloading Credible Layer assertions.
 
 <Note>
-New to `pcl`? Start with the [Quickstart Tutorial](/credible/pcl-quickstart) to learn the workflow.
+New to `pcl`? Start with the [Run an Example Policy Locally](/credible/pcl-quickstart) for an optional local exercise.
 </Note>
 
 ## Version
@@ -106,7 +106,7 @@ Previews and applies declarative deployment changes from `credible.toml`.
 pcl apply [OPTIONS]
 ```
 
-`pcl apply` reads [`credible.toml`](#credibletoml-configuration), builds and verifies referenced assertion contracts, previews release changes against the platform, and creates a release after confirmation.
+`pcl apply` reads [`credible.toml`](#credible-toml-configuration), builds and verifies referenced assertion contracts, previews release changes against the platform, and creates a release after confirmation.
 
 ### `apply` Options
 
@@ -184,12 +184,19 @@ pcl deploy [OPTIONS]
 ```bash
 pcl deploy --dry-run
 pcl deploy --account protocol-manager --rpc-url https://example-rpc.invalid
-pcl deploy --project-name my-protocol --chain-id 84532 --account protocol-manager --rpc-url https://example-rpc.invalid --yes --json
+pcl deploy --project-name my-protocol --chain-id 1 --account protocol-manager --rpc-url https://example-rpc.invalid --yes --json
 ```
 
 ## `auth`
 
-Authenticates the CLI with your Credible Layer Platform account.
+Authenticates the CLI with your Credible Layer Platform account. Select the Ethereum platform explicitly:
+
+```bash
+pcl auth -u https://ethereum.phylax.systems login
+pcl auth status
+```
+
+Check the resolved platform before creating a release. The fallback values below describe CLI behavior, not the platform to choose for an Ethereum integration. See [L2 Platform Notes](./l2-integrations/platform-and-compatibility) for the earlier workflow.
 
 ```bash
 pcl auth [OPTIONS] COMMAND
@@ -409,13 +416,13 @@ args = ["0x75634113D6A2fbfF5e65151ce1572195bE1d001A", "42"]
   <Card title="Apply Assertions" icon="upload" href="/credible/apply-assertions">
     Learn how to create an assertion release with `pcl apply`
   </Card>
-  <Card title="Quick Start Guide" icon="rocket" href="/credible/pcl-quickstart">
+  <Card title="Run an Example Policy Locally" icon="rocket" href="/credible/pcl-quickstart">
     Step-by-step tutorial for your first assertion
   </Card>
   <Card title="Installation" icon="download" href="/credible/credible-install">
     Install pcl
   </Card>
-  <Card title="Deploy with the Platform" icon="browser" href="/credible/deploy-assertions-dapp">
+  <Card title="Review and Deploy Policies" icon="browser" href="/credible/deploy-assertions-dapp">
     Deploy assertions to protect your contracts
   </Card>
 </CardGroup>

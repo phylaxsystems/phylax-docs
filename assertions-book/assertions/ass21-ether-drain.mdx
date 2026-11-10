@@ -1,39 +1,37 @@
 ---
-title: 'Ether Drain'
-description: 'Make sure that ether is not drained from a contract'
+title: "Native ETH Outflow"
+description: "Requirements for a transaction-level native-asset outflow limit"
 ---
 
-import ass21EtherDrain from "/snippets/ass21-ether-drain.a.mdx";
+import Example from "/snippets/ass21-ether-drain.a.mdx";
 
-## When to Use This Pattern
+A treasury policy may limit the native ETH lost in one transaction. The legacy `EtherDrainAssertion` intends to cap that loss at 10% of the starting balance.
 
-Prevents rapid ETH draining by limiting sudden large withdrawals, giving protocols time to respond to potential exploits. Critical for DeFi lending platforms using ETH as collateral, cross-chain bridges with large ETH reserves, DAOs and protocol treasuries, staking protocols managing ETH deposits, yield aggregators holding ETH, and centralized exchanges.
+<Warning>
+The reviewed upstream example needs correction before production use. The limitation below is present in the linked source; the imported code is preserved for comparison.
+</Warning>
 
-Malicious actors often attempt to extract all available ETH in a single transaction after discovering exploits, leading to catastrophic fund loss.
+## Source limitation
 
-> **Real-world example:** In February 2025, Bybit suffered one of the largest hacks in crypto history, losing approximately $1.4 billion USD when attackers compromised Safe Wallet's UI and changed the implementation address of their proxy contract. This allowed the attackers to drain all assets without requiring additional approvals from the original owners. ETH drain assertions, especially with whitelist functionality, could have prevented or significantly limited the impact of this attack. See the [Bybit Safe UI attack](/assertions-book/previous-hacks/bybit-safe-ui) for more details.
+The current source creates `_preTx()` and `_postTx()` identifiers but reads `address(adopter).balance` directly both times. Creating the identifiers does not switch state. The code therefore does not implement the intended before-and-after balance comparison. It also contains no destination allowlist. A local PCL test withdrew 90 ETH from a 100 ETH fixture without triggering the intended cap.
 
-## What This Pattern Checks
+## Adaptation requirements
 
-Implements tiered protection strategy to detect rapid ETH draining:
+Do not activate this example as an ETH drain limit. A replacement needs a supported native-balance observation at explicit snapshots, or a verified protocol getter read with `ph.staticcallAt`. The chosen getter must return actual custody rather than a mutable accounting counter. Native ETH is not an ERC-20: configuring a cumulative ERC-20 watcher with `address(0)` is not a substitute.
 
-- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Capture contract's ETH balance and whitelist balances before/after transaction
-- `registerTxEndTrigger()`: Trigger when ETH balances change
-- For small withdrawals (below threshold): Allow regardless of destination
-- For large withdrawals (above threshold): Require destination to be whitelisted address
-- If no whitelist defined, block all large withdrawals as safety measure
+## Scenarios
 
-The tiered approach ensures normal operations with small withdrawals continue uninterrupted while restricting large withdrawals to trusted addresses.
+| Scenario | Meaning |
+| --- | --- |
+| 100 ETH becomes 91 ETH | Would pass the intended 10% net-loss policy |
+| 100 ETH becomes 89 ETH | Should fail; the current example does not establish that check |
+| 20 ETH leaves and 20 ETH returns in the same transaction | Net-loss policy sees zero loss |
+| Repeated transactions each withdraw 9% | A per-transaction policy does not impose a rolling cap |
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+The table defines acceptance tests for a corrected adapter. It is not a claim that this source enforces them. Test withdrawals, forced receipts, value-bearing nested calls, and rollback. Wrapped ETH held as ERC-20 can use the [ERC-20 outflow breaker](./ass20-erc20-drain), but that covers only the wrapped balance.
 
-## Assertion Pattern
+## Legacy source
 
-<ass21EtherDrain />
+[Reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass21-ether-drain.a.sol). See [running and adapting examples](./run-an-example) for the pinned library revision.
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
-
-## Related Patterns
-- [ERC20 Cumulative Outflow Breaker](/assertions-book/assertions/ass20-erc20-drain)
-- [Implementation Address Change](/assertions-book/assertions/ass01-impl-addr-change)
-- [Ownership Change](/assertions-book/assertions/ass05-ownership-change)
+<Example />

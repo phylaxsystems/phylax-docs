@@ -1,37 +1,36 @@
 ---
-title: Intra-tx Oracle Deviation
-description: Assert that oracle price updates stay within an acceptable deviation range
+title: "In-Transaction Oracle Changes"
+description: "Observe prices at the call that consumes them"
 ---
 
-import ass28IntraTxOracleDeviation from "/snippets/ass28-intra-tx-oracle-deviation.a.mdx";
+import Example from "/snippets/ass28-intra-tx-oracle-deviation.a.mdx";
 
-## When to Use This Pattern
+An attacker can change a price, borrow against it, then restore it in one transaction. Equal transaction endpoints do not show the price used by the borrow.
 
-Monitors oracle price updates to detect and prevent price manipulation within a single transaction, protecting against flash loan attacks and malicious arbitrage. Critical for AMM-based DEXs using oracle prices, lending protocols relying on oracles for collateral valuation, synthetic asset platforms, derivatives protocols using oracles for settlement, and yield farming platforms calculating rewards based on asset prices.
+<Warning>
+The reviewed upstream example needs correction before production use. The limitation below is present in the linked source; the imported code is preserved for comparison.
+</Warning>
 
-Intra-transaction price manipulations can lead to flash loan attacks, theft of funds through manipulated liquidations, or protocol insolvency due to incorrect asset valuations.
+## Source limitation
 
-## What This Pattern Checks
+The legacy `IntraTxOracleDeviationAssertion` intends to compare each update with a 10% band around the starting price. It constructs transaction and call fork identifiers but does not pass them into its `price()` reads. Repeated direct reads do not inspect the named snapshots. In the local PCL test, the direct getter call reverted before the deviation comparison, including for an update inside the intended band.
 
-Implements approach to verify oracle price updates using both pre/post state comparison and intra-transaction inspection:
+## Adaptation requirements
 
-- `_preTx()` / `_postTx()` with Reshiram snapshot reads: Capture oracle price before and after transaction, compare for deviations
-- `getCallInputs()`: Monitor all price update function calls within transaction
-- `registerFnCallTrigger()`: Trigger when oracle price update is detected
-- Verify each update's price parameter against initial price
-- Enforce no price update can deviate more than maximum allowed percentage
+For a writable oracle, bind each observed update to its call ID and read at that call's boundary. For a lending operation, inspect the oracle result actually consumed by that operation. A consumed value can differ from both stored endpoints. The [Aave oracle examples](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/aave/README.md) illustrate version-specific consumed-price checks.
 
-The assertion ensures oracle prices remain within acceptable deviation range throughout transaction, detecting and preventing flash loan attacks that attempt to manipulate prices.
+## Scenarios
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+| Scenario | Meaning |
+| --- | --- |
+| Price starts at 100 and a covered update sets 105 | Within an intended 10% band |
+| Price becomes 150, is used for borrowing, then returns to 100 | Must be tested at the consumption boundary |
+| An external oracle changes without calling the protected contract | Adopter-trigger coverage must be established separately |
 
-## Assertion Pattern
+Do not rely on the source below to catch a temporary price excursion. Test multiple updates, reverted calls, nested reads, oracle replacement, and restoration in a single transaction. Match the baseline and observation point to the actual lending decision.
 
-<ass28IntraTxOracleDeviation />
+## Legacy source
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+[Reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass28-intra-tx-oracle-deviation.a.sol). See [running and adapting examples](./run-an-example) for the pinned library revision.
 
-## Related Patterns
-- [Oracle Validation](/assertions-book/assertions/ass10-oracle-validation)
-- [TWAP Deviation](/assertions-book/assertions/ass11-twap-deviation)
-- [Price Within Ticks](/assertions-book/assertions/ass15-price-within-ticks)
+<Example />

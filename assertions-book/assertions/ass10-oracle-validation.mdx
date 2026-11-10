@@ -1,36 +1,39 @@
 ---
-title: Oracle Liveness Validation
-description: Assert that an oracle is updated within a specified time window
+title: "Oracle Freshness"
+description: "Freshness requirements and snapshot limits of the oracle example"
 ---
 
-import ass10OracleLiveness from "/snippets/ass10-oracle-liveness.a.mdx";
+import Example from "/snippets/ass10-oracle-liveness.a.mdx";
 
-## When to Use This Pattern
+A swap depends on a price that may not have been updated recently. `OracleLivenessAssertion` registers `swap(address,address,uint256)` and requires the oracle's reported update time to be no more than 600 seconds old.
 
-Ensures oracle data is fresh and updated within an acceptable time window, preventing the use of stale price data that could lead to incorrect valuations and financial losses. Critical for lending protocols (collateral valuation, liquidations), DEXs (price discovery, arbitrage detection), yield farming protocols (reward calculations), insurance protocols (premium calculations), and options/derivatives protocols (settlement).
+<Warning>
+The reviewed upstream example needs correction before production use. The limitation below is present in the linked source; the imported code is preserved for comparison.
+</Warning>
 
-Stale oracle data can indicate service disruption or attacks on oracle infrastructure, potentially leading to significant protocol vulnerabilities.
+## Source limitation
 
-### Related Case Studies
-- [Loopscale](https://rekt.news/loopscale-rekt): Hack caused by a stale oracle. It was on Solana, so not relevant to Credible Layer, but the same idea applies.
+The example creates a post-transaction fork identifier but does not use it for its oracle reads. It calls `oracle()` and `lastUpdated()` directly. Creating a `ForkId` does not select that state for subsequent Solidity calls.
 
-## What This Pattern Checks
+## Adaptation requirements
 
-Monitors oracle timestamp updates when critical protocol functions are called:
+A complete adapter must read the oracle actually used by the covered operation, at the relevant call snapshot. Use `ph.staticcallAt` or `_readUintAt` with that fork, bind the expected oracle, and reject future timestamps explicitly. Set maximum age from the feed's update policy. A 600-second limit is an example, not a universal feed requirement.
 
-- `_postTx()`: Check oracle's last update time after transaction
-- `registerFnCallTrigger()`: Trigger on functions that rely on oracle data (e.g., DEX swaps)
-- Verify oracle's last update time is within defined maximum time window
+## Scenarios
 
-Upon functions that rely on oracle data, the assertion ensures transactions only proceed with fresh oracle data, preventing operations with stale pricing information.
+These outcomes describe the timestamp comparison once the read is bound to the correct snapshot. Direct getter calls in the isolated assertion runtime can revert before the comparison.
 
-For more information about cheatcodes, see the [Cheatcodes Documentation](/credible/cheatcodes-reference).
+| Scenario | Meaning |
+| --- | --- |
+| Reported age is exactly 600 seconds | Within the age bound |
+| Reported age is 601 seconds | Outside the age bound |
+| Timestamp is in the future | Unsigned subtraction reverts |
+| Fresh timestamp accompanies a manipulated price | Freshness alone does not reject it |
 
-## Assertion Pattern
+Use [oracle checks on risk-increasing calls](./reusable-patterns#oracle-reduce-only-gate) for an independent reference comparison. Protocols with in-transaction price updates need a check on the consumed price, as in the [Aave oracle examples](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/aave/README.md).
 
-<ass10OracleLiveness />
+## Legacy source
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+[Reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass10-oracle-liveness.a.sol). See [running and adapting examples](./run-an-example) for the pinned library revision.
 
-## Related Patterns
-- [Oracle Price Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation)
+<Example />

@@ -3,8 +3,6 @@ title: Radiant Capital Hack
 description: Ownership change of lending pools lead to drain
 ---
 
-This case study explains how the Radiant Capital hack worked and which assertion pattern could have constrained the invalid state transition.
-
 ## What Happened
 
 In October 2024, Radiant Capital was hacked. You can read more about the hack on [Rekt](https://rekt.news/radiant-capital-rekt2/).
@@ -13,16 +11,13 @@ Had there been an assertion in place that checked that the ownership of the lend
 
 ## Why This Matters
 
-This use case is a good example of how to use assertions to detect ownership changes. A lot of DeFi protocols have the concept of owners and admins that can change the protocol's behavior.
-Usually these are controlled by a multisig, which is best practice, but it is not always enough. Especially if the multisig setup is not done in an optimal way.
+Compromised signers can authorize harmful ownership changes. An assertion can reject those changes or permit transfers only to approved addresses.
 
-The assertion shown below is easy to generalize and use in any protocol that wants to make sure that the ownership of critical contracts don't change.
-It would also be possible to define a whitelist of contracts that the ownership can be changed to. By default there is a cooldown period before an assertion can be paused or removed, so protocols need to plan ahead if they don't have a whitelist defined.
+Plan legitimate transfers around the policy and its change delays.
 
 ## Assertion Pattern
 
-This assertions checks if the owner, emergency admin and pool admin of the lending pool have changed.
-It's a good example of how a simple assertion can be used to prevent disastrous hacks.
+The assertion checks changes to the lending pool's owner, emergency admin, and pool admin.
 
 ```solidity
 // SPDX-License-Identifier: MIT

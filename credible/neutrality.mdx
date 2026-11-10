@@ -1,42 +1,26 @@
 ---
-title: 'Neutrality & Decentralization'
-description: 'Why neutrality is critical to the Credible Layer architecture and how it preserves decentralization for both protocols and networks.'
+title: 'Policy Control and Decentralization'
+description: 'Protocol-owned rules, participating Ethereum builders, and the authority added by enforcement.'
 ---
 
-*Neutrality is critical. It determines who controls the system. Who controls the system decides how the system is regulated.*
+Protocol teams choose security policies. Participating builders enforce them during block building. Guards restrict protected operations to credible blocks while enforcement is active. These policies are separate from Ethereum consensus.
 
-As middleware, the Credible Layer extends network capabilities without requiring external execution services. Protocols define security rules through existing governance channels, and networks enforce these rules through existing mechanisms.
+## Protocol Control
 
-## Decentralization Preservation
+The State Oracle records which manager can change assertion policy for a contract and when lifecycle changes take effect. Rules are inspectable, so users can review the conditions under which protocol activity is permitted.
 
-- Networks can remove the Credible Layer anytime and still execute their core functionality
-- Protocol teams can add or remove assertions through the configured assertion lifecycle and timelocks
-- The system passes the "off-switch test"
-- By avoiding centralized control points, this architecture preserves decentralization for both protocols and networks
+Management authority can affect availability and protection. A restrictive rule may reject legitimate operations; removing a rule may weaken protection. Public rules and timelocks make these decisions more observable, but do not eliminate their risks.
 
-## The Importance of Neutrality
+## Builder Participation
 
-Policymakers are becoming increasingly aware of decentralization and see its value. Systems that quietly rely on centralized emergency controls for security risk falling on the wrong side of laws meant to capture decentralized-in-name-only projects.
+Ethereum builders need not all adopt the Credible Layer. The Credible Registry authorizes the builders whose markers a guard accepts. Those builders are trusted to perform the applicable validation before marking their blocks.
 
-Non-neutral solutions ultimately create new centralized control points:
-- AI providers can change detection algorithms
-- SaaS companies can modify security policies
+The guard's restriction can reduce the set of blocks in which an operation succeeds. RPC availability and builder participation therefore affect liveness. Fail-open and bypass paths can restore access while reducing mandatory enforcement.
 
-Security solutions should optimally **not** add additional trust assumptions or risks, and they should **not** centralize the systems they serve.
+## Administrative and Exit Paths
 
-## Next Steps
+Review the Protocol Manager, protocol upgrade admins, guard controls, Registry admins, and any guardians separately. Their powers and delays need not be identical. Neither an assertion removal nor a guard removal should be assumed immediate or sufficient to undo every part of an integration.
 
-<CardGroup cols={2}>
-  <Card title="Credible Layer Overview" icon="compass" href="/credible/credible-layer-overview">
-    Learn how the Credible Layer works
-  </Card>
-  <Card title="Architecture" icon="gears" href="/credible/architecture-overview">
-    Technical deep dive into system architecture
-  </Card>
-  <Card title="Trust Model" icon="shield-check" href="/credible/trust-model">
-    Guarantees, scope, and operational model
-  </Card>
-  <Card title="FAQ" icon="circle-question" href="/credible/faq">
-    Common questions about the Credible Layer
-  </Card>
-</CardGroup>
+A recovery or exit path must remain executable under active rules. Test it before enforcement, including lost keys, restrictive assertions, and builder or Registry outages. See [Trust Model](./trust-model).
+
+The earlier sequencer model and its network-specific boundaries are documented under [L2 and Sequencer Integrations](./l2-integrations/overview).

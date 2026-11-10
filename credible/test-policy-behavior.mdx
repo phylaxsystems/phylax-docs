@@ -1,0 +1,90 @@
+---
+title: 'Test a Policy’s Allowed and Rejected Cases'
+description: 'Run an example policy’s tests and identify a legitimate operation the rule would reject.'
+---
+
+Run the ownership policy's allowed and rejected cases. Then identify a legitimate transfer that the rule would reject.
+
+## Prerequisites
+
+Complete [Run an Example Policy Locally](./pcl-quickstart). Use the same starter checkout and run commands from its root.
+
+## 1. Run the Allowed Case
+
+```bash
+pcl test --match-contract TestOwnableAssertion --match-test test_assertionOwnershipNotChanged
+```
+
+The test calls `transferOwnership` with the current owner. The owner remains unchanged, so the rule passes. The output should include:
+
+```text
+[PASS] test_assertionOwnershipNotChanged()
+```
+
+Open `assertions/test/OwnableAssertion.t.sol` and locate this test. Notice that it registers the assertion before making the external call.
+
+## 2. Run the Rejected Case
+
+```bash
+pcl test --match-contract TestOwnableAssertion --match-test test_assertionOwnershipChanged
+```
+
+Open `assertions/test/OwnableAssertion.t.sol` and find `test_assertionOwnershipChanged()`. Here, `assertionAdopter` is the example `Ownable` contract, `initialOwner` is its current owner, and `newOwner` is a different address:
+
+```solidity
+function test_assertionOwnershipChanged() public {
+    assertEq(assertionAdopter.owner(), initialOwner);
+
+    cl.assertion({
+        adopter: address(assertionAdopter),
+        createData: type(OwnableAssertion).creationCode,
+        fnSelector: OwnableAssertion.assertionOwnershipChange.selector
+    });
+
+    // Simulate a transaction that changes ownership
+    vm.prank(initialOwner);
+    vm.expectRevert("Ownership has changed");
+    assertionAdopter.transferOwnership(newOwner);
+
+    // Check that owner didn't change
+    assertEq(assertionAdopter.owner(), initialOwner);
+}
+```
+
+`cl.assertion()` registers the ownership rule for the transfer under test. `vm.prank(initialOwner)` makes the call as the current owner, so it satisfies the contract's `onlyOwner` check. The assertion still rejects the transfer because the owner would change.
+
+`vm.expectRevert("Ownership has changed")` checks for that specific rejection. The final `assertEq` confirms that the attempted transfer was rolled back and the original owner remains in place.
+
+The output should include:
+
+```text
+[PASS] test_assertionOwnershipChanged()
+```
+
+Here, a passing test means the expected rejection occurred. It does not mean the ownership transfer was allowed.
+
+## 3. Examine a Legitimate Exception
+
+Now consider a planned transfer to a replacement governance contract. The owner would still change, so the same rule would reject it. The example has no input that represents governance approval or an approved destination.
+
+Record the results:
+
+| Operation | Example policy result | Review finding |
+| --- | --- | --- |
+| Transfer to the existing owner | Passes in the local test. | This operation leaves the owner unchanged. |
+| Transfer to a different owner | Rejected in the local test. | The rule detects a changed owner. |
+| Approved transfer to new governance | Would also be rejected by the same comparison. | The rule does not encode this legitimate exception. |
+
+The first two rows are test results. The third follows from the rule's logic and is not an executed test.
+
+## 4. Record the Requirement to Review
+
+Define how the policy identifies an approved ownership transfer. Specify the approver, permitted destination, timing, and proof of approval. Define the result when approval cannot be verified.
+
+Resolve the exception with your FDE before implementation. Removing the assertion also removes its restriction on harmful transfers.
+
+## What You Have Verified
+
+The tests show one allowed case and one rejected case. Your review identified an exception the policy needs.
+
+Use the behavior table when you [prepare for integration](./evaluate-credible-layer). See [Writing Your Own Policies](./writing-your-own-policies) for implementation.

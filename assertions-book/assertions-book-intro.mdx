@@ -1,18 +1,24 @@
 ---
-title: Using the Assertions Book
-description: Learn how to use the Assertions Book as a catalog of assertion patterns and a set of exploit case studies
+title: Using the Use Cases Book
+description: Learn how to use the Use Cases Book as a catalog of assertion patterns and a set of exploit case studies
 ---
 
-The Assertions Book has two jobs:
+The Use Cases Book has two jobs:
 
 - **Reference**: a catalog of reusable assertion patterns you can adapt to your own protocol
 - **Explanation**: case studies that explain how real exploits worked and why specific assertions would have blocked them
 
-Use this section when you want examples and inspiration. If you want a guided path for writing and deploying assertions, start in the [Credible Layer docs](../credible/credible-introduction).
+You can adapt these examples to write your own assertions. We highly recommend working with [Phylax sales engineering](../credible/work-with-phylax) to find the best policy fit; this support is included in your subscription. Custom policy development includes reviewing protocol assumptions, legitimate exceptions, and integration coverage; an example is not a ready-made production policy.
 
 Each entry shows code snippets of assertions accompanied by minimal interfaces for the protocols they protect.
 
 Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).
+
+## Ethereum Deployment Scope
+
+The examples demonstrate assertion logic, not complete production integrations. On Ethereum, protection also requires activation at participating builders, an unavoidable guard on each protected path, and transaction routing. Exploit replays establish detection under their test conditions, not universal protection. See [Ethereum Integration Planning](../credible/dapp-integration).
+
+Historical examples retain the networks on which the incidents occurred. Sequencer infrastructure designs live separately in [L2 and Sequencer Integrations](../credible/l2-integrations/overview).
 
 ## How to Use This Book
 
@@ -26,8 +32,8 @@ Full examples and mock protocol code are available in [credible-std](https://git
   <Card title="See Full Protocol Suites" icon="sitemap" href="./assertions/aave-v3-suite">
     Review deeper examples that show how assertion coverage can be shaped for a real protocol.
   </Card>
-  <Card title="Start Building" icon="rocket" href="../credible/pcl-quickstart">
-    Leave the book and follow a tutorial when you want to build your own assertion from scratch.
+  <Card title="Run an Example Locally" icon="flask-vial" href="../credible/pcl-quickstart">
+    Optionally inspect a working policy and its tests.
   </Card>
 </CardGroup>
 

@@ -21,16 +21,20 @@ pnpm install
 
 ### Credible Layer (`/credible`)
 
-Documentation for the Credible Layer including guides, reference materials, and best practices.
+Documentation for Ethereum enforcement through participating builders, assertions, credible-block markers, on-chain guards, and transaction routing. Start Here supports independent assertion authoring and explains the sales engineering support recommended for policy fit and included in the Phylax subscription. Tutorials are optional local learning exercises; advanced authoring and deployment guides support the agreed integration plan. The primary platform and deployment guides use the Ethereum platform explicitly.
 
-### Assertions Book (`/assertions-book`)
+### L2 and Sequencer Integrations (`/credible/l2-integrations`)
+
+The separate section preserves sequencer-oriented integration designs, Linea/Besu, OP Stack, validation pipelines, and earlier platform workflows. Confirm deployment support and versions before using them. Redirects in `docs.json` preserve the old network-integration page routes.
+
+### Use Cases Book (`/assertions-book`)
 
 A collection of practical assertion examples and patterns that developers can use as a learning resource and inspiration for building their own assertions.
 Each example demonstrates real-world patterns and best practices. The book also includes a collection of previous hacks and detailed explanations of how they could have been prevented using assertions.
 
 ## Code Snippet Integration
 
-The documentation integrates Assertions Book code snippets from [`credible-std`](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book) through:
+The documentation integrates Use Cases Book code snippets from [`credible-std`](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book) through:
 
 1. Automated GitHub Actions
 2. Storage in `/snippets`
@@ -42,7 +46,7 @@ We welcome contributions to improve our documentation! Here are some ways you ca
 
 - Add new guides and tutorials
 - Improve existing content for clarity
-- Add more examples to the Assertions Book
+- Add more examples to the Use Cases Book
 
 ### How to Contribute
 
@@ -51,10 +55,10 @@ We welcome contributions to improve our documentation! Here are some ways you ca
 3. Make your changes:
    - Create or modify `.mdx` files in the appropriate directory
    - If adding new pages, add them to `docs.json` to include them in the navigation
-   - For Assertions Book code snippets, update `credible-std/examples/assertions-book/assertions/src` first, then import them into `/snippets`
+   - For Use Cases Book code snippets, update `credible-std/examples/assertions-book/assertions/src` first, then import them into `/snippets`
 4. Test your changes:
+   - Run `pnpm test` to check navigation, redirects, preserved section links, MDX accessibility, broken links, and build validation
    - Run `pnpm dev` to preview locally
-   - Check for broken links using `pnpm broken-links`
 5. Commit your changes with a clear commit message
 6. Push to your fork and create a pull request
 

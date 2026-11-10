@@ -1,0 +1,46 @@
+---
+title: 'Work with Phylax'
+description: 'Work with our engineers to scope, review, test, and activate your protocol protection.'
+---
+
+Our forward deployed engineers (FDEs) help define, implement, and test your circuit breakers. Sales engineering is included in your Phylax subscription. You can also [write your own policies](./writing-your-own-policies).
+
+For product fit, see [Should you use Phylax?](./should-you-use-phylax).
+
+## Start a Conversation
+
+[Contact us through our website](https://phylax.systems) or your Phylax contact. Our first meeting covers your protocol, the scenarios that concern you, and existing mitigations.
+
+Use the [preparation guide](./evaluate-credible-layer) to gather the context.
+
+## The Integration Process
+
+When you work with our forward deployed engineers, here's what you get.
+
+| Stage | What our FDEs deliver | What your team reviews or authorizes |
+| --- | --- | --- |
+| Scope protection | Study your contracts, assets, critical operations, existing mitigations, and failure scenarios. | The protected operations, legitimate exceptions, and coverage gaps. |
+| Define policies | Translate agreed scenarios into policies, thresholds, and recovery behavior. | Intended policy behavior and acceptable exceptions. |
+| Implement and validate | Write assertions, run backtests, test a replica of your protocol on an Ethereum fork, and investigate false positives. | Assertion code and evidence for legitimate, violating, and exceptional activity. |
+| Integrate enforcement | Prepare tested contract guards, transaction-routing changes, and recovery procedures. | Protocol changes, customer-controlled signing, and integration evidence. |
+| Activate and operate | Prepare and simulate activation transactions, verify live protection, and set up the agreed monitoring and response process. | Production authorization and execution by your signers, plus the operating plan. |
+
+We agree the delivery scope and operating plan with your team.
+
+## Who Does What
+
+Your team explains protocol behavior, identifies acceptable exceptions, and approves the policies and test results. Involve the people responsible for contract changes, transaction submission, governance, and incident response.
+
+Your team controls its policies and protocol. Our FDEs prepare and simulate changes. Your signers authorize and execute them. See [Managing Policy Deployments](./managing-policy-deployments) for deployment permissions.
+
+## Before you activate your first circuit breaker
+
+Our FDEs run [backtests](./backtesting) and test a replica of your protocol on an Ethereum fork. Review normal activity, policy violations, legitimate exceptions, and recovery behavior with us.
+
+The [testing strategy](./testing-strategy) covers guards and transaction routing. After your signers activate protection, we verify it with you.
+
+## Fallback paths and recovery
+
+We designed onchain recovery paths to work independently of us. Define who can use them and test them before activation.
+
+During fail-open periods, mandatory assertion protection is reduced. A restrictive assertion may still block legitimate activity. See the [Enforcement FAQ on recovery](./faq#availability-false-positives-and-recovery).

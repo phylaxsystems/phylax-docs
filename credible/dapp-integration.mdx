@@ -1,27 +1,19 @@
 ---
-title: 'How to Plan a Platform Integration'
-description: 'Plan the platform, authorization, and rollout work for a protocol adopting the Credible Layer'
+title: 'How to Plan an Ethereum Integration'
+description: 'Plan Ethereum assertions, contract guards, transaction routing, authorization, and recovery.'
 ---
 
-This guide shows you how to plan the platform, authorization, and rollout work for a protocol team adopting the Credible Layer.
+Plan guard coverage, transaction routing, and recovery with your [FDE](./work-with-phylax). Use this checklist before [deployment](./deploy-assertions-dapp).
 
-<Note>
-If you are ready to execute deployment, use [Deploy Assertions with the Platform](./deploy-assertions-dapp). If you need background on how the system works, start with the [Architecture Overview](./architecture-overview).
-</Note>
+## Prerequisites
 
-Use it before deployment to identify the contracts, assertions, admins, and environments involved in the rollout.
-
-<Note>
-Project creation and assertion deployment require authorization for the target contracts. Depending on the contract and network, authorization can happen through an on-chain admin verifier such as `owner()` or, for rollup contracts only, through [manual verification](/credible/manual-verification).
-</Note>
+Agree on the policy scope and review responsibilities. Identify the protected contracts, policy signers, and transaction submitters. Confirm the network, supported assertion specification, and test environment.
 
 ## Adoption Workflow
 
-Teams follow the same underlying steps. The CLI is used to author and deploy assertions, while the platform
-is used to manage deployments and monitoring.
+Your team approves the policies and exceptions. Engineers implement and test assertions, then prepare a release with `pcl apply`. Your signers authorize activation.
 
-- **CLI authoring**: write assertions locally and create a release with `pcl apply`
-- **Platform management**: link contracts, stage or deploy, and monitor invalidations
+See [Work with Phylax](./work-with-phylax#the-integration-process) for the delivery process.
 
 ## End-to-End Flow
 
@@ -30,61 +22,76 @@ is used to manage deployments and monitoring.
 title: Protocol Adoption Flow
 ---
 flowchart LR
-  Dev[Protocol Team] --> Assertion[Write Assertions]
+  Dev[Protocol Team] --> Scope[Agreed Policy Requirements]
+  SE[Phylax Sales Engineering] -. Recommended support .-> Scope
+  Scope --> Assertion[Implement and Test Assertions]
   Assertion --> Platform[Phylax Platform]
   Platform --> DA[Assertion DA]
-  Platform --> Registry[On-Chain Registry]
-  Registry --> Enforcer[Assertion Enforcer]
-  Enforcer --> Outcome[Block Inclusion Decision]
-  Outcome --> Invalidations[Invalidations + The Phylax Explorer]
+  Platform --> StateOracle[State Oracle]
+  StateOracle --> Enforcer[Assertion Enforcer]
+  Enforcer --> Builder[Participating Ethereum Builder]
+  Builder --> Outcome[Candidate Inclusion Decision]
+  Dev --> Guard[Guard Coverage + RPC Routing]
+  Guard --> Execution[Protected Contract Execution]
+  Outcome --> Execution
 ```
 
 ## What You Control
 
-- Which assertions protect which contracts
-- Staging vs production deployments
-- Invalidation notification routing and monitoring
+Your team controls policy assignments, deployment environments, and notification settings. Deployment authority remains separate from project membership and protocol administration.
 
-## Coverage Planning
+## Map Coverage and Required Contract Changes
 
-Before writing assertions, map the surfaces you intend to protect:
+Identify the protected operations, relevant state, dependencies, and coverage gaps. Every protected execution path must reach a suitable guard.
 
-- Protected contracts and external entry points
-- Privileged roles and admin operations
-- Critical state variables and accounting relationships
-- Oracle, bridge, vault, and downstream market dependencies
-- High-risk user flows, such as borrows, withdrawals, upgrades, and parameter changes
-- Known gaps that the first assertion release will not cover
+Choose the integration path that fits the contract:
 
-This map helps the protocol team decide which assertions belong in the first release and which risks should be handled by later releases or operational runbooks.
+| Contract structure | Integration |
+| --- | --- |
+| You can change the implementation | Inherit [Credible Block Guard](./credible-layer-contracts#credible-block-guard) and guard the protected entry points. |
+| A compatible proxy can change its implementation target | Install [Credible Proxy](./credible-layer-contracts#credible-proxy) with the protected selectors. UUPS proxies are not supported. |
+| Operations use Safe owner transactions | Install [Credible Safe Guard](./credible-layer-contracts#credible-safe-guard). Review module paths separately. |
+| The protocol exposes an unavoidable hook | Call an [Assertion Adapter](./credible-layer-contracts#assertion-adapter) and attach assertions to it. |
+
+Include alternative entry points, internal dispatch, and wallet modules. A guarded selector does not protect another selector that reaches the same operation. Resolve unguarded paths before claiming coverage.
+
+Assign responsibility for contract changes and review the deployed version. Include guard replacement, proxy configuration, and bypass permissions. These remain separate from the Protocol Manager wallet that signs policy releases.
+
+## Configure Transaction Submission
+
+Configure the Credible RPC on each top-level submitter of protected transactions. This includes automated submitters and multisig executors. Off-chain signers and internally called contracts do not select the route.
+
+Ordinary reads and unprotected traffic can retain their existing providers. Test actual submission separately from RPC simulation. The Registry permits [zero-gas-price simulations](./credible-layer-contracts#zero-gas-price-calls), so simulation success does not establish that a paid transaction passes the guard or active assertions.
+
+For L2 queues and forced inclusion, see [L2 Integration Planning](./l2-integrations/network-integration#transaction-source-coverage).
 
 ## Authorization Requirements
 
-Before assertions can be deployed for a contract, the platform needs to determine which protocol admin can manage that contract's assertion lifecycle. The common path is owner-based verification. If your rollup contracts do not expose a supported ownership interface, use [How to Request Manual Verification](/credible/manual-verification) to understand the fallback process. Manual verification is not available for Ethereum mainnet contracts.
+Confirm the Protocol Manager for each contract through [Managing Policy Deployments](./managing-policy-deployments). Record the signing policy, recovery path, and deployed delays for each privileged role.
 
 ## Deployment Modes
 
-- **Staging**: test and iterate on assertions without impacting production users
-- **Production**: enforce assertions at the network level for real transactions
+- **Alerting** records violations in a mirrored environment without blocking live transactions. It does not test every production guard or route.
+- **Production** enforces active policies through participating builders. Protected operations require configured guards and routing.
 
-Learn more about ownership checks in [Ownership Verification](/credible/ownership-verification).
+## Test Availability and Recovery
+
+Follow the [testing strategy](./testing-strategy) and [guard tests](./testing-credible-block-guard). Include blocked recovery transactions and lost keys.
+
+A block-gap fallback may not resolve false positives if credible blocks continue. Define how submitters investigate exclusions and retry. Do not assume automatic resubmission.
 
 ## What Users Can Verify
 
-- Which assertions are active for a protocol
-- On-chain registry entries and views in The Phylax Explorer
-- Invalidation history for protected contracts
+Users can inspect active policies and onchain state. Where public [Explorer views](./dapp-explorer) are available, they show selected protection details. Private transaction traces require project access.
 
 ## What Successful Rollout Looks Like
 
-- Assertions cover critical protocol invariants and admin operations
-- Staging assertions are validated before moving to production
-- Teams review invalidations and iterate on coverage over time
+Activate production after policy, guard, routing, and recovery tests pass. Assign responsibility for alerts, policy changes, and periods of reduced enforcement.
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Deploy Assertions" icon="rocket" href="/credible/deploy-assertions-dapp">
+  <Card title="Review and Deploy Policies" icon="rocket" href="/credible/deploy-assertions-dapp">
     Step-by-step deployment guide
   </Card>
   <Card title="Assertions Overview" icon="code" href="/credible/assertions-overview">

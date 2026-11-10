@@ -1,37 +1,38 @@
 ---
-title: KYC Whitelist Assertion
-description: Unified KYC Registry for DeFi Protocols
+title: "Accredited Caller Gate"
+description: "Check immediate callers against an accreditation registry"
 ---
 
-import ass4KycWhitelist from "/snippets/ass4-kyc-whitelist.a.mdx";
+import Example from "/snippets/ass4-kyc-whitelist.a.mdx";
 
-Assert that only KYC-verified addresses can perform privileged actions across multiple dapps using a shared registry
+A token issuer requires approved callers for its mint and transfer entry points. This template checks those callers against a configured registry.
 
-## When to Use This Pattern
+## Behavior
 
-Since regulated funds and prime brokerages can only gain exposure into regulated products, a DeFi protocol may want to attract greater fund deployment by proving itself as a compliant venue. This assertion is a simple proof-of-concept that demonstrates a single, shared registry that multiple applications can reference.
+`OnlyAccreditedCanMintAssertion` registers the example's mint and transfer selectors. It scans successful `CALL` frames to the adopter, up to 32 matches per selector, and checks each immediate caller's accreditation.
 
-It’s designed such that
+## Configuration
 
-- Users complete KYC once and gain access to all integrated protocols; no redundant process to verify on each protocol
-- The protocol can adopt KYC requirements without implementing their own verification systems
-- Registry owners maintain centralized control over access permissions, the owner may revoke an investor accrediation once and have it impact access for all integrated protocols
+Pass the registry address to the constructor. Replace the example interface with the token's exact selectors and confirm that the registry implements the expected lookup. Decide whether accreditation applies to the operator, recipient, sender, or all three before adapting the policy.
 
-## What This Pattern Checks
+<Warning>
+The source calls the registry directly. Adapt that lookup to an explicit snapshot read with `ph.staticcallAt` before using it in the isolated assertion runtime. The table describes the intended caller policy once that lookup is available.
+</Warning>
 
-What you should know about this KYC assertion example:
+## Scenarios
 
-- It is triggered on a specific function call. For example, a mint or transfer request on the implementation contract.
-- When triggered, the assertion references a shared registry contract, here named the `AccreditedInvestorRegistry` which maintains the whitelist of KYC-verified addresses.
-- The assertion validates that `msg.sender` exists in the KYC registry before allowing execution of protected functions. This prevents non-KYC addresses from interacting with regulated tokens or permissioned protocol functions.
-- It is assumed the admin that controls the Registry may be different than the integrating protocol’s admin.
+| Transaction | Result |
+| --- | --- |
+| Accredited caller invokes a covered function | Accepted |
+| Unaccredited immediate caller invokes it | Rejected |
+| Accredited router sends tokens to an unaccredited recipient | Recipient is not checked by this template |
 
-## Assertion Pattern
+## Coverage limits
 
-<ass4KycWhitelist />
+The template does not check recipients or the original transaction sender. Its `CALL` filter and bounded scan are not complete coverage of arbitrary proxy or batch traces. Test the deployed call structure, including batches above the scan bound. For address-argument screening, see the [Cap example](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/cap/src/CapOfacComplianceAssertion.sol).
 
-<Note>Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).</Note>
+## Source
 
-## Related Patterns
-- [Owner Change](/assertions-book/assertions/ass05-ownership-change)
-- [Timelock Verification](/assertions-book/assertions/ass01-impl-addr-change)
+The [reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass4-kyc-whitelist.a.sol) is a teaching template. The [example setup guide](./run-an-example) provides the pinned checkout and test procedure.
+
+<Example />

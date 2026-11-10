@@ -1,0 +1,56 @@
+---
+title: 'Investigate a Rejected Transaction'
+description: 'Find an invalidation, read its rejection reason, and compare transaction and assertion traces.'
+---
+
+Use the [Phylax platform](https://ethereum.phylax.systems) to identify which policy rejected a transaction and why. Open your project or follow an alert's investigation link.
+
+## 1. Find the Event
+
+Open **All invalidations**, filter by assertion name, and select an event. Check its category:
+
+| Category | Meaning |
+| --- | --- |
+| Prevented | Transactions blocked by enforcement. |
+| Alert-only | Violations observed without blocking live transactions. |
+| Simulated | Simulation results. |
+
+<Frame caption="Invalidations are grouped by outcome; this example has alert-only and simulated events">
+  <img src="/images/platform/invalidations.png" alt="All invalidations showing no prevented events, two alert-only events, and five simulated events" />
+</Frame>
+
+## 2. Read the Rejection Reason
+
+Open the transaction replay. In **Replay overview**, check the transaction, affected contract, assertion, and rejection reason. **What changed** shows transfers and other events from the replay.
+
+<Frame caption="The replay identifies the assertion and its outflow-limit rejection reason">
+  <img src="/images/platform/invalidation-replay.png" alt="Replay overview showing a withdrawal rejected by TradingVaultOutflowAssertion because the outflow limit was exceeded" />
+</Frame>
+
+This event is **Alert-only**. The **Transaction rejected** badge describes the replay result, not a live transaction being blocked. An onchain guard revert is a separate event from an assertion rejection.
+
+## 3. Compare Execution Evidence
+
+Expand **Transaction Execution** and **Assertion Evaluation** under **Execution evidence**. Follow the protocol calls, then inspect the assertion that rejected their outcome.
+
+In this example, the withdrawal and token transfer succeed in the replay. `TradingVaultOutflowAssertion` then reads `outflowContext` and `getErc20Transfers` and rejects the result.
+
+<Frame caption="The protocol calls succeed in the replay; the assertion evaluation rejects their outcome">
+  <img src="/images/platform/invalidation-execution-expanded.png" alt="Expanded execution evidence showing successful withdrawal and token transfer calls, followed by TradingVaultOutflowAssertion querying outflow context and ERC20 transfers before rejection" />
+</Frame>
+
+## 4. Inspect the Raw Traces
+
+Expand **Developer Data**. Compare **Raw Transaction Trace** with **Raw Assertion Trace** to inspect call arguments, return values, storage changes, and the assertion's revert reason.
+
+The assertion trace below ends with `TradingVault: outflow limit exceeded`. Use the copy button to share the relevant trace with your FDE.
+
+<Frame caption="The raw assertion trace ends with the outflow-limit rejection">
+  <img src="/images/platform/invalidation-raw-traces.png" alt="Developer Data showing a successful withdrawal transaction trace and an assertion trace ending in Revert: TradingVault: outflow limit exceeded" />
+</Frame>
+
+## 5. Review the Outcome
+
+Compare the rejection with the approved policy. If it blocked intended behavior, review the event with your FDE and add a regression test before [replacing the release](./managing-your-circuit-breakers#replace-or-remove-a-release). Include the policies you intend to retain; assertions cannot be removed individually from an active release.
+
+To receive invalidation notifications in Slack, follow [Setting Up Alerting](./setting-up-alerting).
