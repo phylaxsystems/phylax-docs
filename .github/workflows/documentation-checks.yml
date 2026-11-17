@@ -20,3 +20,30 @@ jobs:
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+
+  observation-examples:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PCL_VERSION: "1.9.0"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          repository: phylaxsystems/credible-std
+          ref: fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0
+          path: examples/docs/lib/credible-std
+          submodules: recursive
+          persist-credentials: false
+      - name: Install pinned PCL
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$PCL_VERSION" --repo phylaxsystems/pcl \
+            --pattern "pcl-${PCL_VERSION}-linux-x86_64.tar.gz"
+          tar -xzf "pcl-${PCL_VERSION}-linux-x86_64.tar.gz"
+          sudo install -m 0755 pcl/pcl /usr/local/bin/pcl
+          pcl --version
+      - name: Test the displayed observation examples
+        working-directory: examples/docs
+        run: pcl test

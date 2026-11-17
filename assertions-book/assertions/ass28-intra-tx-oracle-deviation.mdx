@@ -1,36 +1,40 @@
 ---
 title: "In-Transaction Oracle Changes"
-description: "Observe prices at the call that consumes them"
+description: "Compare covered oracle updates with explicit call snapshots"
 ---
 
-import Example from "/snippets/ass28-intra-tx-oracle-deviation.a.mdx";
+A price can leave its allowed range and return before transaction end. Comparing only transaction endpoints misses that excursion.
 
-An attacker can change a price, borrow against it, then restore it in one transaction. Equal transaction endpoints do not show the price used by the borrow.
+## Policy and scope
 
-<Warning>
-The reviewed upstream example needs correction before production use. The limitation below is present in the linked source; the imported code is preserved for comparison.
-</Warning>
+**Spec:** Reshiram. **Evidence:** locally tested synthetic oracle. **Lifecycle:** adaptation example, not a KiloEx replay or a production oracle policy.
 
-## Source limitation
+`OracleSnapshotsAssertion` below compares slot zero after every covered `updatePrice(uint256)` call with its pre-transaction value. It permits an absolute difference of at most `start / 10`, using integer rounding. A zero starting price therefore permits only zero. The 10% band illustrates behavior; it is not a recommended market threshold.
 
-The legacy `IntraTxOracleDeviationAssertion` intends to compare each update with a 10% band around the starting price. It constructs transaction and call fork identifiers but does not pass them into its `price()` reads. Repeated direct reads do not inspect the named snapshots. In the local PCL test, the direct getter call reverted before the deviation comparison, including for an update inside the intended band.
+## Tested example
 
-## Adaptation requirements
+import Example from "/snippets/docs-observation-assertions.mdx";
 
-For a writable oracle, bind each observed update to its call ID and read at that call's boundary. For a lending operation, inspect the oracle result actually consumed by that operation. A consumed value can differ from both stored endpoints. The [Aave oracle examples](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/aave/README.md) illustrate version-specific consumed-price checks.
+<Example />
+
+The complete fixture and tests are in `examples/docs` in the documentation repository. The three assertions were exercised with PCL 1.9.0, Solidity 0.8.29, and credible-std `fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0` on Linux ARM64 (November 17, 2026): 14 tests pass, including four fuzz tests with 256 runs each. This establishes local behavior, not production dispatch or historical exploit prevention.
 
 ## Scenarios
 
-| Scenario | Meaning |
-| --- | --- |
-| Price starts at 100 and a covered update sets 105 | Within an intended 10% band |
-| Price becomes 150, is used for borrowing, then returns to 100 | Must be tested at the consumption boundary |
-| An external oracle changes without calling the protected contract | Adopter-trigger coverage must be established separately |
+| Starting price | Covered updates | Expected result |
+| --- | --- | --- |
+| 100 | 90 through 110 | Allowed |
+| 100 | 89 or 111 | Rejected |
+| 100 | 150, then 100 | Rejected despite restoration |
+| 100 | 105, then 100 | Allowed |
+| 0 | 1 | Rejected |
 
-Do not rely on the source below to catch a temporary price excursion. Test multiple updates, reverted calls, nested reads, oracle replacement, and restoration in a single transaction. Match the baseline and observation point to the actual lending decision.
+## Adaptation requirements
+
+The fixture has one price slot and one update path. A real lending policy must inspect the value consumed by the borrow or liquidation, including external oracle calls, scaling, freshness, replacement, and reverted calls. An external update that never touches the adopter requires separate trigger coverage. See [Call Frame Context](/credible/use-case-mappings/call-frame-context).
 
 ## Legacy source
 
-[Reviewed source](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass28-intra-tx-oracle-deviation.a.sol). See [running and adapting examples](./run-an-example) for the pinned library revision.
+The [pinned upstream ass28](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book/assertions/src/ass28-intra-tx-oracle-deviation.a.sol) constructs fork identifiers without using them in its direct getter reads. It is retained in the import inventory for provenance, but is no longer displayed as the working example. The replacement passes the observation point into `loadStateAt` explicitly.
 
-<Example />
+<span id="source-limitation" />

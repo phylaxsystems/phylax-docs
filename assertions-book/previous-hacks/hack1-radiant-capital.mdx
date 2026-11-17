@@ -1,78 +1,30 @@
 ---
-title: Radiant Capital Hack
-description: Ownership change of lending pools lead to drain
+title: "Radiant Capital Ownership Takeover"
+description: "Historical mechanism, candidate policy, and evidence limits for Radiant Capital Ownership Takeover"
 ---
 
-## What Happened
+This case explains the failure mechanism and the policy boundary it suggests.
 
-In October 2024, Radiant Capital was hacked. You can read more about the hack on [Rekt](https://rekt.news/radiant-capital-rekt2/).
-In short, the attacker managed to gain control over 3 signers of the Radiant Capital multisig, which allowed the attacker to change ownership of the lending pools and ultimately drain the pools.
-An ownership-change assertion is a candidate control for this path. Demonstrating prevention requires a pinned replay, coverage of the ownership-changing call, and an enforcement path the compromised signers cannot bypass or disable. This page explains the policy idea; it does not supply that evidence.
+**Risk domain:** Authority and configuration. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
 
-## Why This Matters
+## What the source establishes
 
-Compromised signers can authorize harmful ownership changes. An assertion can reject those changes or permit transfers only to approved addresses.
+Radiant’s reimbursement proposal identifies the October 16, 2024 multisig exploit as causing over $50 million in losses. The case concerns compromised authorization and subsequent control of protocol assets, rather than a mathematical error in lending accounting. [Radiant reimbursement proposal](https://community.radiant.capital/t/feedback-101-deploying-merged-claim-contracts-for-radiant-depositor-reimbursement/1936).
 
-Plan legitimate transfers around the policy and its change delays.
+## Candidate policy
 
-## Assertion Pattern
+Lock the configured owner and administrator slots outside an authorized change process, and constrain the operations or outflows those roles can initiate.
 
-The assertion checks changes to the lending pool's owner, emergency admin, and pool admin.
+## Coverage and limitations
 
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+A correct signature can authorize a malicious change. The assertion update authority, allowed migrations, proxy layout, and all relevant control slots must be specified. Checking one owner slot does not protect every administrative path.
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
-import {AssertionSpec} from "../lib/credible-std/SpecRecorder.sol";
+A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](/credible/testing-strategy) and [Ethereum architecture](/credible/architecture-overview).
 
-interface ILendingPoolAddressesProvider {
-    function owner() external view returns (address);
-    function getEmergencyAdmin() external view returns (address);
-    function getPoolAdmin() external view returns (address);
-}
+## Related patterns
 
-// Radiant Lending Pool on Arbitrum that got hacked and drained
-contract LendingPoolAddressesProviderAssertions is Assertion {
-    constructor() {
-        registerAssertionSpec(AssertionSpec.Reshiram);
-    }
+Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](/credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
 
-    ILendingPoolAddressesProvider public lendingPoolAddressesProvider =
-        ILendingPoolAddressesProvider(0x091d52CacE1edc5527C99cDCFA6937C1635330E4); //arbitrum
-
-    function triggers() external view override {
-        // Trigger on any storage change to catch ownership modifications
-        registerTxEndTrigger(this.assertionOwnerChange.selector);
-        registerTxEndTrigger(this.assertionEmergencyAdminChange.selector);
-        registerTxEndTrigger(this.assertionPoolAdminChange.selector);
-    }
-
-    // Check if the owner has changed
-    function assertionOwnerChange() external view {
-        PhEvm.ForkId memory preFork = _preTx();
-        address prevOwner = lendingPoolAddressesProvider.owner();
-        PhEvm.ForkId memory postFork = _postTx();
-        address newOwner = lendingPoolAddressesProvider.owner();
-        require(prevOwner == newOwner, "Owner has changed");
-    }
-
-    // Check if the emergency admin has changed
-    function assertionEmergencyAdminChange() external view {
-        PhEvm.ForkId memory preFork = _preTx();
-        address prevEmergencyAdmin = lendingPoolAddressesProvider.getEmergencyAdmin();
-        PhEvm.ForkId memory postFork = _postTx();
-        address newEmergencyAdmin = lendingPoolAddressesProvider.getEmergencyAdmin();
-        require(prevEmergencyAdmin == newEmergencyAdmin, "Emergency admin has changed");
-    }
-
-    // Check if the pool admin has changed
-    function assertionPoolAdminChange() external view {
-        PhEvm.ForkId memory preFork = _preTx();
-        address prevPoolAdmin = lendingPoolAddressesProvider.getPoolAdmin();
-        PhEvm.ForkId memory postFork = _postTx();
-        address newPoolAdmin = lendingPoolAddressesProvider.getPoolAdmin();
-        require(prevPoolAdmin == newPoolAdmin, "Pool admin has changed");
-    }
-}
-```
+<span id="what-happened" />
+<span id="why-this-matters" />
+<span id="assertion-pattern" />

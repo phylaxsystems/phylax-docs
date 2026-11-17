@@ -1,139 +1,37 @@
 ---
 title: Read Logs
-description: Capture and verify logs as a signal for changes in the state of the contract.
+description: Filter recorded events and compare their claims with actual state changes.
 ---
 
-Read log mappings describe how assertions can inspect emitted events and use them as signals for state changes during a transaction.
+Logs describe what a contract emitted. An assertion can compare those claims with storage snapshots; an event alone is not proof that the corresponding state change occurred.
 
 ## Status
 
-**Supported.**
+**Spec:** Reshiram. **Evidence:** locally tested fixture. **Scope:** non-indexed `Added(uint256)` events from a counter with a `uint256` in slot zero.
 
-## Implementation Details
+## API and behavior
 
-### Required Cheatcodes
+Use `getLogsQuery(query, fork)` for snapshot-aware log inspection and `getLogsForCall(query, callId)` for a call scope. The older `getLogs()` selector is rejected under Reshiram in the tested PCL 1.9.0 runtime.
 
-- `getLogs()`
+`LogsAssertion` below reads transaction logs at `_postTx()`. It checks the emitter, topic count, and event signature before decoding the non-indexed amount. It compares the summed amounts with the actual slot-zero change. Indexed parameters belong in topics and require a different decoder.
 
-### Example Implementation
+## Tested example
 
-<Warning>
-The following fragments illustrate reconstruction logic; they are not a compilable fixture. The assertion fragment writes storage-backed bookkeeping inside a `view` function. Rework that bookkeeping into local memory, supply imports and fixtures, and test the relevant paths before use. For a runnable starting point, use [Run an Example Policy Locally](../pcl-quickstart).
-</Warning>
+import Example from "/snippets/docs-observation-assertions.mdx";
 
-Protocol:
+<Example />
 
-```solidity
-import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+The complete fixture and tests are in `examples/docs` in the documentation repository. The three assertions were exercised with PCL 1.9.0, Solidity 0.8.29, and credible-std `fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0` on Linux ARM64 (November 17, 2026): 14 tests pass, including four fuzz tests with 256 runs each. This establishes local behavior, not production dispatch or historical exploit prevention.
 
-contract Protocol {
-    event Transfer(address from, address to, uint256 amount);
+## Coverage limits
 
-    mapping(address => uint256) public balances;
+The tests cover two additions, incorrect event amounts, a silent state write, unrelated signatures, and another emitter. A silent write is caught because the slot comparison is independent of the events. If events are also the only way to discover affected accounts, a silent write to an undiscovered account can still escape the check.
 
-    function transfer(address to, uint256 amount) public {
-        balances[msg.sender] -= amount;
-        balances[to] += amount;
-        emit Transfer(msg.sender, to, amount);
-    }
+The example does not cover reverted child calls, proxy emission addresses, rebasing tokens, or ERC-20 transfer accounting. Use [Call Frame Context](./call-frame-context) when intermediate state matters and [Modified Key Discovery](./modified-keys) for its supported mapping-key discovery cases.
 
-    function mint(address to, uint256 amount) public {
-        balances[to] += amount;
-        emit Transfer(address(0), to, amount);
-    }
-}
-```
-
-Assertion:
-
-```solidity
-contract ReadLogsAssertion is Assertion {
-    constructor() {
-        registerAssertionSpec(AssertionSpec.Reshiram);
-    }
-
-    mapping(address => int256) public balanceChanges;
-    address[] changedAddresses;
-
-    function triggers() public view override {
-        registerTxEndTrigger(this.assertionReadLogs.selector);
-    }
-
-    function assertionReadLogs() public view {
-        Protocol protocol = Protocol(ph.getAssertionAdopter());
-        PhEvm.Log[] memory logs = ph.getLogs();
-
-        for (uint256 i = 0; i < logs.length; i++) {
-            (address from, address to, uint256 amount) = abi.decode(logs[i].data, (address, address, uint256));
-            // There is an edge case where the changedBalance has gone back to 0
-            // In this case, it would be duplicated in the changedAddresses array
-            // Additional flags can remove duplicates
-            if (balanceChanges[from] == 0) {
-                changedAddresses.push(from);
-            }
-            if (balanceChanges[to] == 0) {
-                changedAddresses.push(to);
-            }
-            balanceChanges[from] -= int256(amount);
-            balanceChanges[to] += int256(amount);
-        }
-
-        uint256 preBalance;
-        uint256 absDiff;
-
-        for (uint256 i = 0; i < changedAddresses.length; i++) {
-            bytes32 balanceSlot = keccak256(abi.encode(changedAddresses[i], uint256(0)));
-            PhEvm.ForkId memory preTx = _preTx();
-            PhEvm.ForkId memory postTx = _postTx();
-
-            preBalance = uint256(ph.loadStateAt(address(protocol), balanceSlot, preTx));
-            uint256 postBalance = uint256(ph.loadStateAt(address(protocol), balanceSlot, postTx));
-
-            if (balanceChanges[changedAddresses[i]] > 0) {
-                absDiff = uint256(balanceChanges[changedAddresses[i]]);
-                require(postBalance == preBalance + absDiff, "Balance change mismatch");
-            } else {
-                absDiff = uint256(balanceChanges[changedAddresses[i]] * -1);
-                require(postBalance == preBalance - absDiff, "Balance change mismatch");
-            }
-        }
-    }
-}
-```
-
-### Implementation Notes
-
-- **Fetching logs:**
-    - Use `getLogs()` to retrieve logs
-    - Filter for specific events
-    - Decode parameters using `abi.decode()` to reconstruct event arguments
-
-- **State verification:**
-    - Use explicit `ForkId` values with `loadStateAt()` to compare states
-    - Validate state changes match expected behavior based on inputs
-
-- **State tracking considerations:**
-    - Manually track modified storage slots/keys
-    - Consider all functions that modify relevant state variables
-    - Account for complex state dependencies between function calls
-
-- **State reconstruction considerations:**
-    - Events are evidence of emitted data, not proof that the expected storage change occurred. Compare them with explicit storage reads.
-    - This example compares transaction endpoints. For checks around a matched call, use [Call Frame Context](./call-frame-context).
-    - Filter logs by emitter and event signature before decoding; unrelated logs can have different data layouts.
-
-## Example Use Cases
-
-- Transfer events of ERC20 tokens
-- Ownership changes
-- Whenever a log is emitted, which represents a state change, it can be used to reconstruct the expected behavior
-
-## Implementation Considerations
-
-1. **Parameter-dependent Storage Access**
-    - Derive storage slots from event parameters and the known contract layout.
-    - [Modified Key Discovery](./modified-keys) offers best-effort discovery of written mapping keys on supported Reshiram runtimes; it does not enumerate every mapping entry.
-
-2. **Requirement of events to be emitted**
-    - If it is not certain that the event is emitted upon state change, the state change is not tracked
-    - Might result in false negatives
+<span id="implementation-details" />
+<span id="required-cheatcodes" />
+<span id="example-implementation" />
+<span id="implementation-notes" />
+<span id="example-use-cases" />
+<span id="implementation-considerations" />

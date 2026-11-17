@@ -138,7 +138,7 @@ See the [credible-std examples](https://github.com/phylaxsystems/credible-std/tr
 
 ## Gas Limits
 
-Assertion execution has a default gas limit of 3,000,000. Node operators can configure this limit to keep assertion validation within the network's execution budget.
+Assertion execution has a runtime-configured gas budget. Obtain the active budget from the deployment operator and test the maximum expected workload against it; do not infer it from the local EVM block gas limit.
 
 Exceeding the limit causes `OutOfGas` and invalidates the candidate, even if the invariant holds. This prevents attackers from bypassing validation through expensive inputs. Test the maximum expected workload.
 

@@ -5,9 +5,9 @@ description: "Choose a circuit breaker or assertion pattern for the operation yo
 
 Choose a pattern by the transaction you need to constrain. Each reference describes the measured quantity, configuration, expected outcomes, and coverage limits.
 
-This edition is reviewed against [credible-std at `fe49de6`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0), dated October 28, 2026. Examples are starting points for a policy tied to your deployed contracts. **A contract with no registered triggers enforces nothing.**
+This edition is reviewed against [credible-std at `fe49de6`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0), source dated October 28, 2026; documentation reviewed November 17, 2026. Examples are starting points for a policy tied to your deployed contracts. **A contract with no registered triggers enforces nothing.**
 
-## Start with a working example
+## Choose a starting point
 
 - [Run an ownership policy locally](./run-an-example): execute a permitted operation, reject an ownership change, and verify rollback.
 - [Compose an ERC-4626 policy](./vault-policies): combine call-level share-price checks with a rolling outflow cap.
@@ -21,7 +21,6 @@ This edition is reviewed against [credible-std at `fe49de6`](https://github.com/
 | [Cumulative outflow](./ass20-erc20-drain) | Net ERC-20 outflow as a fraction of the window's balance baseline |
 | [Cumulative inflow](./ass22-erc20-inflow-breaker) | Net ERC-20 inflow against that baseline |
 | [Flow rates](./rate-of-change-circuit-breakers) | Peak, latest, and mean rate context during cumulative dispatch |
-| [Anomaly-gated policies](./anomaly-gated-policies) | A model trigger plus explicit transaction-effect checks |
 | [Native ETH outflow](./ass21-ether-drain) | Legacy example needs snapshot correction; not an active ETH-loss guarantee |
 
 [Flow-limit semantics](./circuit-breakers) explains netting, block buckets, and history reconstruction. Thresholds in these examples illustrate behavior; choose production limits from your protocol's activity and response requirements.
@@ -49,7 +48,11 @@ This edition is reviewed against [credible-std at `fe49de6`](https://github.com/
 | [Deposit and withdrawal share price](./ass13-erc4626-deposit-withdraw) | Asset-per-share ratio does not decrease across those calls |
 | [Harvest balance and share price](./ass18-harvest-increases-balance) | Two stored values do not decrease during a covered harvest |
 
-## Oracle and liquidation examples that need correction
+## Oracle and valuation
+
+[In-transaction oracle changes](./ass28-intra-tx-oracle-deviation) provides a tested synthetic fixture that observes each covered update. Its consumption and trigger limits are explicit; it is not a historical exploit replay.
+
+## Legacy examples requiring adaptation
 
 These legacy pages retain their source for comparison and explain the replacement approach. They are not deployment-ready policies.
 
@@ -57,8 +60,23 @@ These legacy pages retain their source for comparison and explain the replacemen
 | --- | --- |
 | [Oracle freshness](./ass10-oracle-validation) | Bind the oracle and timestamp read to the operation's snapshot |
 | [TWAP deviation](./ass11-twap-deviation) | Use snapshot reads and an exact scaled comparison |
-| [In-transaction oracle changes](./ass28-intra-tx-oracle-deviation) | Observe the price at each relevant call or consumption point |
 | [Tick bounds and spacing](./ass15-price-within-ticks) | Apply spacing to initialized ticks, not the current pool tick |
 | [Liquidation health improvement](./ass16-liquidation-health-factor) | Read distinct pre- and post-call states and match liquidation semantics |
 
 For production preparation, follow [Ethereum assertion testing](/credible/testing-strategy). The [hack case studies](/assertions-book/previous-hacks/prev-hacks-index) provide historical context rather than proof that an example covers every attack path.
+
+## Read the catalog facets
+
+| Facet | Meaning | Where to look |
+| --- | --- | --- |
+| Risk domain | Flow, authority/configuration, accounting, solvency, or valuation | Pattern groups above and [case studies](../previous-hacks/prev-hacks-index) |
+| Protocol family | The storage and economic model being adapted | [Aave](./aave-v3-suite), [ERC-4626](./vault-policies), [Balancer custody](./balancer-outflow), and historical [Optimism FMA](./optimism-fma-suite) |
+| Dispatch mechanism | When the runtime invokes the assertion | [Triggers](/credible/triggers); [anomaly gating](./anomaly-gated-policies) is a dispatch choice, not a separate risk domain |
+| Specification | APIs the assertion requests | [Legacy, Reshiram, and Experimental](/credible/cheatcodes-reference#assertion-specs) |
+| Lifecycle | Current example, legacy adaptation, or historical design | The entry's status and limitations |
+| Evidence | Source review, compilation, local behavior tests, exploit replay, or live enforcement | The entry's stated validation; one level does not imply another |
+
+Imported Book sources compile at the pinned revision, but most are not individually behavior-tested by this documentation review. The ownership tutorial and local observation fixtures identify their executed tests. Read warnings before copying an example.
+
+<span id="start-with-a-working-example" />
+<span id="oracle-and-liquidation-examples-that-need-correction" />

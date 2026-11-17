@@ -131,7 +131,7 @@ Returns all logs emitted during the assertion-triggering transaction.
 function getLogs() external returns (Log[] memory logs);
 ```
 
-Use `getLogsQuery(query, fork)` when you need emitter or signature filtering, or `getLogsForCall(query, callId)` when you need call-scoped logs.
+For Reshiram, use `getLogsQuery(query, fork)` for snapshot reads or `getLogsForCall(query, callId)` for call-scoped logs. PCL 1.9.0 rejects the legacy `getLogs()` selector under Reshiram; see the [tested log example](./use-case-mappings/read-logs).
 
 ### `getAllCallInputs`
 

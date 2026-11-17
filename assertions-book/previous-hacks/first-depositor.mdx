@@ -1,69 +1,32 @@
 ---
-title: First Depositor Bug
-description: First depositor bug in Compound / Aave v2 lending protocols
+title: "First-Depositor Share Inflation"
+description: "Historical mechanism, candidate policy, and evidence limits for First-Depositor Share Inflation"
 ---
 
-## What Happened
+This case explains the failure mechanism and the policy boundary it suggests.
 
-Background: https://akshaysrivastav.hashnode.dev/first-deposit-bug-in-compoundv2-and-its-forks
+**Risk domain:** Accounting and rounding. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
 
-The First Depositor Attack in Compound / Aave v2 lending protocols:
+## What the source establishes
 
-Key points:
+Akshay Srivastav’s Compound V2 research explains how a very small initial share supply and a direct donation can raise the exchange rate so that a later deposit rounds down severely, potentially to zero shares. This is a vulnerability pattern, not one incident with a single loss total, and it is not a claim about every lending protocol. [Original first-deposit research](https://akshaysrivastav.hashnode.dev/first-deposit-bug-in-compoundv2-and-its-forks).
 
-- First depositor supplies a tiny amount (e.g. 1 wei) of assets
-- First depositor donates a large amount directly to the lending pool (bypassing supply)
-- This artificially inflates the exchange rate between shares and assets
-- Next depositor will receive very few shares for their deposit
-- If next depositor's amount is smaller than exchange rate, they will receive 0 shares due to rounding error
-- First depositor owns all shares, so they can withdraw all assets
+## Candidate policy
 
-Example:
+Check the minimum shares returned for a deposit and bound permitted rounding loss using explicit asset and share units. Define bootstrap behavior separately from the mature pool.
 
-1. Attacker deposits 1 wei, gets 1 share
-2. Attacker donates 1000 tokens directly
-3. Exchange rate is now 1000.00..01 tokens : 1 share
-4. Victim deposits 100 tokens, gets only ~0.1 shares due to inflated rate -> will be rounded down to 0
-5. Attacker withdraws 1 share and gets 1100 tokens, stealing all of victim's deposit
+## Coverage and limitations
 
-## Why This Matters
+A minimum total supply alone does not validate the depositor’s outcome. Initialization, empty-pool transitions, direct donations, decimal differences, and legitimate exchange-rate changes must be tested. The right baseline depends on the actual share-accounting design.
 
-Traditional prevention:
+A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](/credible/testing-strategy) and [Ethereum architecture](/credible/architecture-overview).
 
-- Attack only makes sense if attacker owns all shares (or close to it)
-  - If he owns all shares, donating tokens to the pool will still be owned by the attacker
-- Protocols typically deposit with opening the market atomically
-  - This means not all shares are owned by the attacker
-  - Adjustments to the protocol could mint tokens to 0x0 upon first mint/deposit
-- Many forks fail to combine these actions
+## Related patterns
 
-## Assertion Pattern
+Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](/credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
 
-Assertions can require atomic market creation and the initial deposit, or reject deposits that would round to zero shares.
-
-Sonne Finance planned an atomic deployment and deposit, but its governance process allowed the transactions to execute out of order.
-
-### Example Assertion: Enforce atomically opening the market and depositing first assets
-
-```solidity
-function assertionHasMinimumSupply() public view {
-    Market market = Market(address(0x1234));
-    require(market.totalSupply() > MINIMUM_SUPPLY, "Market has no supply");
-}
-```
-
-### Example Assertion: Enforce exchange rate < deposit amount
-
-```solidity
-function assertionExchangeRate() public view {
-    Market market = Market(address(0x1234));
-
-    PhEvm.CallInputs[] memory inputs = ph.getCallInputs(address(cToken), cToken.mint.selector);
-
-    for (uint256 i = 0; i < inputs.length; i++) {
-        PhEvm.CallInputs memory input = inputs[i];
-        (uint256 amount) = abi.decode(input.input, (uint256));
-        require(amount / market.exchangeRate() > 0, "Did not receive any shares");
-    }
-}
-```
+<span id="what-happened" />
+<span id="why-this-matters" />
+<span id="assertion-pattern" />
+<span id="example-assertion-enforce-atomically-opening-the-market-and-depositing-first-assets" />
+<span id="example-assertion-enforce-exchange-rate--deposit-amount" />

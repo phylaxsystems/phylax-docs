@@ -7,6 +7,8 @@ This suite converts failure modes from [Optimism's security analysis](https://gi
 
 See the [Phylax fork](https://github.com/phylaxsystems/optimism/tree/feat/fma-assertions/packages/contracts-bedrock/assertions) for implementations.
 
+**Lifecycle:** historical protocol example. **Spec:** verify in the linked fork. **Evidence:** source catalog, not executed in this review. This suite is not an active OP Stack integration guide; see [integration status](/credible/l2-integrations/architecture-op-stack).
+
 ## Approach
 
 Each assertion checks a condition identified by the failure mode analysis. For example, state-consistency checks can constrain withdrawals when AnchorStateRegistry reports incorrect state.
@@ -19,7 +21,7 @@ This collection validates the **ETHLockbox** contract's security properties, cor
 
 #### Key Checks:
 - **FM1: Unauthorized Access Protection** - Ensures only authorized portals can call `lockETH` and `unlockETH` functions
-- **FM2: Drain Prevention** - Prevents the lockbox from being drained to zero balance in a single transaction
+- **FM2: Drain Bound** - Proposes preventing the lockbox from being drained to zero balance in a single transaction
 - **FM3: Proxy Upgrade Protection** - Monitors for unexpected proxy implementation address changes that could indicate buggy upgrades
 
 #### Risk Context:

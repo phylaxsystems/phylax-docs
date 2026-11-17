@@ -1,62 +1,29 @@
 ---
-title: Compound Upgrade Bug
-description: Compound comptroller contract had a one letter bug that allowed users to receive massive amounts of COMP rewards
+title: "Compound Reward Accrual Upgrade Bug"
+description: "Historical mechanism, candidate policy, and evidence limits for Compound Reward Accrual Upgrade Bug"
 ---
 
-## What Happened
+This case explains the failure mechanism and the policy boundary it suggests.
 
-Compound upgraded their comptroller contract to https://etherscan.io/address/0x374abb8ce19a73f2c4efad642bda76c797f19233 which had a one letter bug on L1217.
+**Risk domain:** Accounting and rounding. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
 
-The bug occurred when users supplied tokens to markets with zero COMP rewards before initialization. In these cases, the supplyIndex equaled compInitialIndex (1e36), but the reward calculation logic was skipped due to the incorrect comparison operator.
+## What the source establishes
 
-```solidity
-if (supplierIndex == 0 && supplyIndex > compInitialIndex) {
-    // Covers the case where users supplied tokens before the market's supply state index was set.
-    // Rewards the user with COMP accrued from the start of when supplier rewards were first
-    // set for the market.
-    supplierIndex = compInitialIndex;
-}
-```
+Compound Proposal 65 documents over-accrued COMP introduced by Proposal 62 and the corrective work following Proposal 64. The repair distinguishes unclaimed excess accrual from rewards already claimed. This page does not equate an exposed balance, an accrual error, and realized loss. [Compound Proposal 65](https://hackmd.io/@TylerEther/BkdJGdRVY).
 
-The bug was caused by using > instead of >= in the check. This meant that when supplyIndex equaled compInitialIndex (1e36), the if block was skipped, leaving supplierIndex at 0. The large difference between supplierIndex (0) and supplyIndex (1e36) caused the protocol to pay out massive unintended rewards.
+## Candidate policy
 
-The previous version worked because supplyIndex started at 0 instead of 1e36, though >= would have been more correct.
+Bound incremental rewards against configured emission speeds, elapsed blocks, market indices, and account balances at explicit snapshots. Test initialization at the exact index boundary.
 
-## Assertion Pattern
+## Coverage and limitations
 
-The assertion calculates the maximum COMP accrual rate and rejects distributions above it.
+A universal maximum reward amount rejects legitimate accumulated claims. Internal Solidity functions do not have external call frames merely because a selector is constructed for them; attach checks to actual reachable operations or a transaction boundary. Upgrade and correction transactions need explicit treatment.
 
-<Warning>
-The code below is **conceptual pseudo code** to illustrate the invariant that should be enforced. It uses simplified syntax for accessing storage mappings (`compound.compAccrued[supplier]`) that would not compile in actual Solidity. A real implementation would need to use proper getter functions or storage slot calculations via `ph.loadStateAt()`.
-</Warning>
+A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](/credible/testing-strategy) and [Ethereum architecture](/credible/architecture-overview).
 
-```solidity
-// CONCEPTUAL - Verify that COMP accrual never exceeds the maximum possible rate
-function assertionValidCompAccrual() external view {
-    PhEvm.CallInputs[] memory distributions = ph.getCallInputs(
-        address(comptroller), Comptroller.distributeSupplierComp.selector
-    );
+## Related patterns
 
-    for (uint256 i = 0; i < distributions.length; i++) {
-        // Decode call inputs (selector already stripped by cheatcode)
-        (address cToken, address supplier) = abi.decode(distributions[i].input, (address, address));
+Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](/credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
 
-        // Check COMP accrued before distribution
-        PhEvm.ForkId memory preCallFork = PhEvm.ForkId({forkType: 2, callIndex: distributions[i].id});
-        uint256 preAccrued = comptroller.compAccrued(supplier);
-        uint256 supplyIndex = comptroller.compSupplyState(cToken).index;
-        uint256 maxDeltaPerToken = supplyIndex - comptroller.compInitialIndex();
-        uint256 supplierTokens = CToken(cToken).balanceOf(supplier);
-        uint256 maxIncrease = supplierTokens * maxDeltaPerToken;
-
-        // Check COMP accrued after distribution
-        PhEvm.ForkId memory postCallFork = PhEvm.ForkId({forkType: 3, callIndex: distributions[i].id});
-        uint256 postAccrued = comptroller.compAccrued(supplier);
-
-        if (postAccrued > preAccrued) {
-            uint256 increase = postAccrued - preAccrued;
-            require(increase <= maxIncrease, "COMP accrual increase exceeds maximum possible rate");
-        }
-    }
-}
-```
+<span id="what-happened" />
+<span id="assertion-pattern" />

@@ -1,73 +1,30 @@
 ---
-title: Vestra DAO Hack
-description: Unchecked isActive flag in maturity
+title: "Vestra DAO Repeated Unstake"
+description: "Historical mechanism, candidate policy, and evidence limits for Vestra DAO Repeated Unstake"
 ---
 
-## What Happened
-In December 2024, VestraDAO was hacked. The hacker exploited a vulnerability in the `unStake` function which allowed users to stake and unstake without waiting for the maturity period.
-For an in-depth analysis of the hack, you can read this [post](https://x.com/_czepluch/status/1866112404242743590).
+This case explains the failure mechanism and the policy boundary it suggests.
 
-`unStake` set `isActive` to `false` but did not check the flag on later calls. The attacker repeatedly called it to extract yield until the protocol was drained.
+**Risk domain:** Accounting and rounding. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
 
-The code had no tests or audit. An assertion could reject repeated withdrawals while the protocol fix is prepared.
+## What the source establishes
 
-## Why This Matters
+QuillAudits’ analysis of the December 2024 incident describes repeated unstaking because `unStake` did not reject an already inactive stake. The issue is reuse of a redeemed stake, not merely bypassing its maturity time. [QuillAudits incident analysis](https://www.quillaudits.com/blog/hack-analysis/vestra-dao-500k-exploit-analysis).
 
-The missing `isActive` check could have been enforced by the contract or an assertion. The assertion approach still requires an integrated enforcement path.
+## Candidate policy
 
-## Assertion Pattern
-The assertion rejects `unStake` when `isActive` is already `false`.
-Alternatively, there could be an assertion that checks that the `totalStaked` is always equal to the sum of all `stakeAmount` in the `stakes` mapping. 
-This would require a way to iterate over all the stakes and sum them up, which is not yet supported by a cheatcode.
+At each covered unstake boundary, require the selected stake to be active before the call, inactive afterward, and paid at most its permitted amount. Select the stake using the actual caller and stake identifier.
 
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+## Coverage and limitations
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
-import {AssertionSpec} from "../lib/credible-std/SpecRecorder.sol";
+Transaction-end inactivity alone passes both the first and a repeated redemption. Nested calls, multiple stakes, legitimate partial exits, and storage layout must be covered. No conclusion about the project’s audit history follows from this bug.
 
-// VestraDAO interface
-interface IVestraDAO {
-    struct Stake {
-        uint64 startTime;
-        uint256 stakeAmount;
-        uint256 yield;
-        uint256 penalty;
-        uint64 endTime;
-        bool isActive;
-    }
+A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](/credible/testing-strategy) and [Ethereum architecture](/credible/architecture-overview).
 
-    mapping(address => mapping(uint8 => Stake)) public stakes;
+## Related patterns
 
-    function unStake(uint8 maturity) external;
-}
+Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](/credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
 
-contract VestraDAOHack is Assertion {
-    constructor() {
-        registerAssertionSpec(AssertionSpec.Reshiram);
-    }
-
-    IVestraDAO public vestraDAO = IVestraDAO(address(0xbeef));
-
-    function triggers() external view override {
-        registerFnCallTrigger(this.assertionExample.selector, vestraDAO.unStake.selector);
-    }
-
-    // Check that user was actively staked before unstaking
-    // This prevents double-unstaking by ensuring isActive was true before the call
-    function assertionExample() external view {
-        PhEvm.CallInputs[] memory unStakes = ph.getCallInputs(address(vestraDAO), vestraDAO.unStake.selector);
-
-        for (uint256 i = 0; i < unStakes.length; i++) {
-            uint8 maturity = abi.decode(unStakes[i].input, (uint8));
-            address from = unStakes[i].caller;
-
-            // Check BEFORE the unstake that the stake was active
-            PhEvm.ForkId memory preCallFork = PhEvm.ForkId({forkType: 2, callIndex: unStakes[i].id});
-            (,,,,,bool wasActive) = vestraDAO.stakes(from, maturity);
-            require(wasActive, "User was not actively staked for this maturity");
-        }
-    }
-}
-```
+<span id="what-happened" />
+<span id="why-this-matters" />
+<span id="assertion-pattern" />

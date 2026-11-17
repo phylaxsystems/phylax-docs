@@ -1,89 +1,91 @@
 # Documentation consistency review
 
-This is the first implementation pass from the 2026-11-17 audit, against baseline `3e3ca9167feebab92da833fcd8d148f361d29a00`. The aim is to improve current guidance in reviewable steps, following [the repository Diátaxis instructions](../../AGENTS.md).
+Implementation and re-review of the 2026-11-17 audit, against baseline `3e3ca9167feebab92da833fcd8d148f361d29a00`, following [the repository Diátaxis instructions](../../AGENTS.md).
 
 ## Original request and scope
 
-Catalog every source page and taxonomy, make the organization consistent, then review currency (including circuit breakers/assertions) and readability. Review the changes against those same criteria before calling the work complete.
+Catalog every source page and taxonomy, make the organization consistent, then review currency (including circuit breakers/assertions) and readability. Apply the findings and review against the same criteria.
 
-- [Originating request and implementation follow-up](https://phylaxsystems.slack.com/archives/C06T1DLBHGR/p1794880767080659)
+- [Originating request and implementation follow-ups](https://phylaxsystems.slack.com/archives/C06T1DLBHGR/p1794880767080659)
 - [Integration discussion supplied with the request](https://phylaxsystems.slack.com/archives/C06SNPA488J/p1794860382330089)
-- The baseline covers 116 content pages, 24 snippet files and 16 redirects. It was checked against the live GitHub tree, not a deployed-site crawl.
-- This pass retains 116 content routes. The 115 sidebar entries now include the builder guide and exclude the retired OP Stack route. The glossary now has 58 definitions.
+- The source inventory retains **116 content routes**, with **115 sidebar entries**, **38 navigation nodes**, **58 glossary terms**, **25 snippets** (22 upstream, three local), and **16 redirects**. The original tree was checked against live GitHub; this snapshot describes the branch, not a deployed-site crawl.
 
-## Inventory
+## Inventory and maintenance
 
-- [Pages](pages.csv): every page, primary reader need, current navigation, findings and whether this pass edits it. The last column deliberately preserves the **baseline assessment before fixes**; use the finding status below for current work.
-- [Navigation](navigation.csv): all current groups, anchors and landing routes.
-- [Glossary](glossary.csv): current terms and full definitions.
-- [Redirects](redirects.csv): all published redirects; destinations remain unchanged.
-- [Snippets](snippets.csv): all imports and local snippets. Consumer/integrity results are the baseline snapshot; no snippet content changes in this pass.
+- [Pages](pages.csv): every page, primary reader need, current navigation, findings and whether this PR edits it. The last column preserves the **baseline assessment before fixes**; it is not a list of unresolved findings.
+- [Navigation](navigation.csv), [glossary](glossary.csv), and [redirects](redirects.csv): current structure, definitions and route compatibility.
+- [Snippets](snippets.csv): current consumers, source pins and SHA-256 values, including retained unused upstream examples.
+- [Incident sources](incident-sources.json): the reviewed evidence for all 19 cases.
+- [Example provenance](maintaining-examples.md): import ownership, upgrades and local fixture maintenance.
 
-These inventories are a review snapshot, not generated runtime configuration. Update affected rows when subsequent PRs change the docs.
+Run `uv run python scripts/update-docs-inventory.py` to refresh snapshots. New pages require a human Diátaxis classification before regeneration. Baseline notes are retained; update current classifications when a page's reader need changes.
 
-## Taxonomy rules used in this pass
+## Taxonomy conventions
 
 | Dimension | Rule |
 | --- | --- |
-| Reader need | One primary tutorial, how-to, reference or explanation need per article; navigation hubs route to several needs. |
-| Terminology | Policy describes intent; assertion functions implement checks; assertion contracts are compiled artifacts; releases group deployed checks. The broader circuit-breaker product meaning and cumulative-flow subtype are proposed for review. |
-| Audience | Keep protocol-owner and developer tasks distinct from builder/sequencer operation. |
-| Scope | Label Ethereum integration, L2 integration planning, local test and historical analogy separately. |
-| Risk/mechanism | A risk domain, an asset class and a dispatch mechanism are separate facets; broader catalog alignment remains F10. |
-| Status | Historical design, conceptual fragment, correction required, assertion spec and tested version are different properties. |
-| Evidence | Local tests, exploit replay and deployed enforcement demonstrate different things. |
-| Operations | Alerting environment is distinct from Slack notifications; release state is distinct from proof of protection. |
+| Reader need | One primary tutorial, how-to, reference or explanation need per article; hubs route readers to the appropriate form. |
+| Terminology | Policy is intent; assertion functions implement checks; assertion contracts are compiled artifacts; releases group checks. Circuit breaker describes protection; cumulative-flow breaker names the rolling-window subtype. |
+| Audience | Protocol-owner and developer tasks are separate from builder/sequencer operation. |
+| Scope | Ethereum integration, L2 planning, local tests and historical analogies are labelled separately. |
+| Risk and mechanism | Risk domain, protocol family and dispatch mechanism are independent facets. Anomaly dispatch is not a risk domain. |
+| Status | Lifecycle, specification and evidence are independent. A source directory named production is not a readiness certification. |
+| Evidence | Source review, compilation, local behavior tests, exploit replay and live enforcement establish different things. |
+| Operations | Alerting mode is separate from Slack notifications; release state is separate from proof of protection. |
 
-## Finding-by-finding progress
+## Finding-by-finding disposition
 
-**Addressed** means the documented inconsistency is corrected in this pass, with the listed limits. **Contained** means misleading guidance is removed or prominently qualified but a working replacement remains. **Partial**, **For review**, and **Open** are unfinished work. Priorities are editorial order, not security severity.
+**Addressed** means the documentation defect is corrected with the stated limits. It does not certify every upstream policy or live deployment. Twenty-six findings are addressed in the repository; F25 retains the live verification boundary below. Priorities are editorial order, not security severity.
 
-| ID | Priority | Finding | Status | Change or next step |
+| ID | Priority | Finding | Status | Resolution or evidence boundary |
 | --- | --- | --- | --- | --- |
 | F01 | P1 | Enforcer role is conflated with a sidecar deployment | Addressed | Define the enforcer by its role; describe embedded integration and scope operator sizing. Deployment support remains subject to runtime verification. |
 | F02 | P1 | OP Stack / Rollup-Boost remains active guidance | Addressed | Remove OP Stack from active navigation; retain a retirement page and section bookmarks. Mark earlier Linea design historical. |
 | F03 | P1 | Capability mappings still deny supported snapshots and key discovery | Addressed | Correct snapshot and mapping-key limitations; put supported key discovery alongside other capabilities. Example compilability is tracked as F27. |
-| F04 | P1 | KiloEx recommends an example documented as defective | Contained | KiloEx now inherits the defective-example warning and conditional policy language. Correct and replay ass28 before presenting it as demonstrated prevention. |
+| F04 | P1 | KiloEx recommends an example documented as defective | Addressed | Replace the defective displayed ass28 with an explicit post-call snapshot fixture, including excursion-and-restoration rejection tests. KiloEx links to the candidate mechanism without claiming a replay or demonstrated prevention. |
 | F05 | P1 | Bybit balance example creates snapshots but never uses them | Addressed | Remove the defective Bybit balance fragment and align state-inspection prose. A tested native-balance replacement is separate work. |
 | F06 | P1 | Policy-control guarantees omit administrative powers | Addressed | Replace absolute control promises with configured signers and documented administrative boundaries; no live role configuration is claimed. |
-| F07 | P1 | Circuit breaker has incompatible broad and narrow definitions | For review | Align the glossary with the existing introductory product meaning: circuit breaker as protection, assertion as executable check, cumulative-flow breaker as subtype. Confirm naming during PR review. |
+| F07 | P1 | Circuit breaker has incompatible broad and narrow definitions | Addressed | Use circuit breaker for protection, assertion for executable checks, and cumulative-flow breaker for the rolling-window subtype. This is the consistent editorial convention in this PR, not a claim of a separate product decision. |
 | F08 | P2 | Assertion, group, ID, and runtime terminology drift | Addressed | Distinguish assertion contract/function/release; correct ID hash inputs and CLI/runtime terminology. |
 | F09 | P2 | Tutorials and reference material sit in misleading sections | Addressed | Give all three local tutorials a Tutorials entry; move contracts/triggers and protocol catalogs into reference-oriented navigation; keep flow semantics under Explanation. |
-| F10 | P2 | Pattern categories mix mechanisms, assets, and risk domains | Partial | Separate flow limits from anomaly dispatch. Broader alignment of risk-domain catalogs, protocol families and incident categories remains. |
-| F11 | P2 | CLI reference and tutorial versions are not a coherent support policy | Open | Select and exercise a supported CLI/library/spec/runtime matrix. Do not change reference version 1.8.0 to 1.9.0 without checking commands. |
-| F12 | P2 | Snippet importer follows a moving branch while prose cites a pin | Open | Pin/import source provenance and update dependent prose in one review. Baseline comparison found no current drift in 22 upstream imports. |
-| F13 | P1 | Case-study prevention language exceeds demonstrated scope | Partial | Qualify Book landing/index and KiloEx, Bybit, Bunni, Radiant and UxLink claims. Remaining case-by-case evidence/maturity and pinned replays still needed. |
-| F14 | P2 | Historical amounts, dates, and root causes need a provenance pass | Open | Verify incident dates, amounts, metric definitions, primary sources and Balancer price direction before factual replacements. |
+| F10 | P2 | Pattern categories mix mechanisms, assets, and risk domains | Addressed | Separate risk domain, protocol family, dispatch mechanism, specification, lifecycle and evidence. Align the pattern selector, protocol catalogs and case-study risk labels. |
+| F11 | P2 | CLI reference and tutorial versions are not a coherent support policy | Addressed | Check PCL 1.9.0 help and published assets; pin compiler/library/starter revisions and publish executed local combinations. Target enforcer compatibility remains explicitly deployment-specific. |
+| F12 | P2 | Snippet importer follows a moving branch while prose cites a pin | Addressed | Pin 22 upstream snippets in a commit/hash manifest; reject dirty source and unmanaged overwrite; make imports manual and dry-run by default. Test local snippet/source equality separately. |
+| F13 | P1 | Case-study prevention language exceeds demonstrated scope | Addressed | Rework all 19 case studies around source evidence, candidate policy and coverage limits. Remove categorical prevention and unexecuted code fragments; no exploit replay is claimed. |
+| F14 | P2 | Historical amounts, dates, and root causes need a provenance pass | Addressed | Record one evidence source per case; correct Balancer rate direction, Kelp verifier/RPC context, Vestra repeated unstaking, recovery versus loss amounts and other unsupported details. Mark two Abracadabra entries as pinned source analysis rather than verified incident reconstruction. |
 | F15 | P1 | Short answer treats platform status as proof of protection | Addressed | Short protection answer now requires active assertions, guard coverage, routing and observed enforcement/recovery checks. |
-| F16 | P2 | Fuzz example is excluded by its own suggested filter | Addressed | Match the fuzz command filter to the displayed function name. Source-level discovery mismatch corrected; example execution was not performed. |
-| F17 | P2 | CI recipe misses relevant changes and is not reproducible | Open | Repair CI path coverage and pin a validated toolchain; test the profile configuration with that toolchain. |
-| F18 | P2 | Alerting and release workflows have multiple names and entry points | Partial | Rename the Slack notification task and separate notification delivery from Alerting mode. Canonical release-procedure consolidation remains. |
-| F19 | P2 | Time-sensitive defaults and service claims lack an owner/date | Partial | Replace universal sidecar sizing and fixed backtest range with workload/report-specific guidance. Verify gas limits, commercial claims and timelines with their owners. |
-| F20 | P2 | Installation and profile prerequisites are scattered | Partial | State Homebrew prerequisite and project-defined profile selection. Confirm supported OS/install paths and execute onboarding fixtures. |
-| F21 | P2 | Reader-facing overview and reference density obscure next actions | Partial | Give the introduction a descriptive title, replace repetitive mapping prose with a selection table, and clarify Book entry paths. Long reference/FAQ and duplicate-release review remains. |
-| F22 | P3 | Small copy errors reinforce inconsistent naming | Partial | Fix inflow/outflow copy, counts, Cream grammar and Bybit relative wording. A full prose-casing sweep remains. |
+| F16 | P2 | Fuzz example is excluded by its own suggested filter | Addressed | Correct the displayed fuzz-name filter. Execute the documented CI profile configuration: 14 full, 10 unit and four fuzz tests (256 runs each). The unrelated example on the fuzz overview remains illustrative, not execution-certified. |
+| F17 | P2 | CI recipe misses relevant changes and is not reproducible | Addressed | Run the CI recipe on every PR; pin PCL and compiler, remove moving-nightly dependence and correct profile inheritance. Add CI for local observation fixtures and provenance checks; hosted execution is reported separately. |
+| F18 | P2 | Alerting and release workflows have multiple names and entry points | Addressed | Use Set Up Slack Notifications for delivery configuration; keep Alerting mode distinct. Make Review and Deploy Policies the canonical deployment procedure and link replacement/removal tasks to it. |
+| F19 | P2 | Time-sensitive defaults and service claims lack an owner/date | Addressed | Remove unsupported fixed pricing/timing and universal gas defaults; use workload/operator-specific limits. Distinguish a DA storage signature from a future availability guarantee. |
+| F20 | P2 | Installation and profile prerequisites are scattered | Addressed | Publish release-asset OS coverage, Homebrew prerequisites and exact dependency pins. Execute the focused starter and Book tutorials; disclose the unrelated starter full-suite failure. |
+| F21 | P2 | Reader-facing overview and reference density obscure next actions | Addressed | Review long CLI/cheatcode reference and FAQ against their reader needs; organize reference by API/command and link tasks. Replace repetitive incident narratives and duplicate release instructions with concise, scoped sections. |
+| F22 | P3 | Small copy errors reinforce inconsistent naming | Addressed | Normalize task labels, case names, flow terminology, amounts and grammar across edited pages; retain legacy paths for compatibility. |
 | F23 | P2 | Ethereum builder guide is not in the sidebar | Addressed | Add the linked-only Ethereum builder guide to Builder Operations. |
-| F24 | P2 | Supported, experimental, legacy and historical are inconsistently signposted | Partial | Mark historical integrations and defective fragments explicitly. Apply consistent lifecycle, maturity, spec and evidence labels across remaining examples. |
-| F25 | P2 | Live UI and deployment support remain unverified | Open | Verify rendered pages, authenticated UI/screenshots and target deployment compatibility. Source validation does not establish these. |
-| F26 | P2 | Group labels describe overlapping work and uneven granularity | Partial | Separate tutorials, authoring, testing, release management and operator entry points. Revisit remaining mixed hubs as their contents are consolidated. |
-| F27 | P1 | Mapping fragments mutate storage inside view functions | Contained | New review finding: Function Call Inputs and Read Logs mutate storage bookkeeping in view functions. Label as non-compilable fragments; replace with compiled fixtures and behavior tests in a follow-up. |
+| F24 | P2 | Supported, experimental, legacy and historical are inconsistently signposted | Addressed | Apply specification, lifecycle and evidence labels to imported examples; distinguish experimental Aave fixtures and historical Optimism material. Compilation is not presented as behavior testing or production readiness. |
+| F25 | P2 | Live UI and deployment support remain unverified | Live verification pending | Repository rendering and link checks are reported below. Authenticated platform labels/screenshots, live guard configuration and target-enforcer compatibility require a live session/deployment; this PR does not certify them. |
+| F26 | P2 | Group labels describe overlapping work and uneven granularity | Addressed | Align tutorial, authoring, testing, release and operator navigation; use separate pattern-risk and protocol-family catalogs. Preserve every existing route and redirect destination. |
+| F27 | P1 | Mapping fragments mutate storage inside view functions | Addressed | Replace storage-mutating view fragments with local call-input and log-query implementations. Exact displayed-source equality plus 14 behavior tests cover valid/invalid updates, log filtering and oracle boundaries. |
 
 ## Re-review against the original prompt
 
-| Requirement | Result of this pass | Remaining evidence/work |
-| --- | --- | --- |
-| Every page catalogued | 116 unique page rows; navigation, glossary, redirects and snippets also inventoried | Keep snapshots synchronized with later changes |
-| Diátaxis applied | Three tutorials discoverable; contract/trigger references and protocol catalogs correctly placed; explanatory flow semantics separated | Remaining mixed pages need section-level treatment, not a wholesale rewrite |
-| Consistent taxonomy | Policy/assertion/artifact/release distinctions and operator/historical navigation clarified | Confirm product umbrella; finish risk-domain and status facets |
-| Current guidance | Retire OP Stack setup, describe embedded integration, correct API contradictions and qualify defective examples | CLI/runtime matrix, importer pinning, complete incident provenance and replay validation |
-| Readable and legible | Shorter mapping selector, clearer titles, exact task labels, removed broken balance fragment and duplicated copy | Long reference/FAQ cleanup and rendered desktop/mobile review |
+| Requirement | Result |
+| --- | --- |
+| Every source page catalogued | 116 unique rows; current navigation, glossary, redirects and all 25 snippets inventoried. Regeneration checks coverage and import hashes. |
+| Diátaxis applied | Tutorials have managed local paths; references describe APIs and catalogs; release how-tos link to one canonical procedure; incident cases explain source evidence and tradeoffs. |
+| Consistent taxonomy | Shared policy/assertion/release definitions, separate risk/mechanism/status facets, and explicit operator/historical navigation. |
+| Current guidance | PCL 1.9.0 help/assets checked; library/compiler pins and import provenance recorded; snapshots/log queries corrected; all 19 case studies source-reviewed. Unsupported service defaults removed. |
+| Readability | Concise case-study structure, searchable command/API reference, clear task titles and selection tables; duplicate release instructions removed. Rendering results are recorded below. |
 
 ## Validation and limits
 
-- `pnpm test`: repository navigation/redirect/anchor tests, Mintlify alt-attribute checks, broken links and build validation.
-- `git diff --check`: whitespace validation.
-- Inventory coverage: all 116 source routes appear once; all 115 sidebar entries exist; retained redirects and snippet paths exist.
-- Existing warnings: primary/light contrast meets AA (4.83:1), not AAA; pnpm ignores `packageManagerStrictVersion` in workspace configuration.
-- Source inspection only for assertion examples. This pass adds no new Solidity implementation; it removes or qualifies defective fragments. The corrected fuzz filter is checked against the displayed function name, not an executed fixture.
-- Live rendering, authenticated platform labels/screenshots, deployed roles/specification support, historical incident reconstruction and all-example execution remain unverified. These are not silently marked complete by a successful docs build.
-- Linear association is pending: the owning live search returned HTTP 401. Continue repository work; do not infer or invent a ticket.
+- Node tests: **25 pass**, including navigation/redirect/anchor checks, imported hash integrity and exact equality between displayed and executable local source.
+- Pinned importer: **22 upstream snippets verified** against clean `credible-std` `fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0`.
+- PCL 1.9.0 / Solidity 0.8.29 / Linux ARM64: **14 local observation tests pass**, including four fuzz tests with 256 runs each; **three Book ownership tests** and **two focused starter ownership tests** pass. The documented CI profiles also execute successfully (14 full / 10 unit / four fuzz).
+- The starter's unrelated full suite is **not certified**: 27 pass, one existing PhyLock test fails (`testMagicNumberDrainOver69UserDeposit`). Onboarding explicitly selects the two tested ownership cases.
+- Imported Book sources compile at the pin; most individual examples were not behavior-tested. Defective upstream teaching fragments remain labelled as requiring adaptation. Case studies have source evidence and candidate policies, not executed exploit replays.
+- Mintlify local prebuild succeeds using the installed schema and cached client. The ordinary CLI build command currently fails in its network dependency (`got` / `p-cancelable`: onCancel handler attached after settlement); this is not counted as a passing build.
+- Rendered preview and GitHub Actions results: recorded in the PR's final review after the branch is pushed.
+- `git diff --check` passes. Existing accessibility warning: primary/light contrast meets AA (4.83:1), not AAA. The local pnpm version also warns about `packageManagerStrictVersion`.
+- **F25 remains a live verification boundary:** no authenticated platform session, deployment-specific roles/guards, target-enforcer compatibility or production incident replay was exercised. Screenshots and deployment instructions are not certified by source checks or local tests.
+- Linear association remains pending: the owning live search returned HTTP 401; no ticket is inferred.

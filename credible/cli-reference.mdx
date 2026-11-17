@@ -11,12 +11,12 @@ New to `pcl`? Start with the [Run an Example Policy Locally](/credible/pcl-quick
 
 ## Version
 
-This reference matches [`pcl 1.8.0`](https://github.com/phylaxsystems/pcl/releases/tag/1.8.0).
+This development-command reference was checked against [`pcl 1.9.0`](https://github.com/phylaxsystems/pcl/releases/tag/1.9.0) on 2026-11-17. See [tested combinations](./credible-install#tested-combinations) for the exercised fixtures and runtime limits.
 
 ```bash
-pcl 1.8.0
-Commit: f7ae8817db2f
-Build Timestamp: 2026-08-03T23:19:40Z
+pcl 1.9.0
+Commit: 182266c340e4
+Build Timestamp: 2026-10-23T15:06:16Z
 ```
 
 ## Syntax
@@ -162,6 +162,7 @@ pcl deploy [OPTIONS]
 | `--rpc-url RPC_URL` | RPC endpoint used to broadcast transactions. Can also be set with `PCL_RPC_URL` |
 | `--confirmations CONFIRMATIONS` | Confirmations to wait for after broadcasting. Values below the platform requirement are rejected |
 | `--tx-timeout-secs SECONDS` | Transaction confirmation timeout. Default: `300` |
+| `--with-credible-rpc` | Retry a temporarily unavailable Credible RPC while assertion state catches up. Also accepts `PCL_WITH_CREDIBLE_RPC` |
 | `--project-name PROJECT_NAME` | Project name used when `credible.toml` has no `project_id`; overrides `project_name` in the file |
 | `--chain-id CHAIN_ID` | Chain ID used when creating a project. Existing project chains are read from the platform |
 | `--skip-protocol-manager` | Skip protocol-manager verification or configuration |
@@ -256,6 +257,7 @@ pcl build [OPTIONS]
 | Option | Description |
 |--------|-------------|
 | `--root ROOT` | Root directory of the project |
+| `--contracts CONTRACTS` | Assertion source directory. Default: `assertions/src` |
 | `-h, --help` | Print help |
 
 ## `verify`
@@ -409,6 +411,10 @@ args = ["0x75634113D6A2fbfF5e65151ce1572195bE1d001A", "42"]
 ## Configuration File
 
 `pcl` stores CLI configuration in `~/.config/pcl/config.toml` by default. Use `pcl config show` to view the current configuration and `pcl config delete` to delete it.
+
+## Platform Command Families
+
+PCL 1.9.0 also provides `projects`, `releases`, `incidents`, `assertions`, `contracts`, `deployments`, `access`, `integrations`, `protocol-manager`, and `events`. Use `pcl <command> --help` for their current subcommands. These authenticated workflows are outside this development reference.
 
 ## Next Steps
 

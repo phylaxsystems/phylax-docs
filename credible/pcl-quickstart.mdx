@@ -7,8 +7,8 @@ Run an example policy that rejects ownership changes. Inspect its passing and fa
 
 ## Prerequisites
 
-- [pcl installed](./credible-install)
-- Git and Foundry available locally
+- [PCL 1.9.0 installed](./credible-install)
+- Git; the pinned project selects Solidity 0.8.29, which PCL downloads on first use
 
 No wallet or live transaction is required.
 
@@ -17,8 +17,10 @@ No wallet or live transaction is required.
 Clone the example project with its dependencies:
 
 ```bash
-git clone --recurse-submodules https://github.com/phylaxsystems/credible-layer-starter.git
+git clone https://github.com/phylaxsystems/credible-layer-starter.git
 cd credible-layer-starter
+git checkout 22b84c8832733613911deb6d10228cd546edfc5d
+git submodule update --init --recursive
 ```
 
 The project contains example protocol contracts in `src`, assertions in `assertions/src`, and tests in `assertions/test`.
@@ -28,10 +30,10 @@ The project contains example protocol contracts in `src`, assertions in `asserti
 From the repository root, run:
 
 ```bash
-pcl test
+pcl test --match-contract TestOwnableAssertion
 ```
 
-The command compiles the project and runs the assertion tests. The output includes these two Ownable cases; gas values and timing vary:
+The command compiles the project and runs the two ownership tests. Both passed with PCL 1.9.0 on Linux ARM64. The full starter suite at this revision has an unrelated failing PhyLock test; it is not the expected result of this lesson. The output includes these two Ownable cases; gas values and timing vary:
 
 ```text
 [PASS] test_assertionOwnershipChanged()

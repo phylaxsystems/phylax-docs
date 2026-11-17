@@ -1,92 +1,29 @@
 ---
-title: Cream Finance 2
-description: Cream Finance suffered a price manipulation hack
+title: "Cream Vault-Share Valuation"
+description: "Historical mechanism, candidate policy, and evidence limits for Cream Vault-Share Valuation"
 ---
 
-Cream Finance suffered a 130M USD hack in October 2021.
+This case explains the failure mechanism and the policy boundary it suggests.
 
-Detailed Analysis: https://mudit.blog/cream-hack-analysis/
+**Risk domain:** Oracle and valuation. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
 
-## What Happened
+## What the source establishes
 
-The attack stemmed from a sudden price manipulation of a supported asset (yUSDVault) in the protocol.
-The attacker built up leveraged positions and then manipulated the price of the asset by donating
-the underlying into the yUSDVault.
+Mudit Gupta’s October 28, 2021 analysis describes the prior day’s Cream exploit: leveraged vault-share exposure and a donation changed the vault exchange rate, creating debt beyond the account’s collateral. It reports over $130 million extracted from available lending assets. [Mudit Gupta incident analysis](https://mudit.blog/cream-hack-analysis/).
 
-## Assertion Pattern
+## Candidate policy
 
-One possible solution is to check price deviations from touched assets in the protocol during the transaction.
-This would avoid flashloan price manipulation attacks.
+Constrain the exchange rate actually consumed in lending decisions and recompute account solvency across affected markets. Treat donations and recursive borrowing as part of the same economic transition.
 
-```solidity
-uint256 constant MAX_DEVIATION_BPS = 500; // 5% max deviation
+## Coverage and limitations
 
-function assertion_priceDeviation() external view {
-    // Get pre-transaction prices first
-    PhEvm.ForkId memory preFork = _preTx();
-    PhEvm.Log[] memory logs = ph.getLogs();
+An event is not a substitute for the consumed oracle value. A fixed donation threshold or two direct reads without snapshot selection does not demonstrate prevention. Legitimate yield, fees, and donated assets require defined treatment.
 
-    // Count relevant logs to size our array
-    uint256 count = 0;
-    for (uint256 i = 0; i < logs.length; i++) {
-        bytes32 topic = logs[i].topics[0];
-        if (topic == CTokenInterface.Mint.selector ||
-            topic == CTokenInterface.Redeem.selector ||
-            topic == CTokenInterface.Borrow.selector ||
-            topic == CTokenInterface.RepayBorrow.selector) {
-            count++;
-        }
-    }
+A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](/credible/testing-strategy) and [Ethereum architecture](/credible/architecture-overview).
 
-    // Collect touched assets and their pre-prices
-    address[] memory touchedAssets = new address[](count);
-    uint256[] memory prePrices = new uint256[](count);
-    uint256 idx = 0;
+## Related patterns
 
-    for (uint256 i = 0; i < logs.length; i++) {
-        bytes32 topic = logs[i].topics[0];
-        address asset;
+Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](/credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
 
-        if (topic == CTokenInterface.Mint.selector) {
-            asset = getAssetFromLog(logs[i]);
-        } else if (topic == CTokenInterface.Redeem.selector) {
-            asset = getAssetFromLog(logs[i]);
-        } else if (topic == CTokenInterface.Borrow.selector) {
-            asset = getAssetFromLog(logs[i]);
-        } else if (topic == CTokenInterface.RepayBorrow.selector) {
-            asset = getAssetFromLog(logs[i]);
-        } else {
-            continue;
-        }
-
-        touchedAssets[idx] = asset;
-        prePrices[idx] = priceOracle.getPrice(asset);
-        idx++;
-    }
-
-    // Get post-transaction prices and compare
-    PhEvm.ForkId memory postFork = _postTx();
-
-    for (uint256 i = 0; i < touchedAssets.length; i++) {
-        uint256 postPrice = priceOracle.getPrice(touchedAssets[i]);
-        uint256 prePrice = prePrices[i];
-
-        // Check deviation in both directions
-        uint256 deviation;
-        if (postPrice > prePrice) {
-            deviation = ((postPrice - prePrice) * 10000) / prePrice;
-        } else {
-            deviation = ((prePrice - postPrice) * 10000) / prePrice;
-        }
-
-        require(deviation <= MAX_DEVIATION_BPS, "Price deviation too high");
-    }
-}
-
-// Helper to extract asset address from log (implementation depends on log structure)
-function getAssetFromLog(PhEvm.Log memory log) internal pure returns (address) {
-    // Decode asset address from log topics or data
-    // Implementation depends on the specific event structure
-    return abi.decode(log.data, (address));
-}
-```
+<span id="what-happened" />
+<span id="assertion-pattern" />

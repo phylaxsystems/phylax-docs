@@ -1,106 +1,32 @@
 ---
-title: Bybit - Compromised Safe Wallet UI
-description: Safe Wallet UI was compromised by gaining access to the host machine.
+title: "Bybit Safe Wallet Compromise"
+description: "Historical mechanism, candidate policy, and evidence limits for Bybit Safe Wallet Compromise"
 ---
 
-## What Happened
+This case explains the failure mechanism and the policy boundary it suggests.
 
-Bybit suffered from a security breach in Safe's hosting infrastructure losing 1.4bn USD.
+**Risk domain:** Authority and configuration. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
 
-The attackers, the Lazarus Group, gained access to the server and were able to modify the served Safe
-Wallet frontend.
-More on the attack: https://x.com/safe/status/1894768522720350673
+## What the source establishes
 
-The malicious code was specifically targeting Bybit's next transaction.
-The linked incident account describes signers being shown a fake UI, seeming
-to be the intended transaction to sign, but in fact it was a malicious transaction.
+Bybit’s February 26, 2025 forensic update reports compromise of Safe’s environment and manipulation of the signing flow; it reports no compromise of Bybit infrastructure. The incident illustrates why a valid signature does not establish that the signer saw the transaction’s actual effect. [Bybit forensic update](https://www.bybit.com/en/press/post/bybit-confirms-security-integrity-amid-safe-wallet-incident-no-compromise-in-infrastructure-blt9986889e919da8d2).
 
-Unfortunately, it is often very hard to verify the correctness of the message that is signed in
-software or hardware wallets.
+## Candidate policy
 
-**Attack steps:**
+Constrain the actual proxy implementation and relevant Safe configuration at explicit snapshots. Add an independently specified custody outflow policy where needed.
 
-1. Attackers gained access to the hosting server by compromising a developer's machine.
-2. A malicious frontend was uploaded to the server, which targeted Bybit's next transaction.
-3. The frontend would show the intended transaction but in fact the message to be signed was malicious
-4. The malicious message was a delegate call which would change the implementation of the Safe's proxy contract
+## Coverage and limitations
 
-## Assertion Pattern
+A transaction-end implementation check misses a temporary implementation change that is restored before the endpoint. Native ETH loss needs a tested balance-read policy; creating fork identifiers without using them is insufficient. Signing-device security and independent review remain separate controls.
 
-In Safe's proxy implementation, the first storage slot is the implementation address.
+A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](/credible/testing-strategy) and [Ethereum architecture](/credible/architecture-overview).
 
-```solidity
-/**
- * @title Singleton - Base for singleton contracts (should always be the first super contract)
- *        This contract is tightly coupled to our proxy contract (see `proxies/SafeProxy.sol`)
- * @author Richard Meissner - @rmeissner
- */
-abstract contract Singleton {
-    // singleton always has to be the first declared variable to ensure the same location as in the Proxy contract.
-    // It should also always be ensured the address is stored alone (uses a full word)
-    address private singleton;
-}
-```
+## Related patterns
 
-The malicious transaction was executing a delegate call to a malicious contract, effectively
-changing the implementation address of Bybit's proxy contract.
-A change of the implementation address allows an attacker to almost completely exchange the logic
-of the contract.
-Therefore it was possible to be able to drain all the assets of the Safe without the need of any
-additional approvals by the original owners.
+Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](/credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
 
-A delegate call can modify the caller's storage, including the implementation slot, even without a dedicated upgrade function.
-
+<span id="what-happened" />
+<span id="assertion-pattern" />
+<span id="candidate-implementation-slot-policy" />
+<span id="recipient-and-native-balance-policies" />
 <span id="how-the-assertion-would-have-prevented-it" />
-
-### Candidate Implementation-Slot Policy
-
-An assertion can reject changes to the Safe implementation slot when it covers the relevant transaction path. The fragment below illustrates the check; this page does not provide a pinned exploit replay or establish deployed protection.
-
-State inspection used:
-
-- `_preTx()` selects the pre-transaction snapshot.
-- `ph.loadStateAt()` reads the implementation slot at that snapshot.
-- `getStateChangesAddress()` decodes the slot's writes so a temporary implementation change is not hidden by a later restoration.
-
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
-
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
-import {AssertionSpec} from "../../lib/credible-std/src/SpecRecorder.sol"; // Credible Layer precompiles
-import {Safe} from "../../lib/safe-contracts/src/Safe.sol"; // Safe contract
-import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
-
-contract SafeAssertion is Assertion {
-    Safe safe;
-
-    constructor(address payable safe_) {
-        registerAssertionSpec(AssertionSpec.Reshiram);
-        safe = Safe(safe_); // Define address of Safe contract
-    }
-
-    // Define the triggers for the assertions
-    function triggers() public view override {
-        registerTxEndTrigger(this.implementationAddressChange.selector);
-    }
-
-    function implementationAddressChange() external view {
-        PhEvm.ForkId memory preFork = _preTx();
-        address preImplementationAddress = address(uint160(uint256(ph.loadStateAt(address(safe), bytes32(0x0), preFork))));
-
-        address[] memory addresses = getStateChangesAddress(address(safe), bytes32(0x0));
-        for (uint256 i = 0; i < addresses.length; i++) {
-            if (addresses[i] != preImplementationAddress) {
-                revert("Implementation address has changed within transaction");
-            }
-        }
-    }
-}
-```
-
-### Recipient and Native-Balance Policies
-
-A recipient policy must compare the Safe's and permitted recipients' native balances at explicit before/after snapshots. Creating a `ForkId` does not change what a direct `address.balance` read observes.
-
-The former balance fragment used direct reads and never consumed its snapshot IDs, so it did not establish the claimed comparison. It has been removed. A replacement needs verified snapshot-aware native-balance reads, defined behavior for fees and multiple recipients, and tests of legitimate and violating transfers. The [native outflow template](../assertions/ass21-ether-drain) also documents this snapshot limitation.

@@ -1,80 +1,31 @@
 ---
-title: KiloEx Price Oracle Manipulation
-description: Access control vulnerability in price oracle implementation led to $7.5M loss across multiple chains
+title: "KiloEx Forwarder and Price Manipulation"
+description: "Historical mechanism, candidate policy, and evidence limits for KiloEx Forwarder and Price Manipulation"
 ---
 
-import ass28IntraTxOracleDeviation from "/snippets/ass28-intra-tx-oracle-deviation.a.mdx";
+This case explains the failure mechanism and the policy boundary it suggests.
 
-## What Happened
+**Risk domain:** Oracle and valuation. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
 
-Background: https://x.com/SlowMist_Team/status/1911991384254402737
+## What the source establishes
 
-The vulnerability stemmed from a critical access control flaw in KiloEx's price oracle implementation:
+SlowMist’s incident-response recap explains that an inherited forwarder `execute` path allowed calls that passed a trusted-forwarder check without the intended keeper authorization. Manipulated prices were then used to open and close positions. Its revised estimate was $8.44 million, and it reports recovery of the stolen funds; earlier $7.5 million estimates describe an earlier accounting of the incident. [SlowMist recovery recap](https://slowmist.medium.com/slowmist-assists-kiloex-in-recovering-all-stolen-funds-incident-recap-273d10f6d466).
 
-- The protocol used a chain of contracts for price updates:
-  - KiloPriceFeed: Main oracle contract
-  - Keeper: Contract responsible for price updates
-  - PositionKeeper: Contract managing positions
-  - MinimalForwarder: Contract handling transaction forwarding
+## Candidate policy
 
-- The access control chain was implemented as follows:
-  - KiloPriceFeed trusted Keeper
-  - Keeper trusted PositionKeeper
-  - PositionKeeper trusted MinimalForwarder
-  - MinimalForwarder had no access controls
+Validate the effective keeper authorization and the price consumed when a position is opened or closed. Treat forwarder identity and original-caller authorization as separate properties.
 
-**Attack Mechanism:**
-1. The attacker exploited the MinimalForwarder's lack of access controls
-2. They were able to forge signatures and bypass the entire access control chain
-3. This allowed direct manipulation of the KiloPriceFeed contract
+## Coverage and limitations
 
-**Exploitation Steps:**
-1. Attacker funded their wallet through Tornado Cash
-2. Used the MinimalForwarder to bypass access controls
-3. Manipulated ETH price down to $100
-4. Opened leveraged long positions
-5. Manipulated price up to $10,000
-6. Closed positions for profit
-7. Repeated across multiple chains (Base, BNB Chain, Taiko)
+The [tested oracle snapshot example](../assertions/ass28-intra-tx-oracle-deviation) demonstrates temporary excursions in a synthetic writable oracle. It is not a KiloEx replay and does not establish coverage of the forwarded execution or consumed price. A market deviation threshold requires independent calibration.
 
-**Vulnerability Details:**
-- The MinimalForwarder contract lacked signature validation
-- No checks were performed on the caller's identity
-- The entire access control chain relied on each component trusting the next
-- The protocol had been audited 5 times since June 2023, but the vulnerability remained undetected
+A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](/credible/testing-strategy) and [Ethereum architecture](/credible/architecture-overview).
 
-## Assertion Pattern
+## Related patterns
 
-### Price Deviation Assertion
+Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](/credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
 
-A candidate policy would bound each oracle update using call-scoped state reads. The [Price Deviation Assertion](../assertions/ass28-intra-tx-oracle-deviation) describes that intent, but its imported implementation needs correction.
-
-<Warning>
-The legacy example below creates snapshot IDs without binding its direct reads to them; the reference page also records reads reverting before comparison. It does not demonstrate prevention of this attack. A corrected implementation, suitable trigger coverage, and a pinned exploit replay are required before relying on it.
-</Warning>
-
-<ass28IntraTxOracleDeviation />
-
-A corrected implementation would need to:
-1. Trigger on all calls to the `setPrices` function in the KiloPriceFeed contract
-2. Enforce a configured maximum price deviation per update; 5% is illustrative, not a validated production threshold
-3. Reject the candidate when the price deviation exceeds this threshold
-
-Test three cases: a large downward update, a large upward update, and multiple updates within one transaction. Each violating call must be visible to the assertion even if the price returns to its original value before the transaction ends.
-
-Note: In a real implementation, this assertion should be:
-- Run for each token in the protocol
-- Consider token-specific deviation thresholds
-- Handle multiple price updates in a single transaction
-
-### Access Control Assertion
-
-The root cause of the vulnerability was the MinimalForwarder's lack of access controls. A candidate access-control policy would require that the MinimalForwarder is only called by authorized addresses in the expected call chain (Keeper → PositionKeeper → MinimalForwarder):
-
-- **Trigger**: Register for all calls to `MinimalForwarder.execute()`
-- **Assertion**: 
-  - Maintain a whitelist of authorized callers (specifically the PositionKeeper)
-  - Verify the caller is in the whitelist
-  - Revert if unauthorized
-
-Validate the actual call chain and every price-update entry point before choosing the caller allowlist. A local caller check alone does not establish exploit coverage. Correct the access control in the protocol itself and test any additional assertion against legitimate calls and the exploit path.
+<span id="what-happened" />
+<span id="assertion-pattern" />
+<span id="price-deviation-assertion" />
+<span id="access-control-assertion" />

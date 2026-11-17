@@ -17,6 +17,8 @@ Most assertions follow [Aave's invariant specifications](https://github.com/aave
 
 ## Maturity
 
+**Lifecycle:** experimental fork with intentional defects. **Spec:** verify per contract; this page does not establish runtime compatibility. **Evidence:** source catalog; this review did not execute the fork’s suite. A source directory named `production` is not a production-readiness endorsement.
+
 The suite includes local tests. Before production, review [release backtesting](../../credible/backtesting) for false positives against recent protocol activity.
 
 ## Here Be Dragons 🐲
@@ -39,7 +41,9 @@ The repository separates production assertions from showcase assertions. Showcas
 
 ## Assertion Collections
 
-### Production Assertions
+<span id="production-assertions" />
+
+### Assertions in the `production` directory
 
 #### Core Invariants
 

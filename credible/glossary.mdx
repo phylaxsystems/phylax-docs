@@ -123,7 +123,7 @@ A unique identifier computed as `Keccak256(creation bytecode ++ ABI-encoded cons
 Learn more: [Assertion Data Availability](/credible/assertion-da#assertion-id)
 
 ### Assertion DA Prover Signature
-A signature generated and returned by the Assertion DA as part of storing an assertion. This proof is used during deployment of the assertion to guarantee that the assertion bytecode is available on the Assertion DA.
+A signature returned by the Assertion DA when an assertion is stored. Deployment uses it to attest to the stored bytecode at signing time; it is not a guarantee of future service availability.
 
 Learn more: [Assertion Data Availability](/credible/assertion-da#assertion-da-prover-signature)
 

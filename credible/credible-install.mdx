@@ -17,6 +17,29 @@ brew install phylax/pcl/phylax
 
 This will install the `pcl` binary.
 
+### Install a specific release
+
+Download the archive matching your system from [PCL 1.9.0 releases](https://github.com/phylaxsystems/pcl/releases/tag/1.9.0), extract it, and place the included `pcl/pcl` binary on your `PATH`.
+
+| Release asset | System |
+| --- | --- |
+| `pcl-1.9.0-linux-arm64.tar.gz` | Linux ARM64 |
+| `pcl-1.9.0-linux-x86_64.tar.gz` | Linux x86-64 |
+| `pcl-1.9.0-macos-arm64.tar.gz` | macOS Apple silicon |
+
+This release does not publish native Windows or macOS Intel archives. Homebrew resolves its own package version; check `pcl --version` rather than assuming it matches this page.
+
+## Tested Combinations
+
+Local checks on 2026-11-17 used Linux ARM64, PCL **1.9.0** (`182266c`), and Solidity **0.8.29**:
+
+| Path | Source pin | Result |
+| --- | --- | --- |
+| [Starter tutorial](./pcl-quickstart) | Starter `22b84c8832733613911deb6d10228cd546edfc5d`, including its submodules | Both `TestOwnableAssertion` cases pass. The unrelated full-suite PhyLock case fails; the tutorial selects the ownership tests explicitly. |
+| [Book ownership tutorial](../assertions-book/assertions/run-an-example) | `credible-std` `fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0` | Three local behavior tests pass, including the endpoint-check limitation. |
+
+The CLI and library versions are independent. These results establish the listed local tests; they do not establish compatibility with an Ethereum or L2 deployment. Before deploying, confirm the assertion specification and cheatcodes enabled by the target enforcer. See [Library specifications](./credible-std-overview) and [Integration planning](./dapp-integration).
+
 ## Verifying Installation
 
 To verify that `pcl` is installed correctly, run:

@@ -1,54 +1,29 @@
 ---
-title: Visor Finance Unrestricted Mint
-description: Visor Finance allowed anyone to mint rewardTokens
+title: "Visor Unbacked Share Minting"
+description: "Historical mechanism, candidate policy, and evidence limits for Visor Unbacked Share Minting"
 ---
 
-This is a fairly simple bug that let anyone mint rewardTokens.
+This case explains the failure mechanism and the policy boundary it suggests.
 
-Background: https://x.com/storming0x/status/1473321779250802693
+**Risk domain:** Solvency and operation results. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
 
-## What Happened
+## What the source establishes
 
-- The deposit function lets anyone mint rewardTokens if
-  - the from address is a contract and has an owner and where msg.sender == owner
-- It is intended that the from address sends the underlying token to this contract
-  - But it does not check whether delegatedTransferERC20 is implemented correctly
-  - it can be a noop
-- The attacker can mint rewardTokens to himself
+The DeFiHackLabs reproduction supplies an attacker-controlled `from` contract whose `owner` returns the attacker and whose `delegatedTransferERC20` does nothing. It calls RewardsHypervisor’s deposit operation to demonstrate the unbacked-mint path. A successful call to an attacker-controlled transfer implementation is not evidence that VISR arrived in custody. [Pinned DeFiHackLabs reproduction](https://github.com/SunWeb3Sec/DeFiHackLabs/blob/33de12241db1019e1516f6740fd19c7b5e3b003c/src/test/2021-12/Visor_exp.sol).
 
-## Assertion Pattern
+## Candidate policy
 
-While this is an obvious bug, an invariant could have prevented an exploit of the bug.
+Compare the actual custody-token balance increase with shares minted at each deposit boundary, using the pre-deposit asset and supply basis and the intended rounding rule.
 
-Invariant:
+## Coverage and limitations
 
-```solidity
-function assertionIsSolvent() public view {
-    require(visr.balanceOf(address(adopter)) >= vvisr.totalSupply(), "Reward tokens are undercollateralized");
-}
-```
+An arbitrary callback can return successfully without transferring tokens. Fee-on-transfer assets, rebases, donations, zero supply, and reentrancy require explicit treatment. The external reproduction was inspected, not executed in this review; it contains no Phylax assertion.
 
-Alternatively, the assertion could test the correct behavior of the previous transaction.
-The assertion could be triggered by a call to the deposit function.
+A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](/credible/testing-strategy) and [Ethereum architecture](/credible/architecture-overview).
 
-```solidity
-function assertion_triggerDeposit_remainsSolvent() public view {
-    // Get pre-transaction state
-    PhEvm.ForkId memory preFork = _preTx();
-    uint256 preBalanceCollateral = visr.balanceOf(address(adopter));
-    uint256 preTotalSupplyRewards = vvisr.totalSupply();
+## Related patterns
 
-    // Get post-transaction state
-    PhEvm.ForkId memory postFork = _postTx();
-    uint256 postBalanceCollateral = visr.balanceOf(address(adopter));
-    uint256 postTotalSupplyRewards = vvisr.totalSupply();
+Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](/credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
 
-    // Compare ratios using cross-multiplication to avoid precision loss
-    // preBalance / preSupply >= postBalance / postSupply
-    // => preBalance * postSupply >= postBalance * preSupply
-    require(
-        preBalanceCollateral * postTotalSupplyRewards >= postBalanceCollateral * preTotalSupplyRewards,
-        "Reward tokens are undercollateralized"
-    );
-}
-```
+<span id="what-happened" />
+<span id="assertion-pattern" />

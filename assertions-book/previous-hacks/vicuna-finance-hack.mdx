@@ -1,55 +1,31 @@
 ---
-title: Vicuna Finance Oracle Manipulation Hack
-description: Vicuna Finance lost $700K due to LP token oracle manipulation that ignored invariant-based pricing
+title: "Vicuna LP Token Valuation"
+description: "Historical mechanism, candidate policy, and evidence limits for Vicuna LP Token Valuation"
 ---
 
-## What Happened
+This case explains the failure mechanism and the policy boundary it suggests.
 
-The Vicuna Finance hack resulted in a $700K loss through oracle manipulation of Beets LP tokens used as collateral on the Sonic chain. The Core Bug was that LP tokens were priced using a simple sum formula: `price_lp = price_token1 * amount_token1 + price_token0 * amount_token0` instead of fair pricing that accounts for the underlying pool's constant product formula.
+**Risk domain:** Oracle and valuation. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
 
-**Exploitation Steps:**
-1. **Pool Manipulation**: Attacker swapped large amounts from token0 to token1, artificially inflating the LP token's oracle-reported price
-2. **Over-Collateralization**: Deposited the overvalued LP tokens as collateral and borrowed assets against the inflated value  
-3. **Price Deflation**: Reversed the swap (token1 back to token0), deflating the LP price and creating bad debt in the protocol
+## What the source establishes
 
-The attack was executed across two markets - the `$S` market and the stablecoin market - draining approximately $700K in total. The fundamental issue was that the oracle treated LP tokens like regular assets without considering that their value should reflect extractable value, not just the sum of underlying token values.
+The investigator’s post-mortem dates the Sonic exploit to March 28, 2025 and describes approximately $700,000 extracted by manipulating the balances used to value Beets LP collateral. Borrowing against the inflated valuation and reversing the manipulation left bad debt. [Vicuna investigator post-mortem](https://d23e.ch/research/vicuna-post-mortem/).
 
-## Assertion Pattern
+## Candidate policy
 
-A targeted price deviation check on all calls could have prevented this oracle manipulation attack. The assertion function monitors how each call affects oracle prices and reverts if any single call causes price swings exceeding 5%:
+Validate the LP valuation consumed by each borrow against a model that accounts for pool composition, invariant, and trustworthy component prices. Check account solvency using that valuation.
 
-```solidity
-function assertPriceDeviation() external view {
-    BeetsLP assertionAdopter = BeetsLP(ph.getAssertionAdopter());
-    PhEvm.ForkId memory preFork = _preTx();
-    uint256 preOraclePrice = oracle.getPrice(token); // Get the price before the transaction
+## Coverage and limitations
 
-    // Using swap calls as an example, but any call that affects price should be checked
-    PhEvm.CallInputs[] memory calls = ph.getCallInputs(address(assertionAdopter), assertionAdopter.swap.selector);
-    for (uint256 i = 0; i < calls.length; i++) {
-        PhEvm.ForkId memory postCallFork = PhEvm.ForkId({forkType: 3, callIndex: calls[i].id});
-        
-        uint256 postOraclePrice = oracle.getPrice(token);
+A simple sum of manipulable reserves can reproduce the oracle defect. A fixed percentage change bound is a separate exposure control, not proof of fair value. Restoration of reserves before transaction end does not repair a borrow already priced incorrectly.
 
-        // Calculate deviation and require change is within range
-        uint256 deviation = ((postOraclePrice - preOraclePrice) * 10000) / preOraclePrice;
-        require(deviation <= MAX_DEVIATION_BPS, "ORACLE_PRICE_MANIPULATION: Token price changed by more than 5% in single transaction");
-    }  
-}
-```
+A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](/credible/testing-strategy) and [Ethereum architecture](/credible/architecture-overview).
 
-## How the Assertion Would Have Prevented It
+## Related patterns
 
-This assertion function detects oracle price manipulation by monitoring how each call affects prices.
+Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](/credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
 
-**How it works:**
-1. **Captures baseline**: Uses `_preTx()` with a Reshiram snapshot read to get the oracle price before any calls
-2. **Monitors each call**: Iterates through calls (like swaps) that could affect the oracle price
-3. **Checks price impact**: Uses a post-call `ForkId` with `ph.loadStateAt()` to see how each call changed the oracle price
-4. **Enforces limits**: Reverts if any single call causes >5% price deviation from the baseline
-
-Using Phylax cheatcodes allows checking the oracle price at every call in the transaction, detecting price manipulation as it happens and preventing attacks that rely on temporary price distortions.
-
-## Related Resources
-
-- [Oracle Manipulation Example](/assertions-book/assertions/ass28-intra-tx-oracle-deviation)
+<span id="what-happened" />
+<span id="assertion-pattern" />
+<span id="how-the-assertion-would-have-prevented-it" />
+<span id="related-resources" />

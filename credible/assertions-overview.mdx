@@ -48,7 +48,7 @@ Policies can restrict administrative changes, token outflows, price deviations, 
 
 ## Constraints
 
-The default assertion gas limit is 3,000,000. Operators can configure it. Exceeding the limit invalidates the candidate.
+The assertion gas budget is configured by the target runtime. Confirm that budget for the deployment you are testing; a local test runner or EVM block gas limit is a separate setting. Exceeding the limit invalidates the candidate.
 
 Use scoped triggers and test the maximum expected workload. See [Gas Limits in Testing](./testing-assertions#gas-limits).
 

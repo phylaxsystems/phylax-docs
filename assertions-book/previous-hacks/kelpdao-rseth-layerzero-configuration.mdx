@@ -1,80 +1,35 @@
 ---
-title: KelpDAO / rsETH LayerZero Configuration Incident
-description: Reported cross-chain verification failure affecting KelpDAO rsETH and assertion patterns that could constrain similar inflow risk
+title: "KelpDAO / rsETH Verification Incident"
+description: "Historical mechanism, candidate policy, and evidence limits for KelpDAO / rsETH Verification Incident"
 ---
 
-## What Happened
+This case explains the failure mechanism and the policy boundary it suggests.
 
-In April 2026, TechRadar reported that Lazarus Group stole roughly $290 million from KelpDAO through its LayerZero integration. The report described attackers compromising infrastructure used to verify cross-chain transactions and feeding false data that caused fraudulent transfers to be approved.
+**Risk domain:** Cross-chain verification. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
 
-The same report said LayerZero characterized the incident as isolated to KelpDAO's rsETH configuration and attributed it to a single-DVN setup. KelpDAO disputed that the incident was solely the result of its configuration.
+## What the source establishes
 
-Sources:
-- [TechRadar report on the KelpDAO / LayerZero incident](https://www.techradar.com/pro/security/north-koreas-lazarus-makes-off-with-usd290m-crypto-in-kelp-dao-heist-after-siphoning-funds-using-fraudulent-transactions)
+LayerZero’s May 18, 2026 incident report describes the April 18 release of 116,500 rsETH after compromise of verifier infrastructure. It describes a social-engineering intrusion, poisoned RPC responses used by the verifier, and disruption of alternative RPCs. A one-verifier configuration made that verifier a critical trust dependency. A configuration-only account omits the infrastructure compromise. [LayerZero incident report](https://layerzero.network/publications/kelpdao-incident-report.pdf).
 
-<Warning>
-The public root-cause record is disputed. This page focuses on the observable risk class: a cross-chain configuration or verification failure can create unsafe inflows into protocols that depend on the asset, even when those downstream protocols did not make the configuration change themselves.
-</Warning>
+## Candidate policy
 
-## Why It Matters
+Bound bridge inflow and constrain changes to the configured verifier set. A backing/supply policy would need authenticated source-chain evidence with explicit finality and reconciliation rules.
 
-Cross-chain assets can become dependencies for lending markets, vaults, and other protocols. If an upstream bridge, messaging layer, or token issuer accepts invalid messages, the downstream protocol may see apparently valid token balances or inflows even though the underlying backing assumptions have changed.
+## Coverage and limitations
 
-The dangerous state is not only "a bridge was compromised." For a dependent protocol, the dangerous state is:
+An EVM snapshot does not independently establish source-chain truth. If every comparison trusts the compromised verifier, apparent parity can still be false. A flow cap bounds exposure only for covered assets and paths; it does not authenticate messages.
 
-- a supported asset's supply increases faster than expected,
-- the asset's backing no longer matches protocol assumptions,
-- a market accepts deposits from a newly unsafe origin, or
-- risk exposure grows before the protocol team can update parameters.
+A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](/credible/testing-strategy) and [Ethereum architecture](/credible/architecture-overview).
 
-## Assertion Patterns
+## Related patterns
 
-### Cross-Chain Inflow Circuit Breaker
+Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](/credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
 
-An inflow circuit breaker can collect bridged or restaked asset inflow into one bucket per block and limit the cumulative inflow across those per-block buckets over a rolling window.
-
-Useful checks include:
-
-- maximum inflow per block, hour, or day,
-- maximum inflow from a specific bridge, origin chain, or endpoint,
-- maximum increase in a market's exposure to the asset,
-- stricter limits when the asset is newly listed or recently reconfigured.
-
-This would not need to prove exactly which cross-chain message was invalid. It would constrain the downstream impact by preventing unusually large inflows from being accepted all at once.
-
-### Backing and Supply Parity Assertion
-
-For assets whose safety depends on backing, the protocol can assert that minted or accepted supply remains within a tolerated range of verified backing data.
-
-Useful checks include:
-
-- total accepted supply does not exceed verified backing plus a tolerance,
-- bridge-minted supply on a destination chain does not jump without matching source-side accounting,
-- lending-market collateral value is capped when backing data is stale or inconsistent.
-
-### Message-Security Configuration Assertion
-
-If the protocol relies on a cross-chain asset or endpoint with configurable verification policy, an assertion can watch configuration surfaces.
-
-Useful checks include:
-
-- verifier or DVN sets remain in an approved configuration,
-- quorum or threshold values do not drop below a safe minimum,
-- endpoint changes pass through expected governance or timelock paths,
-- high-risk configuration changes trigger lower asset-flow caps until reviewed.
-
-## How Assertions Would Constrain It
-
-For an EVM protocol accepting an asset like rsETH as collateral or vault input, the assertions would not need to understand every LayerZero or KelpDAO internal detail. They would enforce local safety boundaries:
-
-1. The protected market cannot accept more than a configured amount of the asset across the rolling window's per-block buckets.
-2. The market cannot grow exposure if asset backing or message-security data is stale, disputed, or outside policy.
-3. The protocol cannot silently continue with the same risk parameters after a critical upstream configuration changes.
-
-The core idea is to turn external dependency risk into enforceable local limits.
-
-## Key Takeaways
-
-The incident shows why protocols need protections around assets and dependencies they do not fully control. A lending market, vault, or structured product can be harmed by decisions made upstream by a bridge, restaking protocol, verifier set, or token issuer.
-
-Runtime assertions are useful because they can enforce the downstream protocol's own risk boundaries even when the external root cause is complex or disputed.
+<span id="what-happened" />
+<span id="why-it-matters" />
+<span id="assertion-patterns" />
+<span id="cross-chain-inflow-circuit-breaker" />
+<span id="backing-and-supply-parity-assertion" />
+<span id="message-security-configuration-assertion" />
+<span id="how-assertions-would-constrain-it" />
+<span id="key-takeaways" />

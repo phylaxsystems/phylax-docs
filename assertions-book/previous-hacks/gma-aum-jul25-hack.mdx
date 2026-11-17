@@ -1,119 +1,42 @@
 ---
-title: GMX v1 AUM Manipulation Hack
-description: Explanation of the GMX v1 AUM manipulation exploit and assertion patterns that could have constrained it.
+title: "GMX V1 AUM Manipulation"
+description: "Historical mechanism, candidate policy, and evidence limits for GMX V1 AUM Manipulation"
 ---
 
-## What Happened
+This case explains the failure mechanism and the policy boundary it suggests.
 
-On July 9, 2025, [GMX v1 lost around ~\$42 million to an attack](https://x.com/GMX_IO/status/1942989975814820347) that exploited how the protocol calculated its total value (Assets Under Management or AUM). This was GMX's second hack of 2025, following a $13 million loss in March. The attacker used a reentrancy vulnerability to manipulate pricing data, artificially inflating the protocol's apparent value, then immediately withdrew tokens at the inflated price.
+**Risk domain:** Oracle and valuation. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
 
-- [Exploit tx](http://arbiscan.io/tx/0x03182d3f0956a91c4e4c8f225bbc7975f9434fab042228c7acdc5ec9a32626ef)
-- [Exploiter address Arbitrum](https://arbiscan.io/address/0xdf3340a436c27655ba62f8281565c9925c3a5221)
-- [Exploiter address Mainnet](https://etherscan.io/address/0xdf3340a436c27655ba62f8281565c9925c3a5221)
+## What the source establishes
 
-## Why It Worked
+GMX’s recovery report identifies the July 9, 2025 incident as affecting GLP on Arbitrum in GMX V1 and reports recovery after a $5 million bounty. Its account distinguishes V1 from V2. The incident involved reentrancy and inconsistent short-position accounting used in valuation. [GMX recovery report](https://gmxio.substack.com/p/glp-funds-on-arbitrum-fully-recovered).
 
-The attack exploited a design flaw where short position operations immediately updated `globalShortAveragePrices`, which directly impacted AUM calculations used for GLP token minting and redemption. The attacker used reentrancy to establish massive short positions within a single transaction, artificially inflating GLP prices.
+## Candidate policy
 
-The critical vulnerability chain:
-1. **Reentrancy entry point**: `executeDecreaseOrder` accepted a contract address instead of EOA
-2. **State manipulation**: Opening short positions immediately updated global averages
-3. **AUM inflation**: System counted unrealized short losses as vault "assets"
-4. **Value extraction**: Inflated AUM allowed redemption of GLP for excessive assets
+Check consistency between position accounting and the AUM used for share minting or redemption at the consuming operation. Independently bound custody outflow where that is the intended exposure control.
 
-## How AUM Calculation Was Exploited
+## Coverage and limitations
 
-### Normal AUM Calculation
-GMX calculates its total value using this formula:
-```text
-AUM = Physical Tokens + Stablecoins + Unrealized Trading Profits + Fees
-```
+Transaction endpoints can agree after a stale intermediate value has already priced an operation. Recomputing AUM from the same stale dependency does not provide an independent check. Recovered funds, gross exposure, and bounty cost are different measures.
 
-The "unrealized trading profits" component was the vulnerability. When traders open short positions (betting prices will fall), the protocol tracks:
-- **Average price** at which all shorts were opened
-- **Current market price** of the asset
-- **Difference** = profit/loss for the protocol
+A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](/credible/testing-strategy) and [Ethereum architecture](/credible/architecture-overview).
 
-![AUM Calculation](/images/gmx-aum-hack-screenshot-getAum-func.png)
+## Related patterns
 
-### Key Insight: Short Position Impact
-The critical part is how short positions affect AUM:
-- When shorts lose money (current price > average price): Vault profits, AUM increases
-- When shorts make money (current price < average price): Vault loses, AUM decreases
+Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](/credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
 
-### The Manipulation
-1. Attacker deposited tokens to mint GLP (liquidity provider tokens)
-2. Exploited reentrancy to gain control during a transaction
-3. Opened massive short positions at artificially low average prices
-4. AUM spiked significantly because the system thought it had huge unrealized profits from shorts
-5. Redeemed GLP tokens at the inflated price, withdrawing $40M+ in real assets
-
-## Critical Invariants That Could Have Prevented the Attack
-
-Possible checks include AUM bounds, state consistency, and position limits:
-
-### 1. AUM Manipulation Bounds Invariant
-Implement a simple check that AUM changes must be reasonable. This invariant ensures that any change in the protocol's total value is bounded by actual token flows and reasonable market movements.
-
-### 2. Atomic State Consistency Invariant
-Ensure all state changes affecting token pricing complete atomically before any external calls. This prevents reentrancy-based manipulation of global price averages.
-
-### 3. Price Update Monotonicity Invariant
-Ensure global average prices update based on actual position changes, not synthetic operations. This maintains mathematical consistency in price calculations.
-
-### 4. Caller Type Restriction Invariant
-Critical financial operations must originate from externally owned accounts (EOAs) or pre-approved contracts. This prevents malicious contracts from exploiting reentrancy vulnerabilities.
-
-### 5. Position-to-Pool Ratio Invariant
-Individual positions must not exceed a maximum percentage of total pool value. This limits the impact any single position can have on global averages.
-
-## Assertion Pattern
-
-This example checks AUM changes for one call. A complete implementation must check the relevant calls throughout the transaction.
-
-```solidity
-function assertSimplifiedAUMBounds() external {
-    // Core principle: AUM should closely track actual token flows
-
-    // 1. Capture AUM before transaction
-    PhEvm.ForkId memory preFork = _preTx();
-    uint256 aumBefore = getAumInUsdg(true);
-
-    // 2. Capture AUM after transaction
-    PhEvm.ForkId memory postFork = _postTx();
-    uint256 aumAfter = getAumInUsdg(true);
-
-    // 3. Calculate AUM change
-    uint256 aumChange = aumAfter > aumBefore ? aumAfter - aumBefore : aumBefore - aumAfter;
-
-    // 4. Calculate percentage change
-    uint256 percentageChange = aumBefore > 0 ? (aumChange * 10000) / aumBefore : 0;
-
-    // 5. Core invariant: AUM should not change by more than 5% in a single transaction
-    require(
-        percentageChange <= MAX_AUM_DEVIATION_BPS,
-        "SIMPLE_AUM_BOUNDS_VIOLATION: AUM changed by more than 5% in a single transaction"
-    );
-
-    // 6. Additional check: If AUM increased significantly, verify it's not artificial
-    if (aumAfter > aumBefore) {
-        uint256 aumIncrease = aumAfter - aumBefore;
-
-        // If AUM increased by more than $10M, revert
-        require(
-            aumIncrease <= MAX_ABSOLUTE_AUM_DEVIATION,
-            "LARGE_AUM_INCREASE: AUM increased by more than $10M in a single transaction"
-        );
-    }
-}
-```
-
-### How the Assertion Would Have Prevented It
-
-The assertion compares AUM before and after execution. Its example limits are a 5% deviation and a $10M increase. The attack's artificial increase exceeded both limits.
-
-Tune these values to the protocol and test legitimate operations before deployment.
-
-## Key Takeaways
-
-AUM checks can constrain accounting changes that exceed the configured limits. Their coverage depends on the selected thresholds and inspected execution states.
+<span id="what-happened" />
+<span id="why-it-worked" />
+<span id="how-aum-calculation-was-exploited" />
+<span id="normal-aum-calculation" />
+<span id="key-insight-short-position-impact" />
+<span id="the-manipulation" />
+<span id="critical-invariants-that-could-have-prevented-the-attack" />
+<span id="1-aum-manipulation-bounds-invariant" />
+<span id="2-atomic-state-consistency-invariant" />
+<span id="3-price-update-monotonicity-invariant" />
+<span id="4-caller-type-restriction-invariant" />
+<span id="5-position-to-pool-ratio-invariant" />
+<span id="assertion-pattern" />
+<span id="how-the-assertion-would-have-prevented-it" />
+<span id="key-takeaways" />

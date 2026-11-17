@@ -1,0 +1,135 @@
+[
+  {
+    "page": "assertions-book/previous-hacks/kelpdao-rseth-layerzero-configuration.mdx",
+    "risk_domain": "Cross-chain verification",
+    "source": "https://layerzero.network/publications/kelpdao-incident-report.pdf",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/drift-security-council-takeover.mdx",
+    "risk_domain": "Authority and configuration",
+    "source": "https://www.drift.trade/updates/incident-recovery-update-april-16-2026-now",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/bybit-safe-ui.mdx",
+    "risk_domain": "Authority and configuration",
+    "source": "https://www.bybit.com/en/press/post/bybit-confirms-security-integrity-amid-safe-wallet-incident-no-compromise-in-infrastructure-blt9986889e919da8d2",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/hack1-radiant-capital.mdx",
+    "risk_domain": "Authority and configuration",
+    "source": "https://community.radiant.capital/t/feedback-101-deploying-merged-claim-contracts-for-radiant-depositor-reimbursement/1936",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/uxlink-multisig-hack.mdx",
+    "risk_domain": "Authority and configuration",
+    "source": "https://research.blockscope.co/uxlink-exploit-analysis",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/balancer-v2-stable-rate-exploit.mdx",
+    "risk_domain": "Accounting and rounding",
+    "source": "https://www.coinspect.com/blog/balancer-rate-manipulation-exploit/",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/bunni-xyz-rounding-error.mdx",
+    "risk_domain": "Accounting and rounding",
+    "source": "https://blocksec.com/blog/bunni-incident-repeated-small-withdrawals-compound-a-rounding-error-into-an-8.4m-drain",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/abracadabra-rounding-error.mdx",
+    "risk_domain": "Accounting and rounding",
+    "source": "https://github.com/Abracadabra-money/abracadabra-money-contracts/blob/cb97c71c8fbfecbd0080e0cfa877f2dc37f56950/src/cauldrons/CauldronV4.sol",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/hack2-vestra-dao.mdx",
+    "risk_domain": "Accounting and rounding",
+    "source": "https://www.quillaudits.com/blog/hack-analysis/vestra-dao-500k-exploit-analysis",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/compound-upgrade-bug.mdx",
+    "risk_domain": "Accounting and rounding",
+    "source": "https://hackmd.io/@TylerEther/BkdJGdRVY",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/gma-aum-jul25-hack.mdx",
+    "risk_domain": "Oracle and valuation",
+    "source": "https://gmxio.substack.com/p/glp-funds-on-arbitrum-fully-recovered",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/kiloex-price-manipulation-hack.mdx",
+    "risk_domain": "Oracle and valuation",
+    "source": "https://slowmist.medium.com/slowmist-assists-kiloex-in-recovering-all-stolen-funds-incident-recap-273d10f6d466",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/vicuna-finance-hack.mdx",
+    "risk_domain": "Oracle and valuation",
+    "source": "https://d23e.ch/research/vicuna-post-mortem/",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/cream-finance-2.mdx",
+    "risk_domain": "Oracle and valuation",
+    "source": "https://mudit.blog/cream-hack-analysis/",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/abracadabra-gmx-v2-exploit.mdx",
+    "risk_domain": "Accounting and rounding",
+    "source": "https://github.com/Abracadabra-money/abracadabra-money-contracts/blob/dff69a19a219bbff90ab7b752c9f9c0ab5e8fe6f/src/periphery/GmxV2CauldronOrderAgent.sol",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/abracadabra-hack-3.mdx",
+    "risk_domain": "Solvency and operation results",
+    "source": "https://blog.verichains.io/p/abracadabra-money-hack-analysis",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/euler-finance-donation-hack.mdx",
+    "risk_domain": "Solvency and operation results",
+    "source": "https://www.certik.com/blog/euler-finance-incident-analysis",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/visor-finance-unrestricted-mint.mdx",
+    "risk_domain": "Solvency and operation results",
+    "source": "https://github.com/SunWeb3Sec/DeFiHackLabs/blob/33de12241db1019e1516f6740fd19c7b5e3b003c/src/test/2021-12/Visor_exp.sol",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  },
+  {
+    "page": "assertions-book/previous-hacks/first-depositor.mdx",
+    "risk_domain": "Accounting and rounding",
+    "source": "https://akshaysrivastav.hashnode.dev/first-deposit-bug-in-compoundv2-and-its-forks",
+    "reviewed": "2026-11-17",
+    "evidence": "source review; no Phylax exploit replay"
+  }
+]
