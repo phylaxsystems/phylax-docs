@@ -1,111 +1,56 @@
 ---
 title: Call Frame Context
-description: Inspect state before and after a matched function call.
+description: Inspect explicit state snapshots around a matched function call.
 ---
 
-Call frame context mappings describe how assertions can use matched call context and call-scoped snapshots to validate state around a specific function call.
+Call context identifies the function call that dispatched an assertion. Use its start and end snapshots to evaluate that operation, rather than only the whole transaction's endpoints.
 
 ## Status
 
-**Supported.**
+**Spec:** Reshiram. **Evidence:** API reference, with a [tested local oracle fixture](../../assertions-book/assertions/ass28-intra-tx-oracle-deviation) illustrating a post-call check. That fixture does not establish coverage for every batching or proxy design.
 
-## Implementation Details
+<span id="implementation-details" />
+<span id="required-cheatcodes" />
 
-### Required Cheatcodes
+## API and Behavior
 
-- `getCallInputs(address aa, bytes4 signature)` - Gets call inputs with unique IDs
-- `context()` - Gets the currently matched `onFnCall` trigger context
-- `loadStateAt(address target, bytes32 slot, ForkId fork)` - Reads storage at a call-scoped snapshot
+| Interface | Purpose |
+| --- | --- |
+| `registerFnCallTrigger` | Select the function calls that dispatch the assertion |
+| [`context()`](../cheatcodes-reference#trigger-context) | Read the matched call's `callStart` and `callEnd` identifiers |
+| [`getCallInputs(target, selector)`](../cheatcodes-reference#getcallinputs) | Inspect recorded arguments and call IDs; use the entry matching the trigger context |
+| [`loadStateAt(target, slot, fork)`](../cheatcodes-reference#loadstateat) | Read a slot at the explicitly selected snapshot |
 
-### Example Implementation
+<span id="example-implementation" />
+<span id="implementation-notes" />
 
-Protocol:
+## Snapshot Selection
 
-```solidity
-import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+| Boundary | `forkType` | `callIndex` |
+| --- | --- | --- |
+| Before the matched call | `2` | `context().callStart` |
+| After the matched call | `3` | `context().callEnd` |
 
-contract Protocol {
-    mapping(address => uint256) public balances;
-    uint256 public totalSupply;
+Use the same matched context for both reads. When inspecting arguments, require a matching call record before decoding it; a default or unrelated record is not a substitute.
 
-    function transfer(address to, uint256 amount) public {
-        balances[msg.sender] -= amount;
-        balances[to] += amount;
-    }
+<span id="example-use-cases" />
 
-    function batchTransfer(address[] calldata recipients, uint256[] calldata amounts) public {
-        for (uint256 i = 0; i < recipients.length; i++) {
-            transfer(recipients[i], amounts[i]);
-        }
-    }
-}
-```
+## Choosing the Observation Boundary
 
-Assertion:
+A transaction can update an oracle twice, first outside the policy's bounds and then back inside them. An endpoint-only check can miss that excursion. The [oracle fixture](../../assertions-book/assertions/ass28-intra-tx-oracle-deviation) checks covered updates separately and tests this change-and-restore case.
 
-```solidity
-contract CallFrameContextAssertion is Assertion {
-    constructor() {
-        registerAssertionSpec(AssertionSpec.Reshiram);
-    }
+For a transfer policy, compare balances across the covered external call and define the expected result for self-transfers, fees, and nested operations. An internal Solidity function invocation does not necessarily create a separate EVM call frame; a batch function therefore needs its own coverage analysis.
 
-    function triggers() public view override {
-        registerFnCallTrigger(this.assertCallFrameContext.selector, Protocol.transfer.selector);
-    }
+<span id="implementation-considerations" />
 
-    function assertCallFrameContext() public view {
-        Protocol protocol = Protocol(ph.getAssertionAdopter());
-        PhEvm.TriggerContext memory ctx = ph.context();
-        PhEvm.CallInputs[] memory transferCalls = ph.getCallInputs(
-            address(protocol),
-            protocol.transfer.selector
-        );
-        PhEvm.CallInputs memory transferCall;
-        for (uint256 i = 0; i < transferCalls.length; i++) {
-            if (transferCalls[i].id == ctx.callStart) {
-                transferCall = transferCalls[i];
-                break;
-            }
-        }
+## Coverage Limits
 
-        address from = transferCall.caller;
-        (address to, uint256 amount) = abi.decode(transferCall.input, (address, uint256));
-        bytes32 fromBalanceSlot = keccak256(abi.encode(from, uint256(0)));
-        bytes32 toBalanceSlot = keccak256(abi.encode(to, uint256(0)));
-        PhEvm.ForkId memory preCall = PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart});
-        PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd});
+A call's end snapshot includes changes made by its nested execution. Recursive calls, alternate selectors, delegatecalls, and proxy storage require explicit tests. Checking one selected frame does not establish that all state-changing paths dispatch the assertion.
 
-        uint256 preFromBalance = uint256(ph.loadStateAt(address(protocol), fromBalanceSlot, preCall));
-        uint256 preToBalance = uint256(ph.loadStateAt(address(protocol), toBalanceSlot, preCall));
-        uint256 postFromBalance = uint256(ph.loadStateAt(address(protocol), fromBalanceSlot, postCall));
-        uint256 postToBalance = uint256(ph.loadStateAt(address(protocol), toBalanceSlot, postCall));
+<span id="related-use-cases" />
 
-        require(postFromBalance == preFromBalance - amount, "From balance mismatch in call frame");
-        require(postToBalance == preToBalance + amount, "To balance mismatch in call frame");
-    }
-}
-```
+## Related References
 
-### Implementation Notes
-
-Use `registerFnCallTrigger()` for each matched call. Read `callStart` and `callEnd` through `ph.context()`.
-
-Construct call snapshots with `PhEvm.ForkId({forkType: 2, callIndex: ctx.callStart})` and `PhEvm.ForkId({forkType: 3, callIndex: ctx.callEnd})`.
-
-Use these snapshots to check intermediate states. Use transaction snapshots when only the overall change matters.
-
-## Example Use Cases
-
-- **Batch operations:** Validate each individual operation within a batch transaction
-- **Multi-step protocols:** Check state at each step of a complex transaction
-- **Oracle price updates:** Verify each price update doesn't exceed deviation limits (see [Intra-TX Oracle Deviation](/assertions-book/assertions/ass28-intra-tx-oracle-deviation))
-- **Rate provider validation:** Check rate changes before and after swaps (see [Balancer V2 Stable Rate Exploit](/assertions-book/previous-hacks/balancer-v2-stable-rate-exploit))
-
-## Implementation Considerations
-
-- **Recursive function calls:** Recursive calls compound state changes similar to transaction-level execution. Account for recursive call paths when precise call frame tracking is required.
-
-## Related Use Cases
-
-- [Function Call Inputs](/credible/use-case-mappings/function-call-inputs) - Similar but validates at transaction level
-- [State Changes](/credible/use-case-mappings/state-changes) - Track state changes across a transaction
+- [Function Call Inputs](./function-call-inputs): recorded arguments and transaction-level reconciliation.
+- [Storage Lookup](./storage-lookups): layout and snapshot selection.
+- [State Change Tracking](./state-changes): intermediate writes that an endpoint comparison can miss.

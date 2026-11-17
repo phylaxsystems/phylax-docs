@@ -1,5 +1,5 @@
 ---
-title: "Run an Ownership Policy Locally"
+title: "Test the Limits of an Ownership Policy"
 description: "Test a permitted operation, a rejected ownership change, and the limit of an endpoint check"
 ---
 
@@ -7,7 +7,7 @@ In this tutorial, you will run an ownership assertion against a small contract. 
 
 ## Prerequisites
 
-Install [PCL and Foundry](/credible/credible-install). This walkthrough was re-tested with PCL `1.9.0` and Solidity `0.8.29` on Linux ARM64 on 2026-11-17. It uses local contracts and needs no wallet or RPC connection.
+Install [PCL](../../credible/credible-install) and Git. This walkthrough was re-tested with PCL `1.9.0` and Solidity `0.8.29` on Linux ARM64 on 2026-11-17. It uses local contracts and needs no wallet or RPC connection.
 
 ## 1. Check out the reviewed library
 
@@ -105,10 +105,16 @@ Expected result: **3 passed, 0 failed**.
 | `testRejectsOwnerChangeAndRollsBack` | A permanent change is rejected and the original owner remains |
 | `testEndpointCheckAllowsChangeAndRestore` | An external call observes the temporary owner, but equal endpoints still pass |
 
-## Adapt the example
+<span id="adapt-the-example" />
 
-Replace the teaching target with your deployed contract's layout and call paths. Keep the accepted, rejected, and restored-state cases. If temporary authority changes are prohibited, an endpoint equality check is insufficient; the policy must observe the relevant writes or operations.
+## What You Learned
 
-For a constructor with configuration arguments, append `abi.encode(...)` to its creation code when calling `cl.assertion`. Do not fetch protocol state in that constructor: the assertion deployment runtime is isolated from the test's contract state. Pass addresses explicitly and read protocol state during assertion execution.
+The owner check rejects a permanent change and rolls back that transaction. It permits a temporary change that restores the owner before the endpoint comparison, even though another call observed the temporary owner. Passing an endpoint check therefore does not prove that authority stayed unchanged throughout execution.
 
-Continue with the [ERC-4626 policy](./vault-policies). Test each selected assertion function through a matching trigger. Before deployment, run historical backtests and scenarios on a replica of your protocol in [alerting](/credible/testing-strategy).
+You also tested only the owner assertion function. The source's admin check needs a separate fixture; the three passing tests do not establish its behavior.
+
+## Next Steps
+
+- Read [State Change Tracking](../../credible/use-case-mappings/state-changes) to compare intermediate writes with endpoint values.
+- Use the [owner and admin lock reference](./ass05-ownership-change) to inspect this pattern's slots, triggers, and limitations.
+- Follow [Write Your Own Policies](../../credible/writing-your-own-policies) when you are ready to define and test a policy for your own contracts.

@@ -1,6 +1,6 @@
 ---
 title: 'Platform Overview'
-description: 'Assign a protocol manager, set up Slack alerts, and manage circuit breakers.'
+description: 'Find the guides for preparing, reviewing, deploying, and operating policy releases.'
 ---
 
 Use the [Phylax platform](https://ethereum.phylax.systems) to review circuit breakers, authorize changes, and investigate policy violations.
@@ -13,14 +13,20 @@ Use the [Phylax platform](https://ethereum.phylax.systems) to review circuit bre
   <Card title="Assign a protocol manager" icon="wallet" href="./assign-protocol-manager">
     Choose the signing account that authorizes your circuit breaker releases.
   </Card>
-  <Card title="Setting Up Alerting" icon="bell" href="./setting-up-alerting">
-    Send circuit-breaker alerts to your team in Slack.
-  </Card>
-  <Card title="Review and deploy changes" icon="sliders" href="./managing-your-circuit-breakers">
+  <Card title="Review and deploy changes" icon="sliders" href="./deploy-assertions-dapp">
     Review releases and authorize policy changes.
+  </Card>
+  <Card title="Review Backtesting Results" icon="clock-rotate-left" href="./backtesting">
+    Check historical coverage and investigate unexpected rejections before signing.
+  </Card>
+  <Card title="Inspect or Replace a Release" icon="sliders" href="./managing-your-circuit-breakers">
+    Inspect active policies, replace their complete policy set, or schedule removal.
   </Card>
   <Card title="Investigate a Rejected Transaction" icon="magnifying-glass" href="./investigate-rejected-transaction">
     Read rejection reasons and compare execution traces.
+  </Card>
+  <Card title="Set Up Slack Notifications" icon="bell" href="./setting-up-alerting">
+    Send notifications to Slack and test delivery. This is separate from deploying a release to Alerting.
   </Card>
 </CardGroup>
 

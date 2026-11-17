@@ -3,7 +3,7 @@ title: "ERC-4626 Policies"
 description: "Combine call-level share-price checks with a cumulative token outflow limit"
 ---
 
-Use the components in [`src/protection/vault`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/src/protection/vault) to build a policy for a specific vault. The example below combines two independent conditions: standard vault operations must not dilute holders, and net underlying-token outflow must stay within a rolling budget.
+The components in [`src/protection/vault`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/src/protection/vault) provide checks for a specific vault. The example below combines two independent conditions: standard vault operations must not dilute holders, and net underlying-token outflow must stay within a rolling budget.
 
 ## Example policy
 
@@ -32,7 +32,7 @@ contract BookVaultPolicy is ERC4626SharePriceAssertion, ERC4626CumulativeOutflow
 }
 ```
 
-Save the contract as `examples/assertions-book/assertions/src/BookVaultPolicy.sol` in the [reviewed checkout](./run-an-example#1-check-out-the-reviewed-library), then compile it with `FOUNDRY_PROFILE=assertions-book forge build`.
+The compilation context is the `assertions-book` profile in the [reviewed library checkout](./run-an-example#1-check-out-the-reviewed-library). The example's compilation result does not establish behavior for a deployed vault.
 
 | Configuration | Value in this example |
 | --- | --- |

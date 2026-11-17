@@ -8,7 +8,7 @@ Catalog every source page and taxonomy, make the organization consistent, then r
 
 - [Originating request and implementation follow-ups](https://phylaxsystems.slack.com/archives/C06T1DLBHGR/p1794880767080659)
 - [Integration discussion supplied with the request](https://phylaxsystems.slack.com/archives/C06SNPA488J/p1794860382330089)
-- The source inventory retains **116 content routes**, with **115 sidebar entries**, **38 navigation nodes**, **58 glossary terms**, **25 snippets** (22 upstream, three local), and **16 redirects**. The original tree was checked against live GitHub; this snapshot describes the branch, not a deployed-site crawl.
+- The source inventory retains **116 content routes**, with **115 sidebar entries**, **40 navigation nodes**, **58 glossary terms**, **25 snippets** (22 upstream, three local), and **16 redirects**. The original tree was checked against live GitHub; this snapshot describes the branch, not a deployed-site crawl.
 
 ## Inventory and maintenance
 
@@ -19,6 +19,8 @@ Catalog every source page and taxonomy, make the organization consistent, then r
 - [Example provenance](maintaining-examples.md): import ownership, upgrades and local fixture maintenance.
 
 Run `uv run python scripts/update-docs-inventory.py` to refresh snapshots. New pages require a human Diátaxis classification before regeneration. Baseline notes are retained; update current classifications when a page's reader need changes.
+
+See the [follow-up Diátaxis review](diataxis-review.md) for the navigation, page-cohesion, and reader-journey passes, including corrections discovered after the initial audit.
 
 ## Taxonomy conventions
 

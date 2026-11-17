@@ -10,9 +10,12 @@ Prepare a release, review its checks, and authorize deployment in the [Phylax pl
 You need:
 
 - Approved policies and assigned reviewers
-- [pcl installed](./credible-install) and an assertion [written](./writing-your-own-policies) and [tested](./testing-assertions)
 - Target contracts and an [assigned Protocol Manager](./assign-protocol-manager) authorized for them on the approved Ethereum deployment
 - For production, reviewed guards, transaction routing, and recovery under the [Ethereum integration plan](./dapp-integration)
+
+If your FDE or developer has already prepared a release, sign in to the platform, open your project, and start at [Step 4: Review Release Checks](#step-4-review-release-checks). Reviewers do not need to run the CLI preparation steps.
+
+If you are preparing the release yourself, install [pcl](./credible-install), [write](./writing-your-own-policies) and [test](./testing-assertions) your assertions, then complete Steps 1–3.
 
 ## Step 1: Authenticate
 
@@ -46,7 +49,7 @@ Review the preview and confirm to create a pending release. See [Apply Assertion
 
 ## Step 4: Review Release Checks
 
-Open the release under **Releases → Needs your review**. Compare its target contracts, environment, and policy additions and removals with the approved changes. **All passed** does not mean the release is deployed. Review all three checks below; see the [screenshot walkthrough](./managing-your-circuit-breakers#review-a-release).
+Open the release under **Releases → Needs your review**. Compare its target contracts, environment, and policy additions and removals with the approved changes. **All passed** does not mean the release is deployed. Review all three checks below before authorizing deployment.
 
 ### Assertion verification
 
@@ -79,7 +82,7 @@ Resolve failed verification checks and unexpected backtesting findings before si
 3. Select **Deploy to Alerting** or **Deploy to Production**.
 4. Authorize the transaction through your signing process.
 
-The [State Oracle](./credible-layer-contracts#state-oracle) applies the configured delay before activation. After the transaction confirms, check **Assertions** for **Awaiting activation** and the remaining block count. Confirm enforcement after the delay; a signed deployment alone is insufficient. See the [deployment and activation screenshots](./managing-your-circuit-breakers#authorize-the-change). Platform membership does not grant signing authority.
+The [State Oracle](./credible-layer-contracts#state-oracle) applies the configured delay before activation. After the transaction confirms, check **Assertions** for **Awaiting activation** and the remaining block count. Confirm enforcement after the delay; a signed deployment alone is insufficient. Platform membership does not grant signing authority.
 
 ## Verify Ethereum Enforcement
 
@@ -91,7 +94,7 @@ Test a protected call in a noncredible block while the guard is active. Include 
 
 ## Step 6: Monitor Your Policies
 
-Use [Review and deploy changes](./managing-your-circuit-breakers) to check active policies and [Investigate a Rejected Transaction](./investigate-rejected-transaction) to inspect violations. To change the policy set or stop a release, follow [Replace or Remove a Release](./managing-your-circuit-breakers#replace-or-remove-a-release).
+Use [Check Active Policies](./managing-your-circuit-breakers#check-active-policies) to check active policies and [Investigate a Rejected Transaction](./investigate-rejected-transaction) to inspect violations. To change the policy set or stop a release, follow [Replace or Remove a Release](./managing-your-circuit-breakers#replace-or-remove-a-release).
 
 ## Troubleshooting
 
