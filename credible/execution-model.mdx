@@ -1,6 +1,6 @@
 ---
 title: 'Testing vs. Production'
-description: 'How assertion execution differs between testing and on-chain environments'
+description: 'How local assertion tests differ from production validation and onchain guard checks'
 ---
 
 On Ethereum, the Assertion Enforcer reports failures to the participating builder, which excludes failing candidates before inclusion. The enforcer does not make the inclusion decision. A separate on-chain guard can revert a protected operation in a noncredible block while its gate is closed.

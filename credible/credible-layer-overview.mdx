@@ -23,7 +23,7 @@ Assertions can check administrative changes, asset flows, collateralization, ora
 
 For example, an assertion can detect an unexpected change in a pool's state across a transaction. The [Balancer V2 case study](../assertions-book/previous-hacks/balancer-v2-stable-rate-exploit) discusses a candidate policy using that approach; it does not supply a pinned Phylax exploit replay. Production protection also requires active rules, matching triggers, and the guarded execution path.
 
-An assertion failure is a rule violation, not proof of an attack. Legitimate migrations, withdrawals, or upgrades can also violate a rule that lacks the required context. Test those operations alongside known failure cases.
+An assertion failure is not proof of an attack. A policy check may reject a legitimate migration, withdrawal, or upgrade if it lacks the required context; a runtime failure can also invalidate the candidate. Inspect the rejection reason. Test those operations alongside known failure cases.
 
 ## What Integration Requires
 

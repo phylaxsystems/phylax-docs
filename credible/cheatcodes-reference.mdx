@@ -51,7 +51,7 @@ constructor() {
 
 ### `ForkId`
 
-Identifies an immutable transaction snapshot.
+Identifies an immutable snapshot at a transaction or call boundary.
 
 ```solidity
 struct ForkId {
@@ -237,7 +237,7 @@ The helper family also includes mapping-key and mapping-key-with-offset variants
 
 ### `getAssertionAdopter`
 
-Returns the assertion adopter contract address associated with the current transaction.
+Returns the adopter address for the current assertion evaluation. This is the contract to which the assertion is assigned; it need not be the transaction recipient or every contract the check inspects. See [Assertion Adopter](./glossary#assertion-adopter).
 
 ```solidity
 function getAssertionAdopter() external view returns (address);
@@ -809,7 +809,7 @@ function registerErc20ChangeTrigger(
 
 #### `watchCumulativeOutflow`
 
-Registers a circuit breaker trigger that collects ERC20 outflow from the assertion adopter into one bucket per block.
+Registers a cumulative-flow trigger that collects ERC20 outflow from the assertion adopter into one bucket per block.
 
 ```solidity
 function watchCumulativeOutflow(
@@ -824,7 +824,7 @@ The trigger evaluates the per-block buckets over the configured rolling window. 
 
 #### `watchCumulativeInflow`
 
-Registers a circuit breaker trigger that collects ERC20 inflow into the assertion adopter into one bucket per block.
+Registers a cumulative-flow trigger that collects ERC20 inflow into the assertion adopter into one bucket per block.
 
 ```solidity
 function watchCumulativeInflow(

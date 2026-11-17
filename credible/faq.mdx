@@ -59,7 +59,7 @@ Even an assertion preflight result applies only to the simulated state. Active r
 
 ### Do rejected transactions consume gas?
 
-A transaction excluded by a builder before inclusion consumes no onchain execution gas. An included transaction that reverts at a guard does consume gas. Guard and marker operations also have onchain costs, separate from offchain assertion execution.
+Builder exclusion itself consumes no onchain execution gas; it does not establish the transaction's outcome at another builder. An included transaction that reverts at a guard does consume gas. Guard and marker operations also have onchain costs, separate from offchain assertion execution.
 
 ### Are bridge, system, or forced-inclusion transactions protected?
 

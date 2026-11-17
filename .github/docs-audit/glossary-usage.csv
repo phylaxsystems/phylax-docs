@@ -1,0 +1,64 @@
+term,usage_rule,do_not_conflate_with,supporting_reference
+The Credible Layer,Infrastructure; qualify Ethereum or L2 architecture,Phylax company; Ethereum consensus,credible/architecture-overview.mdx
+Assertion,Use function or contract when the unit matters,One-to-one mapping between policy and artifact,credible/assertions-overview.mdx
+Policy,Intended behavior and exceptions,Only invariants; Solidity artifact,credible/writing-your-own-policies.mdx
+Assertion Contract,Artifact packaging functions and triggers,Adopter; individual check; release,credible/assertions-overview.mdx
+Protocol Invariants,Properties at defined observation boundaries,Every failure scenario; scope as a security category,credible/test-policy-behavior.mdx
+PhEVM (Phylax EVM),Assertion execution environment,Enforcer orchestration; local CLI,credible/phevm.mdx
+Assertion DA (Data Availability),Artifact storage and retrieval,Guaranteed uptime; policy correctness,credible/assertion-da.mdx
+State Oracle,Assignments and activation/deactivation timing,Credible Registry; flow measurement windows,credible/credible-layer-contracts.mdx
+Credible Registry,Builder authorization and credible-block markers,Assertion assignments or execution,credible/credible-layer-contracts.mdx
+Credible Block,Authorized builder's marker/attestation,Cryptographic proof that checks ran,credible/architecture-overview.mdx
+Guard,Onchain gate on covered operations,Offchain assertion evaluation; automatic full coverage,credible/credible-layer-contracts.mdx
+Credible RPC,Submission route to participating builders,Guard; guarantee of inclusion,credible/dapp-integration.mdx
+Fail-open,Configured relaxation of the credible-block gate,Removing all protocol checks or stopping all builders' validation,credible/trust-model.mdx
+Protocol Manager,State Oracle assertion-management authority,Platform member; guard admin; submitter,credible/managing-policy-deployments.mdx
+Block Builder,Selects and orders candidates; qualify participating,Every Ethereum validator,credible/ethereum-builder-integration.mdx
+Sequencer,L2 transaction ordering and integration role,Ethereum builder deployment assumptions,credible/l2-integrations/overview.mdx
+Assertion Enforcer,Selects and orchestrates checks through PhEVM,Sidecar topology; final inclusion decision,credible/assertion-enforcer.mdx
+Platform,Phylax web application,Protected protocol application; onchain authority,credible/deploy-assertions-dapp.mdx
+The Phylax Explorer,Public featured-project view with scoped evidence,Every project; unrestricted private data,credible/dapp-explorer.mdx
+Sidecar,Separate-process deployment pattern,Required architecture; synonym for enforcer,credible/assertion-enforcer.mdx
+Network Validator,Ethereum consensus role; node is broader,Builder; sequencer; every node,credible/architecture-overview.mdx
+Trigger,Selects a function when conditions match,The check's rejection decision,credible/triggers.mdx
+Snapshot,Execution-state view at an explicit boundary,Changing ordinary reads by constructing ForkId,credible/cheatcodes-reference.mdx
+Pre-state/Post-state,Always specify transaction or call boundary,Final state as all intermediate observations,credible/phevm.mdx
+State Changes,Observed storage writes during execution,Only final value; proof writes are unauthorized,credible/use-case-mappings/state-changes.mdx
+Call Trace,Recorded calls and nesting; retain old callstack anchor,Active call stack; EVM operand stack,credible/cheatcodes-reference.mdx
+Assertion Bytecode,Compiled assertion artifact; distinguish creation data,Policy intent; CLI as execution network,credible/assertion-da.mdx
+Assertion ID,Hash of creation bytecode plus encoded constructor arguments,Function selector; adopter assignment; release ID,credible/assertion-da.mdx
+Assertion DA Prover Signature,Stored-artifact attestation at signing time,Future availability; proof of assertion execution,credible/assertion-da.mdx
+Assertion Adopter,Assigned contract address; keep API/UI spelling,Every inspected contract; transaction recipient; guard coverage,credible/credible-layer-contracts.mdx
+Assertion Group,Prefer functions or contract for the intended unit,Platform release or project,credible/assertions-overview.mdx
+Assertion Function,Registered executable check,Contract artifact; ID,credible/triggers.mdx
+Assertion Specification,Legacy/Reshiram/Experimental API capability choice,Lifecycle state; tested/audited status; runtime support guarantee,credible/cheatcodes-reference.mdx
+`pcl`,User CLI for development and deployment workflows,PhEVM; enforcer,credible/cli-reference.mdx
+`phorge`,Forge-derived local build/test tooling within pcl,Live enforcement service; deployment workflow,credible/cli-reference.mdx
+`credible-std`,Solidity library and assertion/test interfaces,Runtime support guarantee from library availability,credible/credible-std-overview.mdx
+Cheatcodes,PhEVM inspection interfaces; distinguish local test utilities,Arbitrary mutation of production protocol state,credible/cheatcodes-overview.mdx
+Test Environment,Qualify local PCL tests versus fork versus Alerting,One environment proving every integration property,credible/testing-strategy.mdx
+Backtesting,Release evaluation over a reported historical range,Live exclusion; complete coverage from Passed or zero exercised transactions,credible/backtesting.mdx
+Off-chain Execution,Validation outside Ethereum consensus with its own resources,No compute cost; no guard/marker gas,credible/phevm.mdx
+Forced Inclusion Transactions,L2 protocol-mandated inclusion paths,Ethereum RPC routing; universal rejection policy,credible/l2-integrations/network-integration.mdx
+Circuit Breaker,Protection implemented with assertions (branch editorial convention),Only rolling flow limits; persistent pause flag,assertions-book/assertions/circuit-breakers.mdx
+Cumulative-Flow Breaker,Rolling-window directional net-flow subtype,All circuit breakers; gross transfers; maximum total protocol loss,assertions-book/assertions/circuit-breakers.mdx
+Verifiability,Inspect artifacts and applicable registry state within access scope,Proof of live enforcement or policy completeness,credible/trust-model.mdx
+Invalidation,Reported failed validation; inspect policy condition versus runtime error,Attack; live prevention; ordinary Ethereum consensus invalidity,credible/investigate-rejected-transaction.mdx
+Revert,EVM failure; qualify assertion/test/guard context,Builder exclusion; every subcall failure reverting the whole transaction,credible/execution-model.mdx
+Drop,Participating builder exclusion before inclusion,Onchain revert; proof all other builders excluded it,credible/faq.mdx
+Prevent,Blocking a configured rule-violating effect through covered integration,Every attack; every invalidation event including simulations,credible/trust-model.mdx
+Project,Platform container and permissions,Release; onchain Protocol Manager authority,credible/deploy-assertions-dapp.mdx
+Release,Complete reviewed policy set for project/environment,One function; assertion group; individually removable active assertion,credible/apply-assertions.mdx
+Apply,pcl apply creates a pending platform release,Onchain deployment confirmation; active protection,credible/apply-assertions.mdx
+Deployment,Authorize and submit lifecycle change for environment,Immediate activation; installing guard and routing,credible/deploy-assertions-dapp.mdx
+Slack Notifications,Delivery of invalidation notices,Switching environment or enforcement mode,credible/setting-up-alerting.mdx
+Alerting,Observation in mirrored environment without live exclusion,Public Ethereum testnet; Slack delivery; full end-to-end enforcement test,credible/testing-strategy.mdx
+Production,Active enforcement at participating integration boundary,Guaranteed coverage from environment label alone,credible/dapp-integration.mdx
+Assertion Activation Window,Block interval when an assignment applies,Timelock waiting period; flow measurement window,credible/credible-layer-contracts.mdx
+Rolling Window,Moving flow-observation period with expiring buckets,Assertion activation interval; fixed protocol-wide loss ceiling,assertions-book/assertions/circuit-breakers.mdx
+Timelock,Delay before assertion addition/removal takes effect,Rolling window; universal delay on all administrative powers,credible/trust-model.mdx
+Marked for Enforcement,New Production assignment awaiting activation,Already enforced; verified guard/routing coverage,credible/deploy-assertions-dapp.mdx
+Marked for Alerting,New Alerting assignment awaiting activation,Already observing; Production enforcement,credible/deploy-assertions-dapp.mdx
+Enforced,Production lifecycle state at integrated boundary,Proof all operations and transaction paths are protected,credible/managing-your-circuit-breakers.mdx
+Active in Alerting,Observation after activation delay,Blocking live transactions,credible/testing-strategy.mdx
+Removal,Scheduled deactivation; active until deactivation block,Immediate emergency disable; editing one active release member,credible/managing-your-circuit-breakers.mdx

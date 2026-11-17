@@ -22,7 +22,7 @@ Registering an assertion does not install a guard or configure transaction routi
 
 ### State Oracle
 
-The State Oracle associates protected contract addresses, called assertion adopters, with a Protocol Manager and assertion activation windows. Its configured block delay governs additions and removals. The enforcer reads this state to determine applicable assertions.
+The State Oracle associates protected contract addresses, called assertion adopters, with a Protocol Manager and assertion activation windows. Its configured block delay governs additions and removals. An activation window determines when an assignment applies; it is separate from a cumulative-flow policy's rolling measurement window. The enforcer reads this state to determine applicable assertions.
 
 In the [public State Oracle implementation](https://github.com/phylaxsystems/credible-layer-contracts/blob/main/src/StateOracle.sol), an assertion ID cannot be re-added for the same adopter after removal. Confirm the deployed implementation and configuration when planning updates.
 

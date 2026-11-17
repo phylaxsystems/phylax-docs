@@ -10,7 +10,7 @@ Cheatcodes are native Rust functions exposed to assertions through PhEVM. They p
 Cheatcodes enable functionality that would be impossible or impractical with standard Solidity:
 
 - **Snapshot state access**: Access blockchain state before or after a transaction or call with explicit `ForkId` snapshots
-- **Callstack introspection**: Inspect call traces and execution flow in ways not possible with standard EVM tools
+- **Call trace inspection**: Inspect call traces and execution flow in ways not possible with standard EVM tools
 - **State change tracking**: Monitor specific storage slots and track how they change during transaction execution
 - **Triggering assertions**: Define precise conditions for when assertions should execute with `onFnCall` and `onTxEnd` triggers
 - **Cumulative flow tracking**: Register circuit-breaker triggers that collect ERC20 inflows or outflows into one bucket per block and evaluate the buckets over rolling windows
@@ -27,7 +27,7 @@ Use cheatcodes when a policy needs execution history or state from another snaps
 
 ## Snapshot Read Guidance
 
-Read only the snapshots needed by the policy.
+Read only the snapshots needed by the policy. Specify whether “pre-state” and “post-state” refer to the transaction or the matched call; a transaction-end comparison can miss an intermediate change that was later restored.
 
 <Note>
 Choose the assertion specification supported by your target Ethereum deployment. Reshiram (V2) helpers require V2 support in the enforcer; a local test passing does not establish deployment compatibility. Earlier Linea-specific restrictions are documented in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).

@@ -156,7 +156,10 @@
 - Use invariant for a property at defined observation boundaries, not as a synonym for every policy or failure scenario.
 - Distinguish assertion functions, assertion contracts, and releases. Use Assertion Enforcer for the validation component, PhEVM for its execution environment, and sidecar only for a separate-process integration.
 - Distinguish deployment confirmation, activation, Production enforcement, and Alerting observation. Slack notification delivery is separate from those modes.
-- Distinguish assertion invalidation, builder exclusion, and an onchain revert. An assertion failure establishes a rule violation, not necessarily an attack.
+- Distinguish assertion invalidation, builder exclusion, and an onchain revert. A failed assertion can reflect a policy condition or an execution error; investigate before calling it an attack or live prevention.
+- Name the unit: assertion ID identifies creation data; selector identifies a function; adopter identifies an assignment target; release identifies the platform deployment set.
+- Qualify windows and snapshots: activation window versus rolling measurement window; transaction versus call boundary. Use call trace for recorded calls, not call stack or EVM operand stack.
+- Treat assertion specification, lifecycle state, and evidence as separate axes.
 - Preserve exact commands, Solidity identifiers, UI labels, source titles, old routes, and compatibility anchors. Explain historical naming where needed instead of globally replacing it.
 - Match evidence terms to the linked result: source review, local test, exploit replay, and live enforcement are different claims.
 

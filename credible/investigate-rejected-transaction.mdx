@@ -3,7 +3,7 @@ title: 'Investigate a Rejected Transaction'
 description: 'Find an invalidation, read its rejection reason, and compare transaction and assertion traces.'
 ---
 
-Use the [Phylax platform](https://ethereum.phylax.systems) to identify which policy rejected a transaction and why. Open your project or follow an alert's investigation link.
+Use the [Phylax platform](https://ethereum.phylax.systems) to identify which assertion failed and why. Open your project or follow an alert's investigation link.
 
 ## 1. Find the Event
 
@@ -51,6 +51,6 @@ The assertion trace below ends with `TradingVault: outflow limit exceeded`. Use 
 
 ## 5. Review the Outcome
 
-Compare the rejection with the approved policy. If it blocked intended behavior, review the event with your FDE and add a regression test before [replacing the release](./managing-your-circuit-breakers#replace-or-remove-a-release). Include the policies you intend to retain; assertions cannot be removed individually from an active release.
+Compare the rejection with the approved policy. Distinguish a policy condition from an execution failure such as out-of-gas, and confirm whether the event was prevented, alert-only, or simulated. If the check rejects intended behavior, review the event with your FDE and add a regression test before [replacing the release](./managing-your-circuit-breakers#replace-or-remove-a-release). Include the policies you intend to retain; assertions cannot be removed individually from an active release.
 
 To receive invalidation notifications in Slack, follow [Set Up Slack Notifications](./setting-up-alerting).
