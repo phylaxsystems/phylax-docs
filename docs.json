@@ -99,6 +99,13 @@
             ]
           },
           {
+            "group": "Tutorials",
+            "pages": [
+              "credible/pcl-quickstart",
+              "credible/test-policy-behavior"
+            ]
+          },
+          {
             "group": "How-to Guides",
             "pages": [
               {
@@ -110,24 +117,23 @@
                 ]
               },
               {
-                "group": "Managing Circuit Breakers",
+                "group": "Manage Policy Releases",
                 "pages": [
                   "credible/dapp-overview",
                   "credible/assign-protocol-manager",
                   "credible/setting-up-alerting",
+                  "credible/deploy-assertions-dapp",
                   "credible/managing-your-circuit-breakers",
                   "credible/investigate-rejected-transaction",
                   "credible/dapp-explorer"
                 ]
               },
               {
-                "group": "Writing Your Own Policies",
+                "group": "Author Policies",
                 "root": "credible/writing-your-own-policies",
                 "pages": [
                   "credible/credible-install",
-                  "credible/pcl-quickstart",
-                  "credible/test-policy-behavior",
-                  "credible/deploy-assertions-dapp"
+                  "credible/apply-assertions"
                 ]
               },
               {
@@ -139,13 +145,7 @@
                 ]
               },
               {
-                "group": "Build and Deploy",
-                "pages": [
-                  "credible/apply-assertions"
-                ]
-              },
-              {
-                "group": "Test Circuit Breakers",
+                "group": "Test Assertions",
                 "pages": [
                   "credible/testing-assertions",
                   "credible/fuzz-testing",
@@ -182,8 +182,7 @@
                 "pages": [
                   "credible/assertion-enforcer",
                   "credible/phevm",
-                  "credible/assertion-da",
-                  "credible/credible-layer-contracts"
+                  "credible/assertion-da"
                 ]
               },
               {
@@ -192,7 +191,6 @@
                   "credible/assertions-overview",
                   "credible/development-effort",
                   "credible/cheatcodes-overview",
-                  "credible/triggers",
                   "credible/execution-model"
                 ]
               }
@@ -202,11 +200,18 @@
             "group": "Reference",
             "pages": [
               {
-                "group": "CLI and APIs",
+                "group": "CLI and Assertion SDK",
                 "pages": [
                   "credible/cli-reference",
                   "credible/cheatcodes-reference",
-                  "credible/credible-std-overview"
+                  "credible/credible-std-overview",
+                  "credible/triggers"
+                ]
+              },
+              {
+                "group": "Contract Reference",
+                "pages": [
+                  "credible/credible-layer-contracts"
                 ]
               },
               {
@@ -225,14 +230,15 @@
                   "credible/use-case-mappings/storage-lookups",
                   "credible/use-case-mappings/state-changes",
                   "credible/use-case-mappings/call-frame-context",
-                  {
-                    "group": "Alternative Patterns",
-                    "pages": [
-                      "credible/use-case-mappings/modified-keys"
-                    ]
-                  }
+                  "credible/use-case-mappings/modified-keys"
                 ]
               }
+            ]
+          },
+          {
+            "group": "Builder Operations",
+            "pages": [
+              "credible/ethereum-builder-integration"
             ]
           },
           {
@@ -240,13 +246,12 @@
             "pages": [
               "credible/l2-integrations/overview",
               "credible/l2-integrations/network-integration",
-              "credible/l2-integrations/architecture-linea",
-              "credible/l2-integrations/architecture-op-stack",
               "credible/l2-integrations/validation-pipeline",
-              "credible/l2-integrations/platform-and-compatibility",
               {
-                "group": "How Policy Management Works on L2s",
+                "group": "Historical L2 Workflows",
                 "pages": [
+                  "credible/l2-integrations/architecture-linea",
+                  "credible/l2-integrations/platform-and-compatibility",
                   "credible/l2-integrations/manual-verification"
                 ]
               }
@@ -265,15 +270,15 @@
             ]
           },
           {
+            "group": "Tutorials",
+            "pages": [
+              "assertions-book/assertions/run-an-example"
+            ]
+          },
+          {
             "group": "Explanation",
             "pages": [
-              {
-                "group": "Protocol Case Studies",
-                "pages": [
-                  "assertions-book/assertions/aave-v3-suite",
-                  "assertions-book/assertions/optimism-fma-suite"
-                ]
-              },
+              "assertions-book/assertions/circuit-breakers",
               {
                 "group": "Hack Case Studies",
                 "pages": [
@@ -302,11 +307,18 @@
             ]
           },
           {
+            "group": "Protocol Assertion Catalogs",
+            "pages": [
+              "assertions-book/assertions/aave-v3-suite",
+              "assertions-book/assertions/optimism-fma-suite"
+            ]
+          },
+          {
             "group": "Patterns",
             "pages": [
               "assertions-book/assertions/use-cases-index",
-              "assertions-book/assertions/run-an-example",
               "assertions-book/assertions/reusable-patterns",
+              "assertions-book/assertions/anomaly-gated-policies",
               {
                 "group": "Access Control and Administrative Changes",
                 "pages": [
@@ -342,14 +354,12 @@
                 ]
               },
               {
-                "group": "Circuit Breakers",
+                "group": "Flow Limits",
                 "pages": [
-                  "assertions-book/assertions/circuit-breakers",
                   "assertions-book/assertions/balancer-outflow",
                   "assertions-book/assertions/ass20-erc20-drain",
                   "assertions-book/assertions/ass22-erc20-inflow-breaker",
-                  "assertions-book/assertions/rate-of-change-circuit-breakers",
-                  "assertions-book/assertions/anomaly-gated-policies"
+                  "assertions-book/assertions/rate-of-change-circuit-breakers"
                 ]
               },
               {

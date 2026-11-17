@@ -18,6 +18,10 @@ Function call input mappings describe how assertions can inspect call data for a
 
 ### Example Implementation
 
+<Warning>
+The following fragments illustrate reconstruction logic; they are not a compilable fixture. The assertion fragment writes storage-backed bookkeeping inside a `view` function. Rework that bookkeeping into local memory, supply imports and fixtures, and test the relevant paths before use. For a runnable starting point, use [Run an Example Policy Locally](../pcl-quickstart).
+</Warning>
+
 Protocol:
 
 ```solidity
@@ -112,7 +116,7 @@ contract FunctionCallInputsAssertion is Assertion {
 
 - **State reconstruction considerations:**
     - Manual tracking required for parameter-dependent storage slots (i.e. keys of mappings)
-    - No direct access to intermediate call frame states
+    - This transaction-level example does not inspect intermediate snapshots; use [Call Frame Context](./call-frame-context) for call-scoped checks
     - Order guarantees only within same function calls, not across different functions
 
 ## Example Use Cases
@@ -123,15 +127,12 @@ contract FunctionCallInputsAssertion is Assertion {
 ## Implementation Considerations
 
 1. **Parameter-dependent Storage Access**
-    - Storage slots that depend on function parameters lack automated tracking
-    - Example: Mapping keys derived from function parameters
-    - Workaround: Manual tracking required, but introduces overhead
+    - Derive slots from decoded parameters when the key is known.
+    - [Modified Key Discovery](./modified-keys) can recover written mapping keys on supported Reshiram runtimes, subject to its best-effort and nested-mapping limits.
 
 2. **Transaction-wide State Verification**
-    - Complete transaction verification requires:
-        - Guaranteed execution order of captured call inputs
-        - Accurate reconstruction of expected state changes
-        - No direct access to intermediate call frame states
+    - Reconstruct the expected state change from all relevant calls and compare it with the transaction endpoints.
+    - Endpoint checks can miss an invalid intermediate state that is restored before the transaction ends. Use [Call Frame Context](./call-frame-context) when the policy applies to each matched call.
 
 3. **Cross-function Dependencies**
     - Call inputs are ordered by execution only within individual functions
@@ -139,8 +140,8 @@ contract FunctionCallInputsAssertion is Assertion {
     - State validation becomes ambiguous when behavior depends on cross-function interaction
         - i.e. (approve() -> transferFrom()) has to be considered as a whole
 
-## Future Improvements
+<span id="future-improvements" />
 
-- Provide ordering guarantees between different function selectors
-- Provide direct access to intermediate call frame states (This would allow for partial state verification)
-- Automated tracking of changed slots/keys of mappings
+## Related Capabilities
+
+Use [Modified Key Discovery](./modified-keys) for best-effort recovery of written mapping keys. It does not establish the execution order of calls across selectors.

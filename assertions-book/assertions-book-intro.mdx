@@ -3,10 +3,11 @@ title: Using the Use Cases Book
 description: Learn how to use the Use Cases Book as a catalog of assertion patterns and a set of exploit case studies
 ---
 
-The Use Cases Book has two jobs:
+Use the Book to choose a pattern, understand an exploit mechanism, or run a local exercise:
 
 - **Reference**: a catalog of reusable assertion patterns you can adapt to your own protocol
-- **Explanation**: case studies that explain how real exploits worked and why specific assertions would have blocked them
+- **Explanation**: case studies of exploit mechanisms and candidate policies, with enforcement assumptions
+- **Tutorial**: a guided local exercise with expected allowed and rejected outcomes
 
 You can adapt these examples to write your own assertions. We highly recommend working with [Phylax sales engineering](../credible/work-with-phylax) to find the best policy fit; this support is included in your subscription. Custom policy development includes reviewing protocol assumptions, legitimate exceptions, and integration coverage; an example is not a ready-made production policy.
 
@@ -27,12 +28,12 @@ Historical examples retain the networks on which the incidents occurred. Sequenc
     Use the reference catalog when you already know the type of risk you want to cover.
   </Card>
   <Card title="Study Real Exploits" icon="bug" href="./previous-hacks/prev-hacks-index">
-    Use the case studies when you want to understand why an exploit worked and what assertion would have stopped it.
+    Use the case studies when you want to understand why an exploit worked and what policy could constrain its effects.
   </Card>
   <Card title="See Full Protocol Suites" icon="sitemap" href="./assertions/aave-v3-suite">
     Review deeper examples that show how assertion coverage can be shaped for a real protocol.
   </Card>
-  <Card title="Run an Example Locally" icon="flask-vial" href="../credible/pcl-quickstart">
+  <Card title="Run an Example Locally" icon="flask-vial" href="./assertions/run-an-example">
     Optionally inspect a working policy and its tests.
   </Card>
 </CardGroup>
@@ -43,24 +44,26 @@ If you think an assertion is missing, please don't hesitate to open a PR or reac
 
 ## Book Structure
 
-This book is organized into three sections:
+Choose a section for your current task, or start with the [local tutorial](./assertions/run-an-example):
 
-### Part 1: Protocol Case Studies
+<span id="part-1-protocol-case-studies" />
 
-Explanation pages that show how comprehensive assertion coverage can be designed for real systems.
+### Protocol Assertion Catalogs
+
+Reference catalogs of checks for specific protocol designs. Read the source revision and limitations before adapting a suite.
 
 **[View real world protocol suites →](./assertions/aave-v3-suite)**
 
 ### Part 2: Previous Hacks
 
-Explanation pages that analyze real-world DeFi hacks and show how assertions could have prevented them.
+Explanation pages that analyze real-world DeFi hacks and discuss candidate assertion conditions and their limits.
 
-**[View the previous hacks analysis →](./previous-hacks/)**
+**[View the previous hacks analysis →](./previous-hacks/prev-hacks-index)**
 
 ### Part 3: Assertion Patterns
 
 Reference pages that catalog reusable assertion patterns by security category.
 
-**[View the complete use cases catalog →](./assertions/)**
+**[View the complete use cases catalog →](./assertions/use-cases-index)**
 
 All sections include assertion code examples, explanations of the vulnerability or pattern being addressed, and minimal protocol interfaces for context.

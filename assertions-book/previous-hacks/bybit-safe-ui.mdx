@@ -7,12 +7,12 @@ description: Safe Wallet UI was compromised by gaining access to the host machin
 
 Bybit suffered from a security breach in Safe's hosting infrastructure losing 1.4bn USD.
 
-The attackers, the lazarus group, gained access to the server and was able to modify the served Safe
+The attackers, the Lazarus Group, gained access to the server and were able to modify the served Safe
 Wallet frontend.
 More on the attack: https://x.com/safe/status/1894768522720350673
 
 The malicious code was specifically targeting Bybit's next transaction.
-As of today, it is commonly agreed that the signers of the transaction were shown a fake UI, seeming
+The linked incident account describes signers being shown a fake UI, seeming
 to be the intended transaction to sign, but in fact it was a malicious transaction.
 
 Unfortunately, it is often very hard to verify the correctness of the message that is signed in
@@ -23,7 +23,7 @@ software or hardware wallets.
 1. Attackers gained access to the hosting server by compromising a developer's machine.
 2. A malicious frontend was uploaded to the server, which targeted Bybit's next transaction.
 3. The frontend would show the intended transaction but in fact the message to be signed was malicious
-4. The malicious message was a delegate call which would change the implementation of the Safe's proxycontract
+4. The malicious message was a delegate call which would change the implementation of the Safe's proxy contract
 
 ## Assertion Pattern
 
@@ -51,15 +51,17 @@ additional approvals by the original owners.
 
 A delegate call can modify the caller's storage, including the implementation slot, even without a dedicated upgrade function.
 
-### How the Assertion Would Have Prevented It
+<span id="how-the-assertion-would-have-prevented-it" />
 
-An assertion can reject changes to the Safe implementation slot.
+### Candidate Implementation-Slot Policy
 
-PhEvm precompiles used:
+An assertion can reject changes to the Safe implementation slot when it covers the relevant transaction path. The fragment below illustrates the check; this page does not provide a pinned exploit replay or establish deployed protection.
 
-- _forkPreTx_ allowing to fork the state of the contract before a transaction
-- _load_ reading specific storage slots
-- _getStateChangesAddress_ getting all state changes within a transaction for a given slot
+State inspection used:
+
+- `_preTx()` selects the pre-transaction snapshot.
+- `ph.loadStateAt()` reads the implementation slot at that snapshot.
+- `getStateChangesAddress()` decodes the slot's writes so a temporary implementation change is not hidden by a later restoration.
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -97,30 +99,8 @@ contract SafeAssertion is Assertion {
 }
 ```
 
-A second assertion can restrict transfers to approved addresses. This example compares the Safe's balance decrease with the recipients' balance increases.
+### Recipient and Native-Balance Policies
 
-```solidity
- function assertionSafeDrain() external {
-        PhEvm.ForkId memory preFork = _preTx();
-        uint256 preBalance = address(bybitSafeAddress).balance;
-        uint256[] memory preWhitelistBalances = new uint256[](whitelistedAddresses.length);
-        for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
-            preWhitelistBalances[i] = address(whitelistedAddresses[i]).balance;
-        }
+A recipient policy must compare the Safe's and permitted recipients' native balances at explicit before/after snapshots. Creating a `ForkId` does not change what a direct `address.balance` read observes.
 
-        PhEvm.ForkId memory postFork = _postTx();
-        uint256 postBalance = address(bybitSafeAddress).balance;
-        if (postBalance > preBalance) {
-            return; // Balance increased, not a hack
-        }
-        uint256 diff = preBalance - postBalance;
-        for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
-            uint256 postWhitelistBalance = address(whitelistedAddresses[i]).balance;
-            if (postWhitelistBalance == preWhitelistBalances[i] + diff) {
-                return; // Balance increased, not a hack
-            }
-        }
-        // None of the whitelisted addresses have increased in balance, so it's a hack
-        revert("Bybit safe address balance decreased");
-    }
-```
+The former balance fragment used direct reads and never consumed its snapshot IDs, so it did not establish the claimed comparison. It has been removed. A replacement needs verified snapshot-aware native-balance reads, defined behavior for fees and multiple recipients, and tests of legitimate and violating transfers. The [native outflow template](../assertions/ass21-ether-drain) also documents this snapshot limitation.

@@ -168,4 +168,4 @@ The attacker's 44 tiny withdrawals in a single transaction caused the USDC activ
 
 The Bunni attack succeeded because the protocol's rounding assumptions were safe for individual operations but exploitable in combination. The attack demonstrates that mathematical properties must hold not just for individual operations, but across sequences of operations.
 
-A proportionality check - ensuring balance decreases match share burns - would have prevented this $8.4M loss. This principle applies to any DeFi protocol: if accounting doesn't maintain mathematical consistency across operations, the protocol is vulnerable to attacks that exploit the gaps between assumptions and reality.
+A proportionality check could reject withdrawals whose balance decreases do not match share burns within the permitted rounding tolerance. This page does not establish prevention of the reported loss: the candidate needs a pinned replay, validated tolerances, and coverage of every relevant withdrawal path. Test sequences of operations as well as isolated withdrawals.

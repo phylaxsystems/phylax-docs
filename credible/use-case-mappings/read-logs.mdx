@@ -17,6 +17,10 @@ Read log mappings describe how assertions can inspect emitted events and use the
 
 ### Example Implementation
 
+<Warning>
+The following fragments illustrate reconstruction logic; they are not a compilable fixture. The assertion fragment writes storage-backed bookkeeping inside a `view` function. Rework that bookkeeping into local memory, supply imports and fixtures, and test the relevant paths before use. For a runnable starting point, use [Run an Example Policy Locally](../pcl-quickstart).
+</Warning>
+
 Protocol:
 
 ```solidity
@@ -114,9 +118,9 @@ contract ReadLogsAssertion is Assertion {
     - Account for complex state dependencies between function calls
 
 - **State reconstruction considerations:**
-    - Manual tracking required for parameter-dependent storage slots (i.e. keys of mappings)
-    - No direct access to intermediate call frame states
-    - Order guarantees only within same function calls, not across different functions
+    - Events are evidence of emitted data, not proof that the expected storage change occurred. Compare them with explicit storage reads.
+    - This example compares transaction endpoints. For checks around a matched call, use [Call Frame Context](./call-frame-context).
+    - Filter logs by emitter and event signature before decoding; unrelated logs can have different data layouts.
 
 ## Example Use Cases
 
@@ -127,12 +131,9 @@ contract ReadLogsAssertion is Assertion {
 ## Implementation Considerations
 
 1. **Parameter-dependent Storage Access**
-    - Storage slots that depend on event parameters lack automated tracking
-    - Example: Mapping keys derived from event parameters
-    - Workaround: Manual tracking required, but introduces overhead
+    - Derive storage slots from event parameters and the known contract layout.
+    - [Modified Key Discovery](./modified-keys) offers best-effort discovery of written mapping keys on supported Reshiram runtimes; it does not enumerate every mapping entry.
 
 2. **Requirement of events to be emitted**
     - If it is not certain that the event is emitted upon state change, the state change is not tracked
     - Might result in false negatives
-
-## Future Improvements

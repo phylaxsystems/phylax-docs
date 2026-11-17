@@ -1,5 +1,5 @@
 ---
-title: 'Overview'
+title: 'Credible Layer Overview'
 description: 'Getting started with Phylax'
 ---
 
@@ -24,7 +24,7 @@ For example, a rule that rejects every ownership change would also reject a plan
 
 ## How Ethereum Enforcement Works
 
-Builders that agree to run the Phylax enforcement engine evaluate transactions against your circuit breakers and exclude violating transactions from the blocks they build. Your team defines and approves the rules, which are deployed onchain under a signer set that only you control. No other party can activate or change your rules without your authorization.
+Builders that agree to run the Phylax enforcement engine evaluate transactions against your circuit breakers and exclude violating transactions from the blocks they build. Your team defines and approves the rules through the configured Protocol Manager and signer set. The deployed contracts also define governance, operator, and guardian powers, including manager revocation or assertion removal; review those [administrative boundaries](./credible-layer-contracts#state-oracle-administration) before activation.
 
 Once you protect functions with Phylax circuit breakers, an onchain guard checks that each protected call executes in a credible block. Calls included in a non-participating builder's block revert while the guard's enforcement gate is active. If a transaction interacting with your smart contract and it's routed to a builder that does not evaluate it, the transaction will revert. This ensures that incoming transactions can only settle if it's evaluated by the enforcement engine.
 

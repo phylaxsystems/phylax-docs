@@ -1,6 +1,6 @@
 ---
 title: Storage Lookup
-description: Access the value of a storage variable at a specific address. Even if the variable is not publicly accessible and not part of the contract's state.
+description: Read a contract storage slot at a specified transaction or call snapshot, without a public getter.
 ---
 
 Storage lookup mappings describe how assertions can read raw storage slots from a target contract when a public getter is not available.
@@ -87,9 +87,9 @@ contract StorageLookupAssertion is Assertion {
 ## Implementation Considerations
 
 1. **State snapshot semantics:**
-    - Values can only be read from pre or post states of the executed transactions
-    - No access to intermediate state changes during transaction execution
-    - To work around this, use `getStateChanges()` to capture all intermediate values
+    - `loadStateAt()` reads the explicit snapshot supplied by the assertion; the example above uses the post-transaction snapshot.
+    - Reshiram supports pre- and post-call snapshots for a matched call. See [Call Frame Context](./call-frame-context) for `callStart` and `callEnd` usage.
+    - Use [State Change Tracking](./state-changes) when the policy needs the sequence of writes rather than a snapshot value. Confirm the target runtime supports the required specification.
 
 2. **Storage layout knowledge:**
     - Requires understanding of the target contract's storage layout
@@ -97,6 +97,5 @@ contract StorageLookupAssertion is Assertion {
 
 ## Future Improvements
 
-- Provide intra-transaction snapshot states
 - Add helper functions for common storage patterns
 - Implement automatic storage layout detection

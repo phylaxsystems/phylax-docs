@@ -9,7 +9,7 @@ On September 22, 2025, UxLink's multisig was compromised through private key the
 
 ## Why It Worked
 
-The attack exploited two weaknesses:
+The attack exploited three weaknesses:
 
 1. **Compromised Private Keys**: Attackers gained access to UxLink's multisig owner private keys
 2. **Unrestricted Multisig Configuration**: Safe contract allowed threshold reduction and owner changes without security checks
@@ -163,7 +163,7 @@ Assertions cannot track state across transactions (e.g., cooling periods). The o
 - **Step 3**: `assertOwnerRemoval()` ensures threshold stays above minimum even when removing owners
 - **Result**: Attacker cannot gain solo control of the multisig
 
-**Key insight**: While these assertions can't prevent private key compromise or enforce time delays between transactions, they establish hard boundaries that attackers cannot cross regardless of how many keys they control.
+**Scope**: These candidate policies do not prevent key compromise. Their protection depends on active checks, covered execution paths, and administrative powers that cannot bypass or disable the checks. Review the compromised signers’ full authority, including modules and recovery paths, before making a prevention claim.
 
 ## Key Takeaways
 

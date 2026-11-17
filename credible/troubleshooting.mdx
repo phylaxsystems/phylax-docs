@@ -307,7 +307,7 @@ function testProtocolFunctionIsolation() public {
 
 **Solution:**
 
-Always set `FOUNDRY_PROFILE=assertions` before running pcl commands:
+Select the assertion profile defined in your project’s `foundry.toml`. For a project with an `assertions` profile:
 
 ```bash
 # ✅ CORRECT
@@ -338,7 +338,7 @@ FOUNDRY_PROFILE=assertions pcl test --match-contract ContractName
 
 ## Release backtesting findings
 
-The platform runs backtesting automatically when you create a release. An **Issue found** result means at least one historical transaction from the last 20,000 blocks would have been invalidated by the release.
+The platform runs backtesting automatically when you create a release. An **Issue found** result means at least one historical transaction in the run’s reported block range would have been invalidated by the release.
 
 Open **Backtesting** in the release and review the matched transaction hash, assertion ID, adopter, incident payload, previous transactions, and block environment. If the finding is benign, tune the assertion and create a new release. If the evidence does not explain the finding, do not deploy the release. See [How to Review Backtesting Results](./backtesting) for the complete workflow.
 

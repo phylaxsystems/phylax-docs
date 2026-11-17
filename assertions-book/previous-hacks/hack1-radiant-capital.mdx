@@ -7,7 +7,7 @@ description: Ownership change of lending pools lead to drain
 
 In October 2024, Radiant Capital was hacked. You can read more about the hack on [Rekt](https://rekt.news/radiant-capital-rekt2/).
 In short, the attacker managed to gain control over 3 signers of the Radiant Capital multisig, which allowed the attacker to change ownership of the lending pools and ultimately drain the pools.
-Had there been an assertion in place that checked that the ownership of the lending pools didn't change, the hack would have been prevented.
+An ownership-change assertion is a candidate control for this path. Demonstrating prevention requires a pinned replay, coverage of the ownership-changing call, and an enforcement path the compromised signers cannot bypass or disable. This page explains the policy idea; it does not supply that evidence.
 
 ## Why This Matters
 

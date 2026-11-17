@@ -1,9 +1,9 @@
 ---
-title: "Circuit Breakers"
+title: "Flow-Limit and Anomaly-Gated Policies"
 description: "How cumulative flow, rate, and anomaly-gated policies constrain transactions"
 ---
 
-A circuit breaker rejects a candidate transaction when its configured condition is met. The policy must identify the custody address, measured asset, observation period, and permitted operations. A rejected transaction does not itself set a persistent pause flag in your protocol.
+A circuit breaker rejects transaction effects that violate its configured policy. This page explains cumulative-flow, rate, and anomaly-gated mechanisms. For a flow policy, identify the custody address, measured asset, observation period, and permitted operations. A rejected transaction does not itself set a persistent pause flag in your protocol.
 
 ## Choose the measured condition
 

@@ -1,9 +1,9 @@
 ---
 title: 'System Requirements'
-description: 'Hardware and infrastructure requirements for running the Credible Layer sidecar in production and development environments.'
+description: 'Capacity planning for builder and sequencer assertion execution.'
 ---
 
-The Assertion Enforcer runs as a [sidecar](./glossary#sidecar) alongside a participating Ethereum builder. These are operator requirements; protocol teams using the Ethereum platform and RPC do not need to run their own builder or enforcer. Size and validate the deployment against the actual builder workload.
+These requirements are for builder and sequencer operators. Protocol teams using the Ethereum platform and RPC do not need to run their own builder or enforcer. Size assertion execution against the actual node workload and [integration architecture](./assertion-enforcer#integration-architecture); a sidecar is not required.
 
 ## Production Guidance
 
@@ -14,11 +14,11 @@ Sizing depends on network throughput and assertion complexity. Use these guideli
 | **CPU** | High-core, modern server CPU |
 | **RAM** | Sufficient memory for state caches and execution |
 | **Storage** | Fast local SSD with headroom for growth |
-| **Network** | Low-latency, high-bandwidth link to the block builder |
+| **Network** | Reliable access to required RPC and assertion data endpoints |
 
 ### CPU
 
-The sidecar requires significant compute for assertion execution. Use 32 physical cores with AMD Zen 3 performance equivalent or higher.
+Budget assertion workers alongside transaction execution. Measure peak trigger volume and tail latency on the chosen client and hardware before setting worker counts or admission limits; there is no workload-independent core count in this guide.
 
 ### Memory
 
@@ -30,13 +30,13 @@ Use fast local (not networked) SSDs to keep I/O latency low. Budget for sustaine
 
 ### Networking
 
-Keep round-trip time (RTT) to the block builder low by colocating in the same availability zone or cluster. Co-scheduling on the same Kubernetes node or pod is ideal.
+For an embedded library, validation does not require a separate network hop from the builder. If maintaining a separate validation service, measure round-trip latency and state-transfer costs within the block-production budget.
 
 **Key requirements:**
-- Low-latency, high-bandwidth link between block builder and sidecar
+- For a separate service, a low-latency link between the node and validation workers
 - Prefer private networking; avoid routing over the public internet
 - Stable egress to chain RPC and assertion data endpoints
 
 ## Local Development
 
-For local testing, unless you are benchmarking performance, the sidecar is lightweight and has no hard hardware requirements.
+Use the [local tutorial](./pcl-quickstart) to run assertion tests. Local test results do not establish production capacity; benchmark with the intended client, assertions, and transaction workload.

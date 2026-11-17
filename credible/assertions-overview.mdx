@@ -3,7 +3,7 @@ title: 'Assertions Overview'
 description: 'Understanding Credible Layer assertions'
 ---
 
-An assertion is a Solidity function that rejects transaction effects that violate a policy. A policy defines the intended behavior and exceptions. Assertions implement its checks.
+An assertion is an executable check of a policy. Assertion functions implement the checks; an assertion contract packages those functions with their trigger registrations. A policy defines the intended behavior and exceptions.
 
 Assertions describe invalid outcomes without predicting every exploit path. Participating builders enforce them before inclusion. See [Ethereum Architecture](./architecture-overview) for guards and routing.
 
@@ -52,9 +52,11 @@ The default assertion gas limit is 3,000,000. Operators can configure it. Exceed
 
 Use scoped triggers and test the maximum expected workload. See [Gas Limits in Testing](./testing-assertions#gas-limits).
 
-## Hacks Assertions Would Have Prevented
+<span id="hacks-assertions-would-have-prevented" />
 
-The [exploit case studies](../assertions-book/previous-hacks/prev-hacks-index) show policy checks against historical attacks and explain their scope.
+## Policies for Historical Exploits
+
+The [exploit case studies](../assertions-book/previous-hacks/prev-hacks-index) discuss candidate policy checks against historical attacks. Read each example’s implementation status, enforcement assumptions, and replay evidence before treating it as demonstrated prevention.
 
 ## Next Steps
 

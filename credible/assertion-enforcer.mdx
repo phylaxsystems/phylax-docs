@@ -1,6 +1,6 @@
 ---
 title: 'Assertion Enforcer'
-description: 'The sidecar component that orchestrates assertion validation during block production'
+description: 'Assertion selection and validation within the block-building pipeline'
 ---
 
 The Assertion Enforcer validates candidate transactions for participating Ethereum builders. It runs [assertions](./assertions-overview) through [PhEVM](./phevm) and reports failures to the builder.
@@ -11,9 +11,13 @@ The enforcer selects applicable assertions, executes them, and returns validatio
 
 Sequencer-specific execution and rollback designs are covered in [L2 Validation Pipelines](./l2-integrations/validation-pipeline).
 
-## Sidecar Architecture
+<span id="sidecar-architecture" />
 
-The enforcer runs beside the builder and scales independently. It requires a builder validation hook. Protocol protection also requires guards and transaction routing.
+## Integration Architecture
+
+The enforcer is a validation role, not a required process boundary. An embedded integration links the assertion-execution library into the builder or sequencer and uses its execution context in the block-building pipeline. Earlier designs delegated validation to a separate sidecar.
+
+Define where validation runs and how its results affect inclusion for the chosen client. Embedded workers share the node's resource budget; a separate service also needs a state-transfer interface and a failure policy for that boundary. Ethereum protocol protection additionally requires guards and transaction routing.
 
 ## Validation Process
 

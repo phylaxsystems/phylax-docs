@@ -39,7 +39,7 @@ A Safe transaction guard covers its owner-authorized execution path; modules req
 
 Before activation, our FDEs run backtests and test a replica of your protocol on a fork of Ethereum, including legitimate activity, violations, guard behavior, and recovery. Your team reviews the evidence against the intended policies.
 
-We prepare releases on the [Ethereum platform](https://ethereum.phylax.systems) and simulate the activation transactions. Management of your policies and protocol remains entirely under your authority. Your signers authorize and execute the actions, and we verify the live protection. No other party can activate or change your rules without your authorization.
+We prepare releases on the [Ethereum platform](https://ethereum.phylax.systems) and simulate the activation transactions. Your configured signers authorize and execute policy-management actions, and we verify live protection. This workflow does not remove the deployed contracts’ governance, operator, or guardian powers. Review [State Oracle permissions](./credible-layer-contracts#state-oracle-administration), lifecycle delays, and any separately authorized recovery signers.
 
 The State Oracle records which assertions apply and when additions or removals take effect. Assertion DA supplies the artifacts used by enforcers.
 
