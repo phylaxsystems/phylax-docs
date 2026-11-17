@@ -41,8 +41,8 @@ flowchart LR
         PhEVM["Validate Against Assertions"]
     end
 
-    ASSERTIONS["Deployed Assertions"]
-    RESULT["Valid/Invalid"]
+    ASSERTIONS["Applicable Active Assertions"]
+    RESULT["Assertion Pass/Fail"]
 
     TX --> EVM
     STATE1 --> EVM
@@ -72,7 +72,7 @@ flowchart LR
 
 ### Step-by-Step
 
-1. Read indexed State Oracle data to identify assertions for the affected contracts.
+1. Read indexed State Oracle data to identify active assertions for the affected contracts.
 2. Load their bytecode from the local cache.
 3. Execute the transaction to obtain its state snapshots.
 4. Run the matching assertions in PhEVM.

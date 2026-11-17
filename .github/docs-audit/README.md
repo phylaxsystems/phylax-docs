@@ -22,6 +22,8 @@ Run `uv run python scripts/update-docs-inventory.py` to refresh snapshots. New p
 
 See the [follow-up Diátaxis review](diataxis-review.md) for the navigation, page-cohesion, and reader-journey passes, including corrections discovered after the initial audit.
 
+The [terminology coherence follow-up](terminology-review.md) records the later vocabulary, lifecycle, and cross-page consistency passes, with their own verification boundaries.
+
 ## Taxonomy conventions
 
 | Dimension | Rule |

@@ -5,6 +5,8 @@ description: 'Getting started with Phylax'
 
 Phylax helps DeFi protocols enforce custom security policies before settlement. Policies are implemented as Solidity assertions, checked by participating builders, and paired with guards on protected operations. These docs explain the Ethereum enforcement model; [L2 integration planning](./l2-integrations/overview) describes deployment-specific requirements.
 
+In these docs, a **policy** is the intended rule, a **circuit breaker** is the protection, and an **assertion** is its executable check. A **cumulative-flow breaker** is the rolling-window subtype. See the [terminology reference](./glossary#terminology-across-the-docs) for the related component and lifecycle names.
+
 You can write assertions yourself or work with **Phylax sales engineering** to select policies and plan integration. Agree the support scope with your team. Bring existing assertion code or start with a discussion of your protection needs.
 
 <CardGroup cols={2}>
@@ -24,7 +26,7 @@ For example, a rule that rejects every ownership change would also reject a plan
 
 ## How Ethereum Enforcement Works
 
-Builders that agree to run the Phylax enforcement engine evaluate transactions against your circuit breakers and exclude violating transactions from the blocks they build. Your team defines and approves the rules through the configured Protocol Manager and signer set. The deployed contracts also define governance, operator, and guardian powers, including manager revocation or assertion removal; review those [administrative boundaries](./credible-layer-contracts#state-oracle-administration) before activation.
+Builders that agree to run the [Assertion Enforcer](./assertion-enforcer) evaluate candidate transactions against your active assertions and exclude violating transactions from the blocks they build. Your team defines and approves the rules through the configured Protocol Manager and signer set. The deployed contracts also define governance, operator, and guardian powers, including manager revocation or assertion removal; review those [administrative boundaries](./credible-layer-contracts#state-oracle-administration) before activation.
 
 Once you protect functions with Phylax circuit breakers, an onchain guard checks that each protected call executes in a credible block. Calls included in a non-participating builder's block revert while the guard's enforcement gate is active.
 
@@ -49,4 +51,4 @@ The technical guides remain available throughout evaluation and integration:
 - [Release Review Checks](./release-review-checks) explains the evidence attached to a release.
 - [CLI and API references](./cli-reference) support engineers implementing the agreed plan.
 
-Ethereum builders can use the [builder integration guide](./ethereum-builder-integration). Earlier sequencer designs and workflows live in [L2 and Sequencer Integrations](./l2-integrations/overview).
+Ethereum builders can use the [builder integration guide](./ethereum-builder-integration). Sequencer integration planning and historical designs live in [L2 and Sequencer Integrations](./l2-integrations/overview).

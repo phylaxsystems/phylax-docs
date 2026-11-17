@@ -11,7 +11,7 @@ For integration fit, FDE support, testing, and signer setup, see [Should you use
 
 ### When are transactions checked against my policies?
 
-Participating builders run the Phylax enforcement engine while building a block. The engine simulates candidate transactions and evaluates the applicable assertions against their effects. Builders exclude candidates that violate active production rules.
+Participating builders run the [Assertion Enforcer](./assertion-enforcer) while building a block. Candidate transactions execute against working state, and PhEVM evaluates applicable assertions against their effects before inclusion. Builders exclude candidates that violate active production rules.
 
 Passing the checks makes a transaction eligible for inclusion; it does not guarantee selection, ordering, or finality. See [Ethereum Architecture](./architecture-overview).
 

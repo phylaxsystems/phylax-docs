@@ -7,11 +7,11 @@ Use the [Phylax platform](https://ethereum.phylax.systems) to inspect active pol
 
 ## Check Active Policies
 
-Open **Assertions** to review circuit-breaker activity against its window and threshold. Select an assertion to check its enforcement status and linked contracts.
+Open **Assertions** to check assertion status and linked contracts. For cumulative-flow breakers, also review activity against the configured window and threshold. Other policies, such as an ownership check, do not necessarily have a rolling window.
 
 <Tabs>
-  <Tab title="Circuit Breakers">
-    <Frame caption="Review each circuit breaker's environment, window, threshold, and current activity">
+  <Tab title="Cumulative-Flow Breakers">
+    <Frame caption="Review the pictured cumulative-flow breakers' environments, windows, thresholds, and activity">
       <img src="/images/platform/assertions.png" alt="Assertions page showing two production circuit breakers, their outflow windows and thresholds, and the full assertion list" />
     </Frame>
   </Tab>
@@ -48,7 +48,7 @@ To remove the entire release:
   <img src="/images/platform/remove-release.png" alt="Remove Release 3 confirmation listing the network and eight assertions to remove, with a notice that enforcement continues until their deactivation blocks" />
 </Frame>
 
-Assertions remain enforced until their deactivation blocks. A removed release cannot be reactivated. To restore policies after removal takes effect, create and deploy a new release.
+Production assertions remain enforced until their deactivation blocks; Alerting assertions continue observing until theirs. A removed release cannot be reactivated. To restore policies after removal takes effect, create and deploy a new release.
 
 For an emergency, follow your agreed [fallback and recovery procedure](./work-with-phylax#fallback-paths-and-recovery).
 

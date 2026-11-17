@@ -3,14 +3,14 @@ title: 'How Ethereum Enforcement Works'
 description: 'How Phylax circuit breakers protect Ethereum operations through assertions, participating builders, and onchain guards.'
 ---
 
-Phylax circuit breakers enforce the security policies your team defines and approves. The rules are implemented as Solidity assertions and evaluated before settlement by builders that run the Phylax enforcement engine.
+Phylax circuit breakers enforce the security policies your team defines and approves. The rules are implemented as Solidity assertions and evaluated before settlement by builders that run the [Assertion Enforcer](./assertion-enforcer).
 
 An onchain guard checks that protected functions execute in a credible block. While its enforcement gate is active, calls in a non-participating builder's block revert. This ties successful execution to builders evaluating the transaction against your rules.
 
 ## The Three Parts of Enforcement
 
 1. **Assertions encode your policies.** A rule can compare state before and after a transaction, inspect calls, or check relationships across contracts.
-2. **Participating builders run the enforcement engine.** They evaluate transactions against your circuit breakers and exclude violating transactions from the blocks they build.
+2. **Participating builders run the Assertion Enforcer.** They evaluate candidate transactions against your active assertions and exclude violating transactions from the blocks they build.
 3. **Onchain guards enforce the block requirement.** A guard checks the Credible Registry's block marker and makes protected calls revert in a noncredible block while its enforcement gate is active.
 
 The Credible RPC routes submissions to participating builders. Routing and guarding serve different purposes: a route helps a transaction reach an enforcing builder; a guard constrains where the operation may execute.
@@ -21,7 +21,7 @@ The marker is a builder attestation, not a cryptographic proof that assertions r
 
 Assertions can check administrative changes, asset flows, collateralization, oracle deviations, and relationships between balances or positions. The useful rule describes a harmful effect rather than attempting to enumerate every way it could arise.
 
-For example, an assertion can detect an unexpected change in a pool's state across a transaction. The [Balancer V2 case study](../assertions-book/previous-hacks/balancer-v2-stable-rate-exploit) demonstrates an exploit replay using that approach. Production protection also requires active rules, matching triggers, and the guarded execution path.
+For example, an assertion can detect an unexpected change in a pool's state across a transaction. The [Balancer V2 case study](../assertions-book/previous-hacks/balancer-v2-stable-rate-exploit) discusses a candidate policy using that approach; it does not supply a pinned Phylax exploit replay. Production protection also requires active rules, matching triggers, and the guarded execution path.
 
 An assertion failure is a rule violation, not proof of an attack. Legitimate migrations, withdrawals, or upgrades can also violate a rule that lacks the required context. Test those operations alongside known failure cases.
 

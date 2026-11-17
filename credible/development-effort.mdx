@@ -7,15 +7,19 @@ Development effort depends on the policy requirements, existing tests, and requi
 
 ## Effort Factors
 
-Assertion authoring effort depends on how well the protocol invariants are defined. The full adoption effort also depends on the network enforcement model and existing contract controls.
+Assertion authoring effort depends on how well the failure scenarios, policy requirements, and legitimate exceptions are defined. The full adoption effort also depends on the network enforcement model and existing contract controls.
 
-### Invariants Defined
+<span id="invariants-defined" />
+
+### Policy Requirements Defined
 
 Developers familiar with Forge can write assertions in Solidity and test them with `pcl test`. They also need the [snapshot and inspection APIs](./cheatcodes-overview).
 
-### Invariants Not Defined
+<span id="invariants-not-defined" />
 
-Define prohibited states, required relationships, and legitimate exceptions before implementation. Use existing engineering and audit work to identify them.
+### Policy Requirements Not Defined
+
+Start from the failure scenarios to address. Define prohibited effects, required relationships, observation boundaries, and legitimate exceptions before implementation. Existing invariants, tests, and audits are useful inputs; a complete invariant catalog is not a prerequisite.
 
 See [Writing Your Own Policies](./writing-your-own-policies).
 

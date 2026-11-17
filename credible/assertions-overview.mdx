@@ -5,6 +5,8 @@ description: 'Understanding Credible Layer assertions'
 
 An assertion is an executable check of a policy. Assertion functions implement the checks; an assertion contract packages those functions with their trigger registrations. A policy defines the intended behavior and exceptions.
 
+Invariants are one possible requirement; policies can also constrain transitions, conditional effects, or rolling flows. The resulting protection is called a circuit breaker. See the [terminology reference](./glossary#terminology-across-the-docs).
+
 Assertions describe invalid outcomes without predicting every exploit path. Participating builders enforce them before inclusion. See [Ethereum Architecture](./architecture-overview) for guards and routing.
 
 ## Assertion Specifications

@@ -150,6 +150,16 @@
 - title: Clear, descriptive page title
 - description: Concise summary for SEO/navigation
 
+## Terminology
+- Use `credible/glossary.mdx` as the shared terminology reference.
+- Policy means the intended rule and exceptions; assertion means an executable check; circuit breaker means the protection. Use cumulative-flow breaker for the rolling-window subtype.
+- Use invariant for a property at defined observation boundaries, not as a synonym for every policy or failure scenario.
+- Distinguish assertion functions, assertion contracts, and releases. Use Assertion Enforcer for the validation component, PhEVM for its execution environment, and sidecar only for a separate-process integration.
+- Distinguish deployment confirmation, activation, Production enforcement, and Alerting observation. Slack notification delivery is separate from those modes.
+- Distinguish assertion invalidation, builder exclusion, and an onchain revert. An assertion failure establishes a rule violation, not necessarily an attack.
+- Preserve exact commands, Solidity identifiers, UI labels, source titles, old routes, and compatibility anchors. Explain historical naming where needed instead of globally replacing it.
+- Match evidence terms to the linked result: source review, local test, exploit replay, and live enforcement are different claims.
+
 ## Writing standards
 - Default to second-person voice ("you")
 - Tutorials may occasionally use "we" for shared lesson framing, but do not let the page drift into a generic first-person voice

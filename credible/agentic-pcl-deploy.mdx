@@ -13,7 +13,7 @@ Use `deploy-credible-assertions` to create a platform project, prepare a release
 - A configured `assertions/credible.toml`
 - An authenticated `pcl` session for the target platform
 - The target chain ID and an RPC endpoint
-- Access to the protocol manager wallet through a Foundry keystore
+- Access to the Protocol Manager wallet through a Foundry keystore
 - For production, reviewed Ethereum guard coverage, RPC routing for protected operations, and a tested recovery plan
 
 Confirm that your installed CLI supports the agentic deployment command:
@@ -110,13 +110,13 @@ Deploy the project according to the credible.toml specification and broadcast
 the deployment transactions to the specified RPC endpoints.
 ```
 
-The command resolves the project and manager, builds the release, and waits for required checks. It then broadcasts activation and confirms the result.
+The command resolves the project and manager, builds the release, and waits for required checks. It then broadcasts the deployment transaction and confirms the result. Confirmation does not remove the configured activation delay.
 
 `pcl deploy` checks existing state before each step. After an interruption, inspect the structured error and rerun the command to resume.
 
 ## 6. Verify the result
 
-Record the project ID, release ID, environment, deployment result, and any remaining activation delay. Include the transaction hash if broadcast.
+Record the project ID, release ID, environment, deployment result, and any remaining activation delay. Include the transaction hash if broadcast. After the delay, verify the intended Alerting observation or Production enforcement through the [release verification steps](./deploy-assertions-dapp#verify-ethereum-enforcement).
 
 Activation updates assertion policy; it does not install a guard or configure transaction submitters. Verify those separately with the [Ethereum integration plan](./dapp-integration).
 

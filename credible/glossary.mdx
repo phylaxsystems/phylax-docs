@@ -5,6 +5,21 @@ description: 'Credible Layer terms, components, and lifecycle states.'
 
 Definitions of Credible Layer components, policy states, and platform terms.
 
+## Terminology Across the Docs
+
+| Term | Meaning and scope |
+| --- | --- |
+| Phylax / Credible Layer | Phylax provides the tooling and integration service; the Credible Layer is the enforcement infrastructure described here. Ethereum and L2 integration requirements differ. |
+| Policy / invariant | A policy states permitted and prohibited behavior, including exceptions. An invariant is a property required to hold at specified observation boundaries; it is one kind of policy requirement. |
+| Circuit breaker / cumulative-flow breaker | Circuit breaker names the protection implemented with assertions. A cumulative-flow breaker is the rolling-window flow-limit subtype; other policies need not have a window. |
+| Assertion function / assertion contract / release | A function performs a check; a contract packages functions and triggers; a release groups the policies reviewed and deployed together. These are different units. |
+| Assertion Enforcer / PhEVM / sidecar | The enforcer selects and runs checks; PhEVM executes them. A sidecar is a separate-process deployment pattern, not another name for either component. |
+| Deployed / active / enforced | Deployment submits the lifecycle change. Assertions become active after the configured delay; Production enforcement and Alerting observation have different effects. |
+| Phylax platform / protocol application | The platform manages projects and releases. The protocol application is the system being protected. Older `/dapp-*` routes remain for link compatibility. |
+| Use Cases Book / Assertions Book | Use Cases Book is the current reader-facing title. The `/assertions-book/` routes and source names remain unchanged. |
+
+Exact CLI commands, Solidity identifiers, UI labels, and historical source names retain their spelling. A naming difference in an identifier does not imply a different policy or component.
+
 ## Core Concepts
 
 ### The Credible Layer
@@ -24,7 +39,7 @@ The intended rule for protocol behavior, including permitted exceptions. Asserti
 The Solidity contract artifact containing assertion functions and trigger registrations. Its creation bytecode and constructor arguments determine the assertion ID.
 
 ### Protocol Invariants
-Critical conditions or properties that must always be maintained within a protocol, such as ensuring total assets ≥ total liabilities or maintaining specific ownership rules. These invariants can be:
+Properties required to hold at specified observation boundaries, such as total assets ≥ total liabilities after a transaction. Define whether the property applies at transaction end, around a matched call, or at another supported boundary. Invariants are one kind of policy requirement; policies can also describe allowed transitions, conditional checks, and rolling limits. These invariants can be:
 - Single-contract: Rules within a single contract
 - Protocol-wide: Rules spanning multiple contracts and complex interactions
 - Security-specific: Rules focused on preventing unauthorized access or changes
@@ -223,7 +238,7 @@ The enforcement environment where participating Ethereum builders exclude candid
 A period enforced by the on-chain State Oracle contracts between an assertion change and when that change takes effect. The timelock applies when you add an assertion and when you remove one. It exists for two reasons: (1) to provide latency for the enforcer to index on-chain state and prepare for enforcement changes, and (2) to give users time to expect changes to protocol behavior. During the timelock period, newly added assertions are marked for enforcement or alerting but are not yet active, and removed assertions remain active until the timelock finishes.
 
 ### Marked for Enforcement
-The state of an assertion deployed to production during the timelock period. The assertion is deployed but not yet actively preventing hacks. After the timelock expires, the assertion becomes enforced.
+The state of an assertion deployed to production during the timelock period. The assertion is deployed but not yet enforcing its policy. After the timelock expires, the assertion becomes enforced.
 
 ### Marked for Alerting
 The state of an assertion deployed to alerting during the timelock period. The assertion is deployed but not yet running on the alerting environment. After the timelock expires, the assertion becomes active in alerting mode.
