@@ -45,7 +45,7 @@ jobs:
 
 Run this workflow on every pull request so changes to dependency pins, submodules, compiler settings, remappings, fixtures, and the workflow itself cannot bypass it. Commit dependency revisions and use the profile below. `pcl` supplies its test runner and obtains the configured Solidity compiler; this recipe does not require a moving Foundry nightly.
 
-The CLI was exercised locally on Linux ARM64; this GitHub-hosted recipe selects the separately published x86-64 asset. Successful local tests do not establish a successful run in your repository's GitHub Actions environment.
+The CLI was exercised locally on Linux ARM64. The documentation repository also ran its observation fixtures successfully on GitHub-hosted Ubuntu x86-64 with this release asset and compiler pin. Your workflow still needs to validate its own dependencies, profiles, and tests.
 
 ## Foundry Profile Configuration
 
