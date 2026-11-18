@@ -10,7 +10,8 @@ Prepare a release, review its checks, and authorize deployment in the [Phylax pl
 You need:
 
 - Approved policies and assigned reviewers
-- Target contracts and an [assigned Protocol Manager](./assign-protocol-manager) authorized for them on the approved Ethereum deployment
+- The intended project, network, and target contracts
+- For signing deployment, an [assigned Protocol Manager](./assign-protocol-manager) authorized for those contracts on the approved Ethereum deployment
 - For production, reviewed guards, transaction routing, and recovery under the [Ethereum integration plan](./dapp-integration)
 
 If your FDE or developer has already prepared a release, sign in to the platform, open your project, and start at [Step 4: Review Release Checks](#step-4-review-release-checks). Reviewers do not need to run the CLI preparation steps.
@@ -39,13 +40,7 @@ The platform checks contract administration permissions. See [Managing Policy De
 
 ## Step 3: Apply Your Assertions
 
-Configure your `credible.toml` and create a release with `pcl apply`:
-
-```bash
-pcl apply
-```
-
-Review the preview and confirm to create a pending release. See [Apply Assertions](./apply-assertions) for configuration. Creating a release does not activate it.
+Follow [How to Prepare a Policy Release](./apply-assertions) to configure `credible.toml`, select Alerting or Production, review the complete policy diff, and create a pending release with `pcl apply`. Return to Step 4 below once it exists; creating a release does not activate it.
 
 ## Step 4: Review Release Checks
 
@@ -82,9 +77,17 @@ Resolve failed verification checks and unexpected backtesting findings before si
 3. Select **Deploy to Alerting** or **Deploy to Production**.
 4. Authorize the transaction through your signing process.
 
-The [State Oracle](./credible-layer-contracts#state-oracle) applies the configured delay before activation. After the transaction confirms, check **Assertions** for **Awaiting activation** and the remaining block count. Confirm enforcement after the delay; a signed deployment alone is insufficient. Platform membership does not grant signing authority.
+The [State Oracle](./credible-layer-contracts#state-oracle) applies the configured delay before activation. After the transaction confirms, check **Assertions** for **Awaiting activation** and the remaining block count. Verify the selected mode after the delay; a signed deployment alone is insufficient. Platform membership does not grant signing authority.
+
+## Verify Alerting Observation
+
+For an **Alerting** release, confirm its activation and review **Invalidations → Alert-only**. Check that representative transactions exercised the intended assertions, and investigate unexpected failures with the [invalidation guide](./investigate-rejected-transaction). A quiet period with no matching activity does not validate policy behavior.
+
+Alerting does not exclude live transactions. Complete the [Alerting test plan](./testing-strategy#3-observe-alerting-behavior), then continue to monitoring below. Production requires a separately reviewed release and the enforcement checks in the next section.
 
 ## Verify Ethereum Enforcement
+
+For a **Production** release, verify the integrated enforcement path after activation.
 
 With your FDE, verify an allowed operation and an assertion violation in the approved test environment. Check the assertion result and contract state. A timeout alone does not prove rejection.
 

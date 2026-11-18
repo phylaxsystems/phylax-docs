@@ -149,7 +149,7 @@ Our FDEs run backtests, fork tests, and custom stress scenarios before you go li
   <Accordion title="What evidence should we review?">
     Your forward-deployed engineer will take you through various scenarios so that you get comfortable reading different types of transaction rejections. We keep the protections on a replica of your protocol on a live fork of Ethereum so that you can tune your policies to catch bad behaviour while allowing intended behaviour to continue as normal.
 
-    Before signing, confirm that the release targets the intended contracts and contains the code you tested. Investigate each backtest finding, particularly any legitimate transaction the policy would reject. See [Release Review Checks](./release-review-checks) for the platform's verification results.
+    Before signing, confirm that the release targets the intended contracts and contains the code you tested. Investigate each backtest finding, particularly any legitimate transaction the policy would reject. See [Release Review Checks](./deploy-assertions-dapp#step-4-review-release-checks) for the platform's verification results.
   </Accordion>
   <Accordion title="How long do you recommend running my policies and protocol in alerting mode?">
     Choose an observation period that covers representative activity and exceptional operations. Agree the scenarios and exit criteria with your FDE; elapsed time alone is not evidence that the policy is ready for production.

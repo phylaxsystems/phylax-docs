@@ -116,7 +116,7 @@ The command resolves the project and manager, builds the release, and waits for 
 
 ## 6. Verify the result
 
-Record the project ID, release ID, environment, deployment result, and any remaining activation delay. Include the transaction hash if broadcast. After the delay, verify the intended Alerting observation or Production enforcement through the [release verification steps](./deploy-assertions-dapp#verify-ethereum-enforcement).
+Record the project ID, release ID, environment, deployment result, and any remaining activation delay. Include the transaction hash if broadcast. After the delay, verify [Alerting observation](./deploy-assertions-dapp#verify-alerting-observation) or [Production enforcement](./deploy-assertions-dapp#verify-ethereum-enforcement), according to the release environment.
 
 Activation updates assertion policy; it does not install a guard or configure transaction submitters. Verify those separately with the [Ethereum integration plan](./dapp-integration).
 

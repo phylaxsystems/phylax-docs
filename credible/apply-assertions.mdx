@@ -1,9 +1,9 @@
 ---
-title: 'Apply Assertions'
+title: 'How to Prepare a Policy Release'
 description: 'Configure assertions and create a release on the platform using `pcl apply`'
 ---
 
-Declare your policies in `credible.toml`, then create a release with `pcl apply`.
+Declare your policies in `credible.toml`, then create a pending release with `pcl apply`. This guide ends with a release ready for review; signing and activation follow in [Review and Deploy Policies](./deploy-assertions-dapp#step-4-review-release-checks).
 
 **Prerequisites**:
 - Approved policies and assigned reviewers
@@ -13,7 +13,7 @@ Declare your policies in `credible.toml`, then create a release with `pcl apply`
 
 ## Step 1: Authenticate
 
-Before deploying, authenticate with the Credible Layer:
+Before creating the release, authenticate with the Ethereum platform:
 
 ```bash
 pcl auth -u https://ethereum.phylax.systems login
@@ -35,10 +35,10 @@ For Ethereum production, complete [guard coverage, routing, and recovery plannin
 
 ## Step 2: Configure `credible.toml`
 
-Create `assertions/credible.toml` to declare the protected contracts and their assertions:
+Create `assertions/credible.toml` to declare the protected contracts and their assertions. These examples prepare an **Alerting** release so you can observe policy behavior. For an approved production rollout, set `environment = "production"` after completing the [integration test plan](./testing-strategy). Replace the address and file placeholders with your reviewed targets:
 
 ```toml
-environment = "production"
+environment = "alerting"
 
 [contracts.my_contract]
 address = "0xYOUR_CONTRACT_ADDRESS"
@@ -51,7 +51,7 @@ file = "assertions/src/MyAssertion.a.sol"
 To protect multiple contracts, add more entries:
 
 ```toml
-environment = "production"
+environment = "alerting"
 
 [contracts.vault]
 address = "0xVAULT_ADDRESS"
@@ -100,11 +100,13 @@ pcl apply --yes
 `pcl apply` automatically builds your project. You can also run `pcl build` separately to check for compilation errors before applying.
 </Note>
 
-## Step 4: Review and Deploy in the Platform
+<span id="step-4-review-and-deploy-in-the-platform" />
 
-Open the release under **Releases** in your project and follow [Review and Deploy Policies](./deploy-assertions-dapp#step-4-review-release-checks).
+## Step 4: Verify the Prepared Release
 
-The release becomes active after an authorized manager signs the deployment and the State Oracle delay expires.
+Open the new release under **Releases** in the selected project. Confirm its environment, target contracts, and complete assertion additions and removals against the preview you approved.
+
+The result is a pending release, not active protection. Continue directly to [Step 4: Review Release Checks](./deploy-assertions-dapp#step-4-review-release-checks); do not repeat authentication, project creation, or `pcl apply`. An authorized manager must then sign deployment, and activation follows the configured delay.
 
 ## Troubleshooting
 
@@ -128,8 +130,8 @@ The release becomes active after an authorized manager signs the deployment and 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Review and Deploy Policies" icon="rocket" href="./deploy-assertions-dapp">
-    Complete deployment in the platform
+  <Card title="Review and Deploy Policies" icon="rocket" href="./deploy-assertions-dapp#step-4-review-release-checks">
+    Review the prepared release and authorize deployment
   </Card>
   <Card title="pcl Reference" icon="book" href="./cli-reference">
     Full command reference

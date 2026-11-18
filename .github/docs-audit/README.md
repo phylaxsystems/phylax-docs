@@ -115,3 +115,7 @@ Local `pnpm test` reaches build validation, which cannot download the Mintlify
 client in this sandbox (`requires an internet connection`); hosted build status
 is recorded in the PR. This link correction does not close F25's authenticated
 platform and deployment verification boundary.
+
+## Follow-up: information architecture and user journeys
+
+The [November 18 Diátaxis journey review](journey-review.md) records three further passes from head `98d7f34`: navigation and page roles, task handoffs, and a fresh consistency check. It preserves all routes while distinguishing tutorial goals, release preparation/review, Alerting/Production verification, and Ethereum/L2 reader paths.

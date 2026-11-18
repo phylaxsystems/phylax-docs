@@ -93,7 +93,7 @@ Assertion Lifecycle,Project,"The platform container for a protocol team's contra
 Assertion Lifecycle,Release,"The complete policy set reviewed and deployed together for a project's selected environment. Individual assertions cannot be removed from an active release. Change the set by deploying a replacement release, or remove the whole release."
 Assertion Lifecycle,Apply,"The process of creating a release on the platform using `pcl apply`. This command reads your `credible.toml` configuration, compiles assertion contracts, and creates a release. The platform handles storing assertion bytecode in [Assertion DA](./glossary#assertion-da-data-availability) automatically.
 
-Learn more: [Apply Assertions](./apply-assertions) | [pcl Reference](./cli-reference#apply)"
+Learn more: [Prepare a Policy Release](./apply-assertions) | [pcl Reference](./cli-reference#apply)"
 Assertion Lifecycle,Deployment,The process of reviewing a release and signing its onchain transaction for the selected Alerting or Production environment. Transaction confirmation and assertion activation are separate: new assertions begin applying after the configured delay.
 Assertion Lifecycle,Slack Notifications,Delivery of invalidation notices to a configured Slack channel. Notifications do not choose the enforcement mode. See [Set Up Slack Notifications](./setting-up-alerting).
 Assertion Lifecycle,Alerting,"A mirrored chain environment used for testing assertions without affecting production. Assertions run in alerting mode to observe behavior, but transactions are not dropped if they break assertion rules. This allows protocol teams to test assertions safely before deploying to production."

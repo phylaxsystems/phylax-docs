@@ -5,6 +5,12 @@ description: Validate assertions locally with `CredibleTest`, realistic test pat
 
 Test assertions locally with `CredibleTest` and the Forge test utilities. Use the [testing strategy](./testing-strategy) for integration tests and production readiness.
 
+## Prerequisites
+
+Use a project with [PCL installed](./credible-install), a pinned `credible-std` dependency, the assertion under test, and protocol fixtures. Run commands from the project root using the assertion test profile configured in `foundry.toml`; see [profile configuration](./ci-cd-integration#foundry-profile-configuration).
+
+For a complete first exercise, use [Run an Example Policy Locally](./pcl-quickstart). The patterns below assume you already have a test project.
+
 ## Register an Assertion for the Next Transaction
 
 ```solidity
@@ -154,6 +160,14 @@ Match the compiler and optimizer settings used for deployment. The `credible-std
 - Test batch operations at maximum expected size
 - Use `pcl test -vvv` to monitor gas usage
 - If approaching the limit, optimize or split the assertion
+
+## Run and Verify Your Tests
+
+Run `pcl test` with your project's assertion profile. Use `--match-contract` or `--match-test` to isolate a case, then run the full assertion suite before preparing a release.
+
+Check that the intended assertion function executed, allowed operations retained their expected state changes, and rejected operations failed for the expected assertion reason. A test passing because the protocol reverted before the assertion ran does not validate that assertion. Include legitimate exceptions and maximum-workload cases.
+
+When the results match the approved policy, [prepare a release](./apply-assertions). If a case fails unexpectedly, use [Troubleshooting](./troubleshooting) before continuing.
 
 ## What's Next?
 

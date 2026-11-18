@@ -1,13 +1,15 @@
 ---
-title: 'Writing Your Own Policies'
+title: 'How to Write Your Own Policies'
 description: 'Define, implement, and test Solidity assertions for your protocol.'
 ---
 
 Write your policies as Solidity assertions with `credible-std`, then test them with `pcl` before deployment. You can develop them independently or work with our [forward deployed engineers](./work-with-phylax) to define and implement the policies.
 
-## Set Up Your Project
+## Prerequisites
 
-Start with [Installation](./credible-install). To try a working project, follow [Run an Example Policy Locally](./pcl-quickstart), then [Test a Policy's Allowed and Rejected Cases](./test-policy-behavior).
+Have the protocol source, contract interfaces or storage layouts, and a local project with [PCL installed](./credible-install). If you are new to assertion testing, first [run the starter tutorial](./pcl-quickstart).
+
+## Set Up Your Project
 
 Keep assertion contracts in `assertions/src/` and their tests in `assertions/test/`. Pin the `credible-std` version used by your project and confirm that your target deployment supports the assertion specification you choose. See the [library reference](./credible-std-overview) and [published releases](https://github.com/phylaxsystems/credible-std/releases).
 
@@ -49,6 +51,6 @@ See [Testing Assertions](./testing-assertions) for the test harness and [Testing
 
 ## Review and Deploy
 
-Follow [Review and Deploy Policies](./deploy-assertions-dapp) to create a release, review its checks, and observe the policy in alerting mode. Investigate unexpected rejections and retest changes before production.
+After the local tests pass, [prepare a release with `pcl apply`](./apply-assertions). Choose the intended environment explicitly, then [review and authorize the prepared release](./deploy-assertions-dapp#step-4-review-release-checks). Use Alerting to observe policy behavior, investigate unexpected rejections, and retest changes before production.
 
 Your team controls policy deployment through its authorized signers. See [Managing Policy Deployments](./managing-policy-deployments) for authorization. Ethereum protection also requires the agreed [guard and routing integration](./dapp-integration).

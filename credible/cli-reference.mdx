@@ -366,7 +366,7 @@ args = ["0x75634113D6A2fbfF5e65151ce1572195bE1d001A", "42"]
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `environment` | string | Yes | Deployment environment name, such as `"production"` |
+| `environment` | string | Yes | Deployment environment name, such as `"alerting"` or `"production"` |
 | `project_id` | UUID | No | Platform project ID. Required when `pcl apply` emits JSON output |
 | `contracts` | map | Yes | Named contract definitions |
 
@@ -419,7 +419,7 @@ PCL 1.9.0 also provides `projects`, `releases`, `incidents`, `assertions`, `cont
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Apply Assertions" icon="upload" href="./apply-assertions">
+  <Card title="Prepare a Policy Release" icon="upload" href="./apply-assertions">
     Learn how to create an assertion release with `pcl apply`
   </Card>
   <Card title="Run an Example Policy Locally" icon="rocket" href="./pcl-quickstart">

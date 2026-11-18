@@ -66,19 +66,20 @@ Cache repeated invalid submissions or use short-lived fingerprints and sender bu
 - Network operators define continuity behavior for maintenance windows, degraded dependencies, and validation timeouts
 - Production integrations keep assertion work bounded through admission review, trigger scoping, runtime limits, and operational monitoring
 
+## Review the Integration Plan
+
+Record the covered transaction sources, validation boundaries, timeout decisions, supported assertion specification, and operational owners. Review them with Phylax before implementation. Confirm the network-specific policy-management and investigation workflow; the main platform walkthroughs describe Ethereum.
+
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Architecture Overview" icon="diagram-project" href="../architecture-overview">
-    Detailed system architecture and transaction flow
+  <Card title="Sequencer Validation Pipelines" icon="diagram-project" href="./validation-pipeline">
+    Examine execution ordering, rollback, timeouts, and backpressure for the L2 design
   </Card>
   <Card title="Assertion Enforcer" icon="shield" href="../assertion-enforcer">
     Validation flow, integration boundaries, and enforcement role
   </Card>
-  <Card title="Trust Model" icon="shield-check" href="../trust-model">
-    Guarantees, trust boundaries, and operational assumptions
-  </Card>
-  <Card title="Investigate a Rejected Transaction" icon="warning" href="../investigate-rejected-transaction">
-    Review releases, authorize changes, and investigate rejected transactions.
+  <Card title="Sequencer Enforcement Boundary" icon="shield-check" href="./overview#the-sequencer-enforcement-boundary">
+    Review transaction-source coverage and the sequencer's role in enforcement
   </Card>
 </CardGroup>

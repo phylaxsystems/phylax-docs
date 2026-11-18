@@ -53,7 +53,7 @@ Inspect **Matched Incident Payload** to map the revert data to the assertion fun
 - **False positive:** revise the policy and add a regression test. Create a new release with `pcl apply` to repeat the checks.
 - **Unexplained result:** investigate the payload and replay context before deployment. See [Troubleshooting](./troubleshooting).
 
-After review, deploy to Alerting and follow the [testing strategy](./testing-strategy).
+Return to the [remaining release checks](./deploy-assertions-dapp#step-4-review-release-checks) before authorizing deployment. For an Alerting release, then [verify observation](./deploy-assertions-dapp#verify-alerting-observation) and follow the agreed test plan.
 
 ## Next steps
 
@@ -61,10 +61,10 @@ After review, deploy to Alerting and follow the [testing strategy](./testing-str
   <Card title="Test Assertions" icon="flask" href="./testing-assertions">
     Add focused and regression tests before creating another release
   </Card>
-  <Card title="Apply Assertions" icon="code-branch" href="./apply-assertions">
+  <Card title="Prepare a Policy Release" icon="code-branch" href="./apply-assertions">
     Create a new release after tuning an assertion
   </Card>
-  <Card title="Review and Deploy Policies" icon="rocket" href="./deploy-assertions-dapp">
+  <Card title="Review and Deploy Policies" icon="rocket" href="./deploy-assertions-dapp#step-4-review-release-checks">
     Review release checks and authorize deployment.
   </Card>
 </CardGroup>

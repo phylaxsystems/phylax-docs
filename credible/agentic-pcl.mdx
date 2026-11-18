@@ -14,9 +14,9 @@ Phylax provides reusable workflows in the [agent-skills repository](https://gith
 - A local protocol repository the agent can inspect and edit
 - For custom integration work, defined policy requirements and assigned review responsibilities
 
-For deployment, you also need a target chain, an RPC endpoint, and access to the Protocol Manager wallet.
+Creating and testing a local assertion project requires no platform login or signing credentials.
 
-Authenticate with the platform for your target network before starting the agent. See [Deploy Policies with an AI Agent](./agentic-pcl-deploy#1-authenticate-manually) for explicit Ethereum platform selection. The earlier L2 workflow is in [L2 Platform Notes](./l2-integrations/platform-and-compatibility).
+For the deployment workflow, also identify the target chain, RPC endpoint, and authorized Protocol Manager. Follow [Deploy Policies with an AI Agent](./agentic-pcl-deploy#1-authenticate-manually) to authenticate before starting that workflow. The earlier L2 workflow is in [L2 Platform Notes](./l2-integrations/platform-and-compatibility).
 
 <Warning>
 An agent can edit code, create platform resources, and broadcast on-chain transactions. Review its plan and local changes before authorizing remote mutations. Require a successful dry run and explicit approval before any production deployment.
