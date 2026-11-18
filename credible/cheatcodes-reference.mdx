@@ -449,6 +449,21 @@ function context() external view returns (TriggerContext memory);
 
 This reverts outside an assertion function triggered by `registerFnCallTrigger`.
 
+### Anomaly Context
+
+```solidity
+struct AnomalyContext {
+    uint8 firesAt;
+}
+
+function anomalyContext(address target)
+    external view returns (AnomalyContext memory ctx);
+```
+
+`firesAt` is the strictest sensitivity level (1–10) cleared by the model for this target and transaction. An assertion registered at level `L` fires when `firesAt != 0 && L >= firesAt`. Zero means no level cleared or the target could not be scored; the anomaly trigger does not fire. The context exposes no raw score or basis-point threshold.
+
+An unscored target does not establish that the transaction is safe. Confirm runtime support for anomaly scoring and dispatch; the [anomaly example](../assertions-book/assertions/anomaly-gated-policies) records the released PCL limitation.
+
 ### ERC20 Introspection
 
 #### `Erc20TransferData`
@@ -836,6 +851,17 @@ function watchCumulativeInflow(
 ```
 
 The trigger evaluates the per-block buckets over the configured rolling window. `thresholdBps` is measured against the TVL snapshot taken at the start of that window. `1000` is `10%`.
+
+#### `watchAnomaly`
+
+```solidity
+function watchAnomaly(address target, bytes4 fnSelector, uint8 sensitivity)
+    external view;
+```
+
+Registers the assertion function for anomaly-triggered execution on `target`. Sensitivity must be 1–10; registration rejects other values. Higher levels fire more often, and `Sensitivity.RECOMMENDED` is 7. `Assertion` exposes an internal helper with the same arguments. The trigger decides whether the assertion runs; its deterministic policy checks decide whether it rejects the transaction.
+
+Requires an enforcer with anomaly dispatch. For supported local runtimes, `cl.setAnomalyLevel(target, firesAt)` stages the verdict; see [Testing Contracts](./credible-std-overview#testing-contracts).
 
 ## Deprecated Cheatcodes
 
