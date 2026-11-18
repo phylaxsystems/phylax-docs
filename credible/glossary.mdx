@@ -18,7 +18,7 @@ Definitions of Credible Layer components, policy states, and platform terms. Use
 | Deployed / active / enforced | Deployment submits the lifecycle change. Assertions become active after the configured delay; Production enforcement and Alerting observation have different effects. |
 | Activation window / rolling window | An activation window determines when an assertion applies. A rolling window determines which past flow measurements a cumulative policy evaluates. |
 | Trigger / check / invalidation / exclusion | A trigger selects a check. A failed check produces an invalidation; the environment determines whether the result excludes a live candidate or only records an observation. |
-| Assertion specification / lifecycle state / evidence | Legacy, Reshiram, and Experimental select API capabilities. They do not describe whether a release is active, tested, audited, or suitable for a deployment. |
+| Assertion specification / lifecycle state / example status / evidence | Legacy, Reshiram, and Experimental select API capabilities. Lifecycle state describes pending/active/deactivated assignments. Catalog example status describes an adaptation example, experimental fork, or historical design. None establishes test coverage, audit results, or deployment suitability. |
 | Phylax platform / protocol application | The platform manages projects and releases. The protocol application is the system being protected. Older `/dapp-*` routes remain for link compatibility. |
 | Use Cases Book / Assertions Book | Use Cases Book is the current reader-facing title. The `/assertions-book/` routes and source names remain unchanged. |
 
@@ -211,7 +211,7 @@ The ability to inspect the rules and registry state behind a protocol's Credible
 ### Invalidation
 A reported failure of assertion validation for a candidate or replayed transaction. Inspect the reason: a configured policy condition can fail, but an execution failure such as `OutOfGas` can also invalidate a candidate without establishing that condition. Production enforcement excludes invalidated candidates at the integrated boundary; Alerting and simulation record results without blocking the live transaction. An invalidation is not proof of an attack or of a live prevention.
 
-Learn more: [Investigate a Rejected Transaction](./investigate-rejected-transaction)
+Learn more: [Investigate an Invalidation](./investigate-rejected-transaction)
 
 ### Revert
 An EVM execution failure. An assertion revert occurs off-chain during validation and can cause builder exclusion. A guard revert occurs in the protocol execution path; if included on-chain, the transaction consumes gas. A caller may catch a subcall revert, depending on its code.

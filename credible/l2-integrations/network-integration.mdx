@@ -25,10 +25,13 @@ flowchart LR
   RPC --> Policy
   Policy --> Builder[Block Builder or Sequencer]
   Builder --> Enforcer[Embedded Assertion Validation]
-  Enforcer -->|valid| Block[Block]
-  Enforcer -->|invalid| Drop[Dropped]
-  Enforcer -.-> Registry[On-Chain Registry]
-  Enforcer -.-> DA[Assertion DA]
+  Enforcer --> Report[Validation Report]
+  Report --> Decision[Sequencer Inclusion Decision]
+  Policy --> Decision
+  Decision -->|eligible under source and mode policy| Block[Block Candidate]
+  Decision -->|exclusion permitted and required| Drop[Excluded Candidate]
+  State[Assertion Assignments and Effective Times] -.-> Enforcer
+  DA[Assertion DA] -.-> Enforcer
 ```
 
 ## Integration Surfaces
@@ -38,7 +41,7 @@ Networks provide the following integration surfaces:
 - **Block-building hook**: the block builder or sequencer invokes the assertion library within its execution pipeline before including a transaction
 - **Transaction-source policy**: the integration defines how user-submitted, system-originated, bridge-originated, delayed, or forced-inclusion-style transaction paths are validated
 - **Result routing**: validation results are routed back into the block-building or sequencing policy that decides whether a candidate transaction can be included
-- **Registry access**: the enforcer consumes registry data (indexed from on-chain events) to discover which assertions apply
+- **Assertion-state access**: the enforcer consumes assertion assignments and their effective times from the deployment's on-chain state, such as the State Oracle; this is separate from Ethereum's Credible Registry block markers
 - **Assertion data access**: the enforcer fetches assertion bytecode from Assertion DA
 - **Operational monitoring**: invalidations, assertion status, alerting, and audit-log events are surfaced via the Phylax platform
 
@@ -62,7 +65,7 @@ Cache repeated invalid submissions or use short-lived fingerprints and sender bu
 
 - The embedded enforcer runs within the block-building pipeline; assertion acceptance is an inclusion policy, not a new consensus rule
 - Validation is deterministic for the same assertion, state, and execution context
-- Protocol teams choose whether assertions run in alerting mode or are enforced; networks honor the registry status during validation
+- Protocol teams choose Alerting or Production mode; the integration applies the effective assertion state and its transaction-source policy. An Alerting failure does not exclude a live transaction
 - Network operators define continuity behavior for maintenance windows, degraded dependencies, and validation timeouts
 - Production integrations keep assertion work bounded through admission review, trigger scoping, runtime limits, and operational monitoring
 

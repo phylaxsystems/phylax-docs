@@ -160,6 +160,7 @@
 - Name the unit: assertion ID identifies creation data; selector identifies a function; adopter identifies an assignment target; release identifies the platform deployment set.
 - Qualify windows and snapshots: activation window versus rolling measurement window; transaction versus call boundary. Use call trace for recorded calls, not call stack or EVM operand stack.
 - Treat assertion specification, lifecycle state, and evidence as separate axes.
+- Use **example status** for catalog labels such as adaptation example, experimental fork, or historical design. Reserve **lifecycle state** for pending/active/deactivated assignments; neither label establishes test evidence or deployment readiness.
 - Preserve exact commands, Solidity identifiers, UI labels, source titles, old routes, and compatibility anchors. Explain historical naming where needed instead of globally replacing it.
 - Match evidence terms to the linked result: source review, local test, exploit replay, and live enforcement are different claims.
 

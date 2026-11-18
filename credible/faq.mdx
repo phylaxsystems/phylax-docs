@@ -35,7 +35,7 @@ The **Credible Registry** records credible-block markers and controls which buil
 
 ### What happens if a transaction calls several protocols or batches operations?
 
-A transaction must pass all applicable assertions. One failure excludes the entire candidate transaction, including other operations in the same batch. It does not automatically exclude unrelated transactions or invalidate the whole block.
+A candidate must pass all applicable active Production assertions at the participating builder. One failure excludes the entire candidate transaction, including other operations in the same batch. It does not automatically exclude unrelated transactions or invalidate the whole block. Alerting results do not exclude live transactions.
 
 An onchain guard revert is different: a caller may catch a failed subcall and continue, depending on its code. Account for that behavior in batching, settlement, and retry logic.
 

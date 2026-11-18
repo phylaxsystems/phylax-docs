@@ -25,17 +25,12 @@ Open **Assertions** to check assertion status and linked contracts. For cumulati
 <span id="review-a-release" />
 <span id="authorize-the-change" />
 
-## Deploy a replacement
-
-Follow [Review and Deploy Policies](./deploy-assertions-dapp) for the canonical review, wallet authorization, activation, and live enforcement checks. Project access and [deployment authority](./managing-policy-deployments) are separate.
-
-The screenshots on this page illustrate the documented workflow; their labels were not revalidated in an authenticated platform session during the November 17, 2026 documentation review.
-
+<span id="deploy-a-replacement" />
 <span id="update-or-remove-a-circuit-breaker" />
 
 ## Replace or Remove a Release
 
-To change or remove an individual assertion, prepare a **replacement release** with your FDE, developer, or [AI coding agent](./agentic-pcl). Include the complete set of policies you intend to keep. Review its diff and checks, then deploy it through the same signing process. Changes take effect after their configured delays.
+To change or remove an individual assertion, [prepare a replacement release](./apply-assertions) with your FDE or developer, or use the [AI deployment workflow](./agentic-pcl-deploy). Include the complete set of policies you intend to keep for the selected environment. Review its diff and [release checks](./deploy-assertions-dapp#step-4-review-release-checks), authorize deployment, then verify activation and the selected environment's behavior. Project access and [deployment authority](./managing-policy-deployments) are separate. Changes take effect after their configured delays.
 
 To remove the entire release:
 
@@ -54,4 +49,6 @@ For an emergency, follow your agreed [fallback and recovery procedure](./work-wi
 
 <span id="investigate-a-rejected-transaction" />
 
-For invalidation analysis, follow [Investigate a Rejected Transaction](./investigate-rejected-transaction).
+For invalidation analysis, follow [Investigate an Invalidation](./investigate-rejected-transaction).
+
+The screenshots on this page illustrate the documented workflow; their labels were not revalidated in an authenticated platform session during this source review.

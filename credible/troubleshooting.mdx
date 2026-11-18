@@ -33,7 +33,7 @@ Use [Ethereum Integration Planning](./dapp-integration) and [Guard Testing](./te
 
 ### "Expected 1 assertion to be executed, but 0 were executed"
 
-This error means your assertion never ran on the target transaction. This can occur in local tests, alerting, production, or a platform release backtest.
+In the local harness, this error means the expected assertion function did not run on the monitored call. Missing coverage in Alerting, Production, or a release backtest is a separate observation; do not assume those environments emit this test-harness message.
 
 **Common Causes:**
 
@@ -52,7 +52,7 @@ This error means your assertion never ran on the target transaction. This can oc
 
 **Solution (Testing):**
 
-Move all setup code before `cl.assertion()`. The `cl.assertion()` call registers the assertion to run on the very next transaction, similar to `vm.prank()`.
+Move all setup code before `cl.assertion()`. The `cl.assertion()` call registers the assertion for the next monitored external call, similar to `vm.prank()`.
 
 ```solidity
 // ✅ CORRECT

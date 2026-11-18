@@ -1,11 +1,11 @@
 ---
 title: "ERC-20 Cumulative Inflow Breaker"
-description: "Configure and test a rolling net inflow limit"
+description: "Configuration, behavior, and limits of a rolling net inflow assertion"
 ---
 
 import Example from "/snippets/ass22-erc20-inflow-breaker.a.mdx";
 
-**Lifecycle:** Adaptation example. **Spec:** Reshiram. **Evidence:** pinned source compiled in the Book profile; individual behavior tests were not run in this review.
+**Example status:** Adaptation example. **Spec:** Reshiram. **Evidence:** pinned source compiled in the Book profile; individual behavior tests were not run in this review.
 
 
 An unusually large deposit or donation can change a vault's exposure or accounting. A cumulative inflow breaker rejects the candidate transaction that takes net inflow above the rolling limit.

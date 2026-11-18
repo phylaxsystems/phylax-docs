@@ -5,7 +5,7 @@ description: "Freshness requirements and snapshot limits of the oracle example"
 
 import Example from "/snippets/ass10-oracle-liveness.a.mdx";
 
-**Lifecycle:** Legacy example requiring adaptation. **Spec:** Reshiram. **Evidence:** pinned source compiled in the Book profile; individual behavior tests were not run in this review.
+**Example status:** Legacy example requiring adaptation. **Spec:** Reshiram. **Evidence:** pinned source compiled in the Book profile; individual behavior tests were not run in this review.
 
 
 A swap depends on a price that may not have been updated recently. `OracleLivenessAssertion` registers `swap(address,address,uint256)` and requires the oracle's reported update time to be no more than 600 seconds old.

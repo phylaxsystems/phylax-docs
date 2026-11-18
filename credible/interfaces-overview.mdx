@@ -9,7 +9,9 @@ Ethereum enforcement has two linked paths: preparing assertion policy, and valid
 
 ```mermaid
 flowchart TD
-    CLI["pcl / Ethereum platform"] --> SO["State Oracle"]
+    CLI["pcl / Ethereum platform"] --> Release["Release review"]
+    Release --> Manager["Authorized Protocol Manager"]
+    Manager -->|"Signed lifecycle action"| SO["State Oracle"]
     CLI --> DA["Assertion DA"]
     SO --> E["Assertion Enforcer"]
     DA --> E

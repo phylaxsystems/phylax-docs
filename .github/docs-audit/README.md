@@ -35,7 +35,7 @@ The subsequent [glossary disambiguation review](glossary-review.md) evaluates al
 | Audience | Protocol-owner and developer tasks are separate from builder/sequencer operation. |
 | Scope | Ethereum integration, L2 planning, local tests and historical analogies are labelled separately. |
 | Risk and mechanism | Risk domain, protocol family and dispatch mechanism are independent facets. Anomaly dispatch is not a risk domain. |
-| Status | Lifecycle, specification and evidence are independent. A source directory named production is not a readiness certification. |
+| Status | Example status, assertion lifecycle, specification and evidence are independent. A source directory named production is not a readiness certification. |
 | Evidence | Source review, compilation, local behavior tests, exploit replay and live enforcement establish different things. |
 | Operations | Alerting mode is separate from Slack notifications; release state is separate from proof of protection. |
 
@@ -119,3 +119,7 @@ platform and deployment verification boundary.
 ## Follow-up: information architecture and user journeys
 
 The [November 18 Diátaxis journey review](journey-review.md) records three further passes from head `98d7f34`: navigation and page roles, task handoffs, and a fresh consistency check. It preserves all routes while distinguishing tutorial goals, release preparation/review, Alerting/Production verification, and Ethereum/L2 reader paths.
+
+## Follow-up: ten consistency and coherence passes
+
+The [ten-pass review](ten-pass-coherence-review.md) records the requested review of page roles, observation semantics, enforcement modes, release handoffs, learner/author/operator journeys, diagrams, catalog facets and final cross-page consistency. It distinguishes completed source corrections from unverified rendering and live deployment behavior.

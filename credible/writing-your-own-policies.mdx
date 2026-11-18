@@ -39,7 +39,7 @@ Keep each assertion focused on one property. Check helper mutability when callin
 
 ## Test Allowed and Rejected Transactions
 
-Use `CredibleTest` and register the assertion with `cl.assertion(...)` immediately before the monitored external call. Run the assertion tests with:
+Use `CredibleTest` and register the assertion with `cl.assertion(...)` immediately before the monitored external call. Select the assertion test profile defined in your project's `foundry.toml`; see [profile configuration](./ci-cd-integration#foundry-profile-configuration). With that profile selected, run:
 
 ```bash
 pcl test

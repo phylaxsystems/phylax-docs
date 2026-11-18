@@ -22,7 +22,9 @@ Confirm which specification your target Ethereum deployment accepts before activ
 
 [Triggers](./triggers) select assertion functions for relevant transaction activity. [PhEVM](./phevm) executes them against state snapshots. A participating builder excludes a candidate if an active production assertion fails.
 
-## Example: Prevent Unauthorized Ownership Changes
+<span id="example-prevent-unauthorized-ownership-changes" />
+
+## Example: Compare Ownership at Transaction Boundaries
 
 ```solidity
 function checkOwnershipChange() external view {
@@ -36,7 +38,7 @@ function checkOwnershipChange() external view {
 }
 ```
 
-With an appropriate trigger, this rule rejects ownership changes, including legitimate transfers. Add explicit exceptions if the policy permits transfers.
+With an appropriate trigger, this rule rejects a final owner value that differs from the initial value, including a legitimate transfer. It does not distinguish authorization or detect a temporary change restored before transaction end. The [ownership tutorial](../assertions-book/assertions/run-an-example) demonstrates that limit. A policy permitting transfers needs explicit exceptions and checks at the required observation boundaries.
 
 ## What They Can Do That Regular Solidity Can't
 

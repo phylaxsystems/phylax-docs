@@ -70,12 +70,17 @@ This edition is reviewed against [credible-std at `fe49de6`](https://github.com/
 | [Tick bounds and spacing](./ass15-price-within-ticks) | Pool tick bounds and initialized-tick spacing; legacy predicate needs correction |
 | [In-transaction oracle changes](./ass28-intra-tx-oracle-deviation) | Change across each covered update in a tested synthetic fixture; not a historical exploit replay |
 
-## Legacy examples requiring adaptation
+<span id="legacy-examples-requiring-adaptation" />
 
-These legacy pages retain their source for comparison and explain the replacement approach. They are not deployment-ready policies.
+## Examples requiring corrections
+
+These pages identify specific source limitations beyond configuring a template for your protocol. They retain the source for comparison and explain the required correction. They are not deployment-ready policies.
 
 | Example | Required correction |
 | --- | --- |
+| [Accredited caller gate](./ass04-kyc-whitelist) | Read the accreditation registry at an explicit snapshot |
+| [Lending health factor](./ass07-lending-health-factor) | Select the account for the triggering call; allow legitimate recovery operations |
+| [Native ETH outflow](./ass21-ether-drain) | Observe actual native custody at distinct transaction snapshots |
 | [Oracle freshness](./ass10-oracle-validation) | Bind the oracle and timestamp read to the operation's snapshot |
 | [TWAP deviation](./ass11-twap-deviation) | Use snapshot reads and an exact scaled comparison |
 | [Tick bounds and spacing](./ass15-price-within-ticks) | Apply spacing to initialized ticks, not the current pool tick |
@@ -87,11 +92,11 @@ For production preparation, follow [Ethereum assertion testing](../../credible/t
 
 | Facet | Meaning | Where to look |
 | --- | --- | --- |
-| Risk domain | Flow, authority/configuration, accounting, solvency, or valuation | Pattern groups above and [case studies](../previous-hacks/prev-hacks-index) |
+| Risk domain | Flow, authority/configuration, accounting, solvency, valuation, or cross-chain verification | Pattern groups above and [case studies](../previous-hacks/prev-hacks-index) |
 | Protocol family | The storage and economic model being adapted | [Aave](./aave-v3-suite), [ERC-4626](./vault-policies), [Balancer custody](./balancer-outflow), and historical [Optimism FMA](./optimism-fma-suite) |
 | Dispatch mechanism | When the runtime invokes the assertion | [Triggers](../../credible/triggers); [anomaly gating](./anomaly-gated-policies) is a dispatch choice, not a separate risk domain |
 | Specification | APIs the assertion requests | [Legacy, Reshiram, and Experimental](../../credible/cheatcodes-reference#assertion-specs) |
-| Lifecycle | Current example, legacy adaptation, or historical design | The entry's status and limitations |
+| Example status | Adaptation example, legacy example requiring correction, experimental fork, or historical design | The entry's status and limitations |
 | Evidence | Source review, compilation, local behavior tests, exploit replay, or live enforcement | The entry's stated validation; one level does not imply another |
 
 Imported Book sources compile at the pinned revision, but most are not individually behavior-tested by this documentation review. The ownership tutorial and local observation fixtures identify their executed tests. Read warnings before copying an example.

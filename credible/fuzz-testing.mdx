@@ -3,9 +3,15 @@ title: Fuzz Testing
 description: Test assertions with random inputs to identify edge cases
 ---
 
-Use Forge's fuzz tests to check assertion behavior across random inputs.
+Use `pcl test` to run Forge-style fuzz tests against assertions across random inputs.
+
+## Prerequisites
+
+Start with a working [local assertion test](./testing-assertions), a pinned library, and the assertion profile defined by your project. Confirm an allowed case and an expected assertion rejection before varying the inputs.
 
 ## Example
+
+This illustrative fragment assumes a `PhyLockAssertion`, a funded `user1` with a `5 ether` deposit, and the matching protocol fixture. It is not a standalone runnable test. Adapt it to a passing test in your project; the [starter tutorial](./pcl-quickstart) documents the separate failure in its pinned PhyLock suite.
 
 ```solidity
 function testAssertionAllowsValidWithdrawalFuzz(uint256 withdrawalAmount) public {
@@ -15,7 +21,7 @@ function testAssertionAllowsValidWithdrawalFuzz(uint256 withdrawalAmount) public
     vm.assume(withdrawalAmount <= 100 ether); // Reasonable upper bound
 
     assertEq(assertionAdopter.deposits(user1), 5 ether);
-    // Setup assertion for next transaction
+    // Register the assertion for the next monitored external call
     cl.assertion({
         adopter: address(assertionAdopter),
         createData: type(PhyLockAssertion).creationCode,
@@ -30,7 +36,7 @@ function testAssertionAllowsValidWithdrawalFuzz(uint256 withdrawalAmount) public
 }
 ```
 
-This would run the test with 256 different values for `withdrawalAmount` that adhere to the bounds set by the `vm.assume()` constraints.
+With `runs = 256`, the runner targets 256 accepted fuzz cases within the `vm.assume()` constraints. The selected profile controls the run count; rejected inputs do not count as policy tests. This example checks allowed withdrawals only. Add separate tests for intended violations and legitimate exceptions.
 
 <Note>
 Use `vm.assume()` to filter out invalid inputs that would cause the test to fail for reasons unrelated to your assertion logic.
@@ -55,14 +61,18 @@ FOUNDRY_PROFILE=fuzz-assertions pcl test
 You can configure the number of runs in your `foundry.toml`:
 
 ```toml
-[fuzz]
-runs = 256  # Default is 256
+[profile.default.fuzz]
+runs = 256
 max_test_rejects = 65536  # Maximum rejected inputs before failing
 ```
 
 <Tip>
 Consider creating a separate profile for fuzz tests so they don't run during quick local development cycles. See [CI/CD Integration](./ci-cd-integration#foundry-profile-configuration) for complete profile configuration examples.
 </Tip>
+
+## Verify the Run
+
+Confirm that the intended fuzz tests ran under the selected profile and inspect the reported run counts, failures, and rejected-input limits. A filtered-out test provides no evidence. Preserve any failing input as a regression case and run the full assertion suite before preparing a release.
 
 **Learn More:**
 - [Testing Assertions](./testing-assertions) - Basic testing guide

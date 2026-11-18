@@ -45,7 +45,7 @@ The State Oracle records which assertions apply and when additions or removals t
 
 Alerting observes assertion behavior without dropping live transactions. Production rules affect inclusion at participating builders. Neither mode installs missing guards or configures submission routes.
 
-When a transaction touches several protected contracts, all applicable assertions must pass at the enforcing builder. Passing makes the transaction eligible for inclusion; selection and finality remain separate. An assertion failure excludes the whole candidate transaction, including a batch containing multiple operations.
+When a transaction touches several protected contracts, all applicable active Production assertions must pass at the enforcing builder. Passing makes the transaction eligible for inclusion; selection and finality remain separate. A Production assertion failure excludes the whole candidate transaction, including a batch containing multiple operations.
 
 ## Availability and Recovery
 

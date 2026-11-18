@@ -27,7 +27,9 @@ flowchart LR
   Scope --> Assertion[Implement and Test Assertions]
   Assertion --> Platform[Phylax Platform]
   Platform --> DA[Assertion DA]
-  Platform --> StateOracle[State Oracle]
+  Platform --> Review[Release Review]
+  Review --> Manager[Authorized Protocol Manager]
+  Manager -->|Signed deployment| StateOracle[State Oracle]
   StateOracle --> Enforcer[Assertion Enforcer]
   Enforcer --> Builder[Participating Ethereum Builder]
   Builder --> Outcome[Candidate Inclusion Decision]
@@ -71,7 +73,7 @@ Confirm the Protocol Manager for each contract through [Managing Policy Deployme
 
 ## Deployment Modes
 
-- **Alerting** records violations in a mirrored environment without blocking live transactions. It does not test every production guard or route.
+- **Alerting** records assertion failures in a mirrored environment without blocking live transactions. Investigate each failure to distinguish a policy violation from a false positive or execution error. It does not test every production guard or route.
 - **Production** enforces active policies through participating builders. Protected operations require configured guards and routing.
 
 ## Test Availability and Recovery
