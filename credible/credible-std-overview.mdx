@@ -288,6 +288,8 @@ The `protection/` directory contains reusable assertions, abstract composition b
 
 Access-control and vault mixins require explicit calls to their `_register*Triggers()` helpers from `triggers()`. Inheriting a mixin alone does not activate its check. Define the assertion specification once across the constructor chain, and test each configured check against the actual target implementation. Constructor-time protocol reads are unavailable in the assertion deployment runtime; pass configuration such as the vault asset explicitly and check it at a runtime snapshot.
 
+For Safe allowance policies, [upstream fix `52f4f87`](https://github.com/phylaxsystems/credible-std/commit/52f4f8796303d0e4db16e6be0d309949bfdac165) makes a cumulative `increaseAllowance` peak of `uint256.max` require `allowUnlimited = true` independently of `maxAmount`. The source pin above predates this fix: a maximum numeric cap can allow that peak even with the flag disabled. Finite peaks remain subject to the numeric cap.
+
 Inline compositions are available in [Vault Policies](../assertions-book/assertions/vault-policies) and [Anomaly-Gated Policies](../assertions-book/assertions/anomaly-gated-policies). The latter also describes the current local runtime limitation on anomaly dispatch.
 
 ## Local Backtesting API

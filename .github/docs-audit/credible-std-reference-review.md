@@ -1,6 +1,6 @@
 # credible-std reference coverage review
 
-Scope: the checked-out documentation dependency at `fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0`. GitHub API queries for the current upstream revision failed through the sandbox proxy, so this is a pinned-source review, not a claim about the latest upstream tree.
+Scope: the checked-out documentation dependency at `fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0`. After an initial sandbox proxy failure, a live GitHub comparison confirmed upstream HEAD `52f4f8796303d0e4db16e6be0d309949bfdac165` is one commit ahead. That commit changes Safe allowance enforcement and its tests/README, with no new API surface. The reference keeps its existing source pin and identifies that behavior fix separately.
 
 The edited library and cheatcode pages are reference pages: the reader needs API names, arguments, behavior, constraints, and available reusable components. The testing-strategy page remains a how-to guide for a protocol considering opting into Ethereum enforcement; its title, description, opening, and inventory entry now state that audience.
 
@@ -18,4 +18,4 @@ The edited library and cheatcode pages are reference pages: the reader needs API
 - Read the affected signatures and implementations. No new executable assertion program or runtime behavior was introduced; added Solidity blocks describe existing interfaces.
 - Refreshed the documentation inventory: 116 content routes, 115 sidebar entries, 40 navigation nodes, 63 glossary terms, 25 snippets, 16 redirects.
 - All 27 repository tests passed. Mintlify accessibility and broken-link checks passed, with existing dependency-document parsing warnings and contrast recommendations.
-- The final Mintlify validation step failed in its HTTP client's `p-cancelable`/`got` request handling (`onCancel` handler attached after settlement). A rendered build has not been verified for this change.
+- The first Mintlify build check failed in its HTTP client. Retrying `pnpm validate` after network access recovered passed build validation. No browser rendering inspection was performed.
