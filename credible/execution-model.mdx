@@ -18,7 +18,7 @@ In testing, failed assertions cause **reverts**. This lets you use `vm.expectRev
 
 ## Production: Ethereum Builders Apply the Result
 
-In production, the [Assertion Enforcer](/credible/assertion-enforcer) validates transactions during block building:
+In production, the [Assertion Enforcer](./assertion-enforcer) validates transactions during block building:
 
 ```mermaid
 flowchart LR
@@ -149,21 +149,21 @@ protocol.withdraw(50);
 // Results in: "Expected 1 assertion to be executed, but 0 were executed"
 ```
 
-To verify trigger behavior against recent real transactions, create a release and review its [automatic platform backtest](/credible/backtesting).
+To verify trigger behavior against recent real transactions, create a release and review its [automatic platform backtest](./backtesting).
 
 ## Related Documentation
 
 <CardGroup cols={2}>
-  <Card title="Testing Assertions" icon="flask" href="/credible/testing-assertions">
+  <Card title="Testing Assertions" icon="flask" href="./testing-assertions">
     Testing patterns
   </Card>
-  <Card title="Triggers" icon="bolt" href="/credible/triggers">
+  <Card title="Triggers" icon="bolt" href="./triggers">
     Production trigger behavior
   </Card>
-  <Card title="Backtesting" icon="clock-rotate-left" href="/credible/backtesting">
+  <Card title="Backtesting" icon="clock-rotate-left" href="./backtesting">
     Review historical findings attached to a platform release
   </Card>
-  <Card title="Troubleshooting" icon="wrench" href="/credible/troubleshooting">
+  <Card title="Troubleshooting" icon="wrench" href="./troubleshooting">
     Common errors
   </Card>
 </CardGroup>

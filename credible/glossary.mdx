@@ -34,7 +34,7 @@ See the [Overview](./credible-introduction).
 ### Assertion
 An executable check of a policy. Use **assertion function** for a particular check and **assertion contract** for the artifact containing functions and trigger registrations. Commands and UI labels may use the shorter “assertion” for that artifact; an **assertion ID** identifies its creation data. A policy can require several checks, and a contract can package several functions.
 
-Learn more: [What are Assertions?](/credible/assertions-overview) | [Writing Your Own Policies](./writing-your-own-policies)
+Learn more: [What are Assertions?](./assertions-overview) | [Writing Your Own Policies](./writing-your-own-policies)
 
 ### Policy
 The intended rule for protocol behavior, including permitted exceptions. Assertion functions implement its checks; a release packages the checks for review and deployment.
@@ -50,17 +50,17 @@ Properties required to hold at specified observation boundaries, such as total a
 ### PhEVM (Phylax EVM)
 The execution environment for assertion checks, with interfaces for inspecting transaction and call snapshots. Production assertions inspect state; mutable fork switching in the Legacy API selects a snapshot and does not authorize changing protocol state.
 
-Learn more: [PhEVM](/credible/phevm)
+Learn more: [PhEVM](./phevm)
 
 ### Assertion DA (Data Availability)
 The offchain service storing assertion artifacts for retrieval and integrity checks. Published artifacts can be inspected; service availability, private platform data, and policy correctness are separate concerns. Enforcers cache artifacts for execution.
 
-Learn more: [Assertion Data Availability](/credible/assertion-da)
+Learn more: [Assertion Data Availability](./assertion-da)
 
 ### State Oracle
 The onchain contract recording assertion adopters, their Protocol Managers, assertion IDs, and activation/deactivation blocks. Its assertion activation windows describe lifecycle timing; they are not the rolling measurement windows used by cumulative-flow breakers.
 
-Learn more: [Credible Layer Contracts](/credible/credible-layer-contracts)
+Learn more: [Credible Layer Contracts](./credible-layer-contracts)
 
 ### Credible Registry
 The on-chain contract that authorizes participating builders and records credible-block markers. It is separate from the State Oracle's assertion assignments and lifecycle state.
@@ -89,7 +89,7 @@ An L2 component responsible for ordering transactions. See [L2 and Sequencer Int
 ### Assertion Enforcer
 The validation component that selects and executes assertions during block production. It can be embedded as a library in the builder or sequencer; a separate sidecar is one deployment pattern. It orchestrates the validation process by identifying relevant assertions, invoking PhEVM to execute them, and returning a validation report. The network integration applies the inclusion policy.
 
-Learn more: [Assertion Enforcer](/credible/assertion-enforcer)
+Learn more: [Assertion Enforcer](./assertion-enforcer)
 
 ### Platform
 The [Phylax platform](https://ethereum.phylax.systems) is the web application interface for interacting with the Credible Layer. It allows protocol teams and end-users to deploy, manage, and view assertions and projects.
@@ -114,7 +114,7 @@ A node is the broader software/deployment term; running a node does not by itsel
 ### Trigger
 A registration that selects an assertion function for execution when relevant transaction activity occurs. Matching a trigger does not itself mean rejection: the selected function evaluates the condition. Register triggers in the assertion contract’s `triggers()` function. Available trigger types and their specification requirements are listed in [Triggers](./triggers).
 
-See the [Cheatcodes Reference](/credible/cheatcodes-reference) for detailed information about different trigger types.
+See the [Cheatcodes Reference](./cheatcodes-reference) for detailed information about different trigger types.
 
 ### Snapshot
 An execution-state view at a specified observation boundary. A Reshiram `ForkId` identifies pre-transaction, post-transaction, pre-call, or post-call state. Constructing it does not switch the state used by ordinary Solidity reads; use the [snapshot APIs](./cheatcodes-reference#forkid).
@@ -127,7 +127,7 @@ Reshiram (V2) uses explicit `ForkId` snapshot reads. Legacy (V1) uses mutable fo
 ### State Changes
 Writes to contract storage during transaction execution. A write trace and the final storage value answer different questions: a value can change and later be restored. State-change APIs expose observations; an assertion interprets them against its policy.
 
-See the [Cheatcodes Reference](/credible/cheatcodes-reference) for state tracking functions.
+See the [Cheatcodes Reference](./cheatcodes-reference) for state tracking functions.
 
 <span id="callstack" />
 
@@ -137,17 +137,17 @@ The recorded calls and their nesting during transaction execution. Use **call tr
 ### Assertion Bytecode
 The compiled form of an assertion contract. Assertion DA stores the deployable artifact; the enforcer loads it for execution in PhEVM. `pcl` is the development CLI, not an execution network.
 
-See the [pcl Reference](/credible/cli-reference) for build and store commands.
+See the [pcl Reference](./cli-reference) for build and store commands.
 
 ### Assertion ID
 An artifact identifier computed as `Keccak256(creation bytecode ++ ABI-encoded constructor arguments)`. It identifies the deployable creation data, not a single assertion function, adopter assignment, or platform release. Use the function selector and execution trace to identify a failing check; use the adopter and activation state to identify where and when the artifact applies.
 
-Learn more: [Assertion Data Availability](/credible/assertion-da#assertion-id)
+Learn more: [Assertion Data Availability](./assertion-da#assertion-id)
 
 ### Assertion DA Prover Signature
 A signature returned by the Assertion DA when an assertion is stored. Deployment uses it to attest to the stored bytecode at signing time; it is not a guarantee of future service availability.
 
-Learn more: [Assertion Data Availability](/credible/assertion-da#assertion-da-prover-signature)
+Learn more: [Assertion Data Availability](./assertion-da#assertion-da-prover-signature)
 
 ### Assertion Adopter
 The contract address to which an assertion is assigned in the State Oracle. APIs and UI fields retain the name **adopter**. It can be a protocol contract or an assertion adapter used by a hook; the check may inspect other contracts as well. Adopter registration alone does not establish guard coverage.
@@ -166,7 +166,7 @@ The API capability selection registered by an assertion: `Legacy` (V1), `Reshira
 ### `pcl`
 The command-line tool for building, testing, and deploying assertions to the Credible Layer.
 
-See the [pcl Reference](/credible/cli-reference) for all available commands.
+See the [pcl Reference](./cli-reference) for all available commands.
 
 ### `phorge`
 The Forge-derived build and test tooling integrated into `pcl` from Phoundry. Use the documented `pcl build` and `pcl test` commands. Phorge is local development tooling; PhEVM is the assertion execution environment used by the enforcer.
@@ -177,17 +177,17 @@ The Phylax smart contract library that provides the base contracts and utilities
 ### Cheatcodes
 PhEVM interfaces for inspecting execution and state snapshots, exposed through `credible-std`. Available operations depend on the assertion specification. Test utilities and production inspection interfaces have different capabilities.
 
-See the [Cheatcodes Reference](/credible/cheatcodes-reference) for a complete list of available cheatcodes and their usage.
+See the [Cheatcodes Reference](./cheatcodes-reference) for a complete list of available cheatcodes and their usage.
 
 ### Test Environment
 For local assertion tests, the `CredibleTest`/`cl` interface used with `pcl test`. It selects an assertion function for the next external call and models rejection as a test revert. State whether “test environment” means this local setup, an Ethereum fork, or the platform's Alerting environment; they establish different evidence.
 
-Learn more about testing assertions in the [Testing Guide](/credible/testing-assertions).
+Learn more about testing assertions in the [Testing Guide](./testing-assertions).
 
 ### Backtesting
 An automatic platform release check that evaluates the release against historical transactions. Read the run’s reported block range to establish its coverage. The result identifies historical transactions that the release would have invalidated so you can review false positives before deployment.
 
-Learn more: [Backtesting](/credible/backtesting)
+Learn more: [Backtesting](./backtesting)
 
 ## Security Features
 
@@ -231,9 +231,9 @@ The platform container for a protocol team's contracts, releases, and review res
 The complete policy set reviewed and deployed together for a project's selected environment. Individual assertions cannot be removed from an active release. Change the set by deploying a replacement release, or remove the whole release.
 
 ### Apply
-The process of creating a release on the platform using `pcl apply`. This command reads your `credible.toml` configuration, compiles assertion contracts, and creates a release. The platform handles storing assertion bytecode in [Assertion DA](/credible/glossary#assertion-da-data-availability) automatically.
+The process of creating a release on the platform using `pcl apply`. This command reads your `credible.toml` configuration, compiles assertion contracts, and creates a release. The platform handles storing assertion bytecode in [Assertion DA](./glossary#assertion-da-data-availability) automatically.
 
-Learn more: [Apply Assertions](/credible/apply-assertions) | [pcl Reference](/credible/cli-reference#apply)
+Learn more: [Apply Assertions](./apply-assertions) | [pcl Reference](./cli-reference#apply)
 
 ### Deployment
 The process of reviewing a release and signing its onchain transaction for the selected Alerting or Production environment. Transaction confirmation and assertion activation are separate: new assertions begin applying after the configured delay.

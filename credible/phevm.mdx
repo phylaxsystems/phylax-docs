@@ -24,14 +24,14 @@ Assertions can compare values across these execution points.
 
 ### Cheatcodes
 
-PhEVM implements special precompiles called [cheatcodes](/credible/glossary#cheatcodes) that provide capabilities beyond standard EVM operations:
+PhEVM implements special precompiles called [cheatcodes](./glossary#cheatcodes) that provide capabilities beyond standard EVM operations:
 
 - **Snapshot reads**: `loadStateAt` with explicit `ForkId` values for pre-transaction, post-transaction, pre-call, and post-call state
 - **Call introspection**: Access to call inputs, call traces, and execution context
 - **State change tracking**: Monitor storage slot modifications during execution
 - **Log access**: Retrieve transaction logs for validation
 
-These cheatcodes are exposed through the [`credible-std`](/credible/credible-std-overview) library and documented in the [Cheatcodes Reference](/credible/cheatcodes-reference).
+These cheatcodes are exposed through the [`credible-std`](./credible-std-overview) library and documented in the [Cheatcodes Reference](./cheatcodes-reference).
 
 ### Off-Chain Execution
 

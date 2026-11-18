@@ -19,11 +19,11 @@ Bound bridge inflow and constrain changes to the configured verifier set. A back
 
 An EVM snapshot does not independently establish source-chain truth. If every comparison trusts the compromised verifier, apparent parity can still be false. A flow cap bounds exposure only for covered assets and paths; it does not authenticate messages.
 
-A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](/credible/testing-strategy) and [Ethereum architecture](/credible/architecture-overview).
+A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](../../credible/testing-strategy) and [Ethereum architecture](../../credible/architecture-overview).
 
 ## Related patterns
 
-Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](/credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
+Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](../../credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
 
 <span id="what-happened" />
 <span id="why-it-matters" />

@@ -96,3 +96,22 @@ The subsequent [glossary disambiguation review](glossary-review.md) evaluates al
 - `git diff --check` passes. Existing accessibility warning: primary/light contrast meets AA (4.83:1), not AAA. The local pnpm version also warns about `packageManagerStrictVersion`.
 - **F25 remains a live verification boundary:** no authenticated platform session, deployment-specific roles/guards, target-enforcer compatibility or production incident replay was exercised. Screenshots and deployment instructions are not certified by source checks or local tests.
 - Linear association remains pending: the owning live search returned HTTP 401; no ticket is inferred.
+
+## PR review follow-up: relative internal links
+
+The reviews on `224fc92` and `353aa0c` identified root-relative Markdown and Card
+links that violated `AGENTS.md`. Converted all 138 remaining root-relative page
+links across 41 MDX pages, covering the reported links and older occurrences.
+Each page retains its catalogued Diátaxis role, prose, destination paths and
+fragments. Regenerated the page and glossary inventories.
+
+Added a repository check for root-relative Markdown links, reference-style links
+and component `href` values. It scans tracked MDX, excludes image asset paths,
+and reports the file and line. Restoring the reviewed cheatcode overview links
+makes the check fail; the corrected tree passes all 26 Node tests. A separate
+comparison confirms all 138 edited destinations and fragments are unchanged.
+Mintlify accessibility and broken-link checks pass, as does `git diff --check`.
+Local `pnpm test` reaches build validation, which cannot download the Mintlify
+client in this sandbox (`requires an internet connection`); hosted build status
+is recorded in the PR. This link correction does not close F25's authenticated
+platform and deployment verification boundary.
