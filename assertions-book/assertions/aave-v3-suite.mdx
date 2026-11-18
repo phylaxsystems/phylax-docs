@@ -30,10 +30,10 @@ The catalog covers accounting, oracle prices, flash loans, and lending-operation
 
 #### Core Invariants
 
-- **[BaseInvariants](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/BaseInvariants.a.sol)** - Cross-transaction accounting validation:
+- **[BaseInvariants](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/BaseInvariants.a.sol)** - Cross-transaction accounting enforcement:
   - Debt token supply consistency across operations
   - AToken supply consistency across operations
-  - Underlying balance invariant validation
+  - Underlying balance invariant enforcement
   - Virtual balance sanity checks
   - Liquidity index integrity verification
 
@@ -41,14 +41,14 @@ The catalog covers accounting, oracle prices, flash loans, and lending-operation
 
 - **[OracleAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/OracleAssertions.a.sol)** - Price consistency checks:
   - Borrow/supply/liquidation price deviation monitoring (5% max)
-  - Price consistency validation across transactions
+  - Price consistency enforcement across transactions
   - Manipulated pricing input detection
 
 #### Flashloan Protection
 
 - **[FlashloanInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/FlashloanInvariantAssertions.a.sol)** - Flashloan security:
   - Repayment verification (amount + fee)
-  - Fee payment validation
+  - Fee payment enforcement
   - Reserve state integrity
 
 #### Log-Based Verification
@@ -59,18 +59,20 @@ The catalog covers accounting, oracle prices, flash loans, and lending-operation
 
 ### Showcase Assertions
 
-#### Operation Validation
+<span id="operation-validation" />
+
+#### Operation Checks
 
 - **[LendingInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/LendingInvariantAssertions.a.sol)** - Standard supply/withdrawal checks:
 
-  - Reserve state validation
+  - Reserve state checks
   - Supply cap enforcement
   - Balance change verification
   - Collateral withdrawal health
 
 - **[LiquidationInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/LiquidationInvariantAssertions.a.sol)** - Standard liquidation checks:
   - Health factor thresholds
-  - Grace period validation
+  - Grace period checks
   - Close factor conditions
   - Deficit accounting
   - Reserve state requirements
@@ -82,9 +84,11 @@ The catalog covers accounting, oracle prices, flash loans, and lending-operation
   - Healthy to unhealthy transition prevention
   - Supply/withdraw/repay health maintenance
 
-#### Basic Validation
+<span id="basic-validation" />
 
-- **[BorrowLogicErrorAssertion](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/BorrowLogicErrorAssertion.a.sol)** - Simple balance validation:
+#### Basic Checks
+
+- **[BorrowLogicErrorAssertion](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/BorrowLogicErrorAssertion.a.sol)** - Simple balance checks:
   - Borrow amount matches underlying balance change
 
 <span id="testing" />

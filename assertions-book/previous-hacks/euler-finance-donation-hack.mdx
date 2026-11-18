@@ -1,30 +1,72 @@
 ---
 title: "Euler Donation and Account Health"
-description: "Historical mechanism, candidate policy, and evidence limits for Euler Donation and Account Health"
+description: "Attack mechanism and inline Reshiram assertion example for Euler Donation and Account Health"
 ---
 
-This case explains the failure mechanism and the policy boundary it suggests.
-
-**Risk domain:** Solvency and operation results. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
-
-## What the source establishes
+## What Happened
 
 CertiK’s analysis describes the March 13, 2023 Euler exploit as combining leveraged positions, `donateToReserves` without a health check, and liquidation mechanics. The reported approximately $197 million exploit amount is distinct from later recovery valuations. [CertiK incident analysis](https://www.certik.com/blog/euler-finance-incident-analysis).
 
-## Candidate policy
+## Attack Mechanism
 
-Apply a protocol-specific solvency condition after every operation that can reduce backing or increase debt, including donations. Validate liquidation outcomes as a separate operation with its own allowed transitions.
+Euler allowed users to create leveraged positions by minting matched deposit and debt exposure. `donateToReserves` then reduced the user's collateral without running the account health check that normally constrained borrowing and withdrawals.
 
-## Coverage and limitations
+The attack used a violator account and a liquidator account:
 
-A generic rule requiring every account to stay healthy would block legitimate liquidations of already unhealthy accounts. Define which account, valuation, boundary, and authorized transition the policy covers. Checking only ordinary borrow calls leaves donation paths uncovered.
+1. Build a leveraged deposit/debt position using flash-borrowed funds.
+2. Donate collateral to reserves, making the violator unhealthy.
+3. Liquidate that position from the second account at a discount.
+4. Extract collateral while leaving bad debt with the violator.
 
-A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](../../credible/testing-strategy) and [Ethereum architecture](../../credible/architecture-overview).
+A transaction-end-only test can inspect the wrong state: liquidation has already changed both accounts. The example checks health at the donation's post-call snapshot, before a later liquidation can obscure the unsafe transition.
 
-## Related patterns
+There is no `getModifiedAccounts` cheatcode. The donating account is derived from each call's caller and Euler subaccount ID, using Euler's XOR subaccount convention, then queried through the Exec liquidity view.
 
-Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](../../credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
+## Assertion Example
 
-<span id="what-happened" />
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
+
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+/// @notice Check the donating subaccount before liquidation can hide the unsafe transition.
+contract EulerDonationHealth is Assertion {
+    address public immutable exec;
+    bytes4 constant DONATE = bytes4(keccak256("donateToReserves(uint256,uint256)"));
+    constructor(address exec_) {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+        require(exec_ != address(0), "Invalid exec"); exec = exec_;
+    }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(ph.getAssertionAdopter(), DONATE);
+        for (uint256 i; i < calls.length; ++i) {
+            (uint256 subAccountId,) = abi.decode(calls[i].input, (uint256, uint256));
+            require(subAccountId < 256, "Invalid subaccount");
+            address account = address(uint160(calls[i].caller) ^ uint160(subAccountId));
+            (uint256 collateral, uint256 liability,,) = abi.decode(read(exec,
+                abi.encodeWithSignature("liquidity(address)", account), _postCall(calls[i].id)),
+                (uint256, uint256, uint256, bool));
+            require(collateral >= liability, "Donation leaves unsafe debt");
+        }
+    }
+
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
+    }
+}
+```
+
+## What This Check Covers
+
+The example covers the donating subaccount for the selected eToken and requires the corresponding Euler Exec address. It does not claim protocol-wide account discovery or enforce liquidation incentives. Different subaccount layouts, deferred liquidity checks, price sources, and other debt-increasing operations need their own coverage.
+
 <span id="assertion-pattern" />
 <span id="additional-considerations" />

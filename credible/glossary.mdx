@@ -75,7 +75,7 @@ An on-chain check restricting protected operations to credible blocks while its 
 The transaction submission route to participating builders. Routing is separate from guard enforcement and does not itself guarantee inclusion or assertion success.
 
 ### Fail-open
-A condition that relaxes a guard's requirement for a credible block to preserve availability. Transactions may then execute without mandatory assertion validation, while existing protocol checks remain active. Participating builders can continue enforcing assertions.
+A condition that relaxes a guard's requirement for a credible block to preserve availability. Transactions may then execute without mandatory assertion enforcement, while existing protocol checks remain active. Participating builders can continue enforcing assertions.
 
 ### Protocol Manager
 The address authorized to manage assertion lifecycle for registered contracts through the State Oracle. This authority is distinct from platform membership, transaction submission, and protocol upgrade permissions.
@@ -87,7 +87,7 @@ A component that selects and orders candidate transactions into blocks. A partic
 An L2 component responsible for ordering transactions. See [L2 and Sequencer Integrations](./l2-integrations/overview) for its separate assertion-enforcement model.
 
 ### Assertion Enforcer
-The validation component that selects and executes assertions during block production. It can be embedded as a library in the builder or sequencer; a separate sidecar is one deployment pattern. It orchestrates the validation process by identifying relevant assertions, invoking PhEVM to execute them, and returning a validation report. The network integration applies the inclusion policy.
+The enforcement component that selects and executes assertions during block production. It can be embedded as a library in the builder or sequencer; a separate sidecar is one deployment pattern. It orchestrates the enforcement process by identifying relevant assertions, invoking PhEVM to execute them, and returning an assertion result. The network integration applies the inclusion policy.
 
 Learn more: [Assertion Enforcer](./assertion-enforcer)
 
@@ -98,7 +98,7 @@ The [Phylax platform](https://ethereum.phylax.systems) is the web application in
 A public view of a small selection of featured projects. Where available, project pages show protected contracts, circuit-breaker summaries, operational authority, and supporting evidence. Detailed project information and transaction replays remain subject to access permissions.
 
 ### Sidecar
-A separate process or service that runs alongside the node. A separate-service integration delegates assertion validation to a sidecar. This is not a requirement of the Assertion Enforcer; an embedded integration runs validation within the node's block-building pipeline.
+A separate process or service that runs alongside the node. A separate-service integration delegates assertion enforcement to a sidecar. This is not a requirement of the Assertion Enforcer; an embedded integration runs enforcement within the node's block-building pipeline.
 
 See [Architecture](./architecture-overview#how-the-credible-layer-works) for implementation details.
 
@@ -198,7 +198,7 @@ Learn more: [Backtesting](./backtesting)
 ## Security Features
 
 ### Off-chain Execution
-Assertion validation performed outside Ethereum consensus execution. It still uses compute and an assertion gas budget. Assertion gas is separate from the onchain gas used by protocol calls, guards, and credible-block markers.
+Assertion enforcement performed outside Ethereum consensus execution. It still uses compute and an assertion gas budget. Assertion gas is separate from the onchain gas used by protocol calls, guards, and credible-block markers.
 
 ### Forced Inclusion Transactions
 L2 transaction paths with protocol-level inclusion rules, such as L1-to-L2 deposits or delayed queues. Their assertion handling belongs to the [L2 integration policy](./l2-integrations/network-integration#transaction-source-coverage), not Ethereum builder routing.
@@ -215,12 +215,12 @@ The ability to inspect the rules and registry state behind a protocol's Credible
 ## Prevention
 
 ### Invalidation
-A reported failure of assertion validation for a candidate or replayed transaction. Inspect the reason: a configured policy condition can fail, but an execution failure such as `OutOfGas` can also invalidate a candidate without establishing that condition. Production enforcement excludes invalidated candidates at the integrated boundary; Alerting and simulation record results without blocking the live transaction. An invalidation is not proof of an attack or of a live prevention.
+A reported assertion failure for a candidate or replayed transaction. Inspect the reason: a configured policy condition can fail, but an execution failure such as `OutOfGas` can also invalidate a candidate without establishing that condition. Production enforcement excludes invalidated candidates at the integrated boundary; Alerting and simulation record results without blocking the live transaction. An invalidation is not proof of an attack or of a live prevention.
 
 Learn more: [Investigate an Invalidation](./investigate-rejected-transaction)
 
 ### Revert
-An EVM execution failure. An assertion revert occurs off-chain during validation and can cause builder exclusion. A guard revert occurs in the protocol execution path; if included on-chain, the transaction consumes gas. A caller may catch a subcall revert, depending on its code.
+An EVM execution failure. An assertion revert occurs off-chain during assertion execution and can cause builder exclusion. A guard revert occurs in the protocol execution path; if included on-chain, the transaction consumes gas. A caller may catch a subcall revert, depending on its code.
 
 ### Drop
 Exclusion of a candidate transaction by a participating builder before inclusion. Exclusion itself consumes no onchain execution gas and does not establish that every other builder rejected the transaction. This differs from an included transaction reverting at a guard.

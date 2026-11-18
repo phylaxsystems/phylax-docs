@@ -7,10 +7,6 @@ description: "Reference for credible-std contracts, helpers, specs, and testing 
 
 For individual cheatcode signatures, see the [Cheatcodes API Reference](./cheatcodes-reference). For local assertion tests, see [Testing Assertions](./testing-assertions).
 
-<Note>
-Choose the assertion specification supported by your target Ethereum deployment. Reshiram (V2) helpers require V2 support in the enforcer; a local test passing does not establish deployment compatibility. Linea-specific compatibility requirements are documented in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
-</Note>
-
 ## Package and Configuration
 
 This reference follows [source revision `fe49de6`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0). Pin your dependency; a Solidity interface in the library does not establish support in your CLI or deployed enforcer.
@@ -184,9 +180,16 @@ function _matchingCalls(address target, bytes4 selector, uint256 limit)
 
 Use `_matchingCalls` when an assertion needs a bounded list of successful calls to a target selector.
 
-## Assertion Spec Helper
+<span id="assertion-spec-helper" />
 
-Register the desired assertion spec in the constructor:
+## Assertion Specifications
+
+The assertion specification selects the PhEVM APIs available to an assertion. It applies to Ethereum builders, L2 sequencers, and local tests; it is independent of which platform UI manages the release.
+
+- **Legacy (V1)** uses the original precompile set, including mutable `forkPreTx`, `forkPostTx`, and call-level fork switching.
+- **Reshiram (V2)** uses explicit `ForkId` values with `loadStateAt` and `staticcallAt`. Constructing a `ForkId` does not change the state used by ordinary Solidity getter calls.
+
+Register the desired specification in the assertion constructor:
 
 ```solidity
 import {AssertionSpec} from "credible-std/SpecRecorder.sol";
@@ -203,6 +206,14 @@ Available specs:
 | `Legacy` | Standard launch precompile set. |
 | `Reshiram` | Newer precompile set with explicit snapshot access and legacy-only fork-switching selectors disabled. |
 | `Experimental` | Unrestricted access to all available precompiles. May include untested or dangerous behavior. |
+
+### Deployment Compatibility
+
+Match the assertion's specification to the target enforcer and the CLI/runtime used for tests. A library exposing an API or a local test passing does not establish that a deployed enforcer supports it. Confirm the target runtime revision, accepted specification, required precompiles, and trigger support before activation. This requirement applies to both Ethereum and L2 integrations.
+
+For a Legacy-to-Reshiram migration, replace every mutable fork switch **and the reads that follow it**. Use `loadStateAt` for storage and `staticcallAt` or the inherited snapshot helpers for getters. Update trigger registration and test transaction, call, and temporary-change boundaries. Adding `registerAssertionSpec(AssertionSpec.Reshiram)` alone does not migrate the implementation.
+
+[L2 runtime compatibility](./l2-integrations/platform-and-compatibility#l2-runtime-compatibility) covers the requirements to confirm for a sequencer deployment.
 
 ## Testing Contracts
 

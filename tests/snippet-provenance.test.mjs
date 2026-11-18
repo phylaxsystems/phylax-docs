@@ -21,3 +21,14 @@ test('observation snippet matches the compiled local fixture', () => {
   const snippet = readFileSync(new URL('../snippets/docs-observation-assertions.mdx', import.meta.url), 'utf8');
   assert.equal(snippet, `\`\`\`solidity\n${source}\n\`\`\`\n`);
 });
+
+test('case studies display the complete local Reshiram source inline', () => {
+  const cases = JSON.parse(readFileSync(new URL('examples/docs/case-pages.json', root), 'utf8'));
+  for (const [page, sourcePath] of Object.entries(cases)) {
+    const source = readFileSync(new URL(sourcePath, root), 'utf8').trimEnd();
+    const pageText = readFileSync(new URL(page, root), 'utf8');
+    assert.ok(pageText.includes(`\`\`\`solidity\n${source}\n\`\`\``), page);
+    assert.match(source, /registerAssertionSpec\(AssertionSpec.Reshiram\)/, sourcePath);
+    assert.doesNotMatch(source, /\bph\.fork(?:Pre|Post)(?:Tx|Call)\(/, sourcePath);
+  }
+});

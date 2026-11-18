@@ -1,31 +1,66 @@
 ---
 title: "UxLink Multisig Compromise"
-description: "Historical mechanism, candidate policy, and evidence limits for UxLink Multisig Compromise"
+description: "Attack mechanism and inline Reshiram assertion example for UxLink Multisig Compromise"
 ---
 
-This case explains the failure mechanism and the policy boundary it suggests.
-
-**Risk domain:** Authority and configuration. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
-
-## What the source establishes
+## What Happened
 
 Blockscope’s September 2025 investigation traces a compromised multisig, privileged delegatecalls, and unauthorized token minting. Its loss estimate includes a different scope from early stolen-asset estimates. This page does not add stolen assets and the notional value of minted tokens into a single loss figure. [Blockscope investigation](https://research.blockscope.co/uxlink-exploit-analysis).
 
-## Candidate policy
+## Attack Mechanism
 
-Constrain the owner set, threshold, modules, fallback handler, and implementation as a configuration graph. Apply separate limits to privileged minting and asset movement.
+Compromise of multisig authority gave the attacker a route to privileged execution. Changes to owners and signing threshold could make that control persistent, while delegatecalls could reach storage without using the expected owner-management functions. Authority over token administration then enabled unauthorized minting as well as treasury extraction.
 
-## Coverage and limitations
+A policy that watches only `changeThreshold` or `addOwnerWithThreshold` misses alternate write paths. The example therefore reads the resulting Safe configuration: the threshold must meet a minimum, and every owner must belong to a configured approved set.
 
-A fixed minimum threshold alone permits replacement of all signers. A cooldown must have a trustworthy recorded baseline and upgrade path. A compromised policy administrator may be able to remove the control; that authority belongs in the threat model.
+For a minimum of two signers, a final threshold of one fails even if an approved owner requested it. Replacing an owner with an unapproved address also fails, even when the threshold stays at two.
 
-A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](../../credible/testing-strategy) and [Ethereum architecture](../../credible/architecture-overview).
+## Assertion Example
 
-## Related patterns
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
 
-Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](../../credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
-<span id="what-happened" />
+/// @notice Enforce a minimum threshold and approved owner set at transaction end.
+contract SafeConfiguration is Assertion {
+    uint256 public immutable minimum;
+    mapping(address => bool) public allowed;
+    constructor(uint256 minimum_, address[] memory owners) {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+        require(minimum_ > 0 && minimum_ <= owners.length, "Invalid minimum");
+        minimum = minimum_;
+        for (uint256 i; i < owners.length; ++i) {
+            require(owners[i] != address(0) && !allowed[owners[i]], "Invalid owner");
+            allowed[owners[i]] = true;
+        }
+    }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address safe = ph.getAssertionAdopter();
+        uint256 threshold = abi.decode(read(safe, abi.encodeWithSignature("getThreshold()"), _postTx()), (uint256));
+        address[] memory owners = abi.decode(read(safe, abi.encodeWithSignature("getOwners()"), _postTx()), (address[]));
+        require(threshold >= minimum && threshold <= owners.length, "Unsafe threshold");
+        for (uint256 i; i < owners.length; ++i) require(allowed[owners[i]], "Unapproved owner");
+    }
+
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
+    }
+}
+```
+
+## What This Check Covers
+
+This is a transaction-end configuration rule. It does not detect temporary changes restored in the same transaction, block transfers signed by compromised but still approved owners, or constrain minting by itself. Add separate implementation, module, and asset policies for those paths; test legitimate owner rotation against the approved set.
+
 <span id="why-it-worked" />
 <span id="attack-analysis" />
 <span id="attack-sequence" />

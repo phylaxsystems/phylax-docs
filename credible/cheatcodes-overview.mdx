@@ -30,7 +30,7 @@ Use cheatcodes when a policy needs execution history or state from another snaps
 Read only the snapshots needed by the policy. Specify whether “pre-state” and “post-state” refer to the transaction or the matched call; a transaction-end comparison can miss an intermediate change that was later restored.
 
 <Note>
-Choose the assertion specification supported by your target Ethereum deployment. Reshiram (V2) helpers require V2 support in the enforcer; a local test passing does not establish deployment compatibility. Linea-specific compatibility requirements are documented in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
+Choose the assertion specification supported by your target deployment. Reshiram (V2) helpers require V2 support in the enforcer; a local test passing does not establish deployment compatibility. See [Assertion Specifications](./credible-std-overview#assertion-specifications) for shared registration and deployment requirements.
 </Note>
 
 Prefer Reshiram snapshot reads for new assertions. Use explicit `PhEvm.ForkId` values with `ph.loadStateAt()` for transaction-wide comparisons, or `ph.context()` with call-scoped `ForkId` values inside an `onFnCall` assertion.

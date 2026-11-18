@@ -8,7 +8,7 @@ Ethereum enforcement depends on participating builders, valid block markers, and
 ## Enforcement Scope
 
 - **Deterministic checks**: the same assertion, execution context, and state produce the same result.
-- **Validation before inclusion**: the enforcer reports failures before inclusion; the enforcing integration excludes those candidate transactions.
+- **Enforcement before inclusion**: the enforcer reports failures before inclusion; the enforcing integration excludes those candidate transactions.
 - **Assertion-defined coverage**: rules protect only the behavior their logic and triggers capture. Passing a rule is not proof of safety against other failures.
 - **Configured lifecycle**: the State Oracle determines assertion assignments and activation or removal times.
 - **Execution-path coverage**: every protected Ethereum operation must reach the guard, regardless of its submitter or entry point.
@@ -19,11 +19,11 @@ For the separate sequencer inclusion boundary, see [L2 and Sequencer Integration
 
 ## Decentralized Builders
 
-Assertion validation is not an Ethereum consensus rule. Protected operations need an unavoidable guard. The Credible RPC routes transactions to participating builders but cannot prevent inclusion by other builders.
+Assertion enforcement is not an Ethereum consensus rule. Protected operations need an unavoidable guard. The Credible RPC routes transactions to participating builders but cannot prevent inclusion by other builders.
 
 The model relies on:
 
-- **Authorized builders** validating applicable assertions and marking only blocks they build under that policy.
+- **Authorized builders** enforcing applicable assertions and marking only blocks they build under that policy.
 - **Marker integrity**: the marker is bound to the expected timestamp. The publication design relies on keeping the marker transaction private until the block header is signed and on validators not signing conflicting blocks for the same slot.
 - **Registry administration** controlling builder authorization and any upgrade or emergency powers according to the deployed contracts.
 - **Complete guard coverage**: protected entry points, internal paths, modules, and alternative execution routes must not bypass the intended gate.
@@ -55,7 +55,7 @@ A block-gap fallback does not necessarily resolve false positives. Builders may 
 
 Each integration should define:
 
-- How missing assertion artifacts, validation errors, timeouts, and overloaded workers affect inclusion.
+- How missing assertion artifacts, enforcement errors, timeouts, and overloaded workers affect inclusion.
 - Which operations remain available during degraded service and which protections are relaxed.
 - Who can change rules, guards, and recovery settings, and how those changes are monitored.
 - How excluded transactions are reported, reconciled, and retried by submitters.
@@ -65,7 +65,7 @@ Each integration should define:
 
 Review deployed contract paths, active policies, and administrative powers to assess coverage. Public code and registry state alone do not establish it. Project permissions control access to private invalidation data.
 
-Assertion DA and local caches supply the bytecode used by enforcers. Integrations need defined behavior when artifacts cannot be prepared or validation cannot complete; hot-path validation should not depend on a live artifact fetch.
+Assertion DA and local caches supply the bytecode used by enforcers. Integrations need defined behavior when artifacts cannot be prepared or enforcement cannot complete; hot-path enforcement should not depend on a live artifact fetch.
 
 Local tests, release backtesting, and alerting provide evidence about rule behavior. End-to-end guard, routing, and recovery tests establish different parts of the integration. Audit reports apply to their stated revision and scope, not automatically to later changes or protocol-specific wiring.
 

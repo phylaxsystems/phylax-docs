@@ -44,6 +44,6 @@ jobs:
           tar -xzf "pcl-${PCL_VERSION}-linux-x86_64.tar.gz"
           sudo install -m 0755 pcl/pcl /usr/local/bin/pcl
           pcl --version
-      - name: Test the displayed observation examples
+      - name: Test the displayed assertion examples
         working-directory: examples/docs
         run: pcl test

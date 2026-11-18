@@ -1,30 +1,62 @@
 ---
 title: "Radiant Capital Ownership Takeover"
-description: "Historical mechanism, candidate policy, and evidence limits for Radiant Capital Ownership Takeover"
+description: "Attack mechanism and inline Reshiram assertion example for Radiant Capital Ownership Takeover"
 ---
 
-This case explains the failure mechanism and the policy boundary it suggests.
-
-**Risk domain:** Authority and configuration. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
-
-## What the source establishes
+## What Happened
 
 Radiant’s reimbursement proposal identifies the October 16, 2024 multisig exploit as causing over $50 million in losses. The case concerns compromised authorization and subsequent control of protocol assets, rather than a mathematical error in lending accounting. [Radiant reimbursement proposal](https://community.radiant.capital/t/feedback-101-deploying-merged-claim-contracts-for-radiant-depositor-reimbursement/1936).
 
-## Candidate policy
+## Attack Mechanism
 
-Lock the configured owner and administrator slots outside an authorized change process, and constrain the operations or outflows those roles can initiate.
+The attacker obtained enough signing authority to approve changes to Radiant's lending-pool administration. Once control moved, the attacker could redirect protocol behavior and move assets. The lending arithmetic did not have to fail: the transaction was dangerous because it changed who controlled the contracts.
 
-## Coverage and limitations
+The relevant authority has several parts. The addresses provider has an owner, a pool admin, and an emergency admin. Protecting only `owner()` leaves the other roles outside the rule. The assertion below compares all three roles before and after the transaction, using explicit Reshiram snapshot calls.
 
-A correct signature can authorize a malicious change. The assertion update authority, allowed migrations, proxy layout, and all relevant control slots must be specified. Checking one owner slot does not protect every administrative path.
+A legitimate administration transfer also changes these values. A freeze policy therefore requires a planned policy update before a legitimate transfer; an allowlist policy is an alternative when transfers to known successors should remain possible.
 
-A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](../../credible/testing-strategy) and [Ethereum architecture](../../credible/architecture-overview).
+## Assertion Example
 
-## Related patterns
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
 
-Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](../../credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
-<span id="what-happened" />
+/// @notice Freeze the provider's owner, pool admin, and emergency admin at transaction boundaries.
+contract RadiantAuthority is Assertion {
+    constructor() { registerAssertionSpec(AssertionSpec.Reshiram); }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address provider = ph.getAssertionAdopter();
+        bytes[3] memory getters = [abi.encodeWithSignature("owner()"),
+            abi.encodeWithSignature("getPoolAdmin()"), abi.encodeWithSignature("getEmergencyAdmin()")];
+        for (uint256 i; i < getters.length; ++i) {
+            address beforeRole = abi.decode(read(provider, getters[i], _preTx()), (address));
+            address afterRole = abi.decode(read(provider, getters[i], _postTx()), (address));
+            require(beforeRole == afterRole, "Authority changed");
+        }
+    }
+
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
+    }
+}
+```
+
+## What This Check Covers
+
+Attach this check to the addresses provider that owns these getters. It rejects a lasting role change; it does not detect a role changed and restored within one transaction, implementation upgrades that preserve the roles, or transfers already available to an unchanged authorized signer.
+
 <span id="why-this-matters" />
 <span id="assertion-pattern" />
+
+## Further Sources
+
+- [Rekt](https://rekt.news/radiant-capital-rekt2/)

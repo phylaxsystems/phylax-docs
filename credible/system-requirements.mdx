@@ -30,10 +30,10 @@ Use fast local (not networked) SSDs to keep I/O latency low. Budget for sustaine
 
 ### Networking
 
-For an embedded library, validation does not require a separate network hop from the builder. If maintaining a separate validation service, measure round-trip latency and state-transfer costs within the block-production budget.
+For an embedded library, enforcement does not require a separate network hop from the builder. If maintaining a separate enforcement service, measure round-trip latency and state-transfer costs within the block-production budget.
 
 **Key requirements:**
-- For a separate service, a low-latency link between the node and validation workers
+- For a separate service, a low-latency link between the node and enforcement workers
 - Prefer private networking; avoid routing over the public internet
 - Stable egress to the chain RPC and Assertion DA service
 

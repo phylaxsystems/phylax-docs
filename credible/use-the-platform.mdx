@@ -9,7 +9,7 @@ Use the [Phylax platform](https://ethereum.phylax.systems) to review the work pr
 
 Ask your FDE or project admin for access. Have the target contracts and approved policies available for review.
 
-For signing deployments, you need an [assigned Protocol Manager](./assign-protocol-manager). You can review a prepared release with project access; that access alone does not grant deployment authority.
+Project access lets you review a prepared release; it does not grant signing authority. Assign the Protocol Manager before creating a release, as described below.
 
 ## 1. Open Your Project
 
@@ -18,6 +18,8 @@ Sign in to [ethereum.phylax.systems](https://ethereum.phylax.systems). Open your
 If needed, [create the project](./deploy-assertions-dapp#step-2-create-a-project) with your FDE.
 
 ## 2. Review a Release
+
+Before release creation, [assign the Protocol Manager](./assign-protocol-manager) and confirm the signing account. Project creation itself does not require manager assignment.
 
 Your FDE or developer prepares a release with [`pcl apply`](./apply-assertions). Open it under **Releases**.
 

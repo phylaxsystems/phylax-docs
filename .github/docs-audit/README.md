@@ -46,7 +46,7 @@ The subsequent [glossary disambiguation review](glossary-review.md) evaluates al
 | ID | Priority | Finding | Status | Resolution or evidence boundary |
 | --- | --- | --- | --- | --- |
 | F01 | P1 | Enforcer role is conflated with a sidecar deployment | Addressed | Define the enforcer by its role; describe embedded integration and scope operator sizing. Deployment support remains subject to runtime verification. |
-| F02 | P1 | OP Stack / Rollup-Boost remains active guidance | Addressed | Remove OP Stack from active navigation; retain a retirement page and section bookmarks. Mark earlier Linea design historical. |
+| F02 | P1 | OP Stack / Rollup-Boost remains active guidance | Addressed | Keep L2 integration planning and compatibility separate from Ethereum guidance; retain the OP Stack route and describe the Besu integration design without historical labels. |
 | F03 | P1 | Capability mappings still deny supported snapshots and key discovery | Addressed | Correct snapshot and mapping-key limitations; put supported key discovery alongside other capabilities. Example compilability is tracked as F27. |
 | F04 | P1 | KiloEx recommends an example documented as defective | Addressed | Replace the defective displayed ass28 with an explicit post-call snapshot fixture, including excursion-and-restoration rejection tests. KiloEx links to the candidate mechanism without claiming a replay or demonstrated prevention. |
 | F05 | P1 | Bybit balance example creates snapshots but never uses them | Addressed | Remove the defective Bybit balance fragment and align state-inspection prose. A tested native-balance replacement is separate work. |
@@ -79,7 +79,7 @@ The subsequent [glossary disambiguation review](glossary-review.md) evaluates al
 | --- | --- |
 | Every source page catalogued | 116 unique rows; current navigation, glossary, redirects and all 25 snippets inventoried. Regeneration checks coverage and import hashes. |
 | Diátaxis applied | Tutorials have managed local paths; references describe APIs and catalogs; release how-tos link to one canonical procedure; incident cases explain source evidence and tradeoffs. |
-| Consistent taxonomy | Shared policy/assertion/release definitions, separate risk/mechanism/status facets, and explicit operator/historical navigation. |
+| Consistent taxonomy | Shared policy/assertion/release definitions, separate risk/mechanism/status facets, and explicit Ethereum/L2 operator navigation. |
 | Current guidance | PCL 1.9.0 help/assets checked; library/compiler pins and import provenance recorded; snapshots/log queries corrected; all 19 case studies source-reviewed. Unsupported service defaults removed. |
 | Readability | Concise case-study structure, searchable command/API reference, clear task titles and selection tables; duplicate release instructions removed. Rendering results are recorded below. |
 
@@ -123,3 +123,7 @@ The [November 18 Diátaxis journey review](journey-review.md) records three furt
 ## Follow-up: ten consistency and coherence passes
 
 The [ten-pass review](ten-pass-coherence-review.md) records the requested review of page roles, observation semantics, enforcement modes, release handoffs, learner/author/operator journeys, diagrams, catalog facets and final cross-page consistency. It distinguishes completed source corrections from unverified rendering and live deployment behavior.
+
+## Follow-up: restore useful content and address customer review
+
+The [content-restoration review](content-restoration-review.md) records the restored inline case-study examples, updated workflows, requested overview reverts, current test results, and three remaining cases where an inline example would better answer the reader. It supersedes earlier recommendations to remove case-study implementations or label L2 integration designs historical.

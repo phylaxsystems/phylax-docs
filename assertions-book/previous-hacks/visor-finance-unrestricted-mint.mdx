@@ -1,29 +1,81 @@
 ---
 title: "Visor Unbacked Share Minting"
-description: "Historical mechanism, candidate policy, and evidence limits for Visor Unbacked Share Minting"
+description: "Attack mechanism and inline Reshiram assertion example for Visor Unbacked Share Minting"
 ---
 
-This case explains the failure mechanism and the policy boundary it suggests.
-
-**Risk domain:** Solvency and operation results. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
-
-## What the source establishes
+## What Happened
 
 The DeFiHackLabs reproduction supplies an attacker-controlled `from` contract whose `owner` returns the attacker and whose `delegatedTransferERC20` does nothing. It calls RewardsHypervisor’s deposit operation to demonstrate the unbacked-mint path. A successful call to an attacker-controlled transfer implementation is not evidence that VISR arrived in custody. [Pinned DeFiHackLabs reproduction](https://github.com/SunWeb3Sec/DeFiHackLabs/blob/33de12241db1019e1516f6740fd19c7b5e3b003c/src/test/2021-12/Visor_exp.sol).
 
-## Candidate policy
+## Attack Mechanism
 
-Compare the actual custody-token balance increase with shares minted at each deposit boundary, using the pre-deposit asset and supply basis and the intended rounding rule.
+The deposit path trusted a caller-supplied contract to transfer VISR into custody through `delegatedTransferERC20`. An attacker-controlled contract could return the expected owner and make that transfer function a no-op. The call succeeded, but no underlying tokens arrived; the protocol still minted reward shares.
 
-## Coverage and limitations
+The relevant evidence is the custody balance, not the success of the external call. When a deposit mints shares, the asset balance must increase and existing holders' backing per share must not fall.
 
-An arbitrary callback can return successfully without transferring tokens. Fee-on-transfer assets, rebases, donations, zero supply, and reentrancy require explicit treatment. The external reproduction was inspected, not executed in this review; it contains no Phylax assertion.
+For balances `B` and supply `S`, preserving the pre-deposit ratio means `B_after / S_after >= B_before / S_before`. Cross-multiplication gives `B_after * S_before >= B_before * S_after`. Reversing this inequality would accept dilution—the opposite of the intended protection.
 
-A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](../../credible/testing-strategy) and [Ethereum architecture](../../credible/architecture-overview).
+For example, starting with 100 assets and 100 shares, minting another 100 shares without receiving assets leaves only 0.5 assets per share. The example rejects both the missing asset increase and the dilution.
 
-## Related patterns
+## Assertion Example
 
-Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](../../credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
 
-<span id="what-happened" />
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+/// @notice Enforce non-diluting backing on each deposit(uint256,address,address).
+contract VisorBacking is Assertion {
+    address public immutable asset;
+    address public immutable shares;
+    bytes4 constant DEPOSIT = bytes4(keccak256("deposit(uint256,address,address)"));
+    constructor(address asset_, address shares_) {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+        require(asset_ != address(0) && shares_ != address(0), "Invalid token");
+        asset = asset_; shares = shares_;
+    }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address custody = ph.getAssertionAdopter();
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(custody, DEPOSIT);
+        for (uint256 i; i < calls.length; ++i) {
+            checkDeposit(custody, _preCall(calls[i].id), _postCall(calls[i].id));
+        }
+    }
+    function checkDeposit(address custody, PhEvm.ForkId memory beforeCall, PhEvm.ForkId memory afterCall) internal view {
+        uint256 b0 = balance(custody, beforeCall);
+        uint256 b1 = balance(custody, afterCall);
+        uint256 s0 = supply(beforeCall);
+        uint256 s1 = supply(afterCall);
+        if (s1 <= s0) return;
+        require(b1 > b0, "Mint without backing");
+        // Bounded products fail closed instead of silently overflowing.
+        require(b0 <= type(uint128).max && b1 <= type(uint128).max
+            && s0 <= type(uint128).max && s1 <= type(uint128).max, "Unsupported magnitude");
+        if (s0 != 0) require(b1 * s0 >= b0 * s1, "Share backing diluted");
+    }
+    function balance(address custody, PhEvm.ForkId memory at) internal view returns (uint256) {
+        return abi.decode(read(asset, abi.encodeWithSignature("balanceOf(address)", custody), at), (uint256));
+    }
+    function supply(PhEvm.ForkId memory at) internal view returns (uint256) {
+        return abi.decode(read(shares, abi.encodeWithSignature("totalSupply()"), at), (uint256));
+    }
+
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
+    }
+}
+```
+
+## What This Check Covers
+
+Configure the actual VISR token and reward-share token; the adopter is the deposit/custody contract. The example bounds operands to uint128 before multiplying and rejects larger magnitudes. Initial minting still needs its own exchange-rate rule, and accounting involving assets held outside this custody address needs a different backing calculation.
+
 <span id="assertion-pattern" />

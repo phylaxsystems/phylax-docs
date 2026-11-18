@@ -10,7 +10,7 @@ Modified key discovery returns the keys for entries in a known Solidity mapping 
 **Spec:** V2 Reshiram. **Evidence:** API reference and an illustrative policy; this page's example was not behavior-tested by this documentation review.
 
 <Note>
-Choose the assertion specification supported by your target Ethereum deployment. Reshiram (V2) helpers require V2 support in the enforcer; a local test passing does not establish deployment compatibility. Linea-specific compatibility requirements are documented in [L2 Platform Notes](../l2-integrations/platform-and-compatibility#assertion-specifications).
+Choose the assertion specification supported by your target deployment. Reshiram (V2) helpers require V2 support in the enforcer; a local test passing does not establish deployment compatibility. L2-specific compatibility requirements are documented in [L2 Platform Notes](../l2-integrations/platform-and-compatibility#l2-runtime-compatibility).
 </Note>
 
 ## Interface
@@ -77,6 +77,6 @@ contract ModifiedBalanceAssertion is Assertion {
 
 ## Uses
 
-- Validate limits for every balance or position modified by a transaction.
+- Enforce limits for every balance or position modified by a transaction.
 - Reconcile modified entries against aggregate accounting.
 - Apply field-specific checks to mapping values stored as structs.

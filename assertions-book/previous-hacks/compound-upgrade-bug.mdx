@@ -1,29 +1,65 @@
 ---
 title: "Compound Reward Accrual Upgrade Bug"
-description: "Historical mechanism, candidate policy, and evidence limits for Compound Reward Accrual Upgrade Bug"
+description: "Attack mechanism and inline Reshiram assertion example for Compound Reward Accrual Upgrade Bug"
 ---
 
-This case explains the failure mechanism and the policy boundary it suggests.
-
-**Risk domain:** Accounting and rounding. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
-
-## What the source establishes
+## What Happened
 
 Compound Proposal 65 documents over-accrued COMP introduced by Proposal 62 and the corrective work following Proposal 64. The repair distinguishes unclaimed excess accrual from rewards already claimed. This page does not equate an exposed balance, an accrual error, and realized loss. [Compound Proposal 65](https://hackmd.io/@TylerEther/BkdJGdRVY).
 
-## Candidate policy
+## Attack Mechanism
 
-Bound incremental rewards against configured emission speeds, elapsed blocks, market indices, and account balances at explicit snapshots. Test initialization at the exact index boundary.
+The upgrade changed reward-index initialization. A supplier with an unset index could encounter a market supply index equal to `compInitialIndex` (`1e36`). The affected condition used `supplyIndex > compInitialIndex`, so equality skipped initialization and left the supplier index at zero.
 
-## Coverage and limitations
+```solidity
+// Affected initialization condition; this is protocol code, not an assertion.
+if (supplierIndex == 0 && supplyIndex > compInitialIndex) {
+    supplierIndex = compInitialIndex;
+}
+```
 
-A universal maximum reward amount rejects legitimate accumulated claims. Internal Solidity functions do not have external call frames merely because a selector is constructed for them; attach checks to actual reachable operations or a transaction boundary. Upgrade and correction transactions need explicit treatment.
+The later accrual calculation then used an index difference of roughly `1e36`, rather than the small difference since the supplier's real starting point. The correction had to account for both excess accrual still recorded in storage and rewards already claimed.
 
-A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](../../credible/testing-strategy) and [Ethereum architecture](../../credible/architecture-overview).
+`distributeSupplierComp` is an internal Solidity function, so EVM call-input tracing cannot discover those invocations. The example below limits net COMP leaving a configured rewards treasury in one transaction. It contains the payout even when the faulty internal function has already over-accrued rewards.
 
-## Related patterns
+## Assertion Example
 
-Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](../../credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
 
-<span id="what-happened" />
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+/// @notice Cap net COMP paid from a configured rewards treasury in one transaction.
+contract RewardPayoutLimit is Assertion {
+    address public immutable comp;
+    uint256 public immutable maximum;
+    constructor(address comp_, uint256 maximum_) {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+        require(comp_ != address(0), "Invalid COMP"); comp = comp_; maximum = maximum_;
+    }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        bytes memory query = abi.encodeWithSignature("balanceOf(address)", ph.getAssertionAdopter());
+        uint256 beforeBalance = abi.decode(read(comp, query, _preTx()), (uint256));
+        uint256 afterBalance = abi.decode(read(comp, query, _postTx()), (uint256));
+        if (beforeBalance > afterBalance) require(beforeBalance - afterBalance <= maximum, "Reward payout above cap");
+    }
+
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
+    }
+}
+```
+
+## What This Check Covers
+
+The cap is a policy parameter in COMP base units, not a reconstructed reward schedule. It can reject large legitimate claims and does not fix excess `compAccrued`. Incoming COMP in the same transaction can offset outgoing COMP, so this net-balance cap is weaker than a gross-transfer or cumulative-window policy. Attach it to the paying treasury and test its actual payout paths.
+
 <span id="assertion-pattern" />

@@ -1,29 +1,73 @@
 ---
 title: "Cream Vault-Share Valuation"
-description: "Historical mechanism, candidate policy, and evidence limits for Cream Vault-Share Valuation"
+description: "Attack mechanism and inline Reshiram assertion example for Cream Vault-Share Valuation"
 ---
 
-This case explains the failure mechanism and the policy boundary it suggests.
-
-**Risk domain:** Oracle and valuation. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
-
-## What the source establishes
+## What Happened
 
 Mudit Gupta’s October 28, 2021 analysis describes the prior day’s Cream exploit: leveraged vault-share exposure and a donation changed the vault exchange rate, creating debt beyond the account’s collateral. It reports over $130 million extracted from available lending assets. [Mudit Gupta incident analysis](https://mudit.blog/cream-hack-analysis/).
 
-## Candidate policy
+## Attack Mechanism
 
-Constrain the exchange rate actually consumed in lending decisions and recompute account solvency across affected markets. Treat donations and recursive borrowing as part of the same economic transition.
+The attacker built leveraged exposure to vault shares and then donated underlying assets directly into the vault. The donation increased the vault's assets per share, which increased the collateral value reported to the lending system. Borrowing against that amplified value let the attacker extract other available assets.
 
-## Coverage and limitations
+The amplification matters: a direct donation costs assets, but when the attacker already holds a large leveraged share position, the gain in borrowing capacity can exceed that cost. A price derived from the same manipulable vault balance is not independent collateral evidence.
 
-An event is not a substitute for the consumed oracle value. A fixed donation threshold or two direct reads without snapshot selection does not demonstrate prevention. Legitimate yield, fees, and donated assets require defined treatment.
+Event signatures and layouts differ from function selectors. The example inspects a configured market's borrowing calls and reads its price explicitly around those operations.
 
-A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](../../credible/testing-strategy) and [Ethereum architecture](../../credible/architecture-overview).
+Set `reader` to the deployed price oracle and `query` to the calldata for its market-price getter. Attach the assertion to that market and select `borrow(uint256)`. The pre-call snapshot detects a price raised earlier in the same transaction, even if it is restored after borrowing.
 
-## Related patterns
+## Assertion Example
 
-Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](../../credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
 
-<span id="what-happened" />
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+/// @notice Bound a configured metric before and after every covered operation.
+contract CallMetricBounds is Assertion {
+    address public immutable reader;
+    bytes public query;
+    bytes4 public immutable operation;
+    uint256 public immutable maximumBps;
+    constructor(address reader_, bytes memory query_, bytes4 operation_, uint256 maximumBps_) {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+        require(reader_ != address(0) && query_.length >= 4, "Invalid reader");
+        reader = reader_; query = query_; operation = operation_; maximumBps = maximumBps_;
+    }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address target = ph.getAssertionAdopter();
+        uint256 start = abi.decode(read(reader, query, _preTx()), (uint256));
+        require(start > 0 && start <= type(uint128).max && maximumBps <= 100_000, "Invalid baseline or bound");
+        uint256 allowed = start * maximumBps / 10_000;
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(target, operation);
+        for (uint256 i; i < calls.length; ++i) {
+            within(start, allowed, _preCall(calls[i].id));
+            within(start, allowed, _postCall(calls[i].id));
+        }
+    }
+    function within(uint256 start, uint256 allowed, PhEvm.ForkId memory at) internal view {
+        uint256 value = abi.decode(read(reader, query, at), (uint256));
+        uint256 delta = value >= start ? value - start : start - value;
+        require(delta <= allowed, "Metric outside bound");
+    }
+
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
+    }
+}
+```
+
+## What This Check Covers
+
+Repeat the policy for each affected market. Legitimate vault yield, donations, decimal scales, and stale references affect threshold selection. This bound constrains movement relative to the initial price; it does not prove that either price reflects recoverable collateral.
+
 <span id="assertion-pattern" />

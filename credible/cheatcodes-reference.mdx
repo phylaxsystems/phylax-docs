@@ -16,7 +16,7 @@ Cheatcodes are grouped by API status:
 - **Deprecated cheatcodes**: legacy fork-switching APIs. Do not use them in new assertions.
 
 <Warning>
-Confirm the assertion specification accepted by the target Ethereum enforcer. Reshiram-only precompiles and triggers require V2 support in that deployment; library availability and local tests are not sufficient. Linea-specific compatibility requirements are in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
+Confirm the assertion specification accepted by the target enforcer. Reshiram-only precompiles and triggers require V2 support in that deployment; library availability and local tests are not sufficient. See [Assertion Specifications](./credible-std-overview#assertion-specifications) for shared registration and deployment requirements.
 </Warning>
 
 ## Assertion Specs
@@ -809,7 +809,7 @@ function registerErc20ChangeTrigger(
 
 #### `watchCumulativeOutflow`
 
-Registers a cumulative-flow trigger that collects ERC20 outflow from the assertion adopter into one bucket per block.
+Registers a circuit breaker trigger that collects ERC20 outflow from the assertion adopter into one bucket per block.
 
 ```solidity
 function watchCumulativeOutflow(
@@ -824,7 +824,7 @@ The trigger evaluates the per-block buckets over the configured rolling window. 
 
 #### `watchCumulativeInflow`
 
-Registers a cumulative-flow trigger that collects ERC20 inflow into the assertion adopter into one bucket per block.
+Registers a circuit breaker trigger that collects ERC20 inflow into the assertion adopter into one bucket per block.
 
 ```solidity
 function watchCumulativeInflow(

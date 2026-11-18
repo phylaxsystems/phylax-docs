@@ -1,31 +1,89 @@
 ---
 title: "Bunni Withdrawal Rounding"
-description: "Historical mechanism, candidate policy, and evidence limits for Bunni Withdrawal Rounding"
+description: "Attack mechanism and inline Reshiram assertion example for Bunni Withdrawal Rounding"
 ---
 
-This case explains the failure mechanism and the policy boundary it suggests.
-
-**Risk domain:** Accounting and rounding. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
-
-## What the source establishes
+## What Happened
 
 BlockSec’s analysis describes the September 2, 2025 Bunni exploit as repeated small withdrawals compounding a rounding error into an approximately $8.4 million drain. The affected liquidity calculation and subsequent swaps must be considered together; a single small error is not the complete attack mechanism. [BlockSec incident analysis](https://blocksec.com/blog/bunni-incident-repeated-small-withdrawals-compound-a-rounding-error-into-an-8.4m-drain).
 
-## Candidate policy
+## Attack Mechanism
 
-Check withdrawal accounting against burned shares using the same pre-operation asset and supply basis. Track aggregate error across the batch, with token-specific units and explicit rounding tolerance.
+The withdrawal logic updated the idle balance by subtracting a rounded-down proportional amount. Active balance depended on the remaining accounting, so a rounding choice that appeared conservative for one withdrawal was exploitable when repeated near very small balances.
 
-## Coverage and limitations
+The reported Ethereum sequence first moved the pool into a low-active-balance state, then made many tiny withdrawals. The USDC active balance fell from 28 wei to 4 wei while the burned shares represented only a small fraction of the pool. Subsequent swaps changed which liquidity estimate controlled pricing, allowing the attacker to trade against the distorted liquidity.
 
-A fixed per-call tolerance can itself accumulate into a large loss. Idle balances, active liquidity, fees, supply changes, and downstream pricing must be reconciled. The earlier conceptual fragment did not demonstrate that reconciliation and is not retained as executable guidance.
+The failure was compositional: the initial swaps created a rounding-sensitive state, repeated withdrawals accumulated the error, and later swaps extracted value. A single withdrawal's error does not explain the whole attack.
 
-A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](../../credible/testing-strategy) and [Ethereum architecture](../../credible/architecture-overview).
+The policy below compares each withdrawal's observed active-balance reduction with the reduction expected from burned shares, then adds excess reductions across the transaction. A one-wei allowance applied independently to 44 calls could allow 44 wei of drift; a transaction-wide budget does not reset for each call.
 
-## Related patterns
+The required accounting reader has an explicit interface: at a supplied snapshot it must return `(shareSupply, active0, active1)` for **one selected pool**. That reader must derive active balances from the target Bunni revision, including idle balances and rehypothecated assets. The assertion code is complete, but a Bunni-specific reader is still required; this is not a drop-in Bunni deployment.
 
-Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](../../credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
+## Assertion Example
 
-<span id="what-happened" />
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
+
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+/// @notice Bound cumulative rounding error across covered withdrawals.
+/// @dev The configured reader returns (shareSupply, active0, active1) for one pool.
+contract WithdrawalAccounting is Assertion {
+    struct PoolState { uint256 supply; uint256 active0; uint256 active1; }
+    address public immutable reader;
+    bytes public query;
+    bytes4 public immutable withdrawSelector;
+    uint256 public immutable roundingBudget;
+    constructor(address reader_, bytes memory query_, bytes4 selector_, uint256 budget_) {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+        require(reader_ != address(0) && query_.length >= 4, "Invalid reader");
+        reader = reader_; query = query_; withdrawSelector = selector_; roundingBudget = budget_;
+    }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(ph.getAssertionAdopter(), withdrawSelector);
+        uint256 error0; uint256 error1;
+        for (uint256 i; i < calls.length; ++i) {
+            (uint256 delta0, uint256 delta1) = excess(_preCall(calls[i].id), _postCall(calls[i].id));
+            error0 += delta0; error1 += delta1;
+        }
+        require(error0 <= roundingBudget && error1 <= roundingBudget, "Cumulative withdrawal error");
+    }
+    function excess(PhEvm.ForkId memory beforeCall, PhEvm.ForkId memory afterCall)
+        internal view returns (uint256, uint256)
+    {
+        PoolState memory a = abi.decode(read(reader, query, beforeCall), (PoolState));
+        PoolState memory b = abi.decode(read(reader, query, afterCall), (PoolState));
+        require(a.supply > 0 && b.supply <= a.supply && b.active0 <= a.active0
+            && b.active1 <= a.active1, "Unexpected withdrawal transition");
+        require(a.supply <= type(uint128).max && a.active0 <= type(uint128).max
+            && a.active1 <= type(uint128).max, "Unsupported magnitude");
+        uint256 burned = a.supply - b.supply;
+        uint256 expected0 = a.active0 * burned / a.supply;
+        uint256 expected1 = a.active1 * burned / a.supply;
+        uint256 removed0 = a.active0 - b.active0;
+        uint256 removed1 = a.active1 - b.active1;
+        return (removed0 > expected0 ? removed0 - expected0 : 0,
+            removed1 > expected1 ? removed1 - expected1 : 0);
+    }
+
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
+    }
+}
+```
+
+## What This Check Covers
+
+Use token-specific base-unit budgets; the example uses one budget for both assets for clarity. Only withdrawals for the reader's selected pool may enter this calculation. Nested withdrawals can double-count changes, and swaps or fee realization inside withdrawals require a richer model. Test the full swap–withdraw–swap sequence as well as individual rounding boundaries.
+
 <span id="why-it-worked" />
 <span id="attack-execution" />
 <span id="step-1-swap-with-flashloaned-funds" />

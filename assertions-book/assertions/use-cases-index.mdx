@@ -99,9 +99,11 @@ For production preparation, follow [Ethereum assertion testing](../../credible/t
 | Dispatch mechanism | When the runtime invokes the assertion | [Triggers](../../credible/triggers); [anomaly gating](./anomaly-gated-policies) is a dispatch choice, not a separate risk domain |
 | Specification | APIs the assertion requests | [Legacy, Reshiram, and Experimental](../../credible/cheatcodes-reference#assertion-specs) |
 | Adaptation requirements | Contract-specific configuration, source corrections, or experimental components | The correction table above and limitations in each entry |
-| Evidence | Source review, compilation, local behavior tests, exploit replay, or live enforcement | The entry's stated validation; one level does not imply another |
+| Evidence | Source review, compilation, local behavior tests, exploit replay, or live enforcement | The entry's stated evidence; one level does not imply another |
 
 Imported Book sources compile at the pinned revision, but most are not individually behavior-tested by this documentation review. The ownership tutorial and local observation fixtures identify their executed tests. The Aave fork and Optimism FMA suite are source catalogs, not suites executed in this review; their links follow moving branches rather than pinned tested releases. Aave includes intentional defects and mock contracts. Verify the assertion specification per contract in those forks. Read limitations before copying an example.
 
 <span id="start-with-a-working-example" />
 <span id="oracle-and-liquidation-examples-that-need-correction" />
+
+The hack case studies include inline Reshiram implementations, mirrored in `examples/docs/src/cases` for compilation and testing. All 13 restored implementations compile against the pinned library, and 38 synthetic case-study tests pass under PCL 1.9.0. These tests check the displayed policies against local fixtures; they do not establish compatibility with a deployed protocol or replay the incidents. Their source and evidence are separate from the imported Book sources above.

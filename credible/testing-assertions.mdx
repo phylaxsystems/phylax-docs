@@ -150,7 +150,7 @@ See the [credible-std examples](https://github.com/phylaxsystems/credible-std/tr
 
 Assertion execution has a runtime-configured gas budget. Obtain the active budget from the deployment operator and test the maximum expected workload against it; do not infer it from the local EVM block gas limit.
 
-Exceeding the limit causes `OutOfGas` and invalidates the candidate, even if the intended policy condition would pass. This prevents attackers from bypassing validation through expensive inputs. Test the maximum expected workload.
+Exceeding the limit causes `OutOfGas` and invalidates the candidate, even if the intended policy condition would pass. This prevents attackers from bypassing enforcement through expensive inputs. Test the maximum expected workload.
 
 ### The Happy Path Problem
 

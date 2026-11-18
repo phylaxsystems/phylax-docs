@@ -1,31 +1,31 @@
 ---
 title: 'Assertion Enforcer'
-description: 'Assertion selection and validation within the block-building pipeline'
+description: 'Assertion selection and enforcement within the block-building pipeline'
 ---
 
-The Assertion Enforcer validates candidate transactions for participating Ethereum builders. It runs [assertions](./assertions-overview) through [PhEVM](./phevm) and reports failures to the builder.
+The Assertion Enforcer enforces assertions on candidate transactions for participating Ethereum builders. It runs [assertions](./assertions-overview) through [PhEVM](./phevm) and reports failures to the builder.
 
 ## Role in the System
 
-The enforcer selects applicable assertions, executes them, and returns validation reports. The builder applies the results before publishing its block.
+The enforcer selects applicable assertions, executes them, and returns assertion results. The builder applies the results before publishing its block.
 
-Sequencer-specific execution and rollback designs are covered in [L2 Validation Pipelines](./l2-integrations/validation-pipeline).
+Sequencer-specific execution and rollback designs are covered in [L2 Enforcement Pipelines](./l2-integrations/validation-pipeline).
 
 <span id="sidecar-architecture" />
 
 ## Integration Architecture
 
-The enforcer is a validation role, not a required process boundary. An embedded integration links the assertion-execution library into the builder or sequencer and uses its execution context in the block-building pipeline. A separate-service integration delegates validation to a sidecar.
+The enforcer is an enforcement role, not a required process boundary. An embedded integration links the assertion-execution library into the builder or sequencer and uses its execution context in the block-building pipeline. A separate-service integration delegates enforcement to a sidecar.
 
-Define where validation runs and how its results affect inclusion for the chosen client. Embedded workers share the node's resource budget; a separate service also needs a state-transfer interface and a failure policy for that boundary. Ethereum protocol protection additionally requires guards and transaction routing.
+Define where enforcement runs and how its results affect inclusion for the chosen client. Embedded workers share the node's resource budget; a separate service also needs a state-transfer interface and a failure policy for that boundary. Ethereum protocol protection additionally requires guards and transaction routing.
 
-## Validation Process
+## Enforcement Process
 
-The validation process:
+The enforcement process:
 
 ```mermaid
 ---
-title: Assertion Validation Detail
+title: Assertion Enforcement Detail
 ---
 flowchart LR
     TX["Transaction"]
@@ -37,8 +37,8 @@ flowchart LR
 
     STATE2["Post-Transaction State<br/>(State2)"]
 
-    subgraph validation["PhEVM Assertion Validation"]
-        PhEVM["Validate Against Assertions"]
+    subgraph enforcement["PhEVM Assertion Enforcement"]
+        PhEVM["Enforce Assertions"]
     end
 
     ASSERTIONS["Applicable Active Assertions"]
@@ -80,7 +80,7 @@ flowchart LR
 
 ## Block Building Integration
 
-The builder excludes candidates that fail active production assertions. Passing validation does not guarantee inclusion.
+The builder excludes candidates that fail active production assertions. Satisfying the enforced assertions does not guarantee inclusion.
 
 ### Invalidation Handling
 
@@ -90,7 +90,7 @@ The integration reports failures to the platform. Other builders do not inherit 
 
 Measure assertion execution against the builder's block-production budget. Monitor trigger frequency, tail latency, worker backlog, and rejected candidates.
 
-Prepare bytecode before validation. Define how timeouts, execution errors, and missing artifacts affect inclusion.
+Prepare bytecode before enforcement. Define how timeouts, execution errors, and missing artifacts affect inclusion.
 
 ## Production Admission and Resource Limits
 
@@ -106,17 +106,17 @@ Ingress filters can suppress repeated invalid submissions through short-lived fi
 
 ## Operational Expectations (Public)
 
-Validation is deterministic for the same state, transaction, and assertion code. Alerting records results without production exclusion. Project permissions control access to invalidation details.
+Enforcement is deterministic for the same state, transaction, and assertion code. Alerting records results without production exclusion. Project permissions control access to invalidation details.
 
 ## Assertion Caching
 
-The enforcer detects assertion registration events and fetches bytecode from [Assertion DA](./assertion-da). Validation reads this local cache without fetching artifacts from the network.
+The enforcer detects assertion registration events and fetches bytecode from [Assertion DA](./assertion-da). Enforcement reads this local cache without fetching artifacts from the network.
 
 ## Learn More
 
 <CardGroup cols={2}>
   <Card title="For Ethereum Builders" icon="sitemap" href="./ethereum-builder-integration">
-    Plan validation, marking, and builder operations
+    Plan enforcement, marking, and builder operations
   </Card>
   <Card title="Trust Model" icon="shield-check" href="./trust-model">
     Guarantees, scope, and operational model

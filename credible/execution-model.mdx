@@ -1,6 +1,6 @@
 ---
 title: 'Local Testing vs. Production'
-description: 'How local assertion tests differ from production validation and onchain guard checks'
+description: 'How local assertion tests differ from production enforcement and onchain guard checks'
 ---
 
 On Ethereum, the Assertion Enforcer reports failures to the participating builder, which excludes failing candidates before inclusion. The enforcer does not make the inclusion decision. A separate on-chain guard can revert a protected operation in a noncredible block while its gate is closed.
@@ -18,7 +18,7 @@ In local `CredibleTest` tests, failed assertions cause **reverts**. This lets yo
 
 ## Production: Ethereum Builders Apply the Result
 
-In production, the [Assertion Enforcer](./assertion-enforcer) validates transactions during block building:
+In production, the [Assertion Enforcer](./assertion-enforcer) enforces assertions on transactions during block building:
 
 ```mermaid
 flowchart LR
@@ -33,7 +33,7 @@ flowchart LR
     style INCLUDE fill:#27ae60,color:#fff
 ```
 
-The candidate must pass its matching active Production assertions. The builder excludes failing candidates. Passing validation does not guarantee inclusion. Guards restrict protected operations in other builders' blocks.
+The candidate must pass its matching active Production assertions. The builder excludes failing candidates. Satisfying the enforced assertions does not guarantee inclusion. Guards restrict protected operations in other builders' blocks.
 
 ## Testing: Transactions Revert
 
@@ -55,7 +55,7 @@ flowchart LR
 Key behaviors:
 - You specify the assertion function via `fnSelector`, but triggers still determine if it runs
 - Only the specified assertion runs, not all assertions for the contract
-- Only the next external call is validated, then the registration is consumed
+- Assertions are enforced on only the next external call, then the registration is consumed
 - Reverts simulate drops - use `vm.expectRevert()` to test failure cases
 
 ## The `cl.assertion()` Mental Model

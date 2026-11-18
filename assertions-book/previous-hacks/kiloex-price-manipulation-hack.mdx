@@ -1,31 +1,75 @@
 ---
 title: "KiloEx Forwarder and Price Manipulation"
-description: "Historical mechanism, candidate policy, and evidence limits for KiloEx Forwarder and Price Manipulation"
+description: "Attack mechanism and inline Reshiram assertion example for KiloEx Forwarder and Price Manipulation"
 ---
 
-This case explains the failure mechanism and the policy boundary it suggests.
-
-**Risk domain:** Oracle and valuation. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
-
-## What the source establishes
+## What Happened
 
 SlowMist’s incident-response recap explains that an inherited forwarder `execute` path allowed calls that passed a trusted-forwarder check without the intended keeper authorization. Manipulated prices were then used to open and close positions. Its revised estimate was $8.44 million, and it reports recovery of the stolen funds; earlier $7.5 million estimates describe an earlier accounting of the incident. [SlowMist recovery recap](https://slowmist.medium.com/slowmist-assists-kiloex-in-recovering-all-stolen-funds-incident-recap-273d10f6d466).
 
-## Candidate policy
+## Attack Mechanism
 
-Validate the effective keeper authorization and the price consumed when a position is opened or closed. Treat forwarder identity and original-caller authorization as separate properties.
+The price-update path trusted a chain of contracts. An inherited forwarder execution path could satisfy the downstream trusted-forwarder check without enforcing the keeper authorization intended for that operation. Trusting the immediate forwarding contract did not establish that the original request was authorized.
 
-## Coverage and limitations
+The attacker used manipulated prices to open and close positions at incompatible valuations. A price can be changed, consumed by a trade, and restored in the same transaction, so a transaction-end-only price comparison can miss the value actually used.
 
-The [tested oracle snapshot example](../assertions/ass28-intra-tx-oracle-deviation) demonstrates temporary excursions in a synthetic writable oracle. It is not a KiloEx replay and does not establish coverage of the forwarded execution or consumed price. A market deviation threshold requires independent calibration.
+The example binds every inspected price to an explicit snapshot. Configure the reader and calldata for one market's price getter, and the operation selector for the deployed price-update or position entry point. Checking pre-call and post-call values against the transaction's initial price can reject a temporary out-of-band price even when the final transaction price is restored.
 
-A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](../../credible/testing-strategy) and [Ethereum architecture](../../credible/architecture-overview).
+A 500-bps limit permits a 5% change from the starting value. It is an illustrative policy setting. An authorization assertion should separately check the effective keeper and original-caller rules for each forwarding entry point; allowing only the forwarding contract would repeat the original trust mistake.
 
-## Related patterns
+## Assertion Example
 
-Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](../../credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
 
-<span id="what-happened" />
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+/// @notice Bound a configured metric before and after every covered operation.
+contract CallMetricBounds is Assertion {
+    address public immutable reader;
+    bytes public query;
+    bytes4 public immutable operation;
+    uint256 public immutable maximumBps;
+    constructor(address reader_, bytes memory query_, bytes4 operation_, uint256 maximumBps_) {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+        require(reader_ != address(0) && query_.length >= 4, "Invalid reader");
+        reader = reader_; query = query_; operation = operation_; maximumBps = maximumBps_;
+    }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address target = ph.getAssertionAdopter();
+        uint256 start = abi.decode(read(reader, query, _preTx()), (uint256));
+        require(start > 0 && start <= type(uint128).max && maximumBps <= 100_000, "Invalid baseline or bound");
+        uint256 allowed = start * maximumBps / 10_000;
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(target, operation);
+        for (uint256 i; i < calls.length; ++i) {
+            within(start, allowed, _preCall(calls[i].id));
+            within(start, allowed, _postCall(calls[i].id));
+        }
+    }
+    function within(uint256 start, uint256 allowed, PhEvm.ForkId memory at) internal view {
+        uint256 value = abi.decode(read(reader, query, at), (uint256));
+        uint256 delta = value >= start ? value - start : start - value;
+        require(delta <= allowed, "Metric outside bound");
+    }
+
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
+    }
+}
+```
+
+## What This Check Covers
+
+The example's reader must return the actual price used by the protected market in a consistent scale. Cover every asset and relevant operation. A gradual multi-transaction drift or a price consumed entirely inside a covered call can escape this bound. The access-control fix remains necessary.
+
 <span id="assertion-pattern" />
 <span id="price-deviation-assertion" />
 <span id="access-control-assertion" />

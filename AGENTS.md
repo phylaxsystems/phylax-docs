@@ -154,7 +154,7 @@
 - Use `credible/glossary.mdx` as the shared terminology reference.
 - Policy means the intended rule and exceptions; assertion means an executable check; circuit breaker means an assertion pattern limiting cumulative flows over a rolling window of per-block buckets. Cumulative-flow breaker makes that mechanism explicit.
 - Use invariant for a property at defined observation boundaries, not as a synonym for every policy or failure scenario.
-- Distinguish assertion functions, assertion contracts, and releases. Use Assertion Enforcer for the validation component, PhEVM for its execution environment, and sidecar only for a separate-process integration.
+- Distinguish assertion functions, assertion contracts, and releases. Use Assertion Enforcer for the enforcement component, PhEVM for its execution environment, and sidecar only for a separate-process integration.
 - Distinguish deployment confirmation, activation, Production enforcement, and Alerting observation. Slack and PagerDuty notification delivery is separate from those modes.
 - Distinguish assertion invalidation, builder exclusion, and an onchain revert. A failed assertion can reflect a policy condition or an execution error; investigate before calling it an attack or live prevention.
 - Name the unit: assertion ID identifies creation data; selector identifies a function; adopter identifies an assignment target; release identifies the platform deployment set.
@@ -187,3 +187,8 @@
 - Use absolute URLs for internal links
 - Include untested code examples
 - Make assumptions - always ask for clarification
+
+## Keep answers on the page
+- Preserve attack mechanisms, worked examples, and inline assertion code in case studies. Links supplement the answer; do not replace it with a catalog handoff.
+- Use enforcement for runtime policy protection and transaction exclusion. Reserve validation for input/configuration checks and testing; preserve exact API identifiers and consensus validator terminology.
+- Do not describe L2 integration designs or workflows as historical, including in span IDs and other tags.

@@ -19,7 +19,7 @@ Passing the checks makes a transaction eligible for inclusion; it does not guara
 
 An onchain guard requires protected calls to execute in a credible block while its gate is active. An authorized builder records the block's marker in the Credible Registry. Protected calls in noncredible blocks revert, regardless of how they were submitted.
 
-The Credible RPC routes transactions to participating builders. Configure the [actual transaction submitters](./dapp-integration#configure-transaction-submission) to use that route. Assertion validation is not part of Ethereum's consensus rules; enforcement depends on the builders and guards, including their configured recovery conditions.
+The Credible RPC routes transactions to participating builders. Configure the [actual transaction submitters](./dapp-integration#configure-transaction-submission) to use that route. Assertion enforcement is not part of Ethereum's consensus rules; enforcement depends on the builders and guards, including their configured recovery conditions.
 
 ### Is a credible-block marker proof that all assertions passed?
 
@@ -53,7 +53,7 @@ No. Routing delivers a transaction to the configured builder path. Privacy depen
 
 ### Does a successful RPC simulation mean the transaction will pass assertions?
 
-No. RPC simulation and assertion validation are separate checks. A simulation may account for the credible-block marker so guarded calls can be simulated without running the full production assertion set.
+No. RPC simulation and assertion enforcement are separate checks. A simulation may account for the credible-block marker so guarded calls can be simulated without running the full production assertion set.
 
 Even an assertion preflight result applies only to the simulated state. Active rules, ordering, and chain state can change before inclusion.
 

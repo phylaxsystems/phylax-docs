@@ -1,0 +1,19 @@
+{
+  "assertions-book/previous-hacks/hack1-radiant-capital.mdx": "examples/docs/src/cases/RadiantAuthority.a.sol",
+  "assertions-book/previous-hacks/bybit-safe-ui.mdx": "examples/docs/src/cases/SafeImplementation.a.sol",
+  "assertions-book/previous-hacks/uxlink-multisig-hack.mdx": "examples/docs/src/cases/SafeConfiguration.a.sol",
+  "assertions-book/previous-hacks/abracadabra-rounding-error.mdx": "examples/docs/src/cases/DebtShareConsistency.a.sol",
+  "assertions-book/previous-hacks/hack2-vestra-dao.mdx": "examples/docs/src/cases/VestraActiveStake.a.sol",
+  "assertions-book/previous-hacks/first-depositor.mdx": "examples/docs/src/cases/NonzeroMint.a.sol",
+  "assertions-book/previous-hacks/visor-finance-unrestricted-mint.mdx": "examples/docs/src/cases/VisorBacking.a.sol",
+  "assertions-book/previous-hacks/abracadabra-hack-3.mdx": "examples/docs/src/cases/CookSolvency.a.sol",
+  "assertions-book/previous-hacks/euler-finance-donation-hack.mdx": "examples/docs/src/cases/EulerDonationHealth.a.sol",
+  "assertions-book/previous-hacks/compound-upgrade-bug.mdx": "examples/docs/src/cases/RewardPayoutLimit.a.sol",
+  "assertions-book/previous-hacks/bunni-xyz-rounding-error.mdx": "examples/docs/src/cases/WithdrawalAccounting.a.sol",
+  "assertions-book/previous-hacks/abracadabra-gmx-v2-exploit.mdx": "examples/docs/src/cases/RecoverableCollateral.a.sol",
+  "assertions-book/previous-hacks/balancer-v2-stable-rate-exploit.mdx": "examples/docs/src/cases/CallMetricBounds.a.sol",
+  "assertions-book/previous-hacks/gma-aum-jul25-hack.mdx": "examples/docs/src/cases/CallMetricBounds.a.sol",
+  "assertions-book/previous-hacks/kiloex-price-manipulation-hack.mdx": "examples/docs/src/cases/CallMetricBounds.a.sol",
+  "assertions-book/previous-hacks/vicuna-finance-hack.mdx": "examples/docs/src/cases/CallMetricBounds.a.sol",
+  "assertions-book/previous-hacks/cream-finance-2.mdx": "examples/docs/src/cases/CallMetricBounds.a.sol"
+}

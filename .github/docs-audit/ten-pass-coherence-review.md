@@ -27,7 +27,7 @@ These are ten distinct review lenses, with rereads after corrections, not ten cl
 - A maintainer selects the complete replacement set for an environment, follows the same review/authorization owner, and checks the delayed effect. A platform login does not confer Protocol Manager authority.
 - An operator first establishes the result's mode, then diagnoses the assertion failure and records its disposition. Alert-only or simulated rejection is not live prevention.
 - Ethereum and sequencer plans share validation concepts while retaining separate routing, guard, transaction-source and inclusion boundaries.
-- Example status, API specification, assignment lifecycle, and evidence answer different questions. A historical design, compiled template, or pending release is not a production-readiness result.
+- Example status, API specification, assignment lifecycle, and evidence answer different questions. An integration design, compiled template, or pending release is not a production-readiness result.
 
 ## Validation and remaining boundaries
 

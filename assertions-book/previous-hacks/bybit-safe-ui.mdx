@@ -1,31 +1,53 @@
 ---
 title: "Bybit Safe Wallet Compromise"
-description: "Historical mechanism, candidate policy, and evidence limits for Bybit Safe Wallet Compromise"
+description: "Attack mechanism and inline Reshiram assertion example for Bybit Safe Wallet Compromise"
 ---
 
-This case explains the failure mechanism and the policy boundary it suggests.
-
-**Risk domain:** Authority and configuration. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
-
-## What the source establishes
+## What Happened
 
 Bybit’s February 26, 2025 forensic update reports compromise of Safe’s environment and manipulation of the signing flow; it reports no compromise of Bybit infrastructure. The incident illustrates why a valid signature does not establish that the signer saw the transaction’s actual effect. [Bybit forensic update](https://www.bybit.com/en/press/post/bybit-confirms-security-integrity-amid-safe-wallet-incident-no-compromise-in-infrastructure-blt9986889e919da8d2).
 
-## Candidate policy
+## Attack Mechanism
 
-Constrain the actual proxy implementation and relevant Safe configuration at explicit snapshots. Add an independently specified custody outflow policy where needed.
+The compromised signing interface displayed a benign transaction while the signers authorized a different payload. That payload executed a delegatecall in the Safe's storage context. The delegatecall changed the Safe proxy's singleton address, replacing the code that governed subsequent withdrawals.
 
-## Coverage and limitations
+The attack crossed two boundaries:
 
-A transaction-end implementation check misses a temporary implementation change that is restored before the endpoint. Native ETH loss needs a tested balance-read policy; creating fork identifiers without using them is insufficient. Signing-device security and independent review remain separate controls.
+1. The displayed intent differed from the signed transaction.
+2. The signed transaction changed the wallet's implementation, so later calls no longer followed the original Safe authorization logic.
 
-A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](../../credible/testing-strategy) and [Ethereum architecture](../../credible/architecture-overview).
+Safe stores its singleton in slot zero. An EIP-1967 implementation-slot check would inspect the wrong location for this proxy. The assertion reads the initial slot value and checks every recorded value against it, including an implementation change that is restored before transaction end. Creating a `ForkId` alone does not select a state: the example passes it to `loadStateAt`.
 
-## Related patterns
+## Assertion Example
 
-Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](../../credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
 
-<span id="what-happened" />
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+/// @notice Reject any recorded change to the Safe singleton slot, including change-and-restore.
+contract SafeImplementation is Assertion {
+    constructor() { registerAssertionSpec(AssertionSpec.Reshiram); }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address safe = ph.getAssertionAdopter();
+        bytes32 slot = bytes32(0); // Safe singleton; not the EIP-1967 slot.
+        bytes32 initial = ph.loadStateAt(safe, slot, _preTx());
+        bytes32[] memory values = ph.getStateChanges(safe, slot);
+        for (uint256 i; i < values.length; ++i) {
+            require(values[i] == initial, "Safe implementation changed");
+        }
+    }
+}
+```
+
+## What This Check Covers
+
+The singleton slot must match the deployed Safe layout. Freezing it constrains this implementation-replacement path, not every malicious signed transfer. An approved-recipient policy must inspect actual transfers: unrelated deposits into an approved recipient cannot establish where the Safe's funds went.
+
 <span id="assertion-pattern" />
 <span id="candidate-implementation-slot-policy" />
 <span id="recipient-and-native-balance-policies" />

@@ -1,35 +1,31 @@
 ---
 title: 'L2 and Sequencer Integrations'
-description: 'Sequencer validation, integration planning, and L2 policy-management workflows.'
+description: 'Sequencer enforcement, integration planning, and L2 policy-management workflows.'
 ---
 
-These pages explain how to plan assertion validation inside a sequencer’s block-building pipeline. L2 integrations remain part of Phylax’s integration work, with additional integrations planned. Confirm network support, the deployed client, and the assertion specification before use.
+These pages explain how to plan assertion enforcement inside a sequencer’s block-building pipeline. L2 integrations remain part of Phylax’s integration work, with additional integrations planned. Confirm network support, the deployed client, and the assertion specification before use.
 
 For Ethereum, see [Ethereum Architecture](../architecture-overview).
 
 ## The Sequencer Enforcement Boundary
 
-An integrated sequencer can validate candidate transactions at the network's inclusion boundary. Within the paths it covers, this can enforce assertions without changing the protected contract. Users still rely on the sequencer for ordering and availability, and on the assertion integration for correct validation.
+An integrated sequencer can enforce assertions on candidate transactions at the network's inclusion boundary. Within the paths it covers, this can enforce assertions without changing the protected contract. Users still rely on the sequencer for ordering and availability, and on the assertion integration for correct enforcement.
 
 Coverage must account for bridge-originated, delayed, system, and forced-inclusion paths. Their inclusion rules can differ from ordinary user transactions. An integration must specify where checks run and what happens when they fail or time out.
 
 ## Integration Designs
 
 - [Plan an L2 integration](./network-integration): transaction-source policies, inclusion boundaries, and operational requirements.
-- [Validation pipelines](./validation-pipeline): speculative execution, rollback, bounded response windows, and backpressure.
+- [Enforcement pipelines](./validation-pipeline): speculative execution, rollback, bounded response windows, and backpressure.
 
 ## How Policy Management Works on L2s
 
 Agree the authorization path for a new deployment during [L2 integration planning](./network-integration). The [manual verification workflow](./manual-verification) describes the evidence and manager checks for deployments that support manual registration.
 
-<span id="historical-designs" />
-
 ## Network Designs
 
-[Linea / Besu integration](./architecture-linea) describes plugin-to-sidecar validation. For [OP Stack](./architecture-op-stack) and other new integrations, use [integration planning](./network-integration) to agree the validation boundary and client requirements.
-
-<span id="earlier-platform-workflows" />
+[Linea / Besu integration](./architecture-linea) describes plugin-to-sidecar enforcement. For [OP Stack](./architecture-op-stack) and other new integrations, use [integration planning](./network-integration) to agree the enforcement boundary and client requirements.
 
 ## Platform Workflows
 
-[Platform and compatibility notes](./platform-and-compatibility) cover Linea platform selection and the deployment walkthrough. Use the Ethereum platform and deployment path in the main guides when integrating on Ethereum.
+[Platform and compatibility notes](./platform-and-compatibility) cover L2 platform selection and assertion-specification requirements. Use the Ethereum platform and deployment path in the main guides when integrating on Ethereum.

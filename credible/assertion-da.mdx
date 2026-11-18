@@ -43,9 +43,9 @@ The State Oracle checks registration authority and lifecycle timing. See [Managi
 
 ### Retrieving Assertions
 
-Enforcers index the State Oracle's `AssertionAdded` event. They fetch bytecode by assertion ID and cache it before validation.
+Enforcers index the State Oracle's `AssertionAdded` event. They fetch bytecode by assertion ID and cache it before enforcement.
 
-Operators must define how missing or unreadable artifacts affect validation.
+Operators must define how missing or unreadable artifacts affect enforcement.
 
 ## Complete Lifecycle
 
@@ -57,7 +57,7 @@ Production results affect participating builders. Alerting records violations wi
 
 ### Why Off-Chain Storage?
 
-Offchain storage avoids the cost of storing bytecode and metadata on Ethereum. Enforcers cache artifacts for validation.
+Offchain storage avoids the cost of storing bytecode and metadata on Ethereum. Enforcers cache artifacts for enforcement.
 
 ### Why Compilation Happens Off-Chain
 

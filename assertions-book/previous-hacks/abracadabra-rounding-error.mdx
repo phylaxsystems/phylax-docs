@@ -1,29 +1,63 @@
 ---
 title: "Abracadabra Debt-Share Rounding"
-description: "Historical mechanism, candidate policy, and evidence limits for Abracadabra Debt-Share Rounding"
+description: "Attack mechanism and inline Reshiram assertion example for Abracadabra Debt-Share Rounding"
 ---
 
-This case explains the failure mechanism and the policy boundary it suggests.
-
-**Risk domain:** Accounting and rounding. **Evidence:** source review, November 17, 2026. **Policy maturity:** proposed; no pinned Phylax exploit replay is supplied here.
-
-## What the source establishes
+## What Happened
 
 The pinned CauldronV4 source tracks debt using `elastic` amounts and `base` shares. `repayForAll` and the conversion paths must preserve a meaningful relationship between the two. Reducing the debt amount while leaving shares outstanding creates a precision-sensitive state; a ratio computed from that state is not an independent solvency check. [Pinned CauldronV4 source](https://github.com/Abracadabra-money/abracadabra-money-contracts/blob/cb97c71c8fbfecbd0080e0cfa877f2dc37f56950/src/cauldrons/CauldronV4.sol).
 
-## Candidate policy
+## Attack Mechanism
 
-Validate debt/share transitions, permitted zero states, and post-operation solvency with explicit integer rounding. Treat debt forgiveness, repayment, and borrow as distinct transitions.
+Cauldron debt uses a rebase: `elastic` is the debt amount and `base` is the total number of debt shares. A user's debt is derived from their share of `base`, scaled by `elastic`.
 
-## Coverage and limitations
+`repayForAll` reduces the amount owed without necessarily reducing every borrower's shares. When the amount becomes very small relative to the share count, integer rounding becomes significant. Reaching `elastic = 0` with `base > 0` is particularly dangerous: conversion code may take its zero-value initialization branch while old shares still exist.
 
-A blanket equality between debt units and shares is incorrect. A nonzero-share/zero-debt rule also needs protocol-specific handling of legitimate debt forgiveness. The pinned version includes a minimum-elastic guard in `repayForAll`; it must not be treated as byte-for-byte evidence of the exploited deployment. This source review supports the accounting discussion, not a verified incident loss total or a pinned replay.
+Consider a state with no debt amount but a large outstanding share count. If the next borrow creates new shares at a 1:1 ratio, those shares represent only a tiny fraction of the old total. A subsequent debt calculation can understate the new borrower's obligation. A solvency check based on that same damaged ratio is not an independent safeguard.
 
-A production claim also requires a pinned implementation, allowed-operation tests, a replay of the relevant failure, and verified trigger and enforcement coverage. A local example passing tests establishes only its stated fixture behavior. See [Testing Strategy](../../credible/testing-strategy) and [Ethereum architecture](../../credible/architecture-overview).
+The narrow assertion below rejects the zero-amount/nonzero-shares state. It uses `staticcallAt` to read `totalBorrow()` at transaction end.
 
-## Related patterns
+## Assertion Example
 
-Use the [Catalog](../assertions/use-cases-index) to select a current pattern by risk domain. [Snapshot inspection](../../credible/use-case-mappings/call-frame-context) explains observation boundaries; [flow-limit semantics](../assertions/circuit-breakers) explains cumulative exposure limits.
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
 
-<span id="what-happened" />
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+/// @notice Reject a zero debt amount with outstanding debt shares at transaction end.
+contract DebtShareConsistency is Assertion {
+    constructor() { registerAssertionSpec(AssertionSpec.Reshiram); }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        (uint128 elastic, uint128 base) = abi.decode(read(ph.getAssertionAdopter(),
+            abi.encodeWithSignature("totalBorrow()"), _postTx()), (uint128, uint128));
+        require(elastic != 0 || base == 0, "Debt shares without debt");
+    }
+
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
+    }
+}
+```
+
+## What This Check Covers
+
+This check only covers the stated zero state at transaction end. It can miss a temporary inconsistent state or harmful rounding while `elastic` remains positive. Debt forgiveness, repayment, borrow conversions, and each operation's solvency need separate tests; do not treat this one condition as a complete replay of the exploit.
+
 <span id="assertion-pattern" />
+
+## Further Sources
+
+- [RebaseToken](https://github.com/boringcrypto/BoringSolidity/blob/78f4817d9c0d95fe9c45cd42e307ccd22cf5f4fc/contracts/libraries/BoringRebase.sol)
+- [`User borrow mapping`](https://github.com/Abracadabra-money/abracadabra-money-contracts/blob/cb97c71c8fbfecbd0080e0cfa877f2dc37f56950/src/cauldrons/CauldronV4.sol#L308)
+- [`repayForAll()`](https://github.com/Abracadabra-money/abracadabra-money-contracts/blob/cb97c71c8fbfecbd0080e0cfa877f2dc37f56950/src/cauldrons/CauldronV4.sol#L688)
+- [`repayForAll()`](https://github.com/Abracadabra-money/abracadabra-money-contracts/blob/cb97c71c8fbfecbd0080e0cfa877f2dc37f56950/src/cauldrons/CauldronV4.sol#L703)
+- [first depositor problem](https://github.com/boringcrypto/BoringSolidity/blob/78f4817d9c0d95fe9c45cd42e307ccd22cf5f4fc/contracts/libraries/BoringRebase.sol#L18)
+- [`_isSolvent()`](https://github.com/Abracadabra-money/abracadabra-money-contracts/blob/cb97c71c8fbfecbd0080e0cfa877f2dc37f56950/src/cauldrons/CauldronV4.sol#L203)

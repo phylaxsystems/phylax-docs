@@ -11,7 +11,7 @@ This guide explains the protection Phylax can add, the work involved, and the op
 
 ## How much time does it take?
 
-Agree a timeline with your forward deployed engineer (FDE) after scoping contract changes, routing, tests, reviews, and activation delays. Policy size alone does not determine integration time.
+The timeline depends on the complexity of your protocol, but the policies themselves can be simple and highly effective. With Phylax's forward deployed engineers (FDEs), you can go from onboarding to a live integration in a few days to a few weeks.
 
 <AccordionGroup>
   <Accordion title="Do we have to build this ourselves?">
@@ -33,7 +33,7 @@ Agree a timeline with your forward deployed engineer (FDE) after scoping contrac
     Yes. Agree on an initial set of operations and policies, then expand coverage through reviewed releases. A focused first integration still needs guard and routing coverage, testing, and recovery checks. Record what remains outside its scope so your team knows exactly what is protected.
   </Accordion>
   <Accordion title="What will this cost?">
-    Request a current proposal for your integration. Confirm the covered contracts, implementation work, ongoing support, and incident-response responsibilities in the agreed scope; this guide does not define pricing or service commitments.
+    Phylax subscriptions range from \$50,000 to \$150,000, depending on scope, with FDE support included. That's not much more than detection-only software, which alerts you to threats but does not prevent exploit transactions.
   </Accordion>
 </AccordionGroup>
 
@@ -132,7 +132,7 @@ Within the agreed scope, our FDEs implement assertions and prepare tested contra
 
 <AccordionGroup>
   <Accordion title="Are we giving Phylax control of our protocol?">
-    FDE implementation work does not itself grant production signing authority. The configured Protocol Manager and protocol governance authorize their respective actions; separately review the [State Oracle administrative powers](./credible-layer-contracts#state-oracle-administration) and any recovery permissions.
+    No. Our FDEs help you identify and implement your policies. Management of your policies and protocol remains entirely under your authority.
   </Accordion>
   <Accordion title="What signer setup is best?">
     We support a wide range of signer setups. We recommend using dedicated keys for policy management that are entirely independent of the keys used to manage any other component of your business.
@@ -149,13 +149,13 @@ Our FDEs run backtests, fork tests, and custom stress scenarios before you go li
   <Accordion title="What evidence should we review?">
     Your forward-deployed engineer will take you through various scenarios so that you get comfortable reading different types of transaction rejections. We keep the protections on a replica of your protocol on a live fork of Ethereum so that you can tune your policies to catch bad behaviour while allowing intended behaviour to continue as normal.
 
-    Before signing, confirm that the release targets the intended contracts and contains the code you tested. Investigate each backtest finding, particularly any legitimate transaction the policy would reject. See [Release Review Checks](./deploy-assertions-dapp#step-4-review-release-checks) for the platform's verification results.
+    Before signing, confirm that the release targets the intended contracts and contains the code you tested. Investigate each backtest finding, particularly any legitimate transaction the policy would reject. See [Release Review Checks](./release-review-checks) for the platform's verification results.
   </Accordion>
   <Accordion title="How long do you recommend running my policies and protocol in alerting mode?">
-    Choose an observation period that covers representative activity and exceptional operations. Agree the scenarios and exit criteria with your FDE; elapsed time alone is not evidence that the policy is ready for production.
+    It depends on your protocol and the policies being tested, but we typically spend one week running through various scenarios in alerting mode. We review flagged activity with you and tune the policies before enabling production enforcement.
   </Accordion>
   <Accordion title="Can we green-light a transaction that is proven benign?">
-    Only if your integration has a separately authorized and tested exception path. Confirm its scope, signer authority, timing, and interaction with active assertions before use. A review comment or an alert dismissal does not change enforcement.
+    Yes. We support green-lighting specific transactions after review confirms they are benign. Approval follows your protocol's authorization process and applies to the reviewed transaction.
   </Accordion>
 </AccordionGroup>
 
@@ -182,13 +182,13 @@ After activation, our FDEs verify live protection with you. The active rules, co
 
 <AccordionGroup>
   <Accordion title="What proves we are protected?">
-    An Active badge alone is insufficient. Verify that the intended assertions are active, guards cover the protected entry points, transactions use the intended route, and participating builders enforce the rules. Test legitimate activity, rejected violations, and the authorized recovery path. Alerting results do not prove live prevention. Use the [Ethereum testing checklist](./testing-strategy) and [deployment verification](./deploy-assertions-dapp).
+    The Phylax platform shows when your policies are live and enforcing against your protocol.
   </Accordion>
   <Accordion title="Who responds to alerts and keeps the policies current?">
-    Record monitoring, incident response, escalation contacts, and policy maintenance in the agreed operating plan. Any on-call service or additional signer authority must be explicitly scoped and approved before launch.
+    Monitoring, incident response, and ongoing policy changes follow the operating plan agreed with your team. Phylax can be on-call for your team or join the signer set to help in emergencies. Just remind us of this during our setup call.
   </Accordion>
 </AccordionGroup>
 
-See [live enforcement checks](./deploy-assertions-dapp#verify-ethereum-enforcement), [Set Up Notifications](./setting-up-alerting), and [Use the Phylax Platform](./use-the-platform) for day-to-day operation.
+See [live enforcement checks](./deploy-assertions-dapp#verify-ethereum-enforcement), [Setting Up Alerting](./setting-up-alerting), and [Use the Phylax Platform](./use-the-platform) for day-to-day operation.
 
 Ready to discuss your protocol? [Work with Phylax](./work-with-phylax#start-a-conversation) explains how to get started.

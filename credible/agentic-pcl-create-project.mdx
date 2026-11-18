@@ -101,6 +101,23 @@ Review the implementation and test evidence against your requirements. Before de
 - Commit or otherwise preserve the reviewed local changes
 - Confirm that `assertions/credible.toml` names every protected contract and assertion
 - Decide on the Alerting or Production environment
-- Identify the target chain and Protocol Manager wallet
+- Choose the target network for the release: record its name and chain ID, platform URL, and RPC endpoint
+- Identify the Protocol Manager wallet for that network; assign it after platform project creation and before release creation
+
+Carry the network choice into the deployment request. For a new project, pass the selected chain ID through `pcl deploy --chain-id <chain-id>`. For an existing project, the CLI reads its chain from the platform; verify that the project belongs to the network you selected. A platform login and the Alerting/Production environment are separate from choosing the project's chain.
+
+Before creating the release, ask the agent to confirm:
+
+```text
+Selected network: <network name and chain ID>
+Target platform: <platform URL>
+RPC: <RPC endpoint or approved configuration reference>
+Project: <existing project ID, or new project name>
+Environment: <alerting or production>
+
+Confirm the project chain, RPC chain, protected contract addresses, and Protocol
+Manager wallet all match this network. Use the selected chain ID when creating
+a new project. Do not create the release if any of these values disagree.
+```
 
 Continue with [Deploy Policies with an AI Agent](./agentic-pcl-deploy).
