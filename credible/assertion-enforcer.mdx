@@ -15,7 +15,7 @@ Sequencer-specific execution and rollback designs are covered in [L2 Validation 
 
 ## Integration Architecture
 
-The enforcer is a validation role, not a required process boundary. An embedded integration links the assertion-execution library into the builder or sequencer and uses its execution context in the block-building pipeline. Earlier designs delegated validation to a separate sidecar.
+The enforcer is a validation role, not a required process boundary. An embedded integration links the assertion-execution library into the builder or sequencer and uses its execution context in the block-building pipeline. A separate-service integration delegates validation to a sidecar.
 
 Define where validation runs and how its results affect inclusion for the chosen client. Embedded workers share the node's resource budget; a separate service also needs a state-transfer interface and a failure policy for that boundary. Ethereum protocol protection additionally requires guards and transaction routing.
 

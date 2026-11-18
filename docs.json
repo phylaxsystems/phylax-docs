@@ -146,7 +146,7 @@
                 "root": "credible/agentic-pcl"
               },
               {
-                "group": "Test Assertions",
+                "group": "Test Policies",
                 "pages": [
                   "credible/testing-assertions",
                   "credible/fuzz-testing",
@@ -248,7 +248,7 @@
               "credible/l2-integrations/network-integration",
               "credible/l2-integrations/validation-pipeline",
               {
-                "group": "Historical L2 Workflows",
+                "group": "How Policy Management Works on L2s",
                 "pages": [
                   "credible/l2-integrations/architecture-linea",
                   "credible/l2-integrations/platform-and-compatibility",
@@ -337,7 +337,7 @@
               "assertions-book/assertions/reusable-patterns",
               "assertions-book/assertions/anomaly-gated-policies",
               {
-                "group": "Flow Limits",
+                "group": "Circuit Breakers",
                 "pages": [
                   "assertions-book/assertions/balancer-outflow",
                   "assertions-book/assertions/ass20-erc20-drain",

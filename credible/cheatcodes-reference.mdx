@@ -16,7 +16,7 @@ Cheatcodes are grouped by API status:
 - **Deprecated cheatcodes**: legacy fork-switching APIs. Do not use them in new assertions.
 
 <Warning>
-Confirm the assertion specification accepted by the target Ethereum enforcer. Reshiram-only precompiles and triggers require V2 support in that deployment; library availability and local tests are not sufficient. Earlier Linea-specific restrictions are in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
+Confirm the assertion specification accepted by the target Ethereum enforcer. Reshiram-only precompiles and triggers require V2 support in that deployment; library availability and local tests are not sufficient. Linea-specific compatibility requirements are in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
 </Warning>
 
 ## Assertion Specs
@@ -205,7 +205,7 @@ function getStateChanges(
 ) external view returns (bytes32[] memory stateChanges);
 ```
 
-The returned array includes the initial value as the first element. The length is either `0` or at least `2`.
+When changes occur, the returned array includes the initial value as the first element, followed by the changed values. Same-value writes are omitted. With no value changes, the array is empty; otherwise its length is at least `2`. Compare adjacent entries starting at index `1`. This history cannot establish strict increase on every write because it omits writes that leave the value unchanged.
 
 ### State Change Helpers
 

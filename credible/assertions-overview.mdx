@@ -3,9 +3,11 @@ title: 'Assertions Overview'
 description: 'Understanding Credible Layer assertions'
 ---
 
-An assertion is an executable check of a policy. Assertion functions implement the checks; an assertion contract packages those functions with their trigger registrations. A policy defines the intended behavior and exceptions.
+A policy is implemented as an assertion: EVM bytecode executed offchain in PhEVM. Precompiles provide the primitives teams use to express safety rules, from runtime enforcement of invariants to inflow circuit breakers, anomaly checks, and external data feeds such as risk signals. Available primitives depend on the assertion specification and target runtime.
 
-Invariants are one possible requirement; policies can also constrain transitions, conditional effects, or rolling flows. The resulting protection is called a circuit breaker. See the [terminology reference](./glossary#terminology-across-the-docs).
+Assertion functions implement the checks; an assertion contract packages those functions with their trigger registrations. The policy defines the intended behavior and exceptions.
+
+Invariants are one possible requirement; policies can also constrain transitions, conditional effects, or rolling flows. Circuit breakers limit cumulative inflow or outflow across per-block buckets over a rolling window. See the [terminology reference](./glossary#terminology-across-the-docs).
 
 Assertions describe invalid outcomes without predicting every exploit path. Participating builders enforce them before inclusion. See [Ethereum Architecture](./architecture-overview) for guards and routing.
 
@@ -15,7 +17,7 @@ Assertions describe invalid outcomes without predicting every exploit path. Part
 - **Reshiram (V2)** replaces mutable fork switching with immutable `ForkId` snapshot reads and adds newer transaction and call inspection precompiles.
 
 <Warning>
-Confirm which specification your target Ethereum deployment accepts before activation. Library availability and local tests do not establish enforcer compatibility. Earlier Linea-specific restrictions are in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
+Confirm which specification your target Ethereum deployment accepts before activation. Library availability and local tests do not establish enforcer compatibility. Linea-specific compatibility requirements are in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
 </Warning>
 
 ## How Assertions Work

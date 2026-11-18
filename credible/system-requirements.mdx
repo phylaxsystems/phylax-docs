@@ -1,6 +1,6 @@
 ---
 title: 'System Requirements'
-description: 'Capacity planning for builder and sequencer assertion execution.'
+description: 'Hardware and infrastructure requirements for running the Credible Layer sidecar in production and development environments.'
 ---
 
 These requirements are for builder and sequencer operators. Protocol teams using the Ethereum platform and RPC do not need to run their own builder or enforcer. Size assertion execution against the actual node workload and [integration architecture](./assertion-enforcer#integration-architecture); a sidecar is not required.
@@ -14,7 +14,7 @@ Sizing depends on network throughput and assertion complexity. Use these guideli
 | **CPU** | High-core, modern server CPU |
 | **RAM** | Sufficient memory for state caches and execution |
 | **Storage** | Fast local SSD with headroom for growth |
-| **Network** | Reliable access to required RPC and assertion data endpoints |
+| **Network** | Low-latency, high-bandwidth link to the block builder |
 
 ### CPU
 
@@ -35,8 +35,8 @@ For an embedded library, validation does not require a separate network hop from
 **Key requirements:**
 - For a separate service, a low-latency link between the node and validation workers
 - Prefer private networking; avoid routing over the public internet
-- Stable egress to chain RPC and assertion data endpoints
+- Stable egress to the chain RPC and Assertion DA service
 
 ## Local Development
 
-Use the [local tutorial](./pcl-quickstart) to run assertion tests. Local test results do not establish production capacity; benchmark with the intended client, assertions, and transaction workload.
+Assertions can be developed and tested locally, then pushed to the platform. Start with the [local tutorial](./pcl-quickstart), then [prepare a policy release](./apply-assertions).

@@ -16,7 +16,9 @@ This edition is reviewed against [credible-std at `fe49de6`](https://github.com/
 
 <span id="limit-token-flow" />
 
-## Flow Limits
+<span id="flow-limits" />
+
+## Circuit Breakers
 
 | Pattern | Measured property |
 | --- | --- |
@@ -93,13 +95,13 @@ For production preparation, follow [Ethereum assertion testing](../../credible/t
 | Facet | Meaning | Where to look |
 | --- | --- | --- |
 | Risk domain | Flow, authority/configuration, accounting, solvency, valuation, or cross-chain verification | Pattern groups above and [case studies](../previous-hacks/prev-hacks-index) |
-| Protocol family | The storage and economic model being adapted | [Aave](./aave-v3-suite), [ERC-4626](./vault-policies), [Balancer custody](./balancer-outflow), and historical [Optimism FMA](./optimism-fma-suite) |
+| Protocol family | The storage and economic model being adapted | [Aave](./aave-v3-suite), [ERC-4626](./vault-policies), [Balancer custody](./balancer-outflow), and [Optimism FMA](./optimism-fma-suite) |
 | Dispatch mechanism | When the runtime invokes the assertion | [Triggers](../../credible/triggers); [anomaly gating](./anomaly-gated-policies) is a dispatch choice, not a separate risk domain |
 | Specification | APIs the assertion requests | [Legacy, Reshiram, and Experimental](../../credible/cheatcodes-reference#assertion-specs) |
-| Example status | Adaptation example, legacy example requiring correction, experimental fork, or historical design | The entry's status and limitations |
+| Adaptation requirements | Contract-specific configuration, source corrections, or experimental components | The correction table above and limitations in each entry |
 | Evidence | Source review, compilation, local behavior tests, exploit replay, or live enforcement | The entry's stated validation; one level does not imply another |
 
-Imported Book sources compile at the pinned revision, but most are not individually behavior-tested by this documentation review. The ownership tutorial and local observation fixtures identify their executed tests. Read warnings before copying an example.
+Imported Book sources compile at the pinned revision, but most are not individually behavior-tested by this documentation review. The ownership tutorial and local observation fixtures identify their executed tests. The Aave fork and Optimism FMA suite are source catalogs, not suites executed in this review; their links follow moving branches rather than pinned tested releases. Aave includes intentional defects and mock contracts. Verify the assertion specification per contract in those forks. Read limitations before copying an example.
 
 <span id="start-with-a-working-example" />
 <span id="oracle-and-liquidation-examples-that-need-correction" />

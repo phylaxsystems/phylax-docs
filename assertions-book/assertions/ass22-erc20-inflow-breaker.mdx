@@ -5,8 +5,6 @@ description: "Configuration, behavior, and limits of a rolling net inflow assert
 
 import Example from "/snippets/ass22-erc20-inflow-breaker.a.mdx";
 
-**Example status:** Adaptation example. **Spec:** Reshiram. **Evidence:** pinned source compiled in the Book profile; individual behavior tests were not run in this review.
-
 
 An unusually large deposit or donation can change a vault's exposure or accounting. A cumulative inflow breaker rejects the candidate transaction that takes net inflow above the rolling limit.
 

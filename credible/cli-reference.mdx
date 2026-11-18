@@ -117,14 +117,15 @@ pcl apply [OPTIONS]
 | `--json` | Emit machine-readable output for this command |
 | `--yes` | Apply without interactive confirmation |
 | `--auto-approve` | Alias for `--yes` |
-| `--dry-run` | Build and verify the release payload without calling the platform API |
+| `--dry-run` | Build and verify the release payload without creating a release. Platform access is still needed if `project_id` is omitted |
 | `-u, --api-url API_URL` | Base URL for the platform API. Uses `PCL_API_URL` when set; otherwise, uses the platform remembered from the last login or network selection |
 | `-h, --help` | Print help |
 
 ### `apply` Behavior
 
 - If `project_id` is omitted from `credible.toml`, `pcl apply` prompts you to select a project interactively.
-- If JSON output is enabled, `project_id` is required in `credible.toml`.
+- For local-only `--dry-run` validation, set `project_id` in `credible.toml`. Without it, interactive project selection authenticates and calls the platform before the dry-run return.
+- If JSON output is enabled, `project_id` is required in `credible.toml`, including with `--dry-run`.
 - If there are no release changes, the command exits without creating a release.
 - If `--yes` is omitted, the command prompts for confirmation before applying changes.
 
@@ -197,7 +198,7 @@ pcl auth -u https://ethereum.phylax.systems login
 pcl auth status
 ```
 
-Check the resolved platform before creating a release. The fallback values below describe CLI behavior, not the platform to choose for an Ethereum integration. See [L2 Platform Notes](./l2-integrations/platform-and-compatibility) for the earlier workflow.
+Check the resolved platform before creating a release. The fallback values below describe CLI behavior, not the platform to choose for an Ethereum integration. See [L2 Platform Notes](./l2-integrations/platform-and-compatibility) for the L2 workflow.
 
 ```bash
 pcl auth [OPTIONS] COMMAND

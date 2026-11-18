@@ -7,8 +7,6 @@ A price can leave its allowed range and return before transaction end. Comparing
 
 ## Policy and scope
 
-**Spec:** Reshiram. **Evidence:** locally tested synthetic oracle. **Example status:** adaptation example, not a KiloEx replay or a production oracle policy.
-
 `OracleSnapshotsAssertion` below compares slot zero after every covered `updatePrice(uint256)` call with its pre-transaction value. It permits an absolute difference of at most `start / 10`, using integer rounding. A zero starting price therefore permits only zero. The 10% band illustrates behavior; it is not a recommended market threshold.
 
 ## Tested example

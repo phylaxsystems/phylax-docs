@@ -30,7 +30,7 @@ System Architecture,Assertion Enforcer,"The validation component that selects an
 Learn more: [Assertion Enforcer](./assertion-enforcer)"
 System Architecture,Platform,"The [Phylax platform](https://ethereum.phylax.systems) is the web application interface for interacting with the Credible Layer. It allows protocol teams and end-users to deploy, manage, and view assertions and projects."
 System Architecture,The Phylax Explorer,"A public view of a small selection of featured projects. Where available, project pages show protected contracts, circuit-breaker summaries, operational authority, and supporting evidence. Detailed project information and transaction replays remain subject to access permissions."
-System Architecture,Sidecar,"A separate process or service that runs alongside the node. Earlier integration designs delegated assertion validation to a sidecar. This is not a requirement of the Assertion Enforcer; an embedded integration runs validation within the node's block-building pipeline.
+System Architecture,Sidecar,"A separate process or service that runs alongside the node. A separate-service integration delegates assertion validation to a sidecar. This is not a requirement of the Assertion Enforcer; an embedded integration runs validation within the node's block-building pipeline.
 
 See [Architecture](./architecture-overview#how-the-credible-layer-works) for implementation details.
 
@@ -38,7 +38,13 @@ See [Architecture](./architecture-overview#how-the-credible-layer-works) for imp
 System Architecture,Network Validator,"An Ethereum validator participates in consensus and may propose a block assembled by a builder. Validators apply Ethereum's consensus rules; they do not independently run Phylax assertions as part of block validity. A participating [block builder](#block-builder) runs the assertion integration before publishing its candidate.
 
 A node is the broader software/deployment term; running a node does not by itself mean acting as a validator, builder, or sequencer. For L2 roles, see [L2 and Sequencer Integrations](./l2-integrations/overview)."
-Assertion Components,Trigger,"A registration that selects an assertion function for execution when relevant transaction activity occurs. Matching a trigger does not itself mean rejection: the selected function evaluates the condition. Register triggers in the assertion contract’s `triggers()` function. Available trigger types and their specification requirements are listed in [Triggers](./triggers).
+Assertion Components,Trigger,"A registration that selects an assertion function for execution when relevant transaction activity occurs. Matching a trigger does not itself mean rejection: the selected function evaluates the condition. Register triggers in the assertion contract’s `triggers()` function. Trigger types include:
+
+- **Call triggers:** select checks for matching contract calls.
+- **Storage triggers:** select checks for changes to specified storage slots.
+- **Balance triggers:** select checks for ETH balance changes.
+
+See [Triggers](./triggers) for the full set of trigger types, registration APIs, and assertion-specification requirements.
 
 See the [Cheatcodes Reference](./cheatcodes-reference) for detailed information about different trigger types."
 Assertion Components,Snapshot,"An execution-state view at a specified observation boundary. A Reshiram `ForkId` identifies pre-transaction, post-transaction, pre-call, or post-call state. Constructing it does not switch the state used by ordinary Solidity reads; use the [snapshot APIs](./cheatcodes-reference#forkid)."
@@ -51,7 +57,7 @@ See the [Cheatcodes Reference](./cheatcodes-reference) for state tracking functi
 
 <span id=""callstack"" />"
 Assertion Components,Call Trace,The recorded calls and their nesting during transaction execution. Use **call trace** for recorded execution and **call stack** for the active nested calls at one point. Neither means the EVM operand stack. Older prose may use “callstack” for call inspection.
-Assertion Components,Assertion Bytecode,"The compiled form of an assertion contract. Assertion DA stores the deployable artifact; the enforcer loads it for execution in PhEVM. `pcl` is the development CLI, not an execution network.
+Assertion Components,Assertion Bytecode,"The compiled form of an assertion contract. Assertion DA stores the deployable artifact; the enforcer loads it for execution in PhEVM. `pcl` is the development CLI.
 
 See the [pcl Reference](./cli-reference) for build and store commands."
 Assertion Components,Assertion ID,"An artifact identifier computed as `Keccak256(creation bytecode ++ ABI-encoded constructor arguments)`. It identifies the deployable creation data, not a single assertion function, adopter assignment, or platform release. Use the function selector and execution trace to identify a failing check; use the adopter and activation state to identify where and when the artifact applies.
@@ -80,8 +86,8 @@ Development Tools,Backtesting,"An automatic platform release check that evaluate
 Learn more: [Backtesting](./backtesting)"
 Security Features,Off-chain Execution,"Assertion validation performed outside Ethereum consensus execution. It still uses compute and an assertion gas budget. Assertion gas is separate from the onchain gas used by protocol calls, guards, and credible-block markers."
 Security Features,Forced Inclusion Transactions,"L2 transaction paths with protocol-level inclusion rules, such as L1-to-L2 deposits or delayed queues. Their assertion handling belongs to the [L2 integration policy](./l2-integrations/network-integration#transaction-source-coverage), not Ethereum builder routing."
-Security Features,Circuit Breaker,"The customer-facing protection that uses assertions to reject transaction effects violating a configured policy. A circuit breaker can constrain authority changes, accounting, prices, or asset flows. Rejection does not itself set a persistent pause flag in the protocol; protection depends on the integrated enforcement path."
-Security Features,Cumulative-Flow Breaker,"A specific circuit-breaker pattern that limits directional net asset flow over a rolling window of per-block buckets. It measures the configured asset and custody address, not every form of protocol loss. See [Flow-Limit and Anomaly-Gated Policies](../assertions-book/assertions/circuit-breakers)."
+Security Features,Circuit Breaker,"An assertion pattern that collects value flowing into or out of a protected contract into one bucket per block, then limits the cumulative flow across those per-block buckets over a rolling window. Circuit breakers are useful when the goal is to reduce exploit velocity or contain blast radius rather than block one specific function call."
+Security Features,Cumulative-Flow Breaker,"A circuit breaker that limits directional net asset flow over a rolling window of per-block buckets. It measures the configured asset and custody address, not every form of protocol loss. See [Flow-Limit and Anomaly-Gated Policies](../assertions-book/assertions/circuit-breakers)."
 Security Features,Verifiability,"The ability to inspect the rules and registry state behind a protocol's Credible Layer posture. Assertion IDs and registry entries are on-chain, while assertion bytecode is stored in Assertion DA. Public views expose the protocol's visible assertion posture; private project data remains restricted to authorized project users."
 Prevention,Invalidation,"A reported failure of assertion validation for a candidate or replayed transaction. Inspect the reason: a configured policy condition can fail, but an execution failure such as `OutOfGas` can also invalidate a candidate without establishing that condition. Production enforcement excludes invalidated candidates at the integrated boundary; Alerting and simulation record results without blocking the live transaction. An invalidation is not proof of an attack or of a live prevention.
 
@@ -94,8 +100,10 @@ Assertion Lifecycle,Release,"The complete policy set reviewed and deployed toget
 Assertion Lifecycle,Apply,"The process of creating a release on the platform using `pcl apply`. This command reads your `credible.toml` configuration, compiles assertion contracts, and creates a release. The platform handles storing assertion bytecode in [Assertion DA](./glossary#assertion-da-data-availability) automatically.
 
 Learn more: [Prepare a Policy Release](./apply-assertions) | [pcl Reference](./cli-reference#apply)"
-Assertion Lifecycle,Deployment,The process of reviewing a release and signing its onchain transaction for the selected Alerting or Production environment. Transaction confirmation and assertion activation are separate: new assertions begin applying after the configured delay.
-Assertion Lifecycle,Slack Notifications,Delivery of invalidation notices to a configured Slack channel. Notifications do not choose the enforcement mode. See [Set Up Slack Notifications](./setting-up-alerting).
+Assertion Lifecycle,Deployment,"The process of reviewing a release and signing its onchain transaction for the selected Alerting or Production environment. Transaction confirmation and assertion activation are separate: new assertions begin applying after the configured delay.
+
+<span id=""slack-notifications"" />"
+Assertion Lifecycle,Notifications,Delivery of invalidation notices through Slack or PagerDuty. Notifications do not choose the enforcement mode. See [Set Up Notifications](./setting-up-alerting).
 Assertion Lifecycle,Alerting,"A mirrored chain environment used for testing assertions without affecting production. Assertions run in alerting mode to observe behavior, but transactions are not dropped if they break assertion rules. This allows protocol teams to test assertions safely before deploying to production."
 Assertion Lifecycle,Production,The enforcement environment where participating Ethereum builders exclude candidates violating active assertions. Guard coverage and routing are also required for the protected operations; fail-open or bypass conditions can reduce mandatory protection.
 Assertion Lifecycle,Assertion Activation Window,"The block interval in which an assertion assignment is active, recorded by the State Oracle as `activationBlock` and `deactivationBlock`. The timelock delays a lifecycle change; the activation window describes when the assignment applies. It does not measure token flows."

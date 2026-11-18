@@ -40,8 +40,8 @@ Test Environment,Qualify local PCL tests versus fork versus Alerting,One environ
 Backtesting,Release evaluation over a reported historical range,Live exclusion; complete coverage from Passed or zero exercised transactions,credible/backtesting.mdx
 Off-chain Execution,Validation outside Ethereum consensus with its own resources,No compute cost; no guard/marker gas,credible/phevm.mdx
 Forced Inclusion Transactions,L2 protocol-mandated inclusion paths,Ethereum RPC routing; universal rejection policy,credible/l2-integrations/network-integration.mdx
-Circuit Breaker,Protection implemented with assertions (branch editorial convention),Only rolling flow limits; persistent pause flag,assertions-book/assertions/circuit-breakers.mdx
-Cumulative-Flow Breaker,Rolling-window directional net-flow subtype,All circuit breakers; gross transfers; maximum total protocol loss,assertions-book/assertions/circuit-breakers.mdx
+Circuit Breaker,Rolling-window cumulative inflow or outflow limit,All assertion policies; persistent pause flag,assertions-book/assertions/circuit-breakers.mdx
+Cumulative-Flow Breaker,Circuit breaker with explicit directional net-flow semantics,Gross transfers; maximum total protocol loss,assertions-book/assertions/circuit-breakers.mdx
 Verifiability,Inspect artifacts and applicable registry state within access scope,Proof of live enforcement or policy completeness,credible/trust-model.mdx
 Invalidation,Reported failed validation; inspect policy condition versus runtime error,Attack; live prevention; ordinary Ethereum consensus invalidity,credible/investigate-rejected-transaction.mdx
 Revert,EVM failure; qualify assertion/test/guard context,Builder exclusion; every subcall failure reverting the whole transaction,credible/execution-model.mdx
@@ -51,7 +51,7 @@ Project,Platform container and permissions,Release; onchain Protocol Manager aut
 Release,Complete reviewed policy set for project/environment,One function; assertion group; individually removable active assertion,credible/apply-assertions.mdx
 Apply,pcl apply creates a pending platform release,Onchain deployment confirmation; active protection,credible/apply-assertions.mdx
 Deployment,Authorize and submit lifecycle change for environment,Immediate activation; installing guard and routing,credible/deploy-assertions-dapp.mdx
-Slack Notifications,Delivery of invalidation notices,Switching environment or enforcement mode,credible/setting-up-alerting.mdx
+Notifications,Delivery of invalidation notices through Slack or PagerDuty,Switching environment or enforcement mode,credible/setting-up-alerting.mdx
 Alerting,Observation in mirrored environment without live exclusion,Public Ethereum testnet; Slack delivery; full end-to-end enforcement test,credible/testing-strategy.mdx
 Production,Active enforcement at participating integration boundary,Guaranteed coverage from environment label alone,credible/dapp-integration.mdx
 Assertion Activation Window,Block interval when an assignment applies,Timelock waiting period; flow measurement window,credible/credible-layer-contracts.mdx

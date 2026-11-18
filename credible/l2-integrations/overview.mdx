@@ -1,9 +1,9 @@
 ---
 title: 'L2 and Sequencer Integrations'
-description: 'Embedded sequencer validation, integration planning, and historical L2 workflows.'
+description: 'Sequencer validation, integration planning, and L2 policy-management workflows.'
 ---
 
-These pages explain how to plan assertion validation inside a sequencer’s block-building pipeline. Historical designs and earlier platform workflows are retained separately. Confirm network support, the deployed client, and the assertion specification before use.
+These pages explain how to plan assertion validation inside a sequencer’s block-building pipeline. L2 integrations remain part of Phylax’s integration work, with additional integrations planned. Confirm network support, the deployed client, and the assertion specification before use.
 
 For Ethereum, see [Ethereum Architecture](../architecture-overview).
 
@@ -20,12 +20,16 @@ Coverage must account for bridge-originated, delayed, system, and forced-inclusi
 
 ## How Policy Management Works on L2s
 
-Agree the authorization path for a new deployment during [L2 integration planning](./network-integration). The [historical manual verification workflow](./manual-verification) describes the evidence and manager checks used by earlier integrations; it is not evidence of current network support.
+Agree the authorization path for a new deployment during [L2 integration planning](./network-integration). The [manual verification workflow](./manual-verification) describes the evidence and manager checks for deployments that support manual registration.
 
-## Historical Designs
+<span id="historical-designs" />
 
-[Earlier Linea / Besu integration](./architecture-linea) describes plugin-to-sidecar validation. It is historical context, not the starting point for a new integration. The former OP Stack / Rollup-Boost guide has been retired; use [integration planning](./network-integration) for new work.
+## Network Designs
 
-## Earlier Platform Workflows
+[Linea / Besu integration](./architecture-linea) describes plugin-to-sidecar validation. For [OP Stack](./architecture-op-stack) and other new integrations, use [integration planning](./network-integration) to agree the validation boundary and client requirements.
 
-[Platform and compatibility notes](./platform-and-compatibility) retain the Linea platform selection and earlier walkthrough. Use the Ethereum platform and deployment path in the main guides when integrating on Ethereum.
+<span id="earlier-platform-workflows" />
+
+## Platform Workflows
+
+[Platform and compatibility notes](./platform-and-compatibility) cover Linea platform selection and the deployment walkthrough. Use the Ethereum platform and deployment path in the main guides when integrating on Ethereum.

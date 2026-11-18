@@ -3,7 +3,7 @@ title: State Change Tracking
 description: Inspect writes to a known storage slot, including intermediate values hidden by endpoint comparisons.
 ---
 
-State-change tracking returns the recorded values written to a known storage slot during a transaction. It can reveal a temporary change even when the final value equals the initial value.
+State-change tracking returns the value history for a known storage slot during a transaction. It can reveal a temporary change even when the final value equals the initial value.
 
 ## Status
 
@@ -14,7 +14,7 @@ State-change tracking returns the recorded values written to a known storage slo
 
 ## API and Behavior
 
-[`getStateChanges(target, slot)`](../cheatcodes-reference#getstatechanges) returns the recorded writes for that slot in order. The pre-transaction value is not included. The [typed helpers](../credible-std-overview#state-change-helpers) decode those values; they do not infer the contract's storage layout.
+[`getStateChanges(target, slot)`](../cheatcodes-reference#getstatechanges) returns the value history for that slot in order, including its initial value as the first element when changes occur. Same-value writes are omitted. If there are no value changes, the array is empty; otherwise it contains at least two elements. The [typed helpers](../credible-std-overview#state-change-helpers) decode those values; they do not infer the contract's storage layout.
 
 <span id="example-implementation" />
 <span id="implementation-notes" />
@@ -22,15 +22,18 @@ State-change tracking returns the recorded values written to a known storage slo
 
 ## Comparing Writes with a Policy
 
-For a nondecreasing-value policy, read the pre-transaction value as the baseline. Compare each recorded value with the previous value, then advance the baseline. An empty write list has no transition to reject. For a strictly increasing policy, equal consecutive values must also fail.
+For a nondecreasing-value policy, compare adjacent entries in the returned history, starting at index `1`: each value must be greater than or equal to the preceding value. Index `0` is already the initial value; do not compare it against a separately read baseline. An empty history has no observed transition to reject.
 
-| Initial value | Recorded writes | Nondecreasing result | Reason |
-| --- | --- | --- | --- |
-| 10 | None | Accept | No observed change |
-| 10 | 11 | Accept | The first write meets the baseline |
-| 10 | 9 | Reject | The first write violates the baseline |
-| 10 | 11, 10 | Reject | A later decrease is visible despite equal transaction endpoints |
-| 10 | 10 | Accept | Equality is permitted by this policy |
+| Initial value | Actual writes | Returned history | Nondecreasing result | Reason |
+| --- | --- | --- | --- | --- |
+| 10 | None | `[]` | Accept | No observed change |
+| 10 | 11 | `[10, 11]` | Accept | The value increases |
+| 10 | 9 | `[10, 9]` | Reject | The value decreases |
+| 10 | 11, 10 | `[10, 11, 10]` | Reject | A later decrease is visible despite equal transaction endpoints |
+| 10 | 10 | `[]` | Accept | Same-value writes are omitted |
+| 10 | 11, 11 | `[10, 11]` | Accept | The repeated write adds no history entry |
+
+Using a strict comparison checks increases between returned entries, but cannot enforce strict increase on **every write**: a same-value write is invisible in this history. A policy that must reject such writes needs another observation mechanism.
 
 For an authority lock, compare every recorded authority value with the permitted value or allowlist instead. The [ownership tutorial](../../assertions-book/assertions/run-an-example) demonstrates why endpoint equality alone cannot rule out a temporary authority change; it does not test a write-tracking replacement.
 
@@ -41,5 +44,5 @@ For an authority lock, compare every recorded authority value with the permitted
 
 - Observations are slot-level. Decode packed fields with the contract's offsets and masks before comparing values.
 - Derive mapping slots from the layout, or use [Modified Key Discovery](./modified-keys) within its discovery limits.
-- Separate slots have separate write lists. Matching array indices does not establish that two values existed at the same moment. Use [call snapshots](./call-frame-context) when a policy needs a defined boundary across multiple slots.
+- Separate slots have separate histories. Matching array indices does not establish that two values existed at the same moment. Use [call snapshots](./call-frame-context) when a policy needs a defined boundary across multiple slots.
 - Validate reverted calls, nested execution, and trigger coverage in the target runtime before treating an observed write sequence as proof of protection.

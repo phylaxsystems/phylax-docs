@@ -11,14 +11,14 @@ Definitions of Credible Layer components, policy states, and platform terms. Use
 | --- | --- |
 | Phylax / Credible Layer | Phylax provides the tooling and integration service; the Credible Layer is the enforcement infrastructure described here. Ethereum and L2 integration requirements differ. |
 | Policy / invariant | A policy states permitted and prohibited behavior, including exceptions. An invariant is a property required to hold at specified observation boundaries; it is one kind of policy requirement. |
-| Circuit breaker / cumulative-flow breaker | Circuit breaker names the protection implemented with assertions. A cumulative-flow breaker is the rolling-window flow-limit subtype; other policies need not have a window. |
+| Circuit breaker / cumulative-flow breaker | A circuit breaker limits cumulative inflow or outflow over a rolling window of per-block buckets. Cumulative-flow breaker makes that mechanism explicit; other assertion policies need not have a window. |
 | Assertion function / assertion contract / assertion ID | A function performs a check; a contract packages functions and triggers; the ID identifies deployable creation data, not an individual function. |
 | Project / release / assertion group | A project organizes platform work; a release is its reviewed deployment set. Assertion group describes functions within one contract, not a release or project. |
 | Assertion Enforcer / PhEVM / sidecar | The enforcer selects and runs checks; PhEVM executes them. A sidecar is a separate-process deployment pattern, not another name for either component. |
 | Deployed / active / enforced | Deployment submits the lifecycle change. Assertions become active after the configured delay; Production enforcement and Alerting observation have different effects. |
 | Activation window / rolling window | An activation window determines when an assertion applies. A rolling window determines which past flow measurements a cumulative policy evaluates. |
 | Trigger / check / invalidation / exclusion | A trigger selects a check. A failed check produces an invalidation; the environment determines whether the result excludes a live candidate or only records an observation. |
-| Assertion specification / lifecycle state / example status / evidence | Legacy, Reshiram, and Experimental select API capabilities. Lifecycle state describes pending/active/deactivated assignments. Catalog example status describes an adaptation example, experimental fork, or historical design. None establishes test coverage, audit results, or deployment suitability. |
+| Assertion specification / lifecycle state / adaptation requirements / evidence | Legacy, Reshiram, and Experimental select API capabilities. Lifecycle state describes pending/active/deactivated assignments. Adaptation requirements identify configuration, corrections, or experimental components. None establishes test coverage, audit results, or deployment suitability. |
 | Phylax platform / protocol application | The platform manages projects and releases. The protocol application is the system being protected. Older `/dapp-*` routes remain for link compatibility. |
 | Use Cases Book / Assertions Book | Use Cases Book is the current reader-facing title. The `/assertions-book/` routes and source names remain unchanged. |
 
@@ -98,7 +98,7 @@ The [Phylax platform](https://ethereum.phylax.systems) is the web application in
 A public view of a small selection of featured projects. Where available, project pages show protected contracts, circuit-breaker summaries, operational authority, and supporting evidence. Detailed project information and transaction replays remain subject to access permissions.
 
 ### Sidecar
-A separate process or service that runs alongside the node. Earlier integration designs delegated assertion validation to a sidecar. This is not a requirement of the Assertion Enforcer; an embedded integration runs validation within the node's block-building pipeline.
+A separate process or service that runs alongside the node. A separate-service integration delegates assertion validation to a sidecar. This is not a requirement of the Assertion Enforcer; an embedded integration runs validation within the node's block-building pipeline.
 
 See [Architecture](./architecture-overview#how-the-credible-layer-works) for implementation details.
 
@@ -112,7 +112,13 @@ A node is the broader software/deployment term; running a node does not by itsel
 ## Assertion Components
 
 ### Trigger
-A registration that selects an assertion function for execution when relevant transaction activity occurs. Matching a trigger does not itself mean rejection: the selected function evaluates the condition. Register triggers in the assertion contract’s `triggers()` function. Available trigger types and their specification requirements are listed in [Triggers](./triggers).
+A registration that selects an assertion function for execution when relevant transaction activity occurs. Matching a trigger does not itself mean rejection: the selected function evaluates the condition. Register triggers in the assertion contract’s `triggers()` function. Trigger types include:
+
+- **Call triggers:** select checks for matching contract calls.
+- **Storage triggers:** select checks for changes to specified storage slots.
+- **Balance triggers:** select checks for ETH balance changes.
+
+See [Triggers](./triggers) for the full set of trigger types, registration APIs, and assertion-specification requirements.
 
 See the [Cheatcodes Reference](./cheatcodes-reference) for detailed information about different trigger types.
 
@@ -135,7 +141,7 @@ See the [Cheatcodes Reference](./cheatcodes-reference) for state tracking functi
 The recorded calls and their nesting during transaction execution. Use **call trace** for recorded execution and **call stack** for the active nested calls at one point. Neither means the EVM operand stack. Older prose may use “callstack” for call inspection.
 
 ### Assertion Bytecode
-The compiled form of an assertion contract. Assertion DA stores the deployable artifact; the enforcer loads it for execution in PhEVM. `pcl` is the development CLI, not an execution network.
+The compiled form of an assertion contract. Assertion DA stores the deployable artifact; the enforcer loads it for execution in PhEVM. `pcl` is the development CLI.
 
 See the [pcl Reference](./cli-reference) for build and store commands.
 
@@ -198,10 +204,10 @@ Assertion validation performed outside Ethereum consensus execution. It still us
 L2 transaction paths with protocol-level inclusion rules, such as L1-to-L2 deposits or delayed queues. Their assertion handling belongs to the [L2 integration policy](./l2-integrations/network-integration#transaction-source-coverage), not Ethereum builder routing.
 
 ### Circuit Breaker
-The customer-facing protection that uses assertions to reject transaction effects violating a configured policy. A circuit breaker can constrain authority changes, accounting, prices, or asset flows. Rejection does not itself set a persistent pause flag in the protocol; protection depends on the integrated enforcement path.
+An assertion pattern that collects value flowing into or out of a protected contract into one bucket per block, then limits the cumulative flow across those per-block buckets over a rolling window. Circuit breakers are useful when the goal is to reduce exploit velocity or contain blast radius rather than block one specific function call.
 
 ### Cumulative-Flow Breaker
-A specific circuit-breaker pattern that limits directional net asset flow over a rolling window of per-block buckets. It measures the configured asset and custody address, not every form of protocol loss. See [Flow-Limit and Anomaly-Gated Policies](../assertions-book/assertions/circuit-breakers).
+A circuit breaker that limits directional net asset flow over a rolling window of per-block buckets. It measures the configured asset and custody address, not every form of protocol loss. See [Flow-Limit and Anomaly-Gated Policies](../assertions-book/assertions/circuit-breakers).
 
 ### Verifiability
 The ability to inspect the rules and registry state behind a protocol's Credible Layer posture. Assertion IDs and registry entries are on-chain, while assertion bytecode is stored in Assertion DA. Public views expose the protocol's visible assertion posture; private project data remains restricted to authorized project users.
@@ -238,8 +244,10 @@ Learn more: [Prepare a Policy Release](./apply-assertions) | [pcl Reference](./c
 ### Deployment
 The process of reviewing a release and signing its onchain transaction for the selected Alerting or Production environment. Transaction confirmation and assertion activation are separate: new assertions begin applying after the configured delay.
 
-### Slack Notifications
-Delivery of invalidation notices to a configured Slack channel. Notifications do not choose the enforcement mode. See [Set Up Slack Notifications](./setting-up-alerting).
+<span id="slack-notifications" />
+
+### Notifications
+Delivery of invalidation notices through Slack or PagerDuty. Notifications do not choose the enforcement mode. See [Set Up Notifications](./setting-up-alerting).
 
 ### Alerting
 A mirrored chain environment used for testing assertions without affecting production. Assertions run in alerting mode to observe behavior, but transactions are not dropped if they break assertion rules. This allows protocol teams to test assertions safely before deploying to production.

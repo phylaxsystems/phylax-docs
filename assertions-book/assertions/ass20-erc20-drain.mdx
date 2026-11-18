@@ -5,8 +5,6 @@ description: "Configuration, behavior, and limits of a rolling net outflow asser
 
 import Example from "/snippets/ass20-erc20-drain.a.mdx";
 
-**Example status:** Adaptation example. **Spec:** Reshiram. **Evidence:** pinned source compiled in the Book profile; individual behavior tests were not run in this review.
-
 
 Several withdrawals, each small enough to look routine, can remove a large share of custody. A cumulative outflow breaker rejects the candidate transaction that takes net outflow above the rolling limit.
 

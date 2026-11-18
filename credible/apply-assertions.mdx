@@ -73,7 +73,7 @@ Each contract address must be unique within the configuration. See the [pcl Refe
 </Note>
 
 <Tip>
-Set `project_id` to skip interactive project selection, including in CI.
+Set `project_id` to skip interactive project selection, including in CI. This is also required for local-only `pcl apply --dry-run` validation. Without it, dry-run authenticates and queries the platform to select a project; it still does not create a release.
 </Tip>
 
 <Note>
