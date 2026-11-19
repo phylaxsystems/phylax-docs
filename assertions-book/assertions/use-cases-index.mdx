@@ -1,32 +1,38 @@
 ---
-title: "Catalog"
-description: "Choose a circuit breaker or assertion pattern for the operation you need to protect"
+title: "Assertion Pattern Catalog"
+description: "Choose an assertion pattern to implement the policy for the operation you need to protect"
 ---
 
 Choose a pattern by the transaction you need to constrain. Each reference describes the measured quantity, configuration, expected outcomes, and coverage limits.
 
-This edition is reviewed against [credible-std at `fe49de6`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0), dated October 28, 2026. Examples are starting points for a policy tied to your deployed contracts. **A contract with no registered triggers enforces nothing.**
+This edition is reviewed against [credible-std at `fe49de6`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0), source dated October 28, 2026; documentation reviewed November 17, 2026. Examples are starting points for a policy tied to your deployed contracts. **A contract with no registered triggers enforces nothing.**
 
-## Start with a working example
+## Choose a starting point
 
-- [Run an ownership policy locally](./run-an-example): execute a permitted operation, reject an ownership change, and verify rollback.
-- [Compose an ERC-4626 policy](./vault-policies): combine call-level share-price checks with a rolling outflow cap.
-- [Configure a Balancer Vault breaker](./balancer-outflow): select the custody address, token, threshold, and window.
+- [Test the limits of an ownership policy](./run-an-example): execute allowed and rejected operations, then observe a temporary change escaping an endpoint check.
+- [ERC-4626 policy reference](./vault-policies): inspect a composition of call-level share-price checks and a rolling outflow cap.
+- [Balancer Vault breaker reference](./balancer-outflow): look up the custody address, token, threshold, and window parameters.
 - [Reusable patterns](./reusable-patterns): accounting, call results, account health, oracle gates, configuration, and tiered limits.
 
-## Limit token flow
+<span id="limit-token-flow" />
+
+<span id="flow-limits" />
+
+## Circuit Breakers
 
 | Pattern | Measured property |
 | --- | --- |
+| [Balancer Vault outflow](./balancer-outflow) | Configured token outflow from a selected custody address |
 | [Cumulative outflow](./ass20-erc20-drain) | Net ERC-20 outflow as a fraction of the window's balance baseline |
 | [Cumulative inflow](./ass22-erc20-inflow-breaker) | Net ERC-20 inflow against that baseline |
 | [Flow rates](./rate-of-change-circuit-breakers) | Peak, latest, and mean rate context during cumulative dispatch |
-| [Anomaly-gated policies](./anomaly-gated-policies) | A model trigger plus explicit transaction-effect checks |
 | [Native ETH outflow](./ass21-ether-drain) | Legacy example needs snapshot correction; not an active ETH-loss guarantee |
 
-[Circuit breaker semantics](./circuit-breakers) explains netting, block buckets, and history reconstruction. Thresholds in these examples illustrate behavior; choose production limits from your protocol's activity and response requirements.
+[Flow-limit semantics](./circuit-breakers) explains netting, block buckets, and history reconstruction. Thresholds in these examples illustrate behavior; choose production limits from your protocol's activity and response requirements.
 
-## Protect authority and configuration
+<span id="protect-authority-and-configuration" />
+
+## Authority and Configuration
 
 | Pattern | Measured property |
 | --- | --- |
@@ -37,28 +43,67 @@ This edition is reviewed against [credible-std at `fe49de6`](https://github.com/
 | [AMM fee allowlist](./ass14-fee-calculations) | Stored fee matches the allowed values for the pool type |
 | [Paused balance bound](./ass17-panic-state-validation) | A stored counter cannot increase when the transaction starts paused |
 
-## Check accounting and operation results
+<span id="check-accounting-and-operation-results" />
+
+## Accounting and Operation Results
 
 | Pattern | Measured property |
 | --- | --- |
 | [Reserve product floor](./ass06-constant-product) | Product of two recorded reserves does not decrease |
 | [Deposit supply delta](./ass08-sum-of-all-positions) | Aggregate increase equals a covered deposit's amount |
 | [Borrowed supply bound](./ass19-tokens-borrowed-invariant) | Recorded borrowing does not exceed recorded supply |
-| [Lending health factor](./ass07-lending-health-factor) | Selected account's post-call health exceeds a floor; legacy caller selection needs adaptation |
 | [Asset and share units](./ass12-erc4626-assets-to-shares) | Raw asset/share comparison, valid only for a specified one-to-one model |
 | [Deposit and withdrawal share price](./ass13-erc4626-deposit-withdraw) | Asset-per-share ratio does not decrease across those calls |
 | [Harvest balance and share price](./ass18-harvest-increases-balance) | Two stored values do not decrease during a covered harvest |
 
-## Oracle and liquidation examples that need correction
+## Solvency
 
-These legacy pages retain their source for comparison and explain the replacement approach. They are not deployment-ready policies.
+| Pattern | Measured property |
+| --- | --- |
+| [Lending health factor](./ass07-lending-health-factor) | Selected account's post-call health exceeds a floor; legacy caller selection needs adaptation |
+| [Liquidation health improvement](./ass16-liquidation-health-factor) | Health before and after liquidation; legacy snapshots need correction |
+
+## Oracle and Valuation
+
+| Pattern | Measured property |
+| --- | --- |
+| [Oracle freshness](./ass10-oracle-validation) | Age of the oracle update; legacy snapshot reads need adaptation |
+| [TWAP deviation](./ass11-twap-deviation) | Distance from a time-weighted price; snapshot reads and scaling need correction |
+| [Tick bounds and spacing](./ass15-price-within-ticks) | Pool tick bounds and initialized-tick spacing; legacy predicate needs correction |
+| [In-transaction oracle changes](./ass28-intra-tx-oracle-deviation) | Change across each covered update in a tested synthetic fixture; not a historical exploit replay |
+
+<span id="legacy-examples-requiring-adaptation" />
+
+## Examples requiring corrections
+
+These pages identify specific source limitations beyond configuring a template for your protocol. They retain the source for comparison and explain the required correction. They are not deployment-ready policies.
 
 | Example | Required correction |
 | --- | --- |
+| [Accredited caller gate](./ass04-kyc-whitelist) | Read the accreditation registry at an explicit snapshot |
+| [Lending health factor](./ass07-lending-health-factor) | Select the account for the triggering call; allow legitimate recovery operations |
+| [Native ETH outflow](./ass21-ether-drain) | Observe actual native custody at distinct transaction snapshots |
 | [Oracle freshness](./ass10-oracle-validation) | Bind the oracle and timestamp read to the operation's snapshot |
 | [TWAP deviation](./ass11-twap-deviation) | Use snapshot reads and an exact scaled comparison |
-| [In-transaction oracle changes](./ass28-intra-tx-oracle-deviation) | Observe the price at each relevant call or consumption point |
 | [Tick bounds and spacing](./ass15-price-within-ticks) | Apply spacing to initialized ticks, not the current pool tick |
 | [Liquidation health improvement](./ass16-liquidation-health-factor) | Read distinct pre- and post-call states and match liquidation semantics |
 
-For production preparation, follow [Ethereum assertion testing](/credible/testing-strategy). The [hack case studies](/assertions-book/previous-hacks/prev-hacks-index) provide historical context rather than proof that an example covers every attack path.
+For production preparation, follow [Ethereum assertion testing](../../credible/testing-strategy). The [hack case studies](../previous-hacks/prev-hacks-index) provide historical context rather than proof that an example covers every attack path.
+
+## Read the catalog facets
+
+| Facet | Meaning | Where to look |
+| --- | --- | --- |
+| Risk domain | Flow, authority/configuration, accounting, solvency, valuation, or cross-chain verification | Pattern groups above and [case studies](../previous-hacks/prev-hacks-index) |
+| Protocol family | The storage and economic model being adapted | [Aave](./aave-v3-suite), [ERC-4626](./vault-policies), [Balancer custody](./balancer-outflow), and [Optimism FMA](./optimism-fma-suite) |
+| Dispatch mechanism | When the runtime invokes the assertion | [Triggers](../../credible/triggers); [anomaly gating](./anomaly-gated-policies) is a dispatch choice, not a separate risk domain |
+| Specification | APIs the assertion requests | [Legacy, Reshiram, and Experimental](../../credible/cheatcodes-reference#assertion-specs) |
+| Adaptation requirements | Contract-specific configuration, source corrections, or experimental components | The correction table above and limitations in each entry |
+| Evidence | Source review, compilation, local behavior tests, exploit replay, or live enforcement | The entry's stated evidence; one level does not imply another |
+
+Imported Book sources compile at the pinned revision, but most are not individually behavior-tested by this documentation review. The ownership tutorial and local observation fixtures identify their executed tests. The Aave fork and Optimism FMA suite are source catalogs, not suites executed in this review; their links follow moving branches rather than pinned tested releases. Aave includes intentional defects and mock contracts. Verify the assertion specification per contract in those forks. Read limitations before copying an example.
+
+<span id="start-with-a-working-example" />
+<span id="oracle-and-liquidation-examples-that-need-correction" />
+
+The hack case studies include inline Reshiram implementations, mirrored in `examples/docs/src/cases` for compilation and testing. All 13 restored implementations compile against the pinned library, and 38 synthetic case-study tests pass under PCL 1.9.0. These tests check the displayed policies against local fixtures; they do not establish compatibility with a deployed protocol or replay the incidents. Their source and evidence are separate from the imported Book sources above.

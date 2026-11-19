@@ -1,102 +1,47 @@
 ---
 title: Storage Lookup
-description: Access the value of a storage variable at a specific address. Even if the variable is not publicly accessible and not part of the contract's state.
+description: Read a known contract storage slot at a transaction or call snapshot.
 ---
 
-Storage lookup mappings describe how assertions can read raw storage slots from a target contract when a public getter is not available.
+Storage lookup reads a raw slot without requiring a public getter. The caller must supply the correct contract address, storage layout, and snapshot.
 
 ## Status
 
-**Supported.**
+**Spec:** Reshiram for explicit snapshots. **Evidence:** API reference; this page does not provide a standalone tested policy. The [ownership tutorial](../../assertions-book/assertions/run-an-example) exercises endpoint reads in a local fixture.
 
-## Implementation Details
+<span id="implementation-details" />
+<span id="required-cheatcodes" />
 
-### Required Cheatcodes
+## API and Behavior
 
-- `loadStateAt(address target, bytes32 slot, ForkId fork)` - Reads the raw storage value at the given slot for the specified contract address and snapshot
+[`loadStateAt(target, slot, fork)`](../cheatcodes-reference#loadstateat) returns the slot's `bytes32` value at the supplied `ForkId`.
 
-### Example Implementation
+| Snapshot | Question it answers |
+| --- | --- |
+| `_preTx()` | What was the value before the transaction? |
+| `_postTx()` | What was the value after the transaction? |
+| Matched call start/end | What changed across this particular call? See [Call Frame Context](./call-frame-context). |
 
-Protocol:
+<span id="example-implementation" />
+<span id="implementation-notes" />
 
-```solidity
-import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+## Interpreting a Slot
 
-contract Protocol {
-    // This variable is stored in slot 0
-    address owner;
+For an unpacked owner address in slot zero, decode the low 160 bits as an address. This layout is a property of that contract, not a general ownership convention. A proxy implementation slot, packed variable, or mapping entry requires its own layout and decoding.
 
-    function setOwner(address owner_) public {
-        owner = owner_;
-    }
-}
-```
+Two possible owner policies answer different questions:
 
-Assertion:
+- **Endpoint lock:** compare pre- and post-transaction values to reject a permanent change.
+- **Allowlist:** compare the selected snapshot's owner with an approved set to restrict who may own the contract.
 
-```solidity
-contract StorageLookupAssertion is Assertion {
-    constructor() {
-        registerAssertionSpec(AssertionSpec.Reshiram);
-    }
+Neither comparison establishes that every intermediate owner was allowed. Use [State Change Tracking](./state-changes) when that is the requirement.
 
-    function triggers() public view override {
-        registerTxEndTrigger(this.assertionStorageLookup.selector);
-    }
+<span id="example-use-cases" />
+<span id="implementation-considerations" />
+<span id="future-improvements" />
 
-    function assertionStorageLookup() public view {
-        Protocol protocol = Protocol(ph.getAssertionAdopter());
-        // Define a whitelist of allowed owner addresses
-        address[] memory whitelist = new address[](2);
-        whitelist[0] = address(0x1);
-        whitelist[1] = address(0x2);
+## Coverage Limits
 
-        // Read owner from storage slot 0 at the post-transaction snapshot.
-        // Complex casting is needed because loadStateAt() returns bytes32.
-        // 1. Convert bytes32 to uint256
-        // 2. Convert uint256 to uint160 (address size)
-        // 3. Cast to address type
-        PhEvm.ForkId memory postTx = _postTx();
-        address owner = address(uint160(uint256(ph.loadStateAt(address(protocol), bytes32(uint256(0)), postTx))));
-
-        // Verify the owner is in the whitelist
-        for (uint256 i = 0; i < whitelist.length; i++) {
-            if (owner == whitelist[i]) {
-                return;
-            }
-        }
-
-        revert("Owner not in whitelist");
-    }
-}
-```
-
-### Implementation Notes
-
-- **Storage access capabilities:**
-    - You can load specific slots from any address, even if no public getter exists
-    - Works with both external and internal contract storage
-
-## Example Use Cases
-
-- Read slots of private inputs where no getter is available:
-    - e.g. implementation address of ERC1967
-- Access internal contract state for validation
-- Verify ownership or admin privileges properly set
-
-## Implementation Considerations
-
-1. **State snapshot semantics:**
-    - Values can only be read from pre or post states of the executed transactions
-    - No access to intermediate state changes during transaction execution
-    - To work around this, use `getStateChanges()` to capture all intermediate values
-
-2. **Storage layout knowledge:**
-    - Requires understanding of the target contract's storage layout
-    - May need complex casting for packed storage slots
-
-## Future Improvements
-
-- Provide intra-transaction snapshot states
-- Add helper functions for common storage patterns
-- Implement automatic storage layout detection
+- Read from the address that holds the storage. In a delegatecall-based proxy, this can differ from the implementation code's address.
+- Calculate mapping slots and apply the correct offsets and masks for packed fields. See [Modified Key Discovery](./modified-keys) for its separate discovery constraints.
+- Confirm the deployed runtime supports the requested specification. A local endpoint test does not establish production coverage.

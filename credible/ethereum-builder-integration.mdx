@@ -1,6 +1,6 @@
 ---
 title: 'For Ethereum Builders'
-description: 'Scope Ethereum builder validation, credible-block markers, routing, and operational responsibilities.'
+description: 'Scope Ethereum builder enforcement, credible-block markers, routing, and operational responsibilities.'
 ---
 
 This guide is for Ethereum block builders integrating the Assertion Enforcer. Protocol teams should use [Ethereum integration planning](./dapp-integration).
@@ -9,11 +9,11 @@ This guide is for Ethereum block builders integrating the Assertion Enforcer. Pr
 
 Agree on the target Ethereum deployment, approved builder software, State Oracle and Credible Registry deployments, builder authorization, and the supported assertion specification. Obtain the deployment-specific operator runbook and endpoints through onboarding.
 
-## 1. Connect Validation to Block Building
+## 1. Connect Enforcement to Block Building
 
-Integrate the Assertion Enforcer with candidate transaction execution. Supply the execution context needed by the applicable triggers and wait for the required validation results before publishing the candidate block.
+Integrate the Assertion Enforcer with candidate transaction execution. Supply the execution context needed by the applicable triggers and wait for the required enforcement results before publishing the candidate block.
 
-Exclude candidates that fail active production assertions. A successful report only makes a transaction eligible for inclusion. Document handling for validation errors, resource exhaustion, missing artifacts, and timeouts. Do not assume the sequencer rollback design in the [L2 section](./l2-integrations/validation-pipeline) applies to an Ethereum builder.
+Exclude candidates that fail active production assertions. A successful report only makes a transaction eligible for inclusion. Document handling for enforcement errors, resource exhaustion, missing artifacts, and timeouts. Do not assume the sequencer rollback design in the [L2 section](./l2-integrations/validation-pipeline) applies to an Ethereum builder.
 
 ## 2. Prepare Assertion State and Artifacts
 
@@ -23,7 +23,7 @@ Index assertion assignments and lifecycle events from the State Oracle. Prepare 
 
 Only authorized builder addresses may mark blocks in the Credible Registry. Place the marker before protected operations and bind it to the expected block timestamp. Protect the marker's publication and signing flow according to the [Trust Model](./trust-model#decentralized-builders).
 
-The marker is an attestation, not a proof of assertion execution. Guarded protocols depend on the builder honoring its validation policy. Assertion-manager authority in the State Oracle is separate from builder authorization in the Credible Registry.
+The marker is an attestation, not a proof of assertion execution. Guarded protocols depend on the builder honoring its enforcement policy. Assertion-manager authority in the State Oracle is separate from builder authorization in the Credible Registry.
 
 ## 4. Verify Routing and Guarded Execution
 
@@ -39,6 +39,6 @@ Ethereum bridge or relayer activity is submitted as Ethereum transactions and mu
 
 ## 5. Establish Operational Ownership
 
-Monitor marker production, gaps in credible blocks, validation latency, artifact readiness, routing failures, and invalidations. Define incident contacts, authorization changes, software upgrades, and recovery responsibilities with protocol teams.
+Monitor marker production, gaps in credible blocks, enforcement latency, artifact readiness, routing failures, and invalidations. Define incident contacts, authorization changes, software upgrades, and recovery responsibilities with protocol teams.
 
 Builder outages can trigger a protocol guard's configured fail-open condition. That restores access by relaxing mandatory credible-block execution; it is not continued protection from nonparticipating builders. Review [System Requirements](./system-requirements) and [Trust Model](./trust-model) before rollout.

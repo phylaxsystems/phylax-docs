@@ -1,78 +1,62 @@
 ---
-title: Radiant Capital Hack
-description: Ownership change of lending pools lead to drain
+title: "Radiant Capital Ownership Takeover"
+description: "Attack mechanism and inline Reshiram assertion example for Radiant Capital Ownership Takeover"
 ---
 
 ## What Happened
 
-In October 2024, Radiant Capital was hacked. You can read more about the hack on [Rekt](https://rekt.news/radiant-capital-rekt2/).
-In short, the attacker managed to gain control over 3 signers of the Radiant Capital multisig, which allowed the attacker to change ownership of the lending pools and ultimately drain the pools.
-Had there been an assertion in place that checked that the ownership of the lending pools didn't change, the hack would have been prevented.
+Radiant’s reimbursement proposal identifies the October 16, 2024 multisig exploit as causing over $50 million in losses. The case concerns compromised authorization and subsequent control of protocol assets, rather than a mathematical error in lending accounting. [Radiant reimbursement proposal](https://community.radiant.capital/t/feedback-101-deploying-merged-claim-contracts-for-radiant-depositor-reimbursement/1936).
 
-## Why This Matters
+## Attack Mechanism
 
-Compromised signers can authorize harmful ownership changes. An assertion can reject those changes or permit transfers only to approved addresses.
+The attacker obtained enough signing authority to approve changes to Radiant's lending-pool administration. Once control moved, the attacker could redirect protocol behavior and move assets. The lending arithmetic did not have to fail: the transaction was dangerous because it changed who controlled the contracts.
 
-Plan legitimate transfers around the policy and its change delays.
+The relevant authority has several parts. The addresses provider has an owner, a pool admin, and an emergency admin. Protecting only `owner()` leaves the other roles outside the rule. The assertion below compares all three roles before and after the transaction, using explicit Reshiram snapshot calls.
 
-## Assertion Pattern
+A legitimate administration transfer also changes these values. A freeze policy therefore requires a planned policy update before a legitimate transfer; an allowlist policy is an alternative when transfers to known successors should remain possible.
 
-The assertion checks changes to the lending pool's owner, emergency admin, and pool admin.
+## Assertion Example
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
-import {AssertionSpec} from "../lib/credible-std/SpecRecorder.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
-interface ILendingPoolAddressesProvider {
-    function owner() external view returns (address);
-    function getEmergencyAdmin() external view returns (address);
-    function getPoolAdmin() external view returns (address);
-}
-
-// Radiant Lending Pool on Arbitrum that got hacked and drained
-contract LendingPoolAddressesProviderAssertions is Assertion {
-    constructor() {
-        registerAssertionSpec(AssertionSpec.Reshiram);
+/// @notice Freeze the provider's owner, pool admin, and emergency admin at transaction boundaries.
+contract RadiantAuthority is Assertion {
+    constructor() { registerAssertionSpec(AssertionSpec.Reshiram); }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address provider = ph.getAssertionAdopter();
+        bytes[3] memory getters = [abi.encodeWithSignature("owner()"),
+            abi.encodeWithSignature("getPoolAdmin()"), abi.encodeWithSignature("getEmergencyAdmin()")];
+        for (uint256 i; i < getters.length; ++i) {
+            address beforeRole = abi.decode(read(provider, getters[i], _preTx()), (address));
+            address afterRole = abi.decode(read(provider, getters[i], _postTx()), (address));
+            require(beforeRole == afterRole, "Authority changed");
+        }
     }
 
-    ILendingPoolAddressesProvider public lendingPoolAddressesProvider =
-        ILendingPoolAddressesProvider(0x091d52CacE1edc5527C99cDCFA6937C1635330E4); //arbitrum
-
-    function triggers() external view override {
-        // Trigger on any storage change to catch ownership modifications
-        registerTxEndTrigger(this.assertionOwnerChange.selector);
-        registerTxEndTrigger(this.assertionEmergencyAdminChange.selector);
-        registerTxEndTrigger(this.assertionPoolAdminChange.selector);
-    }
-
-    // Check if the owner has changed
-    function assertionOwnerChange() external view {
-        PhEvm.ForkId memory preFork = _preTx();
-        address prevOwner = lendingPoolAddressesProvider.owner();
-        PhEvm.ForkId memory postFork = _postTx();
-        address newOwner = lendingPoolAddressesProvider.owner();
-        require(prevOwner == newOwner, "Owner has changed");
-    }
-
-    // Check if the emergency admin has changed
-    function assertionEmergencyAdminChange() external view {
-        PhEvm.ForkId memory preFork = _preTx();
-        address prevEmergencyAdmin = lendingPoolAddressesProvider.getEmergencyAdmin();
-        PhEvm.ForkId memory postFork = _postTx();
-        address newEmergencyAdmin = lendingPoolAddressesProvider.getEmergencyAdmin();
-        require(prevEmergencyAdmin == newEmergencyAdmin, "Emergency admin has changed");
-    }
-
-    // Check if the pool admin has changed
-    function assertionPoolAdminChange() external view {
-        PhEvm.ForkId memory preFork = _preTx();
-        address prevPoolAdmin = lendingPoolAddressesProvider.getPoolAdmin();
-        PhEvm.ForkId memory postFork = _postTx();
-        address newPoolAdmin = lendingPoolAddressesProvider.getPoolAdmin();
-        require(prevPoolAdmin == newPoolAdmin, "Pool admin has changed");
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
     }
 }
 ```
+
+## What This Check Covers
+
+Attach this check to the addresses provider that owns these getters. It rejects a lasting role change; it does not detect a role changed and restored within one transaction, implementation upgrades that preserve the roles, or transfers already available to an unchanged authorized signer.
+
+<span id="why-this-matters" />
+<span id="assertion-pattern" />
+
+## Further Sources
+
+- [Rekt](https://rekt.news/radiant-capital-rekt2/)

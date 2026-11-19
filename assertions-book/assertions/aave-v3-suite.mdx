@@ -1,52 +1,39 @@
 ---
-title: Aave V3 Suite
-description: Credible Layer Assertions for Aave V3
+title: Aave V3 Assertion Catalog (Experimental)
+description: Reference catalog for an experimental Aave V3 fork, with intentional defects and explicit validation limits.
 ---
 
-<Note>
-This case study describes a separate example fork. For the current `credible-std` adapters and their activation limits, see [Aave example notes](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/aave/README.md).
-</Note>
+This reference catalogs checks in the separate [Phylax Aave V3 fork](https://github.com/phylaxsystems/aave-v3-origin/tree/main). It is distinct from the adapters in [credible-std](https://github.com/phylaxsystems/credible-std/blob/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/aave/README.md).
 
-This suite implements Aave V3 invariants as assertions. See the [Phylax fork](https://github.com/phylaxsystems/aave-v3-origin/tree/main) for code and tests.
+<span id="maturity" />
+<span id="here-be-dragons-" />
+<span id="here-be-dragons" />
+<span id="intentional-bugs" />
 
-## Approach
+<Warning>
+Do not deploy this fork as a production version of Aave. It includes an intentional borrowing defect and mock contracts designed to create invalid states.
+</Warning>
 
-Most assertions follow [Aave's invariant specifications](https://github.com/aave-dao/aave-v3-origin/tree/main/tests/invariants/specs).
+<span id="approach" />
+<span id="key-features" />
+<span id="assertion-types" />
 
-[Mocks](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/mocks) create invalid states to test assertion failures.
+## Catalog Scope
 
-## Maturity
-
-The suite includes local tests. Before production, review [release backtesting](../../credible/backtesting) for false positives against recent protocol activity.
-
-## Here Be Dragons 🐲
-
-The example fork contains an intentional bug.
-
-Anyone borrowing exactly `333e6` tokens will receive double the amount of tokens they would normally receive if they borrowed any other amount.
-
-The bug can be found in the [BorrowLogic.sol](https://github.com/phylaxsystems/aave-v3-origin/blob/main/src/contracts/protocol/libraries/logic/BorrowLogic.sol#L137-L141) file.
-
-<Warning>**DO NOT USE THIS VERSION OF AAVE V3 IN PRODUCTION!**</Warning>
-
-## Key Features
-
-The suite covers supply, borrow, repay, withdrawal, liquidation, and flash-loan operations.
-
-## Assertion Types
-
-The repository separates production assertions from showcase assertions. Showcase checks illustrate behavior that protocol Solidity can also enforce.
+The catalog covers accounting, oracle prices, flash loans, and lending-operation conditions. The fork draws on [Aave's invariant specifications](https://github.com/aave-dao/aave-v3-origin/tree/main/tests/invariants/specs) and separates its `production` directory from `showcase` checks. Those directory names describe source organization, not evidence of deployment safety.
 
 ## Assertion Collections
 
-### Production Assertions
+<span id="production-assertions" />
+
+### Assertions in the `production` directory
 
 #### Core Invariants
 
-- **[BaseInvariants](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/BaseInvariants.a.sol)** - Cross-transaction accounting validation:
+- **[BaseInvariants](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/BaseInvariants.a.sol)** - Cross-transaction accounting enforcement:
   - Debt token supply consistency across operations
   - AToken supply consistency across operations
-  - Underlying balance invariant validation
+  - Underlying balance invariant enforcement
   - Virtual balance sanity checks
   - Liquidity index integrity verification
 
@@ -54,36 +41,38 @@ The repository separates production assertions from showcase assertions. Showcas
 
 - **[OracleAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/OracleAssertions.a.sol)** - Price consistency checks:
   - Borrow/supply/liquidation price deviation monitoring (5% max)
-  - Price consistency validation across transactions
+  - Price consistency enforcement across transactions
   - Manipulated pricing input detection
 
 #### Flashloan Protection
 
 - **[FlashloanInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/FlashloanInvariantAssertions.a.sol)** - Flashloan security:
   - Repayment verification (amount + fee)
-  - Fee payment validation
+  - Fee payment enforcement
   - Reserve state integrity
 
 #### Log-Based Verification
 
-- **[LogBasedAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/LogBasedAssertions.a.sol)** - Proxy/delegatecall resilient validation:
+- **[LogBasedAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/production/LogBasedAssertions.a.sol)** - Event-based accounting checks:
   - Balance change verification using event logs
-  - Works with complex call patterns
+  - Confirm emitter and call-path coverage for the target proxy design
 
 ### Showcase Assertions
 
-#### Operation Validation
+<span id="operation-validation" />
+
+#### Operation Checks
 
 - **[LendingInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/LendingInvariantAssertions.a.sol)** - Standard supply/withdrawal checks:
 
-  - Reserve state validation
+  - Reserve state checks
   - Supply cap enforcement
   - Balance change verification
   - Collateral withdrawal health
 
 - **[LiquidationInvariantAssertions](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/LiquidationInvariantAssertions.a.sol)** - Standard liquidation checks:
   - Health factor thresholds
-  - Grace period validation
+  - Grace period checks
   - Close factor conditions
   - Deficit accounting
   - Reserve state requirements
@@ -95,30 +84,18 @@ The repository separates production assertions from showcase assertions. Showcas
   - Healthy to unhealthy transition prevention
   - Supply/withdraw/repay health maintenance
 
-#### Basic Validation
+<span id="basic-validation" />
 
-- **[BorrowLogicErrorAssertion](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/BorrowLogicErrorAssertion.a.sol)** - Simple balance validation:
+#### Basic Checks
+
+- **[BorrowLogicErrorAssertion](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/src/showcase/BorrowLogicErrorAssertion.a.sol)** - Simple balance checks:
   - Borrow amount matches underlying balance change
 
-## Testing
+<span id="testing" />
+<span id="usage" />
 
-The tests cover valid and invalid operations, sequences, batches, and boundary conditions. Mocks provide controlled failure cases.
+## Validation Before Adaptation
 
-## Intentional Bugs
+Review and pin the fork revision before using its tests or copying an assertion. Inspect the [mock contracts](https://github.com/phylaxsystems/aave-v3-origin/tree/main/assertions/mocks) and distinguish intentional failures from the behavior of the deployed protocol.
 
-1. **333e6 Borrow Bug**: Borrowing exactly 333e6 tokens returns double amount
-
-   - Location: `BorrowLogic.sol` lines 128-144
-   - Test: `test_BASE_INVARIANT_A_DebtTokenSupply_333e6Bug()`
-
-2. **Mock Protocol**: `BrokenPool.sol` for controlled testing
-
-## Usage
-
-```bash
-# Run all assertion tests
-FOUNDRY_PROFILE=assertions pcl test
-
-# Run specific test file
-FOUNDRY_PROFILE=assertions pcl test assertions/test/BaseInvariants.t.sol
-```
+The collections above describe intended checks. This review does not establish runtime compatibility, test coverage, or live enforcement for that fork. Follow [assertion testing](../../credible/testing-assertions) for your own implementation, then [review release backtests](../../credible/backtesting) and the [integration test plan](../../credible/testing-strategy) before activation.

@@ -1,92 +1,73 @@
 ---
-title: Cream Finance 2
-description: Cream Finance suffered a price manipulation hack
+title: "Cream Vault-Share Valuation"
+description: "Attack mechanism and inline Reshiram assertion example for Cream Vault-Share Valuation"
 ---
-
-Cream Finance suffered a 130M USD hack in October 2021.
-
-Detailed Analysis: https://mudit.blog/cream-hack-analysis/
 
 ## What Happened
 
-The attack stem from a sudden price manipulation of a supported asset (yUSDVault) in the protocol.
-The attacker built up leveraged positions and then manipulated the price of the asset by donating
-the underlying into the yUSDVault.
+Mudit Gupta’s October 28, 2021 analysis describes the prior day’s Cream exploit: leveraged vault-share exposure and a donation changed the vault exchange rate, creating debt beyond the account’s collateral. It reports over $130 million extracted from available lending assets. [Mudit Gupta incident analysis](https://mudit.blog/cream-hack-analysis/).
 
-## Assertion Pattern
+## Attack Mechanism
 
-One possible solution is to check price deviations from touched assets in the protocol during the transaction.
-This would avoid flashloan price manipulation attacks.
+The attacker built leveraged exposure to vault shares and then donated underlying assets directly into the vault. The donation increased the vault's assets per share, which increased the collateral value reported to the lending system. Borrowing against that amplified value let the attacker extract other available assets.
+
+The amplification matters: a direct donation costs assets, but when the attacker already holds a large leveraged share position, the gain in borrowing capacity can exceed that cost. A price derived from the same manipulable vault balance is not independent collateral evidence.
+
+Event signatures and layouts differ from function selectors. The example inspects a configured market's borrowing calls and reads its price explicitly around those operations.
+
+Set `reader` to the deployed price oracle and `query` to the calldata for its market-price getter. Attach the assertion to that market and select `borrow(uint256)`. The pre-call snapshot detects a price raised earlier in the same transaction, even if it is restored after borrowing.
+
+## Assertion Example
 
 ```solidity
-uint256 constant MAX_DEVIATION_BPS = 500; // 5% max deviation
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
 
-function assertion_priceDeviation() external view {
-    // Get pre-transaction prices first
-    PhEvm.ForkId memory preFork = _preTx();
-    PhEvm.Log[] memory logs = ph.getLogs();
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
-    // Count relevant logs to size our array
-    uint256 count = 0;
-    for (uint256 i = 0; i < logs.length; i++) {
-        bytes32 topic = logs[i].topics[0];
-        if (topic == CTokenInterface.Mint.selector ||
-            topic == CTokenInterface.Redeem.selector ||
-            topic == CTokenInterface.Borrow.selector ||
-            topic == CTokenInterface.RepayBorrow.selector) {
-            count++;
+/// @notice Bound a configured metric before and after every covered operation.
+contract CallMetricBounds is Assertion {
+    address public immutable reader;
+    bytes public query;
+    bytes4 public immutable operation;
+    uint256 public immutable maximumBps;
+    constructor(address reader_, bytes memory query_, bytes4 operation_, uint256 maximumBps_) {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+        require(reader_ != address(0) && query_.length >= 4, "Invalid reader");
+        reader = reader_; query = query_; operation = operation_; maximumBps = maximumBps_;
+    }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address target = ph.getAssertionAdopter();
+        uint256 start = abi.decode(read(reader, query, _preTx()), (uint256));
+        require(start > 0 && start <= type(uint128).max && maximumBps <= 100_000, "Invalid baseline or bound");
+        uint256 allowed = start * maximumBps / 10_000;
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(target, operation);
+        for (uint256 i; i < calls.length; ++i) {
+            within(start, allowed, _preCall(calls[i].id));
+            within(start, allowed, _postCall(calls[i].id));
         }
     }
-
-    // Collect touched assets and their pre-prices
-    address[] memory touchedAssets = new address[](count);
-    uint256[] memory prePrices = new uint256[](count);
-    uint256 idx = 0;
-
-    for (uint256 i = 0; i < logs.length; i++) {
-        bytes32 topic = logs[i].topics[0];
-        address asset;
-
-        if (topic == CTokenInterface.Mint.selector) {
-            asset = getAssetFromLog(logs[i]);
-        } else if (topic == CTokenInterface.Redeem.selector) {
-            asset = getAssetFromLog(logs[i]);
-        } else if (topic == CTokenInterface.Borrow.selector) {
-            asset = getAssetFromLog(logs[i]);
-        } else if (topic == CTokenInterface.RepayBorrow.selector) {
-            asset = getAssetFromLog(logs[i]);
-        } else {
-            continue;
-        }
-
-        touchedAssets[idx] = asset;
-        prePrices[idx] = priceOracle.getPrice(asset);
-        idx++;
+    function within(uint256 start, uint256 allowed, PhEvm.ForkId memory at) internal view {
+        uint256 value = abi.decode(read(reader, query, at), (uint256));
+        uint256 delta = value >= start ? value - start : start - value;
+        require(delta <= allowed, "Metric outside bound");
     }
 
-    // Get post-transaction prices and compare
-    PhEvm.ForkId memory postFork = _postTx();
-
-    for (uint256 i = 0; i < touchedAssets.length; i++) {
-        uint256 postPrice = priceOracle.getPrice(touchedAssets[i]);
-        uint256 prePrice = prePrices[i];
-
-        // Check deviation in both directions
-        uint256 deviation;
-        if (postPrice > prePrice) {
-            deviation = ((postPrice - prePrice) * 10000) / prePrice;
-        } else {
-            deviation = ((prePrice - postPrice) * 10000) / prePrice;
-        }
-
-        require(deviation <= MAX_DEVIATION_BPS, "Price deviation too high");
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
     }
-}
-
-// Helper to extract asset address from log (implementation depends on log structure)
-function getAssetFromLog(PhEvm.Log memory log) internal pure returns (address) {
-    // Decode asset address from log topics or data
-    // Implementation depends on the specific event structure
-    return abi.decode(log.data, (address));
 }
 ```
+
+## What This Check Covers
+
+Repeat the policy for each affected market. Legitimate vault yield, donations, decimal scales, and stale references affect threshold selection. This bound constrains movement relative to the initial price; it does not prove that either price reflects recoverable collateral.
+
+<span id="assertion-pattern" />

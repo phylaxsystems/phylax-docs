@@ -1,89 +1,48 @@
 ---
-title: Variable State Change Tracking
-description: Track and assert all values assigned to a specific storage variable during a transaction's execution, including intermediate states.
+title: State Change Tracking
+description: Inspect writes to a known storage slot, including intermediate values hidden by endpoint comparisons.
 ---
 
-Variable state change mappings describe how assertions can track writes to a specific storage slot during transaction execution.
+State-change tracking returns the value history for a known storage slot during a transaction. It can reveal a temporary change even when the final value equals the initial value.
 
 ## Status
 
-**Supported.**
+**Evidence:** API reference and worked reasoning examples below, not an executable policy fixture. Confirm the target runtime's [assertion specification](../cheatcodes-reference#assertion-specs) before combining write observations with snapshot reads.
 
-## Implementation Details
+<span id="implementation-details" />
+<span id="required-cheatcodes" />
 
-### Required Cheatcodes
+## API and Behavior
 
-- `getStateChanges(address aa, bytes32 slot)`
+[`getStateChanges(target, slot)`](../cheatcodes-reference#getstatechanges) returns the value history for that slot in order, including its initial value as the first element when changes occur. Same-value writes are omitted. If there are no value changes, the array is empty; otherwise it contains at least two elements. The [typed helpers](../credible-std-overview#state-change-helpers) decode those values; they do not infer the contract's storage layout.
 
-### Example Implementation
+<span id="example-implementation" />
+<span id="implementation-notes" />
+<span id="example-use-cases" />
 
-Protocol:
+## Comparing Writes with a Policy
 
-```solidity
-// Example contract code if needed
-contract MonotonicallyIncreasingValue {
-    uint256 public value;
+For a nondecreasing-value policy, compare adjacent entries in the returned history, starting at index `1`: each value must be greater than or equal to the preceding value. Index `0` is already the initial value; do not compare it against a separately read baseline. An empty history has no observed transition to reject.
 
-    function setValue(uint256 value_) external {
-        value = value_;
-    }
-}
-```
+| Initial value | Actual writes | Returned history | Nondecreasing result | Reason |
+| --- | --- | --- | --- | --- |
+| 10 | None | `[]` | Accept | No observed change |
+| 10 | 11 | `[10, 11]` | Accept | The value increases |
+| 10 | 9 | `[10, 9]` | Reject | The value decreases |
+| 10 | 11, 10 | `[10, 11, 10]` | Reject | A later decrease is visible despite equal transaction endpoints |
+| 10 | 10 | `[]` | Accept | Same-value writes are omitted |
+| 10 | 11, 11 | `[10, 11]` | Accept | The repeated write adds no history entry |
 
-Assertion:
+Using a strict comparison checks increases between returned entries, but cannot enforce strict increase on **every write**: a same-value write is invisible in this history. A policy that must reject such writes needs another observation mechanism.
 
-```solidity
-import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+For an authority lock, compare every recorded authority value with the permitted value or allowlist instead. The [ownership tutorial](../../assertions-book/assertions/run-an-example) demonstrates why endpoint equality alone cannot rule out a temporary authority change; it does not test a write-tracking replacement.
 
-contract StateChangesAssertion is Assertion {
-    constructor() {
-        registerAssertionSpec(AssertionSpec.Reshiram);
-    }
+<span id="implementation-considerations" />
+<span id="future-improvements" />
 
-    function triggers() public view override {
-        registerTxEndTrigger(this.assertionStateChanges.selector);
-    }
+## Coverage Limits
 
-    function assertionStateChanges() public view {
-        MonotonicallyIncreasingValue protocol = MonotonicallyIncreasingValue(ph.getAssertionAdopter());
-        uint256[] memory changes = getStateChangesUint(address(protocol), 0x0);
-        for (uint256 i = 0; i < changes.length - 1; i++) {
-            require(changes[i] < changes[i + 1], "Value is not monotonically increasing");
-        }
-    }
-}
-```
-
-### Implementation Notes
-
-- **Storage access helpers:**
-    - The `getStateChangesTYPE()` helper functions return the changes for the given slot cast to the respective type
-    - Storage layout packing has to be handled by the user
-
-- **State change ordering:**
-    - The `getStateChanges()` function returns the changes in order of changes being made
-    - To access values of a mapping, the slot has to be calculated manually
-    - The pre-execution value is not included in the state changes
-
-## Example Use Cases
-
-Reject changes to fixed values, such as an owner or proxy implementation. For mutable values, check each assigned value against the policy's limits or allowlist.
-
-## Implementation Considerations
-
-1. **Slot granularity**
-    - Request state changes at the slot level
-    - Use the target contract's storage layout to select the right slot
-    - Shift or mask values when the relevant variable occupies only part of a packed slot
-
-2. **Slot Coupling**
-    - Treat arrays of state changes for different slots as independent observations
-        - Align values across slots only when your assertion explicitly establishes that relationship
-        - Use protocol-specific knowledge of write order when timing relationships matter
-
-## Future Improvements
-
-- Provide variable level access
-- Allow masking/shifting for correct bits of the slot in helper functions
-- Allow coupling of variables
-    - stateChanges provide snapshots of the requested slots
+- Observations are slot-level. Decode packed fields with the contract's offsets and masks before comparing values.
+- Derive mapping slots from the layout, or use [Modified Key Discovery](./modified-keys) within its discovery limits.
+- Separate slots have separate histories. Matching array indices does not establish that two values existed at the same moment. Use [call snapshots](./call-frame-context) when a policy needs a defined boundary across multiple slots.
+- Validate reverted calls, nested execution, and trigger coverage in the target runtime before treating an observed write sequence as proof of protection.

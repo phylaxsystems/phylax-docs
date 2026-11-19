@@ -7,10 +7,6 @@ description: "Reference for credible-std contracts, helpers, specs, and testing 
 
 For individual cheatcode signatures, see the [Cheatcodes API Reference](./cheatcodes-reference). For local assertion tests, see [Testing Assertions](./testing-assertions).
 
-<Note>
-Choose the assertion specification supported by your target Ethereum deployment. Reshiram (V2) helpers require V2 support in the enforcer; a local test passing does not establish deployment compatibility. Earlier Linea-specific restrictions are documented in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
-</Note>
-
 ## Package and Configuration
 
 This reference follows [source revision `fe49de6`](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0). Pin your dependency; a Solidity interface in the library does not establish support in your CLI or deployed enforcer.
@@ -39,7 +35,11 @@ Protocol guards live in [`credible-registry`](./credible-layer-contracts#credibl
 | `StateChanges.sol` | Typed helpers for legacy state-change arrays. |
 | `utils/ForkUtils.sol` | Snapshot getter calls, typed return decoding, and ERC20 balance delta helpers. |
 | `Sensitivity.sol` | Anomaly trigger levels from 1 to 10; higher levels fire more often. |
-| `CredibleTest.sol` | Test base for `pcl test` that exposes `cl.assertion(...)`. |
+| `Console.sol` | Provides `console.log(string)` for assertion debugging; it does not provide Forge console overloads. |
+| `CredibleTest.sol` | Test base exposing `cl.assertion(...)` and the `cl.setAnomalyLevel(...)` interface. |
+| `CredibleTestWithBacktesting.sol` | Local single-transaction and block-range replay harness. |
+| `utils/LogUtils.sol`, `utils/IERC20LogUtils.sol` | In-memory event matching and ERC20 event decoding. |
+| `utils/BacktestingTypes.sol`, `utils/BacktestingUtils.sol` | Replay configuration/results and supporting parsing, formatting, and script discovery. |
 
 ## Assertion Helpers
 
@@ -87,6 +87,8 @@ The cumulative flow helpers aggregate net flow into per-block buckets over a rol
 
 `watchAnomaly(target, fnSelector, sensitivity)` registers a check at a sensitivity level from 1 to 10. `Sensitivity.RECOMMENDED` is level 7. The trigger decides whether to run the assertion; the assertion's logic decides whether to reject the transaction.
 
+`Sensitivity` also exposes `LEVEL_1` through `LEVEL_10`, `MIN` (1), `MAX` (10), and `isValid(uint8)`. Values outside 1–10 are invalid registration levels.
+
 Anomaly dispatch requires runtime support. The released PCL version tested in the [anomaly guide](../assertions-book/assertions/anomaly-gated-policies) does not dispatch these triggers; compiling the interface is insufficient.
 
 ## Fork and Snapshot Helpers
@@ -98,8 +100,8 @@ Construct `ForkId` values explicitly:
 ```solidity
 PhEvm.ForkId memory preTx = _preTx();
 PhEvm.ForkId memory postTx = _postTx();
-PhEvm.ForkId memory preCall = PhEvm.ForkId({forkType: 2, callIndex: callId});
-PhEvm.ForkId memory postCall = PhEvm.ForkId({forkType: 3, callIndex: callId});
+PhEvm.ForkId memory preCall = _preCall(callId);
+PhEvm.ForkId memory postCall = _postCall(callId);
 ```
 
 Use `ph.loadStateAt` to read storage at those snapshots:
@@ -122,7 +124,7 @@ A `ForkId` identifies a snapshot; constructing one does not switch EVM state. Or
 | `_readUintAt`, `_readUint8At`, `_readAddressAt`, `_readBoolAt` | A decoded value; each takes `(target, data, fork)`. |
 | `_readBalanceAt(token, account, fork)` | The ERC20 `balanceOf(account)` result at that snapshot. |
 
-The helpers forward 500,000 gas and revert if the snapshot call fails. Typed helpers also revert if the returned bytes cannot be decoded. When calling `ph.staticcallAt` directly, check `result.ok` before decoding `result.data`.
+The helpers forward 500,000 gas and revert if the snapshot call fails. Override `_viewFailureMessage() internal pure virtual returns (string memory)` to customize that failure message. Typed helpers also revert if the returned bytes cannot be decoded. When calling `ph.staticcallAt` directly, check `result.ok` before decoding `result.data`.
 
 ## ERC20 Delta Helpers
 
@@ -139,7 +141,7 @@ function _consumedBetween(uint256 beforeValue, uint256 afterValue)
     internal pure returns (uint256 consumed);
 ```
 
-Use these helpers when an assertion needs to reason about ERC20 flows within a selected transaction or call snapshot.
+`_reducedErc20BalanceDeltasAt` forwards to `ph.reduceErc20BalanceDeltas`. `_transferredValueAt` sums the returned entries matching both `from` and `to`; it returns zero if none match. `_consumedBetween` returns `beforeValue - afterValue` for a decrease and zero otherwise. Transfer-derived deltas do not independently establish actual token balances; use snapshot balance reads when the policy needs them.
 
 ## State Change Helpers
 
@@ -169,7 +171,9 @@ function getStateChangesUint(address contractAddress, bytes32 slot, uint256 key,
     internal view returns (uint256[] memory);
 ```
 
-The same overload pattern exists for `Address`, `Bool`, and `Bytes32`.
+The same overload pattern exists for `Address`, `Bool`, and `Bytes32`. Mapping overloads read `keccak256(abi.encodePacked(key, slot)) + slotOffset`; they do not automatically resolve nested mappings or dynamic keys.
+
+Address conversion keeps the low 160 bits of each word; Boolean conversion treats any nonzero word as `true`. These helpers do not shift or mask a packed field at an arbitrary byte offset. Read and decode the exact storage word for packed values.
 
 ## Call Matching Helpers
 
@@ -182,11 +186,18 @@ function _matchingCalls(address target, bytes4 selector, uint256 limit)
     internal view returns (PhEvm.TriggerCall[] memory);
 ```
 
-Use `_matchingCalls` when an assertion needs a bounded list of successful calls to a target selector.
+`_successOnlyFilter` selects successful calls of any call type and depth, including nested calls. `_matchingCalls` passes that filter to `ph.matchingCalls` and returns at most `limit` entries. A bounded result does not prove that no additional matching calls occurred.
 
-## Assertion Spec Helper
+<span id="assertion-spec-helper" />
 
-Register the desired assertion spec in the constructor:
+## Assertion Specifications
+
+The assertion specification selects the PhEVM APIs available to an assertion. It applies to Ethereum builders, L2 sequencers, and local tests; it is independent of which platform UI manages the release.
+
+- **Legacy (V1)** uses the original precompile set, including mutable `forkPreTx`, `forkPostTx`, and call-level fork switching.
+- **Reshiram (V2)** uses explicit `ForkId` values with `loadStateAt` and `staticcallAt`. Constructing a `ForkId` does not change the state used by ordinary Solidity getter calls.
+
+Register the desired specification exactly once in the assertion constructor. A valid assertion must define a specification; if a base constructor already registers it, do not register it again:
 
 ```solidity
 import {AssertionSpec} from "credible-std/SpecRecorder.sol";
@@ -204,6 +215,14 @@ Available specs:
 | `Reshiram` | Newer precompile set with explicit snapshot access and legacy-only fork-switching selectors disabled. |
 | `Experimental` | Unrestricted access to all available precompiles. May include untested or dangerous behavior. |
 
+### Deployment Compatibility
+
+Match the assertion's specification to the target enforcer and the CLI/runtime used for tests. A library exposing an API or a local test passing does not establish that a deployed enforcer supports it. Confirm the target runtime revision, accepted specification, required precompiles, and trigger support before activation. This requirement applies to both Ethereum and L2 integrations.
+
+For a Legacy-to-Reshiram migration, replace every mutable fork switch **and the reads that follow it**. Use `loadStateAt` for storage and `staticcallAt` or the inherited snapshot helpers for getters. Update trigger registration and test transaction, call, and temporary-change boundaries. Adding `registerAssertionSpec(AssertionSpec.Reshiram)` alone does not migrate the implementation.
+
+[L2 runtime compatibility](./l2-integrations/platform-and-compatibility#l2-runtime-compatibility) covers the requirements to confirm for a sequencer deployment.
+
 ## Testing Contracts
 
 `CredibleTest` is the base contract for tests run with `pcl test`. It exposes `cl.assertion(...)`, which registers an assertion against a target for the next call and selects one assertion function. This does not reproduce production dispatch of every matching assertion. Use the repository's optimized `ci` profile for its protection tests; see [gas-limit testing](./testing-assertions#gas-limits).
@@ -215,8 +234,102 @@ interface VmEx {
         bytes calldata createData,
         bytes4 fnSelector
     ) external;
+
+    function setAnomalyLevel(address target, uint8 firesAt) external;
 }
 ```
+
+`cl.setAnomalyLevel` stages a target’s anomaly verdict for the next `cl.assertion` call. Stage each target separately. A trigger at level `L` fires when `firesAt != 0 && L >= firesAt`; unstaged targets are unscored and do not fire. This interface requires a runtime implementing anomaly staging and dispatch; it does not make those features available in an older PCL release.
+
+## Log Utilities
+
+Import `LogUtils` from `credible-std/utils/LogUtils.sol` and `IERC20LogUtils` from `credible-std/utils/IERC20LogUtils.sol`. Their functions are `internal pure`: they operate on logs already fetched through `ph`, without making precompile calls.
+
+### `LogUtils`
+
+| Function | Result and constraints |
+| --- | --- |
+| `sig(log)` | Event signature (`topics[0]`), or zero when there are no topics. |
+| `isSig(log, eventSig)`, `isFrom(log, emitter)`, `isEvent(log, emitter, eventSig)` | Match the signature, emitter, or both. |
+| `indexedTopic(log, indexedIdx)` | Returns `topics[indexedIdx + 1]`, skipping the signature. Reverts out of bounds. |
+| `indexedAddress(log, indexedIdx)` | Low 160 bits of the indexed topic. |
+| `indexedUint(log, indexedIdx)`, `indexedBool(log, indexedIdx)` | Topic as a `uint256`, or `true` for any nonzero topic. |
+| `topic(address)`, `topic(uint256)` | Encodes the value as a `bytes32` topic. |
+| `first(logs, emitter, eventSig)` | Returns `(bool found, PhEvm.Log memory log)`; check `found` before decoding. |
+| `count(logs, emitter, eventSig)` | Number of matching logs. |
+
+Indexed access assumes a non-anonymous event whose first topic is its signature. A hashed indexed dynamic value cannot be recovered by casting its topic.
+
+### `IERC20LogUtils`
+
+| Function | Result and constraints |
+| --- | --- |
+| `transferQuery(token)`, `approvalQuery(token)` | A `PhEvm.LogQuery` for the event signature and token emitter. `address(0)` matches any emitter. |
+| `isTransfer(log)`, `isApproval(log)` | Checks the signature, exactly three topics, and 32 bytes of data. |
+| `decodeTransfer(log)` | `PhEvm.Erc20TransferData`: `token_addr`, `from`, `to`, `value`. |
+| `decodeApproval(log)` | `ApprovalData`: `token_addr`, `owner`, `spender` (addresses), and `value` (`uint256`). |
+| `decodeTransfers(logs)`, `decodeApprovals(logs)` | Arrays of decoded results. Every input must have the expected event shape; these functions do not filter mixed logs. |
+
+The library exposes `TRANSFER_EVENT_SIGNATURE` and `APPROVAL_EVENT_SIGNATURE`. Decoders revert on invalid event shape. Matching that shape does not prove the emitter is a standard ERC20 or that the event changed balances or allowances as claimed.
+
+## Protection Contracts
+
+The `protection/` directory contains reusable assertions, abstract composition bases, protocol adapters, and supporting interfaces. The following map describes the families available at the pinned source revision. Parameters, adapter implementations, and trigger registration determine the actual coverage.
+
+| Source directory | Contracts and scope |
+| --- | --- |
+| `access_control/` | `AccessControlBaseAssertion` holds the protected target. `SlotProtectionAssertion` protects configured slots; `BalanceConservationAssertion` checks configured balances; `SharePriceAssertion` checks configured vault share prices. Implement `_protectedSlots`, `_conservedBalances`, or `_protectedVaults` for the mixins you use. |
+| `vault/` | `ERC4626BaseAssertion` accepts the vault and asset addresses explicitly and supplies snapshot reads. `ERC4626SharePriceAssertion`, `ERC4626PreviewAssertion`, `ERC4626AssetFlowAssertion`, and `ERC4626CumulativeOutflowAssertion` cover share-price changes, preview consistency, asset-flow accounting, and rolling outflow limits. `IERC4626` supplies the vault interface; `examples/MetaMorphoVaultAssertion.sol` composes checks for a specific vault design. |
+| `safe/` | `SafeConfigLockAssertion` checks configured owner/module sets, threshold, guard, and fallback handler. `SafeTxShapeAssertion` checks module, delegatecall, target/selector, batch, and approval policies. `SafeConfigLockHelpers` and `SafeTxShapeHelpers` supply snapshot reads and decoding. |
+| `lending/` | `LendingBaseAssertion` checks operation safety and post-operation solvency through `ILendingProtectionSuite`. Implement `_suite()` and protocol-specific decoding, consumption checks, and account snapshots. `LendingProtectionSuiteBase` supplies shared adapter behavior. The examples include Aave V3 and SparkLend adapters and their interfaces/helpers. |
+| `perpetual/` | `PerpetualBaseAssertion` checks operation safety and post-mutation risk through `IPerpetualProtectionSuite`. Its check families include execution price, liquidity coverage, funding, liquidation, accounting, and oracle anchors. `PerpetualProtectionSuiteBase` supplies default adapter behavior; configure enabled checks and implement the protocol-specific data they require. |
+| `swaps/examples/` | `CowSettlementAssertion` and `UniswapV4PoolManagerAssertion`, with their helpers and interfaces, adapt checks to those settlement and pool-manager designs. They are protocol-specific examples, not a universal swap adapter. |
+| `anomaly/` | `AnomalyGatedBaseAssertion` supports outflow, upgrade, accounting, and oracle checks in the corresponding `AnomalyGated*Assertion` contracts. `AnomalyCompositeAssertion` combines enabled checks. `AnomalyUngatedAssertion` rejects every firing without a corroborating damage check, so its behavior differs from the gated policies. |
+
+Access-control and vault mixins require explicit calls to their `_register*Triggers()` helpers from `triggers()`. Inheriting a mixin alone does not activate its check. Define the assertion specification once across the constructor chain, and test each configured check against the actual target implementation. Constructor-time protocol reads are unavailable in the assertion deployment runtime; pass configuration such as the vault asset explicitly and check it at a runtime snapshot.
+
+For Safe allowance policies, [upstream fix `52f4f87`](https://github.com/phylaxsystems/credible-std/commit/52f4f8796303d0e4db16e6be0d309949bfdac165) makes a cumulative `increaseAllowance` peak of `uint256.max` require `allowUnlimited = true` independently of `maxAmount`. The source pin above predates this fix: a maximum numeric cap can allow that peak even with the flag disabled. Finite peaks remain subject to the numeric cap.
+
+Inline compositions are available in [Vault Policies](../assertions-book/assertions/vault-policies) and [Anomaly-Gated Policies](../assertions-book/assertions/anomaly-gated-policies). The latter also describes the current local runtime limitation on anomaly dispatch.
+
+## Local Backtesting API
+
+`CredibleTestWithBacktesting` extends `CredibleTest` and Forge's `Test` with two public entry points. This is the local Solidity replay harness, separate from the automatic backtest attached to a platform release.
+
+```solidity
+function executeBacktestForTransaction(
+    bytes32 txHash,
+    address targetContract,
+    bytes memory assertionCreationCode,
+    bytes4 assertionSelector,
+    string memory rpcUrl
+) public returns (BacktestingTypes.BacktestingResults memory results);
+
+function executeBacktest(BacktestingTypes.BacktestingConfig memory config)
+    public returns (BacktestingTypes.BacktestingResults memory results);
+```
+
+Import `BacktestingTypes` from `credible-std/utils/BacktestingTypes.sol`.
+
+| `BacktestingConfig` field | Meaning |
+| --- | --- |
+| `address targetContract` | Target whose transactions are selected for replay. |
+| `uint256 endBlock`, `uint256 blockRange` | Inclusive range ending at `endBlock`, starting at `max(1, endBlock - blockRange + 1)`. Supply a positive range and end block. |
+| `bytes assertionCreationCode` | Assertion creation bytecode including any encoded constructor arguments. |
+| `bytes4 assertionSelector` | Assertion function selected for the replay. |
+| `string rpcUrl` | RPC endpoint with the required historical state and transaction access. |
+| `bool detailedBlocks` | Enables detailed block summaries. |
+| `bool forkByTxHash` | Compatibility field; this revision always forks by transaction hash, regardless of this flag. |
+
+`BacktestingResults` returns seven `uint256` counters: `totalTransactions`, `processedTransactions`, `successfulValidations`, `skippedTransactions`, `assertionFailures`, `replayFailures`, and `unknownErrors`.
+
+The result categories in `ValidationResult` are `Success`, `Skipped`, `ReplayFailure`, `AssertionFailed`, and `UnknownError`. `ValidationDetails` carries the category, `errorMessage`, and `isProtocolViolation`. Those names are API identifiers: the implementation classifies caught errors, so an `AssertionFailed` result or `isProtocolViolation` flag needs investigation before treating it as a confirmed policy violation. A skipped transaction did not exercise the selected assertion.
+
+The harness requires FFI and the dependency's `scripts/backtesting/transaction_fetcher.sh`, which uses Bash, curl, and jq. Without FFI permission, the harness skips the test. The dependency provides a `backtesting` profile with `ffi = true`; a consuming project's profile must grant FFI too. `CREDIBLE_STD_PATH` can identify the dependency root when script discovery fails; `_getScriptSearchPaths()` can be overridden for other layouts.
+
+Trace-method availability affects transaction selection: the fetcher tries trace APIs and can fall back to direct calls only. Results therefore depend on RPC coverage and replay conditions. The harness returns counters rather than asserting your acceptance criteria; a test that merely calls it can finish without demonstrating successful assertion coverage. Check the counters and failure details explicitly.
+
+`BacktestingUtils` provides the harness's transaction parsing, hex conversion, revert decoding, and default script search paths. `TransactionData` records transaction identity, sender/recipient, value/calldata, block/index, and gas/fee fields. These support replay; they are not additional enforcement APIs.
 
 ## Related Pages
 

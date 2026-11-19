@@ -1,62 +1,65 @@
 ---
-title: Compound Upgrade Bug
-description: Compound comptroller contract had a one letter bug that allowed users to receive massive amounts of COMP rewards
+title: "Compound Reward Accrual Upgrade Bug"
+description: "Attack mechanism and inline Reshiram assertion example for Compound Reward Accrual Upgrade Bug"
 ---
 
 ## What Happened
 
-Compound upgraded their comptroller contract to https://etherscan.io/address/0x374abb8ce19a73f2c4efad642bda76c797f19233 which had a one letter bug on L1217.
+Compound Proposal 65 documents over-accrued COMP introduced by Proposal 62 and the corrective work following Proposal 64. The repair distinguishes unclaimed excess accrual from rewards already claimed. This page does not equate an exposed balance, an accrual error, and realized loss. [Compound Proposal 65](https://hackmd.io/@TylerEther/BkdJGdRVY).
 
-The bug occurred when users supplied tokens to markets with zero COMP rewards before initialization. In these cases, the supplyIndex equaled compInitialIndex (1e36), but the reward calculation logic was skipped due to the incorrect comparison operator.
+## Attack Mechanism
+
+The upgrade changed reward-index initialization. A supplier with an unset index could encounter a market supply index equal to `compInitialIndex` (`1e36`). The affected condition used `supplyIndex > compInitialIndex`, so equality skipped initialization and left the supplier index at zero.
 
 ```solidity
+// Affected initialization condition; this is protocol code, not an assertion.
 if (supplierIndex == 0 && supplyIndex > compInitialIndex) {
-    // Covers the case where users supplied tokens before the market's supply state index was set.
-    // Rewards the user with COMP accrued from the start of when supplier rewards were first
-    // set for the market.
     supplierIndex = compInitialIndex;
 }
 ```
 
-The bug was caused by using > instead of >= in the check. This meant that when supplyIndex equaled compInitialIndex (1e36), the if block was skipped, leaving supplierIndex at 0. The large difference between supplierIndex (0) and supplyIndex (1e36) caused the protocol to pay out massive unintended rewards.
+The later accrual calculation then used an index difference of roughly `1e36`, rather than the small difference since the supplier's real starting point. The correction had to account for both excess accrual still recorded in storage and rewards already claimed.
 
-The previous version worked because supplyIndex started at 0 instead of 1e36, though >= would have been more correct.
+`distributeSupplierComp` is an internal Solidity function, so EVM call-input tracing cannot discover those invocations. The example below limits net COMP leaving a configured rewards treasury in one transaction. It contains the payout even when the faulty internal function has already over-accrued rewards.
 
-## Assertion Pattern
-
-The assertion calculates the maximum COMP accrual rate and rejects distributions above it.
-
-<Warning>
-The code below is **conceptual pseudo code** to illustrate the invariant that should be enforced. It uses simplified syntax for accessing storage mappings (`compound.compAccrued[supplier]`) that would not compile in actual Solidity. A real implementation would need to use proper getter functions or storage slot calculations via `ph.loadStateAt()`.
-</Warning>
+## Assertion Example
 
 ```solidity
-// CONCEPTUAL - Verify that COMP accrual never exceeds the maximum possible rate
-function assertionValidCompAccrual() external view {
-    PhEvm.CallInputs[] memory distributions = ph.getCallInputs(
-        address(comptroller), Comptroller.distributeSupplierComp.selector
-    );
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
 
-    for (uint256 i = 0; i < distributions.length; i++) {
-        // Decode call inputs (selector already stripped by cheatcode)
-        (address cToken, address supplier) = abi.decode(distributions[i].input, (address, address));
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
-        // Check COMP accrued before distribution
-        PhEvm.ForkId memory preCallFork = PhEvm.ForkId({forkType: 2, callIndex: distributions[i].id});
-        uint256 preAccrued = comptroller.compAccrued(supplier);
-        uint256 supplyIndex = comptroller.compSupplyState(cToken).index;
-        uint256 maxDeltaPerToken = supplyIndex - comptroller.compInitialIndex();
-        uint256 supplierTokens = CToken(cToken).balanceOf(supplier);
-        uint256 maxIncrease = supplierTokens * maxDeltaPerToken;
+/// @notice Cap net COMP paid from a configured rewards treasury in one transaction.
+contract RewardPayoutLimit is Assertion {
+    address public immutable comp;
+    uint256 public immutable maximum;
+    constructor(address comp_, uint256 maximum_) {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+        require(comp_ != address(0), "Invalid COMP"); comp = comp_; maximum = maximum_;
+    }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        bytes memory query = abi.encodeWithSignature("balanceOf(address)", ph.getAssertionAdopter());
+        uint256 beforeBalance = abi.decode(read(comp, query, _preTx()), (uint256));
+        uint256 afterBalance = abi.decode(read(comp, query, _postTx()), (uint256));
+        if (beforeBalance > afterBalance) require(beforeBalance - afterBalance <= maximum, "Reward payout above cap");
+    }
 
-        // Check COMP accrued after distribution
-        PhEvm.ForkId memory postCallFork = PhEvm.ForkId({forkType: 3, callIndex: distributions[i].id});
-        uint256 postAccrued = comptroller.compAccrued(supplier);
-
-        if (postAccrued > preAccrued) {
-            uint256 increase = postAccrued - preAccrued;
-            require(increase <= maxIncrease, "COMP accrual increase exceeds maximum possible rate");
-        }
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
     }
 }
 ```
+
+## What This Check Covers
+
+The cap is a policy parameter in COMP base units, not a reconstructed reward schedule. It can reject large legitimate claims and does not fix excess `compAccrued`. Incoming COMP in the same transaction can offset outgoing COMP, so this net-balance cap is weaker than a gross-transfer or cumulative-window policy. Attach it to the paying treasury and test its actual payout paths.
+
+<span id="assertion-pattern" />

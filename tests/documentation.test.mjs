@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
@@ -6,6 +7,23 @@ const root = new URL('../', import.meta.url);
 const config = JSON.parse(readFileSync(new URL('docs.json', root), 'utf8'));
 const pageExists = (route) => existsSync(new URL(`${route.replace(/^\//, '')}.mdx`, root));
 const readPage = (route) => readFileSync(new URL(`${route.replace(/^\//, '')}.mdx`, root), 'utf8');
+
+test('internal Markdown links and component hrefs use file-relative paths', () => {
+  // Inspect tracked content only: installed packages and preview output are not docs.
+  const pages = execFileSync('git', ['ls-files', '-z', '*.mdx'], { cwd: root, encoding: 'utf8' })
+    .split('\0').filter(Boolean);
+  const violations = [];
+  for (const page of pages) {
+    const source = readFileSync(new URL(page, root), 'utf8');
+    // Images use site asset paths; navigation links must be relative to their page.
+    const rootLink = /(?:(?<!!)\]\(\s*|\bhref\s*=\s*["']|^\s*\[[^\]]+\]:\s*)\/(?!\/)[^\s)"']+/gm;
+    for (const match of source.matchAll(rootLink)) {
+      const line = source.slice(0, match.index).split('\n').length;
+      violations.push(`${page}:${line}: ${match[0]}`);
+    }
+  }
+  assert.deepEqual(violations, [], 'Use ./ or ../ for internal links:\n' + violations.join('\n'));
+});
 
 function* navigationPages(node) {
   if (!node || typeof node !== 'object') return;

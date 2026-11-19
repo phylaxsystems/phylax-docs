@@ -1,0 +1,17 @@
+source,destination
+/credible/store-submit-assertions,/credible/apply-assertions
+/credible/dapp-transparency-dashboard,/credible/dapp-explorer
+/credible/dapp-incidents,/credible/investigate-rejected-transaction
+/credible/accelerate-with-ai,/credible/agentic-pcl
+/credible/network-integration,/credible/l2-integrations/network-integration
+/credible/network-integrations/architecture-linea,/credible/l2-integrations/architecture-linea
+/credible/network-integrations/architecture-op-stack,/credible/l2-integrations/architecture-op-stack
+/credible/manual-verification,/credible/l2-integrations/manual-verification
+/credible/ownership-verification,/credible/managing-policy-deployments
+/credible/write-first-assertion,/credible/writing-your-own-policies
+/credible/invariant-to-assertion,/credible/writing-your-own-policies
+/credible/explorer-security-posture,/credible/dapp-explorer
+/credible/dapp-projects,/credible/managing-your-circuit-breakers
+/credible/dapp-invalidations,/credible/investigate-rejected-transaction
+/credible/dapp-integrations,/credible/setting-up-alerting
+/credible/release-review-checks,/credible/deploy-assertions-dapp

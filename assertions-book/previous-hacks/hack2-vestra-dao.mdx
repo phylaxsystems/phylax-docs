@@ -1,73 +1,68 @@
 ---
-title: Vestra DAO Hack
-description: Unchecked isActive flag in maturity
+title: "Vestra DAO Repeated Unstake"
+description: "Attack mechanism and inline Reshiram assertion example for Vestra DAO Repeated Unstake"
 ---
 
 ## What Happened
-In December 2024, VestraDAO was hacked. The hacker exploited a vulnerability in the `unStake` function which allowed users to stake and unstake without waiting for the maturity period.
-For an in-depth analysis of the hack, you can read this [post](https://x.com/_czepluch/status/1866112404242743590).
 
-`unStake` set `isActive` to `false` but did not check the flag on later calls. The attacker repeatedly called it to extract yield until the protocol was drained.
+QuillAudits’ analysis of the December 2024 incident describes repeated unstaking because `unStake` did not reject an already inactive stake. The issue is reuse of a redeemed stake, not merely bypassing its maturity time. [QuillAudits incident analysis](https://www.quillaudits.com/blog/hack-analysis/vestra-dao-500k-exploit-analysis).
 
-The code had no tests or audit. An assertion could reject repeated withdrawals while the protocol fix is prepared.
+## Attack Mechanism
 
-## Why This Matters
+`unStake` marked a stake inactive after paying it out but did not reject a later call for the same inactive stake. The attacker could therefore reuse a redeemed stake and collect additional payouts. The missing condition was whether the stake was still active, rather than simply whether its maturity time had elapsed.
 
-The missing `isActive` check could have been enforced by the contract or an assertion. The assertion approach still requires an integrated enforcement path.
+Checking only the state before the transaction is insufficient when two unstakes occur in one transaction. Both would appear to start from an active stake. The assertion reads the stake immediately before each recorded `unStake(uint8)` call:
 
-## Assertion Pattern
-The assertion rejects `unStake` when `isActive` is already `false`.
-Alternatively, there could be an assertion that checks that the `totalStaked` is always equal to the sum of all `stakeAmount` in the `stakes` mapping. 
-This would require a way to iterate over all the stakes and sum them up, which is not yet supported by a cheatcode.
+1. The first call sees `isActive = true` and may proceed.
+2. That call marks the stake inactive.
+3. The second call sees `isActive = false` and fails the assertion.
+
+A Solidity interface declares the generated mapping getter as a function; it cannot declare the mapping itself. The returned tuple below preserves the stake fields and reads the final Boolean.
+
+## Assertion Example
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../lib/credible-std/Assertion.sol";
-import {AssertionSpec} from "../lib/credible-std/SpecRecorder.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
-// VestraDAO interface
-interface IVestraDAO {
-    struct Stake {
-        uint64 startTime;
-        uint256 stakeAmount;
-        uint256 yield;
-        uint256 penalty;
-        uint64 endTime;
-        bool isActive;
-    }
-
-    mapping(address => mapping(uint8 => Stake)) public stakes;
-
-    function unStake(uint8 maturity) external;
-}
-
-contract VestraDAOHack is Assertion {
-    constructor() {
-        registerAssertionSpec(AssertionSpec.Reshiram);
-    }
-
-    IVestraDAO public vestraDAO = IVestraDAO(address(0xbeef));
-
-    function triggers() external view override {
-        registerFnCallTrigger(this.assertionExample.selector, vestraDAO.unStake.selector);
-    }
-
-    // Check that user was actively staked before unstaking
-    // This prevents double-unstaking by ensuring isActive was true before the call
-    function assertionExample() external view {
-        PhEvm.CallInputs[] memory unStakes = ph.getCallInputs(address(vestraDAO), vestraDAO.unStake.selector);
-
-        for (uint256 i = 0; i < unStakes.length; i++) {
-            uint8 maturity = abi.decode(unStakes[i].input, (uint8));
-            address from = unStakes[i].caller;
-
-            // Check BEFORE the unstake that the stake was active
-            PhEvm.ForkId memory preCallFork = PhEvm.ForkId({forkType: 2, callIndex: unStakes[i].id});
-            (,,,,,bool wasActive) = vestraDAO.stakes(from, maturity);
-            require(wasActive, "User was not actively staked for this maturity");
+/// @notice Check the stake immediately before each unStake(uint8) call.
+contract VestraActiveStake is Assertion {
+    bytes4 constant UNSTAKE = bytes4(keccak256("unStake(uint8)"));
+    constructor() { registerAssertionSpec(AssertionSpec.Reshiram); }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address staking = ph.getAssertionAdopter();
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(staking, UNSTAKE);
+        for (uint256 i; i < calls.length; ++i) {
+            uint8 maturity = abi.decode(calls[i].input, (uint8)); // selector already removed
+            (,,,,, bool active) = abi.decode(read(staking,
+                abi.encodeWithSignature("stakes(address,uint8)", calls[i].caller, maturity),
+                _preCall(calls[i].id)), (uint64, uint256, uint256, uint256, uint64, bool));
+            require(active, "Stake already redeemed");
         }
+    }
+
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
     }
 }
 ```
+
+## What This Check Covers
+
+Confirm the deployed getter ABI and stake-field order. Calls through another staking entry point or another adopter need coverage too. This condition prevents reuse of an inactive stake; maturity, yield arithmetic, and payout amounts are separate policies.
+
+<span id="why-this-matters" />
+<span id="assertion-pattern" />
+
+## Further Sources
+
+- [Vestra incident discussion](https://x.com/_czepluch/status/1866112404242743590)

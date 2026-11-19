@@ -3,42 +3,64 @@ title: 'Glossary'
 description: 'Credible Layer terms, components, and lifecycle states.'
 ---
 
-Definitions of Credible Layer components, policy states, and platform terms.
+Definitions of Credible Layer components, policy states, and platform terms. Use the specific term when the distinction affects configuration, review, or an enforcement claim.
+
+## Terminology Across the Docs
+
+| Term | Meaning and scope |
+| --- | --- |
+| Phylax / Credible Layer | Phylax provides the tooling and integration service; the Credible Layer is the enforcement infrastructure described here. Ethereum and L2 integration requirements differ. |
+| Policy / invariant | A policy states permitted and prohibited behavior, including exceptions. An invariant is a property required to hold at specified observation boundaries; it is one kind of policy requirement. |
+| Circuit breaker / cumulative-flow breaker | A circuit breaker limits cumulative inflow or outflow over a rolling window of per-block buckets. Cumulative-flow breaker makes that mechanism explicit; other assertion policies need not have a window. |
+| Assertion function / assertion contract / assertion ID | A function performs a check; a contract packages functions and triggers; the ID identifies deployable creation data, not an individual function. |
+| Project / release / assertion group | A project organizes platform work; a release is its reviewed deployment set. Assertion group describes functions within one contract, not a release or project. |
+| Assertion Enforcer / PhEVM / sidecar | The enforcer selects and runs checks; PhEVM executes them. A sidecar is a separate-process deployment pattern, not another name for either component. |
+| Deployed / active / enforced | Deployment submits the lifecycle change. Assertions become active after the configured delay; Production enforcement and Alerting observation have different effects. |
+| Activation window / rolling window | An activation window determines when an assertion applies. A rolling window determines which past flow measurements a cumulative policy evaluates. |
+| Trigger / check / invalidation / exclusion | A trigger selects a check. A failed check produces an invalidation; the environment determines whether the result excludes a live candidate or only records an observation. |
+| Assertion specification / lifecycle state / adaptation requirements / evidence | Legacy, Reshiram, and Experimental select API capabilities. Lifecycle state describes pending/active/deactivated assignments. Adaptation requirements identify configuration, corrections, or experimental components. None establishes test coverage, audit results, or deployment suitability. |
+| Phylax platform / protocol application | The platform manages projects and releases. The protocol application is the system being protected. Older `/dapp-*` routes remain for link compatibility. |
+| Use Cases Book / Assertions Book | Use Cases Book is the current reader-facing title. The `/assertions-book/` routes and source names remain unchanged. |
+
+Exact CLI commands, Solidity identifiers, UI labels, and historical source names retain their spelling. A naming difference in an identifier does not imply a different policy or component.
 
 ## Core Concepts
 
 ### The Credible Layer
-Ethereum security infrastructure combining protocol-authored assertions, participating builders, credible-block markers, and on-chain guards. Builders exclude candidates that fail active rules; guards restrict protected operations while their gate is active.
+Assertion-enforcement infrastructure. On Ethereum, it combines protocol-authored assertions, participating builders, credible-block markers, and onchain guards. Builders exclude candidates that fail active rules; guards restrict protected operations while their gate is active. L2 integrations have a separate sequencer inclusion boundary.
 
 See the [Overview](./credible-introduction).
 
 ### Assertion
-A smart contract that verifies specific properties or behaviors of other smart contracts. Assertions are the fundamental building blocks of the Credible Layer, used to enforce security properties and invariants.
+An executable check of a policy. Use **assertion function** for a particular check and **assertion contract** for the artifact containing functions and trigger registrations. Commands and UI labels may use the shorter “assertion” for that artifact; an **assertion ID** identifies its creation data. A policy can require several checks, and a contract can package several functions.
 
-Learn more: [What are Assertions?](/credible/assertions-overview) | [Writing Your Own Policies](./writing-your-own-policies)
+Learn more: [What are Assertions?](./assertions-overview) | [Writing Your Own Policies](./writing-your-own-policies)
+
+### Policy
+The intended rule for protocol behavior, including permitted exceptions. Assertion functions implement its checks; a release packages the checks for review and deployment.
+
+### Assertion Contract
+The Solidity contract artifact containing assertion functions and trigger registrations. Its creation bytecode and constructor arguments determine the assertion ID.
 
 ### Protocol Invariants
-Critical conditions or properties that must always be maintained within a protocol, such as ensuring total assets ≥ total liabilities or maintaining specific ownership rules. These invariants can be:
-- Single-contract: Rules within a single contract
-- Protocol-wide: Rules spanning multiple contracts and complex interactions
-- Security-specific: Rules focused on preventing unauthorized access or changes
+Properties required to hold at specified observation boundaries, such as total assets ≥ total liabilities after a transaction. Define whether the property applies at transaction end, around a matched call, or at another supported boundary. An invariant can span one contract or several; contract scope and observation boundary are separate choices. Invariants are one kind of policy requirement; policies can also describe allowed transitions, conditional checks, and rolling limits.
 
 ## System Architecture
 
 ### PhEVM (Phylax EVM)
-A specialized EVM implementation that includes additional capabilities for assertion verification and state manipulation.
+The execution environment for assertion checks, with interfaces for inspecting transaction and call snapshots. Production assertions inspect state; mutable fork switching in the Legacy API selects a snapshot and does not authorize changing protocol state.
 
-Learn more: [PhEVM](/credible/phevm)
+Learn more: [PhEVM](./phevm)
 
 ### Assertion DA (Data Availability)
-The data availability layer responsible for storing assertion code and metadata. This ensures that assertions are accessible and verifiable by anyone.
+The offchain service storing assertion artifacts for retrieval and integrity checks. Published artifacts can be inspected; service availability, private platform data, and policy correctness are separate concerns. Enforcers cache artifacts for execution.
 
-Learn more: [Assertion Data Availability](/credible/assertion-da)
+Learn more: [Assertion Data Availability](./assertion-da)
 
 ### State Oracle
-The core on-chain contract that coordinates protocol admins and network operators. It maintains the mapping between protected contracts and their assertions, enforces timelock periods, and manages assertion windows.
+The onchain contract recording assertion adopters, their Protocol Managers, assertion IDs, and activation/deactivation blocks. Its assertion activation windows describe lifecycle timing; they are not the rolling measurement windows used by cumulative-flow breakers.
 
-Learn more: [Credible Layer Contracts](/credible/credible-layer-contracts)
+Learn more: [Credible Layer Contracts](./credible-layer-contracts)
 
 ### Credible Registry
 The on-chain contract that authorizes participating builders and records credible-block markers. It is separate from the State Oracle's assertion assignments and lifecycle state.
@@ -53,7 +75,7 @@ An on-chain check restricting protected operations to credible blocks while its 
 The transaction submission route to participating builders. Routing is separate from guard enforcement and does not itself guarantee inclusion or assertion success.
 
 ### Fail-open
-A condition that relaxes a guard's requirement for a credible block to preserve availability. Transactions may then execute without mandatory assertion validation, while existing protocol checks remain active. Participating builders can continue enforcing assertions.
+A condition that relaxes a guard's requirement for a credible block to preserve availability. Transactions may then execute without mandatory assertion enforcement, while existing protocol checks remain active. Participating builders can continue enforcing assertions.
 
 ### Protocol Manager
 The address authorized to manage assertion lifecycle for registered contracts through the State Oracle. This authority is distinct from platform membership, transaction submission, and protocol upgrade permissions.
@@ -65,9 +87,9 @@ A component that selects and orders candidate transactions into blocks. A partic
 An L2 component responsible for ordering transactions. See [L2 and Sequencer Integrations](./l2-integrations/overview) for its separate assertion-enforcement model.
 
 ### Assertion Enforcer
-The sidecar component responsible for validating transactions against assertions during block production. It orchestrates the validation process by identifying relevant assertions, invoking PhEVM to execute them, and returning a validation report. The network integration applies the inclusion policy.
+The enforcement component that selects and executes assertions during block production. It can be embedded as a library in the builder or sequencer; a separate sidecar is one deployment pattern. It orchestrates the enforcement process by identifying relevant assertions, invoking PhEVM to execute them, and returning an assertion result. The network integration applies the inclusion policy.
 
-Learn more: [Assertion Enforcer](/credible/assertion-enforcer)
+Learn more: [Assertion Enforcer](./assertion-enforcer)
 
 ### Platform
 The [Phylax platform](https://ethereum.phylax.systems) is the web application interface for interacting with the Credible Layer. It allows protocol teams and end-users to deploy, manage, and view assertions and projects.
@@ -76,95 +98,107 @@ The [Phylax platform](https://ethereum.phylax.systems) is the web application in
 A public view of a small selection of featured projects. Where available, project pages show protected contracts, circuit-breaker summaries, operational authority, and supporting evidence. Detailed project information and transaction replays remain subject to access permissions.
 
 ### Sidecar
-A software architecture pattern where a component runs alongside the main application without changing core protocol rules. The Credible Layer operates as a sidecar to the network's block builder, intercepting and validating transactions during the block building process.
+A separate process or service that runs alongside the node. A separate-service integration delegates assertion enforcement to a sidecar. This is not a requirement of the Assertion Enforcer; an embedded integration runs enforcement within the node's block-building pipeline.
 
 See [Architecture](./architecture-overview#how-the-credible-layer-works) for implementation details.
 
-### Network Validator (Node)
+<span id="network-validator-node" />
+
+### Network Validator
 An Ethereum validator participates in consensus and may propose a block assembled by a builder. Validators apply Ethereum's consensus rules; they do not independently run Phylax assertions as part of block validity. A participating [block builder](#block-builder) runs the assertion integration before publishing its candidate.
 
-For the different roles in an L2 sequencer architecture, see [L2 and Sequencer Integrations](./l2-integrations/overview).
+A node is the broader software/deployment term; running a node does not by itself mean acting as a validator, builder, or sequencer. For L2 roles, see [L2 and Sequencer Integrations](./l2-integrations/overview).
 
 ## Assertion Components
 
 ### Trigger
-A function that determines when an assertion should be executed. Triggers are registered with the PCL system to specify the conditions under which an assertion should be evaluated. There are several types of triggers:
-- Call Triggers: Execute on specific contract calls
-- Storage Triggers: Execute on storage changes
-- Balance Triggers: Execute on ETH balance changes
+A registration that selects an assertion function for execution when relevant transaction activity occurs. Matching a trigger does not itself mean rejection: the selected function evaluates the condition. Register triggers in the assertion contract’s `triggers()` function. Trigger types include:
 
-See the [Cheatcodes Reference](/credible/cheatcodes-reference) for detailed information about different trigger types.
+- **Call triggers:** select checks for matching contract calls.
+- **Storage triggers:** select checks for changes to specified storage slots.
+- **Balance triggers:** select checks for ETH balance changes.
+
+See [Triggers](./triggers) for the full set of trigger types, registration APIs, and assertion-specification requirements.
+
+See the [Cheatcodes Reference](./cheatcodes-reference) for detailed information about different trigger types.
+
+### Snapshot
+An execution-state view at a specified observation boundary. A Reshiram `ForkId` identifies pre-transaction, post-transaction, pre-call, or post-call state. Constructing it does not switch the state used by ordinary Solidity reads; use the [snapshot APIs](./cheatcodes-reference#forkid).
 
 ### Pre-state/Post-state
-Snapshots of the blockchain state captured before and after a transaction. These states are used by assertions to verify changes and enforce properties. The ability to compare pre and post states enables assertions to detect and prevent invalidating transactions that would result in undesired state changes.
+The state before and after the chosen transaction or matched call. State the boundary explicitly: pre-transaction/post-transaction and pre-call/post-call can produce different comparisons. An intermediate violation may be absent from transaction-end state.
 
 Reshiram (V2) uses explicit `ForkId` snapshot reads. Legacy (V1) uses mutable fork switching. See the [Cheatcodes Reference](./cheatcodes-reference) for the supported interfaces.
 
 ### State Changes
-Modifications to contract storage that occur during transaction execution. These can be tracked and verified using the Credible Layer's state change tracking capabilities, allowing assertions to monitor and prevent unauthorized modifications.
+Writes to contract storage during transaction execution. A write trace and the final storage value answer different questions: a value can change and later be restored. State-change APIs expose observations; an assertion interprets them against its policy.
 
-See the [Cheatcodes Reference](/credible/cheatcodes-reference) for state tracking functions.
+See the [Cheatcodes Reference](./cheatcodes-reference) for state tracking functions.
 
-### Callstack
+<span id="callstack" />
 
-The sequence of function calls during a transaction. Assertions can inspect nested calls and state changes across contract boundaries.
+### Call Trace
+The recorded calls and their nesting during transaction execution. Use **call trace** for recorded execution and **call stack** for the active nested calls at one point. Neither means the EVM operand stack. Older prose may use “callstack” for call inspection.
 
 ### Assertion Bytecode
-The compiled form of an assertion contract that is stored in the Assertion DA and executed by the PCL network.
+The compiled form of an assertion contract. Assertion DA stores the deployable artifact; the enforcer loads it for execution in PhEVM. `pcl` is the development CLI.
 
-See the [pcl Reference](/credible/cli-reference) for build and store commands.
+See the [pcl Reference](./cli-reference) for build and store commands.
 
 ### Assertion ID
-A unique identifier for an assertion, computed as the Keccak256 hash of the assertion's EVM bytecode. The assertion ID is used to reference assertions in the Credible Layer protocol and retrieve assertion bytecode from the Assertion DA.
+An artifact identifier computed as `Keccak256(creation bytecode ++ ABI-encoded constructor arguments)`. It identifies the deployable creation data, not a single assertion function, adopter assignment, or platform release. Use the function selector and execution trace to identify a failing check; use the adopter and activation state to identify where and when the artifact applies.
 
-Learn more: [Assertion Data Availability](/credible/assertion-da#assertion-id)
+Learn more: [Assertion Data Availability](./assertion-da#assertion-id)
 
 ### Assertion DA Prover Signature
-A signature generated and returned by the Assertion DA as part of storing an assertion. This proof is used during deployment of the assertion to guarantee that the assertion bytecode is available on the Assertion DA.
+A signature returned by the Assertion DA when an assertion is stored. Deployment uses it to attest to the stored bytecode at signing time; it is not a guarantee of future service availability.
 
-Learn more: [Assertion Data Availability](/credible/assertion-da#assertion-da-prover-signature)
+Learn more: [Assertion Data Availability](./assertion-da#assertion-da-prover-signature)
 
 ### Assertion Adopter
-The contract that is being monitored by an assertion. This is the contract whose behavior the assertion is designed to verify.
+The contract address to which an assertion is assigned in the State Oracle. APIs and UI fields retain the name **adopter**. It can be a protocol contract or an assertion adapter used by a hook; the check may inspect other contracts as well. Adopter registration alone does not establish guard coverage.
 
 ### Assertion Group
-A collection of assertions in the same contract that are related to the same protocol contract. This allows for organizing multiple assertions that protect different aspects of the same protocol.
+A collection of assertion functions within one assertion contract. Prefer **assertion functions** when discussing checks and **assertion contract** when discussing the compiled artifact. Use **release** for the complete platform deployment set; “group” is not a substitute for that lifecycle unit.
 
 ### Assertion Function
-A function in an assertion contract that performs a specific check. These functions must be registered in the `triggers()` function and are called by the PCL system when their trigger conditions are met.
+A function in an assertion contract that performs a specific check. These functions must be registered in the `triggers()` function and are executed by the enforcer in PhEVM when their trigger conditions are met.
+
+### Assertion Specification
+The API capability selection registered by an assertion: `Legacy` (V1), `Reshiram` (V2), or `Experimental`. These names select available precompiles; they are separate from lifecycle state, test evidence, and deployment support. See [Assertion Specs](./cheatcodes-reference#assertion-specs).
 
 ## Development Tools
 
 ### `pcl`
 The command-line tool for building, testing, and deploying assertions to the Credible Layer.
 
-See the [pcl Reference](/credible/cli-reference) for all available commands.
+See the [pcl Reference](./cli-reference) for all available commands.
 
 ### `phorge`
-A minimal fork of Forge with functionality for assertion execution, used for testing and running assertions in the Credible Layer. It provides the infrastructure needed to compile, test, and deploy assertions.
+The Forge-derived build and test tooling integrated into `pcl` from Phoundry. Use the documented `pcl build` and `pcl test` commands. Phorge is local development tooling; PhEVM is the assertion execution environment used by the enforcer.
 
 ### `credible-std`
 The Phylax smart contract library that provides the base contracts and utilities for writing assertions. It includes the interfaces and implementations needed to interact with the Credible Layer's cheatcodes and assertion system.
 
 ### Cheatcodes
-Special precompiles (similar to Ethereum's native precompiles) that provide additional capabilities for state manipulation, forking, and assertion management in the PhEVM environment. These are accessed through the credible-std library.
+PhEVM interfaces for inspecting execution and state snapshots, exposed through `credible-std`. Available operations depend on the assertion specification. Test utilities and production inspection interfaces have different capabilities.
 
-See the [Cheatcodes Reference](/credible/cheatcodes-reference) for a complete list of available cheatcodes and their usage.
+See the [Cheatcodes Reference](./cheatcodes-reference) for a complete list of available cheatcodes and their usage.
 
 ### Test Environment
-The PCL testing interface that extends Forge's testing capabilities with additional utilities specifically for testing assertions. It provides functions for adding assertions and validating transactions, making it easier to test assertion behavior in different scenarios.
+For local assertion tests, the `CredibleTest`/`cl` interface used with `pcl test`. It selects an assertion function for the next external call and models rejection as a test revert. State whether “test environment” means this local setup, an Ethereum fork, or the platform's Alerting environment; they establish different evidence.
 
-Learn more about testing assertions in the [Testing Guide](/credible/testing-assertions).
+Learn more about testing assertions in the [Testing Guide](./testing-assertions).
 
 ### Backtesting
-An automatic platform release check that tests every assertion in a release against transactions from the last 20,000 blocks. The result identifies historical transactions that the release would have invalidated so you can review false positives before deployment.
+An automatic platform release check that evaluates the release against historical transactions. Read the run’s reported block range to establish its coverage. The result identifies historical transactions that the release would have invalidated so you can review false positives before deployment.
 
-Learn more: [Backtesting](/credible/backtesting)
+Learn more: [Backtesting](./backtesting)
 
 ## Security Features
 
 ### Off-chain Execution
-The ability to run complex security rules outside the main blockchain execution, providing significant efficiency gains compared to on-chain validation.
+Assertion enforcement performed outside Ethereum consensus execution. It still uses compute and an assertion gas budget. Assertion gas is separate from the onchain gas used by protocol calls, guards, and credible-block markers.
 
 ### Forced Inclusion Transactions
 L2 transaction paths with protocol-level inclusion rules, such as L1-to-L2 deposits or delayed queues. Their assertion handling belongs to the [L2 integration policy](./l2-integrations/network-integration#transaction-source-coverage), not Ethereum builder routing.
@@ -172,37 +206,48 @@ L2 transaction paths with protocol-level inclusion rules, such as L1-to-L2 depos
 ### Circuit Breaker
 An assertion pattern that collects value flowing into or out of a protected contract into one bucket per block, then limits the cumulative flow across those per-block buckets over a rolling window. Circuit breakers are useful when the goal is to reduce exploit velocity or contain blast radius rather than block one specific function call.
 
+### Cumulative-Flow Breaker
+A circuit breaker that limits directional net asset flow over a rolling window of per-block buckets. It measures the configured asset and custody address, not every form of protocol loss. See [Flow-Limit and Anomaly-Gated Policies](../assertions-book/assertions/circuit-breakers).
+
 ### Verifiability
 The ability to inspect the rules and registry state behind a protocol's Credible Layer posture. Assertion IDs and registry entries are on-chain, while assertion bytecode is stored in Assertion DA. Public views expose the protocol's visible assertion posture; private project data remains restricted to authorized project users.
 
 ## Prevention
 
 ### Invalidation
-A report that a candidate transaction violated an assertion. Production enforcement excludes the transaction at the integrated boundary. Alerting records the violation without blocking the live transaction; ordinary network validity and inclusion rules still apply.
+A reported assertion failure for a candidate or replayed transaction. Inspect the reason: a configured policy condition can fail, but an execution failure such as `OutOfGas` can also invalidate a candidate without establishing that condition. Production enforcement excludes invalidated candidates at the integrated boundary; Alerting and simulation record results without blocking the live transaction. An invalidation is not proof of an attack or of a live prevention.
 
-Learn more: [Investigate a Rejected Transaction](./investigate-rejected-transaction)
+Learn more: [Investigate an Invalidation](./investigate-rejected-transaction)
 
 ### Revert
-An EVM execution failure. An assertion revert occurs off-chain during validation and can cause builder exclusion. A guard revert occurs in the protocol execution path; if included on-chain, the transaction consumes gas. A caller may catch a subcall revert, depending on its code.
+An EVM execution failure. An assertion revert occurs off-chain during assertion execution and can cause builder exclusion. A guard revert occurs in the protocol execution path; if included on-chain, the transaction consumes gas. A caller may catch a subcall revert, depending on its code.
 
 ### Drop
-Exclusion of a candidate transaction by a participating builder before inclusion. An excluded transaction consumes no on-chain execution gas. This differs from an included transaction reverting at a guard.
+Exclusion of a candidate transaction by a participating builder before inclusion. Exclusion itself consumes no onchain execution gas and does not establish that every other builder rejected the transaction. This differs from an included transaction reverting at a guard.
 
 ### Prevent
 Blocking a rule-violating effect through the integrated enforcement path. Protection depends on active assertions, trigger coverage, builder behavior, and any required guards; a violation is not necessarily malicious.
 
 ## Assertion Lifecycle
 
+### Project
+The platform container for a protocol team's contracts, releases, and review results. Project permissions control platform access; they do not themselves confer the Protocol Manager's onchain authority.
+
 ### Release
 The complete policy set reviewed and deployed together for a project's selected environment. Individual assertions cannot be removed from an active release. Change the set by deploying a replacement release, or remove the whole release.
 
 ### Apply
-The process of creating a release on the platform using `pcl apply`. This command reads your `credible.toml` configuration, compiles assertion contracts, and creates a release. The platform handles storing assertion bytecode in [Assertion DA](/credible/glossary#assertion-da-data-availability) automatically.
+The process of creating a release on the platform using `pcl apply`. This command reads your `credible.toml` configuration, compiles assertion contracts, and creates a release. The platform handles storing assertion bytecode in [Assertion DA](./glossary#assertion-da-data-availability) automatically.
 
-Learn more: [Apply Assertions](/credible/apply-assertions) | [pcl Reference](/credible/cli-reference#apply)
+Learn more: [Prepare a Policy Release](./apply-assertions) | [pcl Reference](./cli-reference#apply)
 
 ### Deployment
 The process of reviewing a release and signing its onchain transaction for the selected Alerting or Production environment. Transaction confirmation and assertion activation are separate: new assertions begin applying after the configured delay.
+
+<span id="slack-notifications" />
+
+### Notifications
+Delivery of invalidation notices through Slack or PagerDuty. Notifications do not choose the enforcement mode. See [Set Up Notifications](./setting-up-alerting).
 
 ### Alerting
 A mirrored chain environment used for testing assertions without affecting production. Assertions run in alerting mode to observe behavior, but transactions are not dropped if they break assertion rules. This allows protocol teams to test assertions safely before deploying to production.
@@ -210,11 +255,17 @@ A mirrored chain environment used for testing assertions without affecting produ
 ### Production
 The enforcement environment where participating Ethereum builders exclude candidates violating active assertions. Guard coverage and routing are also required for the protected operations; fail-open or bypass conditions can reduce mandatory protection.
 
+### Assertion Activation Window
+The block interval in which an assertion assignment is active, recorded by the State Oracle as `activationBlock` and `deactivationBlock`. The timelock delays a lifecycle change; the activation window describes when the assignment applies. It does not measure token flows.
+
+### Rolling Window
+The moving observation period over which a cumulative-flow policy evaluates per-block buckets. Old buckets expire as the window advances. This is independent of assertion activation/deactivation timing. See [Cumulative Flow](../assertions-book/assertions/circuit-breakers#what-a-cumulative-limit-measures).
+
 ### Timelock
 A period enforced by the on-chain State Oracle contracts between an assertion change and when that change takes effect. The timelock applies when you add an assertion and when you remove one. It exists for two reasons: (1) to provide latency for the enforcer to index on-chain state and prepare for enforcement changes, and (2) to give users time to expect changes to protocol behavior. During the timelock period, newly added assertions are marked for enforcement or alerting but are not yet active, and removed assertions remain active until the timelock finishes.
 
 ### Marked for Enforcement
-The state of an assertion deployed to production during the timelock period. The assertion is deployed but not yet actively preventing hacks. After the timelock expires, the assertion becomes enforced.
+The state of a newly added Production assertion before its activation block. Once active, it is eligible for enforcement by the integrated builder. This lifecycle label does not by itself verify triggers, guard coverage, routing, or builder behavior.
 
 ### Marked for Alerting
 The state of an assertion deployed to alerting during the timelock period. The assertion is deployed but not yet running on the alerting environment. After the timelock expires, the assertion becomes active in alerting mode.

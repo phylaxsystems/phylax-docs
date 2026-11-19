@@ -1,55 +1,73 @@
 ---
-title: Vicuna Finance Oracle Manipulation Hack
-description: Vicuna Finance lost $700K due to LP token oracle manipulation that ignored invariant-based pricing
+title: "Vicuna LP Token Valuation"
+description: "Attack mechanism and inline Reshiram assertion example for Vicuna LP Token Valuation"
 ---
 
 ## What Happened
 
-The Vicuna Finance hack resulted in a $700K loss through oracle manipulation of Beets LP tokens used as collateral on the Sonic chain. The Core Bug was that LP tokens were priced using a simple sum formula: `price_lp = price_token1 * amount_token1 + price_token0 * amount_token0` instead of fair pricing that accounts for the underlying pool's constant product formula.
+The investigator’s post-mortem dates the Sonic exploit to March 28, 2025 and describes approximately $700,000 extracted by manipulating the balances used to value Beets LP collateral. Borrowing against the inflated valuation and reversing the manipulation left bad debt. [Vicuna investigator post-mortem](https://d23e.ch/research/vicuna-post-mortem/).
 
-**Exploitation Steps:**
-1. **Pool Manipulation**: Attacker swapped large amounts from token0 to token1, artificially inflating the LP token's oracle-reported price
-2. **Over-Collateralization**: Deposited the overvalued LP tokens as collateral and borrowed assets against the inflated value  
-3. **Price Deflation**: Reversed the swap (token1 back to token0), deflating the LP price and creating bad debt in the protocol
+## Attack Mechanism
 
-The attack was executed across two markets - the `$S` market and the stablecoin market - draining approximately $700K in total. The fundamental issue was that the oracle treated LP tokens like regular assets without considering that their value should reflect extractable value, not just the sum of underlying token values.
+The lending market accepted Beets LP tokens as collateral and valued them from pool balances. A large swap distorted the composition used by that valuation, temporarily raising the reported collateral value. The attacker borrowed against it and then reversed the manipulation, leaving debt backed by a lower-value position.
 
-## Assertion Pattern
+A naive sum of reserves multiplied by component prices is sensitive to the reserve mix at the observation point. A useful valuation policy must account for the pool's invariant, share supply, fees, and independently priced components. It must also measure the price consumed by borrowing, not just the value after the attacker restores the pool.
 
-A targeted price deviation check on all calls could have prevented this oracle manipulation attack. The assertion function monitors how each call affects oracle prices and reverts if any single call causes price swings exceeding 5%:
+Configure the example's reader/calldata to obtain the LP collateral price and select the lending market's `borrow(uint256)` entry point. The pre-call snapshot then observes the valuation presented to that borrow. The post-call check also catches a lasting change during the operation. A 500-bps limit is an illustrative bound on movement from the transaction-start valuation.
+
+## Assertion Example
 
 ```solidity
-function assertPriceDeviation() external view {
-    BeetsLP assertionAdopter = BeetsLP(ph.getAssertionAdopter());
-    PhEvm.ForkId memory preFork = _preTx();
-    uint256 preOraclePrice = oracle.getPrice(token); // Get the price before the transaction
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
 
-    // Using swap calls as an example, but any call that affects price should be checked
-    PhEvm.CallInputs[] memory calls = ph.getCallInputs(address(assertionAdopter), assertionAdopter.swap.selector);
-    for (uint256 i = 0; i < calls.length; i++) {
-        PhEvm.ForkId memory postCallFork = PhEvm.ForkId({forkType: 3, callIndex: calls[i].id});
-        
-        uint256 postOraclePrice = oracle.getPrice(token);
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
-        // Calculate deviation and require change is within range
-        uint256 deviation = ((postOraclePrice - preOraclePrice) * 10000) / preOraclePrice;
-        require(deviation <= MAX_DEVIATION_BPS, "ORACLE_PRICE_MANIPULATION: Token price changed by more than 5% in single transaction");
-    }  
+/// @notice Bound a configured metric before and after every covered operation.
+contract CallMetricBounds is Assertion {
+    address public immutable reader;
+    bytes public query;
+    bytes4 public immutable operation;
+    uint256 public immutable maximumBps;
+    constructor(address reader_, bytes memory query_, bytes4 operation_, uint256 maximumBps_) {
+        registerAssertionSpec(AssertionSpec.Reshiram);
+        require(reader_ != address(0) && query_.length >= 4, "Invalid reader");
+        reader = reader_; query = query_; operation = operation_; maximumBps = maximumBps_;
+    }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address target = ph.getAssertionAdopter();
+        uint256 start = abi.decode(read(reader, query, _preTx()), (uint256));
+        require(start > 0 && start <= type(uint128).max && maximumBps <= 100_000, "Invalid baseline or bound");
+        uint256 allowed = start * maximumBps / 10_000;
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(target, operation);
+        for (uint256 i; i < calls.length; ++i) {
+            within(start, allowed, _preCall(calls[i].id));
+            within(start, allowed, _postCall(calls[i].id));
+        }
+    }
+    function within(uint256 start, uint256 allowed, PhEvm.ForkId memory at) internal view {
+        uint256 value = abi.decode(read(reader, query, at), (uint256));
+        uint256 delta = value >= start ? value - start : start - value;
+        require(delta <= allowed, "Metric outside bound");
+    }
+
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
+    }
 }
 ```
 
-## How the Assertion Would Have Prevented It
+## What This Check Covers
 
-This assertion function detects oracle price manipulation by monitoring how each call affects prices.
+A deviation limit is not a fair-LP-pricing formula. Manipulation established before the transaction, alternate borrowing paths, or an unsafe price calculated only inside the call need additional coverage. Stable, weighted and constant-product pools require different valuation models.
 
-**How it works:**
-1. **Captures baseline**: Uses `_preTx()` with a Reshiram snapshot read to get the oracle price before any calls
-2. **Monitors each call**: Iterates through calls (like swaps) that could affect the oracle price
-3. **Checks price impact**: Uses a post-call `ForkId` with `ph.loadStateAt()` to see how each call changed the oracle price
-4. **Enforces limits**: Reverts if any single call causes >5% price deviation from the baseline
-
-Using Phylax cheatcodes allows checking the oracle price at every call in the transaction, detecting price manipulation as it happens and preventing attacks that rely on temporary price distortions.
-
-## Related Resources
-
-- [Oracle Manipulation Example](/assertions-book/assertions/ass28-intra-tx-oracle-deviation)
+<span id="assertion-pattern" />
+<span id="how-the-assertion-would-have-prevented-it" />
+<span id="related-resources" />

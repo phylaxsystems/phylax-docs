@@ -1,69 +1,69 @@
 ---
-title: First Depositor Bug
-description: First depositor bug in Compound / Aave v2 lending protocols
+title: "First-Depositor Share Inflation"
+description: "Attack mechanism and inline Reshiram assertion example for First-Depositor Share Inflation"
 ---
 
 ## What Happened
 
-Background: https://akshaysrivastav.hashnode.dev/first-deposit-bug-in-compoundv2-and-its-forks
+Akshay Srivastav’s Compound V2 research explains how a very small initial share supply and a direct donation can raise the exchange rate so that a later deposit rounds down severely, potentially to zero shares. This is a vulnerability pattern, not one incident with a single loss total, and it is not a claim about every lending protocol. [Original first-deposit research](https://akshaysrivastav.hashnode.dev/first-deposit-bug-in-compoundv2-and-its-forks).
 
-The First Depositor Attack in Compound / Aave v2 lending protocols:
+## Attack Mechanism
 
-Key points:
+A share-based market with a tiny initial supply can become sensitive to donations. The attacker supplies a minimal amount and receives the initial shares, then transfers assets directly to the market without minting more shares. Assets per share rises sharply.
 
-- First depositor supplies a tiny amount (e.g. 1 wei) of assets
-- First depositor donates a large amount directly to the lending pool (bypassing supply)
-- This artificially inflates the exchange rate between shares and assets
-- Next depositor will receive very few shares for their deposit
-- If next depositor's amount is smaller than exchange rate, they will receive 0 shares due to rounding error
-- First depositor owns all shares, so they can withdraw all assets
+For a simplified pool with one indivisible share:
 
-Example:
+1. The attacker deposits one asset unit and receives one share.
+2. A direct donation adds 1,000 asset units, so one share represents 1,001 units.
+3. A victim deposits 100 units. Integer division calculates `floor(100 / 1001) = 0` shares.
+4. The attacker still owns the only share and can redeem the pool's 1,101 units.
 
-1. Attacker deposits 1 wei, gets 1 share
-2. Attacker donates 1000 tokens directly
-3. Exchange rate is now 1000.00..01 tokens : 1 share
-4. Victim deposits 100 tokens, gets only ~0.1 shares due to inflated rate -> will be rounded down to 0
-5. Attacker withdraws 1 share and gets 1100 tokens, stealing all of victim's deposit
+Real cTokens apply an exchange-rate scale and have their own decimals. Comparing an unscaled deposit amount directly with an exchange rate is therefore unsafe. The assertion checks the depositor's actual share-balance increase across each `mint(uint256)` call instead.
 
-## Why This Matters
+Atomic initialization and locked seed liquidity reduce the opportunity to own the entire initial share supply. A minimum total supply alone does not prove that a particular depositor received a fair result.
 
-Traditional prevention:
-
-- Attack only makes sense if attacker owns all shares (or close to it)
-  - If he owns all shares, donating tokens to the pool will still be owned by the attacker
-- Protocols typically deposit with opening the market atomically
-  - This means not all shares are owned by the attacker
-  - Adjustments to the protocol could mint tokens to 0x0 upon first mint/deposit
-- Many forks fail to combine these actions
-
-## Assertion Pattern
-
-Assertions can require atomic market creation and the initial deposit, or reject deposits that would round to zero shares.
-
-Sonne Finance planned an atomic deployment and deposit, but its governance process allowed the transactions to execute out of order.
-
-### Example Assertion: Enforce atomically opening the market and depositing first assets
+## Assertion Example
 
 ```solidity
-function assertionHasMinimumSupply() public view {
-    Market market = Market(address(0x1234));
-    require(market.totalSupply() > MINIMUM_SUPPLY, "Market has no supply");
-}
-```
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
 
-### Example Assertion: Enforce exchange rate < deposit amount
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
-```solidity
-function assertionExchangeRate() public view {
-    Market market = Market(address(0x1234));
+/// @notice A positive cToken mint must increase the caller's share balance.
+contract NonzeroMint is Assertion {
+    bytes4 constant MINT = bytes4(keccak256("mint(uint256)"));
+    constructor() { registerAssertionSpec(AssertionSpec.Reshiram); }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address market = ph.getAssertionAdopter();
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(market, MINT);
+        for (uint256 i; i < calls.length; ++i) {
+            if (abi.decode(calls[i].input, (uint256)) == 0) continue;
+            bytes memory query = abi.encodeWithSignature("balanceOf(address)", calls[i].caller);
+            uint256 beforeShares = abi.decode(read(market, query, _preCall(calls[i].id)), (uint256));
+            uint256 afterShares = abi.decode(read(market, query, _postCall(calls[i].id)), (uint256));
+            require(afterShares > beforeShares, "Deposit minted no shares");
+        }
+    }
 
-    PhEvm.CallInputs[] memory inputs = ph.getCallInputs(address(cToken), cToken.mint.selector);
-
-    for (uint256 i = 0; i < inputs.length; i++) {
-        PhEvm.CallInputs memory input = inputs[i];
-        (uint256 amount) = abi.decode(input.input, (uint256));
-        require(amount / market.exchangeRate() > 0, "Did not receive any shares");
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
     }
 }
 ```
+
+## What This Check Covers
+
+This deliberately rejects a positive mint that returns without increasing shares, including cToken error-code returns. It catches zero-share outcomes, not every unfair nonzero exchange. Transfer-fee assets, routers that receive shares on another address, minimum-share slippage, empty-pool transitions, and initialization all need their own cases.
+
+<span id="why-this-matters" />
+<span id="assertion-pattern" />
+<span id="example-assertion-enforce-atomically-opening-the-market-and-depositing-first-assets" />
+<span id="example-assertion-enforce-exchange-rate--deposit-amount" />

@@ -5,19 +5,13 @@ description: Reported Drift administrative takeover and assertion patterns for c
 
 ## What Happened
 
-In April 2026, Drift Protocol reported an active attack and suspended deposits and withdrawals. The Record reported that security firms estimated losses above USD 285 million, while other estimates were at least USD 130 million. TechRadar later summarized Drift's public explanation as a sophisticated attack involving durable nonces, misrepresented transaction approvals, and rapid takeover of Drift's Security Council administrative powers.
+Drift’s April 16, 2026 recovery update attributes $295,706,374.93 of stolen assets to the April 1 incident, using its incident-time valuation. Its response includes dedicated signing devices, independent transaction-content verification, timelocks, and disabling durable-nonce transactions. These operational controls matter alongside constraints on administrative authority. [Drift recovery update](https://www.drift.trade/updates/incident-recovery-update-april-16-2026-now).
 
-Sources:
-- [The Record report on the Drift security incident](https://therecord.media/drift-crypto-heist-solana-hacker)
-- [TechRadar report on the Drift incident](https://www.techradar.com/pro/security/this-is-not-an-april-fools-joke-crypto-platform-drift-suspends-services-after-millions-stolen)
-
-<Note>
-Drift is not an EVM protocol. This page uses the incident as an operational-risk case study for comparable EVM systems with emergency councils, admin multisigs, governance executors, or fast-path roles.
-</Note>
+<Note>Drift is a Solana protocol. The policies below describe comparable EVM administrative systems, not deployment of Solidity assertions on Drift.</Note>
 
 ## Why It Worked
 
-The public reporting describes an attack on the administrative execution layer rather than a conventional smart-contract bug. The relevant risk pattern is that trusted signers or emergency-governance machinery can be induced to execute actions that are valid at the signature layer but unsafe for the protocol.
+The incident illustrates an attack on the administrative execution layer rather than a conventional smart-contract bug. The relevant risk pattern is that trusted signers or emergency-governance machinery can be induced to execute actions that are valid at the signature layer but unsafe for the protocol.
 
 For an EVM protocol, comparable high-impact actions include:
 
@@ -69,7 +63,7 @@ Useful surfaces include:
 
 ### Outflow Circuit Breaker
 
-Even if an attacker reaches an admin role or function, an outflow circuit breaker can prevent rapid value extraction.
+Even if an attacker reaches an admin role or function, an outflow circuit breaker can limit value extraction within covered paths.
 
 Useful checks include:
 
@@ -80,7 +74,7 @@ Useful checks include:
 
 ## How Assertions Would Constrain It
 
-For an EVM protocol with comparable emergency-admin powers, assertions could block the unsafe transaction before it settles if the transaction:
+For an EVM protocol with comparable emergency-admin powers, assertions can reject a covered transaction when the transaction:
 
 1. weakens the signer threshold,
 2. adds an unapproved admin,
@@ -95,3 +89,12 @@ The key point is that the signature can be valid while the state transition is s
 Operational security failures should not automatically become total protocol failures. Admin wallets, emergency councils, and governance executors are powerful because they are supposed to respond quickly, but that same power needs explicit runtime limits.
 
 Assertions can enforce the protocol's intended governance shape: who can hold authority, how much authority can change at once, and how much value can move when authority changes.
+
+## Enforcement Boundaries
+
+These policies require an integrated enforcement path, explicit data sources, and tests of legitimate operations. A flow cap bounds exposure; it cannot establish that an upstream message is authentic or a signer’s device is uncompromised.
+
+## Further Sources
+
+- [The Record report on the Drift security incident](https://therecord.media/drift-crypto-heist-solana-hacker)
+- [TechRadar report on the Drift incident](https://www.techradar.com/pro/security/this-is-not-an-april-fools-joke-crypto-platform-drift-suspends-services-after-millions-stolen)

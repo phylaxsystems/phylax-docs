@@ -1,18 +1,40 @@
 ---
 title: Using the Use Cases Book
-description: Learn how to use the Use Cases Book as a catalog of assertion patterns and a set of exploit case studies
+description: Choose a local tutorial, assertion pattern reference, or historical exploit explanation.
 ---
 
-The Use Cases Book has two jobs:
+Use the Book to learn how an assertion behaves, select a pattern for a known risk, or understand an exploit mechanism. Each page has a different purpose; a case study is not a deployable policy, and compilation alone does not demonstrate protection.
 
-- **Reference**: a catalog of reusable assertion patterns you can adapt to your own protocol
-- **Explanation**: case studies that explain how real exploits worked and why specific assertions would have blocked them
+## How to Use This Book
 
-You can adapt these examples to write your own assertions. We highly recommend working with [Phylax sales engineering](../credible/work-with-phylax) to find the best policy fit; this support is included in your subscription. Custom policy development includes reviewing protocol assumptions, legitimate exceptions, and integration coverage; an example is not a ready-made production policy.
+<CardGroup cols={2}>
+  <Card title="Test an Ownership Policy" icon="flask-vial" href="./assertions/run-an-example">
+    Follow a local tutorial with three expected results, including a temporary ownership change that escapes an endpoint check.
+  </Card>
+  <Card title="Browse Assertion Patterns" icon="book-open" href="./assertions/use-cases-index">
+    Look up a pattern's measured property, configuration, and limitations by risk domain.
+  </Card>
+  <Card title="Study Historical Exploits" icon="bug" href="./previous-hacks/prev-hacks-index">
+    Understand a failure mechanism and the assumptions behind a proposed policy.
+  </Card>
+  <Card title="Inspect a Composed Vault Policy" icon="sitemap" href="./assertions/vault-policies">
+    See how an ERC-4626 example combines operation checks with a rolling outflow limit.
+  </Card>
+</CardGroup>
 
-Each entry shows code snippets of assertions accompanied by minimal interfaces for the protocols they protect.
+<span id="book-structure" />
+<span id="part-1-protocol-case-studies" />
+<span id="protocol-assertion-catalogs" />
+<span id="part-2-previous-hacks" />
+<span id="part-3-assertion-patterns" />
 
-Full examples and mock protocol code are available in [credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).
+## Find the Right Reference
+
+The **Patterns** sidebar groups entries by risk: flow limits, authority and configuration, accounting and operation results, solvency, and oracle valuation. Legacy entries remain in their risk group and state the corrections they need. Read the [catalog facets](./assertions/use-cases-index#read-the-catalog-facets) to distinguish risk from protocol family, dispatch mechanism, specification, adaptation requirements, and evidence.
+
+**Protocol-specific Policies** contains the [ERC-4626 composition](./assertions/vault-policies), the [experimental Aave V3 catalog](./assertions/aave-v3-suite), and the [historical Optimism FMA catalog](./assertions/optimism-fma-suite). Their status and coverage differ; read each reference's source and limits before adapting it.
+
+The [reviewed credible-std revision](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book) contains the Book's imported examples and mock contracts. Pages identify separately maintained local fixtures and the tests executed for them.
 
 ## Ethereum Deployment Scope
 
@@ -20,47 +42,4 @@ The examples demonstrate assertion logic, not complete production integrations. 
 
 Historical examples retain the networks on which the incidents occurred. Sequencer infrastructure designs live separately in [L2 and Sequencer Integrations](../credible/l2-integrations/overview).
 
-## How to Use This Book
-
-<CardGroup cols={2}>
-  <Card title="Browse Assertion Patterns" icon="book-open" href="./assertions/use-cases-index">
-    Use the reference catalog when you already know the type of risk you want to cover.
-  </Card>
-  <Card title="Study Real Exploits" icon="bug" href="./previous-hacks/prev-hacks-index">
-    Use the case studies when you want to understand why an exploit worked and what assertion would have stopped it.
-  </Card>
-  <Card title="See Full Protocol Suites" icon="sitemap" href="./assertions/aave-v3-suite">
-    Review deeper examples that show how assertion coverage can be shaped for a real protocol.
-  </Card>
-  <Card title="Run an Example Locally" icon="flask-vial" href="../credible/pcl-quickstart">
-    Optionally inspect a working policy and its tests.
-  </Card>
-</CardGroup>
-
-If you have questions or issues, please reach out on telegram [@phylax_credible_layer](https://t.me/phylax_credible_layer).
-
-If you think an assertion is missing, please don't hesitate to open a PR or reach out. We love digging into new hacks and use cases and writing assertions for them!
-
-## Book Structure
-
-This book is organized into three sections:
-
-### Part 1: Protocol Case Studies
-
-Explanation pages that show how comprehensive assertion coverage can be designed for real systems.
-
-**[View real world protocol suites →](./assertions/aave-v3-suite)**
-
-### Part 2: Previous Hacks
-
-Explanation pages that analyze real-world DeFi hacks and show how assertions could have prevented them.
-
-**[View the previous hacks analysis →](./previous-hacks/)**
-
-### Part 3: Assertion Patterns
-
-Reference pages that catalog reusable assertion patterns by security category.
-
-**[View the complete use cases catalog →](./assertions/)**
-
-All sections include assertion code examples, explanations of the vulnerability or pattern being addressed, and minimal protocol interfaces for context.
+For your own policy, follow [Write Your Own Policies](../credible/writing-your-own-policies) and agree the scope with [Phylax](../credible/work-with-phylax). Custom development includes reviewing protocol assumptions, legitimate exceptions, and integration coverage.

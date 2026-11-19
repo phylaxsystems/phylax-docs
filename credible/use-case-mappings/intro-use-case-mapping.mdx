@@ -1,18 +1,19 @@
 ---
-title: Use Case Mappings
-description: Reference for assertion capabilities enabled by Credible Layer cheatcodes.
+title: Transaction Data APIs
+description: Reference for choosing assertion inspection capabilities and understanding their constraints.
 ---
 
-Use this reference to look up which Credible Layer cheatcodes support each assertion use case and what implementation constraints apply.
+Choose the data your assertion needs to inspect. Each reference describes the interface, snapshot scope, and implementation constraints; a supported API does not make every illustrative fragment a tested fixture.
 
-## What You'll Find Here
+<span id="what-youll-find-here" />
 
-- **Use Case Mappings**: Documentation of different assertion capabilities enabled by Credible Layer cheatcodes
-- **Implementation Examples**: Code samples showing how to implement each use case with the appropriate cheatcodes
-- **Status Indicators**: Clear labeling of which use cases are fully supported, partially supported, or not yet supported
+| Need | Reference | Main constraint |
+| --- | --- | --- |
+| Inspect arguments of matching calls | [Function Call Inputs](./function-call-inputs) | Account for every relevant state-changing entry point |
+| Reconcile emitted events with state | [Read Logs](./read-logs) | Filter emitter/signature; events can omit changes |
+| Read a known storage slot | [Storage Lookup](./storage-lookups) | Know the layout and select the intended snapshot |
+| Inspect writes during a transaction | [State Change Tracking](./state-changes) | Distinguish intermediate writes from endpoint values |
+| Check one matched call | [Call Frame Context](./call-frame-context) | Use the matching call's start/end snapshots |
+| Discover written mapping keys | [Modified Key Discovery](./modified-keys) | Best-effort Reshiram discovery; no full mapping enumeration |
 
-Each mapping includes example code with both the protocol contract being monitored and the corresponding assertion implementation. The examples demonstrate the technical approach for implementing different types of validations using the available cheatcodes.
-
-The mappings are organized to help you choose the right Credible Layer primitive for each use case. For each use case, you'll find implementation details, example code, and notes about implementation considerations.
-
-Some pages describe use cases that require alternate patterns or future primitives, so you can choose the right implementation path.
+Confirm the target runtime supports the required [assertion specification](../assertions-overview#assertion-specifications). For a guided exercise with expected results, use [Run an Example Policy Locally](../pcl-quickstart).

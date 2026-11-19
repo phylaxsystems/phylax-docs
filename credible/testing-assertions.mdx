@@ -5,7 +5,17 @@ description: Validate assertions locally with `CredibleTest`, realistic test pat
 
 Test assertions locally with `CredibleTest` and the Forge test utilities. Use the [testing strategy](./testing-strategy) for integration tests and production readiness.
 
-## Register an Assertion for the Next Transaction
+## Prerequisites
+
+Use a project with [PCL installed](./credible-install), a pinned `credible-std` dependency, the assertion under test, and protocol fixtures. Run commands from the project root using the assertion test profile configured in `foundry.toml`; see [profile configuration](./ci-cd-integration#foundry-profile-configuration).
+
+For a complete first exercise, use [Run an Example Policy Locally](./pcl-quickstart). The patterns below assume you already have a test project.
+
+<span id="register-an-assertion-for-the-next-transaction" />
+
+## Register an Assertion for the Next External Call
+
+The interface below explains the harness mechanism. In your test project, import `CredibleTest` from your pinned `credible-std` dependency, as the next example does; do not create a second local definition.
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -24,7 +34,7 @@ contract CredibleTest {
 
 ## Using the Testing Interface
 
-A test registers the assertion, calls the protocol, and checks the result:
+This example uses the contracts and layout from the [pinned starter tutorial](./pcl-quickstart). In another project, substitute your own target, assertion, imports, and expected failure. A test registers the assertion, calls the protocol, and checks the result:
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -69,14 +79,14 @@ contract TestOwnableAssertion is CredibleTest, Test {
 ```
 
 <Note>
-Local assertion tests use reverts to model rejection by a participating builder. They do not exercise Ethereum block markers, guard coverage, or RPC routing; test those with the [integration testing plan](./testing-strategy). See [Testing vs. Production](./execution-model) for details.
+Local assertion tests use reverts to model rejection by a participating builder. They do not exercise Ethereum block markers, guard coverage, or RPC routing; test those with the [integration testing plan](./testing-strategy). See [Local Testing vs. Production](./execution-model) for details.
 </Note>
 
-`cl.assertion()` registers one assertion function for the next transaction. Use `vm.prank()` to select the caller and `vm.expectRevert()` to check the expected failure. Successful transactions retain their state changes.
+`cl.assertion()` registers one assertion function for the next monitored external call. Its trigger must match that call. Use `vm.prank()` to select the caller and `vm.expectRevert()` to check the expected failure. Successful transactions retain their state changes.
 
 ### Testing Assertion Contracts with Constructor Arguments
 
-Use `ph.getAssertionAdopter()` to obtain the protected contract. If the assertion needs other constructor values, append their ABI encoding to the creation bytecode:
+Use `ph.getAssertionAdopter()` inside an assertion function to obtain its assigned contract; it is unavailable in the constructor. If your assertion declares constructor arguments, append their ABI encoding to the creation bytecode in the exact declared order. The following fragment illustrates an assertion with one address argument; only use it if that constructor exists:
 
 ```solidity
 createData: abi.encodePacked(type(OwnableAssertion).creationCode, abi.encode(address(token)))
@@ -128,19 +138,19 @@ require(!success, "assertion reason");
 ```
 </Note>
 
-See [Sum of All Positions](../assertions-book/assertions/ass08-sum-of-all-positions) for an example.
+See [Deposit Supply Delta](../assertions-book/assertions/ass08-sum-of-all-positions) for an example.
 
 ### Protocol Mocking
 
 Use a mock protocol to create states that the real protocol's checks prevent. For example, expose a balance change that should make the assertion fail.
 
-See the [credible-std examples](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book) for mocks.
+See the [credible-std examples](https://github.com/phylaxsystems/credible-std/tree/fe49de6dcddb8ea1f77ea2828a0c9d7d5f923db0/examples/assertions-book) for mocks.
 
 ## Gas Limits
 
-Assertion execution has a default gas limit of 3,000,000. Node operators can configure this limit to keep assertion validation within the network's execution budget.
+Assertion execution has a runtime-configured gas budget. Obtain the active budget from the deployment operator and test the maximum expected workload against it; do not infer it from the local EVM block gas limit.
 
-Exceeding the limit causes `OutOfGas` and invalidates the candidate, even if the invariant holds. This prevents attackers from bypassing validation through expensive inputs. Test the maximum expected workload.
+Exceeding the limit causes `OutOfGas` and invalidates the candidate, even if the intended policy condition would pass. This prevents attackers from bypassing enforcement through expensive inputs. Test the maximum expected workload.
 
 ### The Happy Path Problem
 
@@ -154,6 +164,14 @@ Match the compiler and optimizer settings used for deployment. The `credible-std
 - Test batch operations at maximum expected size
 - Use `pcl test -vvv` to monitor gas usage
 - If approaching the limit, optimize or split the assertion
+
+## Run and Verify Your Tests
+
+Run `pcl test` with your project's assertion profile. Use `--match-contract` or `--match-test` to isolate a case, then run the full assertion suite before preparing a release.
+
+Check that the intended assertion function executed, allowed operations retained their expected state changes, and rejected operations failed for the expected assertion reason. A test passing because the protocol reverted before the assertion ran does not validate that assertion. Include legitimate exceptions and maximum-workload cases.
+
+When the results match the approved policy, [prepare a release](./apply-assertions). If a case fails unexpectedly, use [Troubleshooting](./troubleshooting) before continuing.
 
 ## What's Next?
 

@@ -13,7 +13,7 @@ Use `deploy-credible-assertions` to create a platform project, prepare a release
 - A configured `assertions/credible.toml`
 - An authenticated `pcl` session for the target platform
 - The target chain ID and an RPC endpoint
-- Access to the protocol manager wallet through a Foundry keystore
+- Access to the Protocol Manager wallet through a Foundry keystore
 - For production, reviewed Ethereum guard coverage, RPC routing for protected operations, and a tested recovery plan
 
 Confirm that your installed CLI supports the agentic deployment command:
@@ -28,13 +28,13 @@ Deployment creates remote platform state and can broadcast an on-chain transacti
 
 ## 1. Authenticate manually
 
-Complete authentication yourself before giving the agent the deployment task. The platform URL selects the target network:
+Complete authentication yourself before giving the agent the deployment task. Select the platform API explicitly, then confirm the project's target chain separately:
 
 ```bash
 pcl auth -u https://ethereum.phylax.systems login
 ```
 
-Use the Ethereum platform explicitly. The earlier Linea platform selection is documented under [L2 Platform Notes](./l2-integrations/platform-and-compatibility).
+Use the Ethereum platform explicitly. L2 platform selection is documented under [L2 Platform Notes](./l2-integrations/platform-and-compatibility).
 
 After login, `pcl` remembers the selected platform and uses it as the default for subsequent platform commands. Confirm the session before starting the agent:
 
@@ -51,14 +51,16 @@ Use the deploy-credible-assertions skill to prepare this assertion project
 for deployment.
 
 Target platform: https://ethereum.phylax.systems
-Target chain ID: 1 (Ethereum mainnet; confirm the approved deployment)
+Target network: Ethereum mainnet
+Target chain ID: 1 (use --chain-id 1 for a new project; verify an existing project's chain)
 RPC: <rpc-url or where the RPC can be found>
 Agreed policy specification and release review: <path or record>
 Environment: alerting
 Signer: Foundry keystore <account-name>
 
 Inspect the repository and credible.toml, then check the installed pcl command
-surface. Confirm the existing authentication and explain every remote or
+surface. Confirm the existing authentication, project chain, RPC chain, and
+contract addresses match the selected network. Explain every remote or
 on-chain mutation that would be required.
 
 Do not create a project, create a release, access signing credentials, or
@@ -82,7 +84,7 @@ name = "My Contract"
 file = "src/MyAssertion.a.sol"
 ```
 
-On the first approved deployment, `pcl deploy` creates the platform project and writes its `project_id` back to `credible.toml`. Review and commit that change after deployment.
+On the first approved deployment, `pcl deploy` creates the platform project and writes its `project_id` back to `credible.toml`. It then verifies or assigns the Protocol Manager before creating the release. Manager assignment is a pre-release step, not a prerequisite to creating the project. Review and commit the configuration change after deployment.
 
 ## 4. Require a dry run
 
@@ -95,7 +97,8 @@ credible.toml.
 
 Review the result for:
 
-- The protected contract addresses
+- The selected network and chain ID, confirmed separately as described below
+- The protected contract addresses on that network
 - The assertions and constructor arguments
 - Any warnings or failed verification
 
@@ -110,13 +113,13 @@ Deploy the project according to the credible.toml specification and broadcast
 the deployment transactions to the specified RPC endpoints.
 ```
 
-The command resolves the project and manager, builds the release, and waits for required checks. It then broadcasts activation and confirms the result.
+The command resolves the project and manager, builds the release, and waits for required checks. It then broadcasts the deployment transaction and confirms the result. Confirmation does not remove the configured activation delay.
 
 `pcl deploy` checks existing state before each step. After an interruption, inspect the structured error and rerun the command to resume.
 
 ## 6. Verify the result
 
-Record the project ID, release ID, environment, deployment result, and any remaining activation delay. Include the transaction hash if broadcast.
+Record the network and chain ID, project ID, release ID, environment, deployment result, and any remaining activation delay. Include the transaction hash if broadcast. After the delay, verify [Alerting observation](./deploy-assertions-dapp#verify-alerting-observation) or [Production enforcement](./deploy-assertions-dapp#verify-ethereum-enforcement), according to the release environment.
 
 Activation updates assertion policy; it does not install a guard or configure transaction submitters. Verify those separately with the [Ethereum integration plan](./dapp-integration).
 

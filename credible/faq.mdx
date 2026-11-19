@@ -11,7 +11,7 @@ For integration fit, FDE support, testing, and signer setup, see [Should you use
 
 ### When are transactions checked against my policies?
 
-Participating builders run the Phylax enforcement engine while building a block. The engine simulates candidate transactions and evaluates the applicable assertions against their effects. Builders exclude candidates that violate active production rules.
+Participating builders run the [Assertion Enforcer](./assertion-enforcer) while building a block. Candidate transactions execute against working state, and PhEVM evaluates applicable assertions against their effects before inclusion. Builders exclude candidates that violate active production rules.
 
 Passing the checks makes a transaction eligible for inclusion; it does not guarantee selection, ordering, or finality. See [Ethereum Architecture](./architecture-overview).
 
@@ -19,7 +19,7 @@ Passing the checks makes a transaction eligible for inclusion; it does not guara
 
 An onchain guard requires protected calls to execute in a credible block while its gate is active. An authorized builder records the block's marker in the Credible Registry. Protected calls in noncredible blocks revert, regardless of how they were submitted.
 
-The Credible RPC routes transactions to participating builders. Configure the [actual transaction submitters](./dapp-integration#configure-transaction-submission) to use that route. Assertion validation is not part of Ethereum's consensus rules; enforcement depends on the builders and guards, including their configured recovery conditions.
+The Credible RPC routes transactions to participating builders. Configure the [actual transaction submitters](./dapp-integration#configure-transaction-submission) to use that route. Assertion enforcement is not part of Ethereum's consensus rules; enforcement depends on the builders and guards, including their configured recovery conditions.
 
 ### Is a credible-block marker proof that all assertions passed?
 
@@ -35,7 +35,7 @@ The **Credible Registry** records credible-block markers and controls which buil
 
 ### What happens if a transaction calls several protocols or batches operations?
 
-A transaction must pass all applicable assertions. One failure excludes the entire candidate transaction, including other operations in the same batch. It does not automatically exclude unrelated transactions or invalidate the whole block.
+A candidate must pass all applicable active Production assertions at the participating builder. One failure excludes the entire candidate transaction, including other operations in the same batch. It does not automatically exclude unrelated transactions or invalidate the whole block. Alerting results do not exclude live transactions.
 
 An onchain guard revert is different: a caller may catch a failed subcall and continue, depending on its code. Account for that behavior in batching, settlement, and retry logic.
 
@@ -53,13 +53,13 @@ No. Routing delivers a transaction to the configured builder path. Privacy depen
 
 ### Does a successful RPC simulation mean the transaction will pass assertions?
 
-No. RPC simulation and assertion validation are separate checks. A simulation may account for the credible-block marker so guarded calls can be simulated without running the full production assertion set.
+No. RPC simulation and assertion enforcement are separate checks. A simulation may account for the credible-block marker so guarded calls can be simulated without running the full production assertion set.
 
 Even an assertion preflight result applies only to the simulated state. Active rules, ordering, and chain state can change before inclusion.
 
 ### Do rejected transactions consume gas?
 
-A transaction excluded by a builder before inclusion consumes no onchain execution gas. An included transaction that reverts at a guard does consume gas. Guard and marker operations also have onchain costs, separate from offchain assertion execution.
+Builder exclusion itself consumes no onchain execution gas; it does not establish the transaction's outcome at another builder. An included transaction that reverts at a guard does consume gas. Guard and marker operations also have onchain costs, separate from offchain assertion execution.
 
 ### Are bridge, system, or forced-inclusion transactions protected?
 

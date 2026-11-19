@@ -5,6 +5,7 @@ description: "Detect a change to a configured proxy implementation slot"
 
 import Example from "/snippets/ass1-implementation-change.a.mdx";
 
+
 A proxy must keep its current implementation until your team approves an upgrade. This example rejects a transaction whose final implementation address differs from its initial address.
 
 ## Behavior
@@ -15,7 +16,7 @@ A proxy must keep its current implementation until your team approves an upgrade
 
 Replace `IMPLEMENTATION_SLOT` with the slot used by the deployed proxy. Slot `0` is a teaching layout; it is not the ERC-1967 implementation slot. Attach the assertion to the proxy whose storage contains that slot.
 
-The example has no constructor arguments and no approved-upgrader exception. A legitimate upgrade also fails while this lock is active. Coordinate a policy change through [your deployment process](/credible/deploy-assertions-dapp) before the upgrade.
+The example has no constructor arguments and no approved-upgrader exception. A legitimate upgrade also fails while this lock is active. Coordinate a policy change through [your deployment process](../../credible/deploy-assertions-dapp) before the upgrade.
 
 ## Scenarios
 

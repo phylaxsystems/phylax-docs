@@ -1,172 +1,70 @@
 ---
-title: UxLink Multisig Ownership Compromise
-description: Compromised private keys led to \$10M+ drain from UxLink multisig through threshold manipulation and owner replacement
+title: "UxLink Multisig Compromise"
+description: "Attack mechanism and inline Reshiram assertion example for UxLink Multisig Compromise"
 ---
 
 ## What Happened
 
-On September 22, 2025, UxLink's multisig was compromised through private key theft, resulting in \$11.3M direct theft plus unauthorized minting of 10 trillion tokens worth ~\$28M. Attackers manipulated the multisig configuration to drain funds and gain token minting privileges.
+Blockscope’s September 2025 investigation traces a compromised multisig, privileged delegatecalls, and unauthorized token minting. Its loss estimate includes a different scope from early stolen-asset estimates. This page does not add stolen assets and the notional value of minted tokens into a single loss figure. [Blockscope investigation](https://research.blockscope.co/uxlink-exploit-analysis).
 
-## Why It Worked
+## Attack Mechanism
 
-The attack exploited two weaknesses:
+Compromise of multisig authority gave the attacker a route to privileged execution. Changes to owners and signing threshold could make that control persistent, while delegatecalls could reach storage without using the expected owner-management functions. Authority over token administration then enabled unauthorized minting as well as treasury extraction.
 
-1. **Compromised Private Keys**: Attackers gained access to UxLink's multisig owner private keys
-2. **Unrestricted Multisig Configuration**: Safe contract allowed threshold reduction and owner changes without security checks
-3. **Token Minting Access**: Compromised multisig gained Manager privileges over the UXLINK token contract
+A policy that watches only `changeThreshold` or `addOwnerWithThreshold` misses alternate write paths. The example therefore reads the resulting Safe configuration: the threshold must meet a minimum, and every owner must belong to a configured approved set.
 
-**Attack Vector:**
-Compromised private keys enabled execution of multisig transactions without validation or rate limiting.
+For a minimum of two signers, a final threshold of one fails even if an approved owner requested it. Replacing an owner with an unapproved address also fails, even when the threshold stays at two.
 
-## Attack Analysis
-
-### Attack Sequence
-
-**Phase 1: Multisig Compromise**
-Attackers used compromised private keys to revoke admin privileges, add themselves as owners, and reduce the multisig threshold to 1, gaining full control.
-
-**Phase 2: Treasury Drainage**
-Drained \$11.3M in assets (USDT, USDC, WBTC, ETH) and converted them across chains.
-
-**Phase 3: Token Exploitation**
-Used multisig control to mint unlimited UXLINK tokens, causing a price crash and significant market cap loss.
-
-### Root Causes
-
-1. **Private Key Compromise**: Compromised private keys due to poor operational security
-2. **No Multisig Protection**: No safeguards against rapid configuration changes
-3. **No Rate Limiting**: Multisig changes executed immediately without cooling periods
-4. **Missing Access Controls**: No whitelisting for owner changes
-
-## Assertion Pattern
-
-Multisig protection assertions could have prevented this attack by enforcing governance invariants:
+## Assertion Example
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
-import {AssertionSpec} from "../../lib/credible-std/src/SpecRecorder.sol";
-import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
-import {ISafe} from "@safe-global/safe-contracts/contracts/interfaces/ISafe.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
-contract UxLinkMultisigProtectionAssertion is Assertion {
-    constructor() {
+/// @notice Enforce a minimum threshold and approved owner set at transaction end.
+contract SafeConfiguration is Assertion {
+    uint256 public immutable minimum;
+    mapping(address => bool) public allowed;
+    constructor(uint256 minimum_, address[] memory owners) {
         registerAssertionSpec(AssertionSpec.Reshiram);
-    }
-
-    // Minimum threshold that must be maintained
-    uint256 constant MIN_THRESHOLD = 2;
-
-    // Whitelisted addresses that can become owners (set at deployment)
-    address constant ALLOWED_OWNER_1 = 0x1111111111111111111111111111111111111111;
-    address constant ALLOWED_OWNER_2 = 0x2222222222222222222222222222222222222222;
-    address constant ALLOWED_OWNER_3 = 0x3333333333333333333333333333333333333333;
-
-    function triggers() external view override {
-        registerFnCallTrigger(
-            this.assertThresholdProtection.selector,
-            ISafe.changeThreshold.selector
-        );
-
-        registerFnCallTrigger(
-            this.assertOwnerAddition.selector,
-            ISafe.addOwnerWithThreshold.selector
-        );
-
-        registerFnCallTrigger(
-            this.assertOwnerRemoval.selector,
-            ISafe.removeOwner.selector
-        );
-    }
-
-    /// @notice Prevents threshold reduction below minimum
-    function assertThresholdProtection() external view {
-        ISafe safe = ISafe(ph.getAssertionAdopter());
-
-        PhEvm.CallInputs[] memory calls = ph.getCallInputs(
-            address(safe),
-            ISafe.changeThreshold.selector
-        );
-
-        for (uint256 i = 0; i < calls.length; i++) {
-            uint256 newThreshold = abi.decode(calls[i].input, (uint256));
-
-            // Never allow threshold below minimum
-            require(newThreshold >= MIN_THRESHOLD, "Threshold cannot go below minimum");
+        require(minimum_ > 0 && minimum_ <= owners.length, "Invalid minimum");
+        minimum = minimum_;
+        for (uint256 i; i < owners.length; ++i) {
+            require(owners[i] != address(0) && !allowed[owners[i]], "Invalid owner");
+            allowed[owners[i]] = true;
         }
     }
-
-    /// @notice Validates new owner additions against whitelist
-    function assertOwnerAddition() external view {
-        ISafe safe = ISafe(ph.getAssertionAdopter());
-
-        PhEvm.CallInputs[] memory calls = ph.getCallInputs(
-            address(safe),
-            ISafe.addOwnerWithThreshold.selector
-        );
-
-        for (uint256 i = 0; i < calls.length; i++) {
-            (address newOwner, uint256 threshold) = abi.decode(calls[i].input, (address, uint256));
-
-            // Basic validation
-            require(newOwner != address(0), "Invalid owner address");
-
-            // Check whitelist
-            require(
-                newOwner == ALLOWED_OWNER_1 ||
-                newOwner == ALLOWED_OWNER_2 ||
-                newOwner == ALLOWED_OWNER_3,
-                "New owner not whitelisted"
-            );
-
-            // Never allow threshold below minimum
-            require(threshold >= MIN_THRESHOLD, "Threshold cannot go below minimum");
-        }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address safe = ph.getAssertionAdopter();
+        uint256 threshold = abi.decode(read(safe, abi.encodeWithSignature("getThreshold()"), _postTx()), (uint256));
+        address[] memory owners = abi.decode(read(safe, abi.encodeWithSignature("getOwners()"), _postTx()), (address[]));
+        require(threshold >= minimum && threshold <= owners.length, "Unsafe threshold");
+        for (uint256 i; i < owners.length; ++i) require(allowed[owners[i]], "Unapproved owner");
     }
 
-    /// @notice Validates owner removals don't reduce threshold below minimum
-    function assertOwnerRemoval() external view {
-        ISafe safe = ISafe(ph.getAssertionAdopter());
-
-        PhEvm.CallInputs[] memory calls = ph.getCallInputs(
-            address(safe),
-            ISafe.removeOwner.selector
-        );
-
-        for (uint256 i = 0; i < calls.length; i++) {
-            (, , uint256 threshold) = abi.decode(calls[i].input, (address, address, uint256));
-
-            // Never allow threshold below minimum
-            require(threshold >= MIN_THRESHOLD, "Threshold cannot go below minimum");
-        }
+    function read(address target, bytes memory data, PhEvm.ForkId memory fork)
+        internal view returns (bytes memory)
+    {
+        PhEvm.StaticCallResult memory result = ph.staticcallAt(target, data, 500_000, fork);
+        require(result.ok, "Snapshot read failed");
+        return result.data;
     }
 }
 ```
 
-<Note>
-Assertions cannot track state across transactions (e.g., cooling periods). The original attack used rapid sequential transactions, which would require off-chain monitoring or timelocked governance contracts to fully prevent. However, the assertions above still provide strong protection by enforcing minimum thresholds and owner whitelisting.
-</Note>
+## What This Check Covers
 
-### How the Assertions Would Have Prevented It
+This is a transaction-end configuration rule. It does not detect temporary changes restored in the same transaction, block transfers signed by compromised but still approved owners, or constrain minting by itself. Add separate implementation, module, and asset policies for those paths; test legitimate owner rotation against the approved set.
 
-**What they do:**
-1. **Threshold Protection**: Prevents threshold from dropping below a safe minimum (e.g., 2)
-2. **Owner Whitelisting**: Only allows pre-approved addresses to become owners
-3. **Removal Validation**: Ensures owner removals don't reduce threshold below minimum
-
-**How they prevent the attack:**
-
-- **Step 1**: `assertThresholdProtection()` blocks any attempt to reduce threshold to 1
-- **Step 2**: `assertOwnerAddition()` blocks attacker addresses that aren't whitelisted
-- **Step 3**: `assertOwnerRemoval()` ensures threshold stays above minimum even when removing owners
-- **Result**: Attacker cannot gain solo control of the multisig
-
-**Key insight**: While these assertions can't prevent private key compromise or enforce time delays between transactions, they establish hard boundaries that attackers cannot cross regardless of how many keys they control.
-
-## Key Takeaways
-
-The UxLink attack shows that multisig security requires both operational security (private key protection) and protocol-level protections (configuration validation). The \$39.3M total impact (\$11.3M direct + \$28M token minting) demonstrates how compromised private keys can lead to complete protocol takeover when governance controls are missing.
-
-Credible Layer assertions can enforce governance invariants: maintaining reasonable thresholds, validating owner changes, and preventing rapid reconfiguration. This approach ensures operational security failures don't lead to complete protocol compromise.
+<span id="why-it-worked" />
+<span id="attack-analysis" />
+<span id="attack-sequence" />
+<span id="root-causes" />
+<span id="assertion-pattern" />
+<span id="how-the-assertions-would-have-prevented-it" />
+<span id="key-takeaways" />

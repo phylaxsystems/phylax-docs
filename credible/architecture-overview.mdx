@@ -3,9 +3,9 @@ title: 'Ethereum Architecture'
 description: 'How participating Ethereum builders, assertions, block markers, and contract guards work together.'
 ---
 
-On Ethereum, the Credible Layer combines off-chain assertion validation by participating builders with an on-chain guard on protected operations. The Credible RPC routes submissions to those builders. Ethereum validators do not independently execute Phylax assertions as part of consensus.
+On Ethereum, the Credible Layer combines off-chain assertion enforcement by participating builders with an on-chain guard on protected operations. The Credible RPC routes submissions to those builders. Ethereum validators do not independently execute Phylax assertions as part of consensus.
 
-For a shorter introduction, see [How Ethereum Enforcement Works](./credible-layer-overview). The earlier sequencer model is documented separately under [L2 and Sequencer Integrations](./l2-integrations/overview).
+For a shorter introduction, see [How Ethereum Enforcement Works](./credible-layer-overview). Sequencer integration planning and network designs are documented separately under [L2 and Sequencer Integrations](./l2-integrations/overview).
 
 ## System Overview
 
@@ -15,7 +15,7 @@ For a shorter introduction, see [How Ethereum Enforcement Works](./credible-laye
 | State Oracle | Records assertion assignments, Protocol Manager authority, and activation or removal timing. |
 | Assertion DA | Supplies assertion bytecode and source artifacts. |
 | Assertion Enforcer / PhEVM | Evaluates applicable assertions against candidate transaction execution state. |
-| Participating builder | Uses validation reports to exclude failing candidates and marks the blocks it builds under that policy. |
+| Participating builder | Uses assertion results to exclude failing candidates and marks the blocks it builds under that policy. |
 | Credible Registry | Authorizes builders and records credible-block markers. |
 | Contract or wallet guard | Restricts protected operations to credible blocks while its gate is active. |
 | Credible RPC | Routes top-level transaction submissions to participating builders. |
@@ -30,7 +30,7 @@ Developers create a release with [`pcl apply`](./apply-assertions). The platform
 
 The enforcer indexes lifecycle events and caches active assertion bytecode. A pending release does not enforce policies.
 
-### Validation During Block Building
+### Enforcement During Block Building
 
 A participating builder sends candidate transaction context to the [Assertion Enforcer](./assertion-enforcer). [PhEVM](./phevm) executes matching assertions against the required state snapshots.
 
@@ -88,7 +88,7 @@ Use the [investigation guide](./investigate-rejected-transaction) to distinguish
 
 ## System Components
 
-- [Assertion Enforcer](./assertion-enforcer): validation, resource limits, and artifact caching.
+- [Assertion Enforcer](./assertion-enforcer): enforcement, resource limits, and artifact caching.
 - [PhEVM](./phevm): execution and state inspection for assertions.
 - [Assertion DA](./assertion-da): assertion artifacts and availability.
 - [Credible Layer Contracts](./credible-layer-contracts): State Oracle, Credible Registry, guards, and authority.
@@ -97,5 +97,5 @@ Use the [investigation guide](./investigate-rejected-transaction) to distinguish
 ## Integration Paths
 
 - [Protocol teams](./dapp-integration): scope assertions, guards, routing, and recovery.
-- [For Ethereum Builders](./ethereum-builder-integration): connect validation, marking, and operations.
+- [For Ethereum Builders](./ethereum-builder-integration): connect enforcement, marking, and operations.
 - [L2 and sequencer operators](./l2-integrations/overview): separate network integration designs.

@@ -1,106 +1,23 @@
 ---
-title: 'OP Stack'
-description: 'OP Stack specific implementation of the Credible Layer'
+title: 'OP Stack Integration Planning'
+description: 'Plan assertion enforcement for an OP Stack sequencer integration.'
 ---
 
-This L2 design connects assertion validation to an OP Stack sequencer through [Rollup-Boost](https://github.com/flashbots/rollup-boost). Confirm implementation and support status before use.
+<Warning>
+An OP Stack integration needs an enforcement design agreed for its sequencer client and transaction paths. The previous Rollup-Boost setup is not a verified implementation guide for a new deployment.
+</Warning>
 
-See [L2 Integration Planning](./network-integration) for requirements.
+Start with [How to Plan an L2 Integration](./network-integration) to place assertion enforcement inside the sequencer's block-building pipeline. Confirm the client revision, transaction-source coverage, supported assertion specification, and failure policy for the target network.
 
-## Architecture Diagram
+The previous diagram and setup description are available in [repository history](https://github.com/phylaxsystems/phylax-docs/blob/3e3ca9167feebab92da833fcd8d148f361d29a00/credible/l2-integrations/architecture-op-stack.mdx) for design context. This page preserves the published URL and section bookmarks.
 
-```mermaid
----
-title: OP Stack Implementation Architecture
----
-flowchart TD
-
-classDef sequencer fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
-classDef credible fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
-classDef rollupBoost fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
-
-subgraph Sequencer[**Sequencer**]
-    SequencerCL[op-node]
-    SequencerEL[op-geth/op-reth]
-end
-
-subgraph CredibleLayer[**Credible Layer**]
-    AssertionEnforcerEL[op-reth]
-    AssertionEnforcerCLI[CLI]
-    AssertionEnforcerDapp[Platform]
-    AssertionDA[Assertion DA]
-    subgraph AssertionEnforcerBlockBuilder[Block Builder]
-        AssertionEnforcer
-    end
-end
-
-subgraph RollupBoost[**Rollup-Boost**]
-    RollupBoostProxy[Proxy]
-end
-
-SequencerEL --> |Fallback Blocks + Validation| RollupBoost
-
-AssertionDA --> |Serve Assertions| AssertionEnforcerBlockBuilder
-AssertionEnforcerCLI --> |Auth + Apply| AssertionEnforcerDapp
-AssertionEnforcerDapp --> |Store bytecode| AssertionDA
-AssertionEnforcerDapp --> |Fetch assertions| AssertionDA
-
-AssertionEnforcerEL <--> |Pulls State + Txs| SequencerEL
-AssertionEnforcerEL <--> |Provide Best Transactions| AssertionEnforcerBlockBuilder
-RollupBoost <--> |Request Credible Blocks| AssertionEnforcerBlockBuilder
-RollupBoost <--> |Request Credible Blocks| SequencerCL
-
-class SequencerCL,SequencerEL sequencer
-class AssertionEnforcerBlockBuilder,AssertionEnforcerEL,AssertionEnforcerCLI,AssertionEnforcerDapp,AssertionDA credible
-class RollupBoostProxy,AssertionEnforcer rollupBoost
-```
-
-## System Components
-
-### Sequencer
-- **op-node**: The main orchestrator node in the OP Stack, responsible for sequencing transactions and maintaining consensus with the execution layer.
-- **op-geth/op-reth**: The execution layer clients (Geth or Reth) that process and execute transactions, providing the EVM environment for the rollup.
-
-### Credible Layer (Sidecar)
-- **[Block Builder](/credible/glossary#block-builder)**: The component of the network that simulates transactions and runs assertions before transaction finalization to ensure they don't violate defined conditions.
-- **op-reth**: The execution layer client within the Credible Layer that processes transactions and maintains state.
-- **[`pcl` CLI](/credible/glossary#pcl)**: Command-line interface for developers to write, test, and deploy assertions to the system.
-- **[Platform](https://app.phylax.systems)**: The web application interface to deploy, manage, and view assertions and projects.
-- **[Assertion DA](/credible/glossary#assertion-da-data-availability)**: The Assertion Data Availability layer, which stores assertion bytecode and serves it to both end-users and the Assertion Enforcer for execution.
-
-### Rollup-Boost
-- **Proxy**: Acts as a bridge between the block builder and the sequencer, enabling integration without requiring changes to the sequencer code. It handles new block requests and fallback validation.
-
-## Component Interactions
-
-- The Credible Layer op-reth pulls state and transactions from the Sequencer op-geth/op-reth.
-- The Credible Layer op-reth provides best transactions to the Block Builder.
-- The Block Builder enforces assertions and produces credible blocks, which are requested by Rollup-Boost.
-- Rollup-Boost requests credible blocks from both the Block Builder and the Sequencer op-node.
-- The Assertion DA serves assertion bytecode to the Block Builder, ensuring up-to-date enforcement.
-- `pcl` and the platform provide interfaces for assertion development, submission and management.
-
-## L1-Originated Transactions
-
-OP Stack networks can define an L1-originated transaction validation policy alongside the ordinary sequencer-selected transaction path.
-
-An integration should specify where assertion validation runs, how validation results are reported to sequencing components, and what metadata is sent to the platform. See [Network Integration Overview](/credible/l2-integrations/network-integration#transaction-source-coverage) for the general checklist.
-
-## Transaction Flow
-
-![Transaction Flow](/images/tx-flow-credible.png "OP Stack transaction flow with assertion execution detail")
-
-The diagram above illustrates transaction flow through the OP Stack implementation. The top section shows the complete deployment: users submit transactions that flow through OP-Talos (block builder) → Rollup-Boost → OP Stack Sequencer → Network. Candidates violating active assertions are excluded by the enforcing integration; a violation is not necessarily malicious.
-
-The bottom section illustrates **assertion execution**, a component shared with other integrations. It does not show Ethereum guard or marker checks. The transaction and State 1 (pre-state) flow into the EVM for simulation, producing State 2 (post-state). PhEVM then validates these states against deployed assertions, returning valid/invalid.
-
-## Key Technologies
-
-- **OP-Talos**: Implementation of [rbuilder](https://github.com/flashbots/rbuilder) as the Assertion Enforcer. rbuilder is Flashbots' open-source block builder, which we've adapted to include assertion validation logic for the OP Stack.
-- [**Rollup-Boost**](https://github.com/flashbots/rollup-boost): Developed by Flashbots, Rollup-Boost is a proxy architecture that enables external block builders to integrate with rollup sequencers. It integrates OP-Talos with the Sequencer without requiring code changes to the Sequencer, allowing for modular and non-invasive assertion enforcement.
-
-## Integration Benefits
-
-Rollup-Boost connects an external builder without sequencer code changes. Assertion workers can run separately. Measure latency and backpressure for the deployment.
-
-Review coverage, activation timing, and failure handling before changing enforcement policy.
+<span id="architecture-diagram" />
+<span id="system-components" />
+<span id="sequencer" />
+<span id="credible-layer-sidecar" />
+<span id="rollup-boost" />
+<span id="component-interactions" />
+<span id="l1-originated-transactions" />
+<span id="transaction-flow" />
+<span id="key-technologies" />
+<span id="integration-benefits" />

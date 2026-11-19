@@ -3,7 +3,11 @@ title: 'Assertions Overview'
 description: 'Understanding Credible Layer assertions'
 ---
 
-An assertion is a Solidity function that rejects transaction effects that violate a policy. A policy defines the intended behavior and exceptions. Assertions implement its checks.
+A policy is implemented as an assertion: EVM bytecode executed offchain in PhEVM. Precompiles provide the primitives teams use to express safety rules, from runtime enforcement of invariants to inflow circuit breakers, anomaly checks, and external data feeds such as risk signals. Available primitives depend on the assertion specification and target runtime.
+
+Assertion functions implement the checks; an assertion contract packages those functions with their trigger registrations. The policy defines the intended behavior and exceptions.
+
+Invariants are one possible requirement; policies can also constrain transitions, conditional effects, or rolling flows. Circuit breakers limit cumulative inflow or outflow across per-block buckets over a rolling window. See the [terminology reference](./glossary#terminology-across-the-docs).
 
 Assertions describe invalid outcomes without predicting every exploit path. Participating builders enforce them before inclusion. See [Ethereum Architecture](./architecture-overview) for guards and routing.
 
@@ -13,14 +17,16 @@ Assertions describe invalid outcomes without predicting every exploit path. Part
 - **Reshiram (V2)** replaces mutable fork switching with immutable `ForkId` snapshot reads and adds newer transaction and call inspection precompiles.
 
 <Warning>
-Confirm which specification your target Ethereum deployment accepts before activation. Library availability and local tests do not establish enforcer compatibility. Earlier Linea-specific restrictions are in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
+Confirm which specification your target enforcer accepts before activation, on Ethereum or an L2. Library availability and local tests do not establish compatibility. The [Assertion Specifications reference](./credible-std-overview#assertion-specifications) covers registration, API differences, migration, and deployment requirements.
 </Warning>
 
 ## How Assertions Work
 
 [Triggers](./triggers) select assertion functions for relevant transaction activity. [PhEVM](./phevm) executes them against state snapshots. A participating builder excludes a candidate if an active production assertion fails.
 
-## Example: Prevent Unauthorized Ownership Changes
+<span id="example-prevent-unauthorized-ownership-changes" />
+
+## Example: Compare Ownership at Transaction Boundaries
 
 ```solidity
 function checkOwnershipChange() external view {
@@ -34,7 +40,7 @@ function checkOwnershipChange() external view {
 }
 ```
 
-With an appropriate trigger, this rule rejects ownership changes, including legitimate transfers. Add explicit exceptions if the policy permits transfers.
+With an appropriate trigger, this rule rejects a final owner value that differs from the initial value, including a legitimate transfer. It does not distinguish authorization or detect a temporary change restored before transaction end. The [ownership tutorial](../assertions-book/assertions/run-an-example) demonstrates that limit. A policy permitting transfers needs explicit exceptions and checks at the required observation boundaries.
 
 ## What They Can Do That Regular Solidity Can't
 
@@ -48,13 +54,15 @@ Policies can restrict administrative changes, token outflows, price deviations, 
 
 ## Constraints
 
-The default assertion gas limit is 3,000,000. Operators can configure it. Exceeding the limit invalidates the candidate.
+The assertion gas budget is configured by the target runtime. Confirm that budget for the deployment you are testing; a local test runner or EVM block gas limit is a separate setting. Exceeding the limit invalidates the candidate.
 
 Use scoped triggers and test the maximum expected workload. See [Gas Limits in Testing](./testing-assertions#gas-limits).
 
-## Hacks Assertions Would Have Prevented
+<span id="hacks-assertions-would-have-prevented" />
 
-The [exploit case studies](../assertions-book/previous-hacks/prev-hacks-index) show policy checks against historical attacks and explain their scope.
+## Policies for Historical Exploits
+
+The [exploit case studies](../assertions-book/previous-hacks/prev-hacks-index) discuss candidate policy checks against historical attacks. Read each example’s implementation status, enforcement assumptions, and replay evidence before treating it as demonstrated prevention.
 
 ## Next Steps
 
@@ -62,13 +70,13 @@ The [exploit case studies](../assertions-book/previous-hacks/prev-hacks-index) s
   <Card title="Writing Your Own Policies" icon="code" href="./writing-your-own-policies">
     Define, implement, and test policies for your protocol.
   </Card>
-  <Card title="Cheatcodes" icon="wand-magic-sparkles" href="/credible/cheatcodes-overview">
+  <Card title="Cheatcodes" icon="wand-magic-sparkles" href="./cheatcodes-overview">
     Tools available for writing assertions
   </Card>
-  <Card title="Triggers" icon="bolt" href="/credible/triggers">
+  <Card title="Triggers" icon="bolt" href="./triggers">
     Learn about assertion triggers and optimization
   </Card>
-  <Card title="Use Cases Book" icon="book-open" href="/assertions-book/assertions-book-intro">
+  <Card title="Use Cases Book" icon="book-open" href="../assertions-book/assertions-book-intro">
     Real-world examples and implementations
   </Card>
 </CardGroup>

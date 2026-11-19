@@ -9,7 +9,7 @@ Use the [Phylax platform](https://ethereum.phylax.systems) to review the work pr
 
 Ask your FDE or project admin for access. Have the target contracts and approved policies available for review.
 
-[Assign a protocol manager](./assign-protocol-manager) to sign deployments. Platform access alone does not grant deployment authority.
+Project access lets you review a prepared release; it does not grant signing authority. Assign the Protocol Manager before creating a release, as described below.
 
 ## 1. Open Your Project
 
@@ -19,15 +19,17 @@ If needed, [create the project](./deploy-assertions-dapp#step-2-create-a-project
 
 ## 2. Review a Release
 
+Before release creation, [assign the Protocol Manager](./assign-protocol-manager) and confirm the signing account. Project creation itself does not require manager assignment.
+
 Your FDE or developer prepares a release with [`pcl apply`](./apply-assertions). Open it under **Releases**.
 
 Check the proposed policies against your requirements. Review the [release checks](./deploy-assertions-dapp#step-4-review-release-checks) and [backtesting results](./backtesting) with your FDE. Creating a release does not activate it.
 
-Follow [Review and deploy changes](./managing-your-circuit-breakers#review-a-release) for the walkthrough.
+Continue to [Authorize Deployment](./deploy-assertions-dapp#step-5-authorize-deployment) when the release is ready for signing.
 
 ## 3. Deploy to Alerting and Observe
 
-Authorize the release targeting **Alerting** through your signing process. Wait for its activation delay.
+Authorize the release targeting **Alerting** through your signing process. Wait for its activation delay, then [verify Alerting observation](./deploy-assertions-dapp#verify-alerting-observation).
 
 Review **Invalidations → Alert-only** with your FDE. Exercise the operations in your [test plan](./testing-strategy). Investigate false positives and retest policy changes.
 
@@ -35,7 +37,7 @@ Alerting records violations without blocking live transactions. Production requi
 
 ## 4. Authorize Production and Verify Protection
 
-Complete the integration tests and recovery rehearsal with your FDE. Follow [Review and Deploy Policies](./deploy-assertions-dapp) to authorize the production release.
+Complete the integration tests and recovery rehearsal with your FDE. Have your FDE or developer [prepare a separate Production release](./apply-assertions#step-2-configure-credible-toml), then [review its checks and authorize deployment](./deploy-assertions-dapp#step-4-review-release-checks).
 
 After the activation delay, [verify live enforcement](./deploy-assertions-dapp#verify-ethereum-enforcement) with your FDE. Check the active policies, guard coverage, and transaction routes.
 
@@ -47,7 +49,7 @@ Review unexpected findings with your FDE. Policy changes require a reviewed rele
 
 ## 6. Configure and Test Alerts
 
-Follow [Setting Up Alerting](./setting-up-alerting) to connect Slack and test notification delivery. Agree with your FDE who investigates alerts and who can authorize recovery.
+Phylax supports Slack and PagerDuty notifications. See [Set Up Notifications](./setting-up-alerting) for integration context and the Slack setup walkthrough. Agree with your FDE who investigates alerts and who can authorize recovery.
 
 ## 7. Keep Access and Project Information Current
 

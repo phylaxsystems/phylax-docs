@@ -19,13 +19,13 @@ The assertion ID is deterministically derived from deployable creation data:
 Assertion ID = Keccak256(Creation_Bytecode ++ Encoded_Constructor_Arguments)
 ```
 
-The bytecode and encoded constructor arguments are stored separately in Assertion DA and combined to reconstruct the deployment data.
+The bytecode and encoded constructor arguments are stored separately in Assertion DA and combined to reconstruct the deployment data. This ID identifies the artifact; a function selector identifies a check inside it. The State Oracle separately records adopter assignments and activation state.
 
 Recompute the hash to check artifact integrity. Assertion DA compiles submitted Solidity source in a Dockerized `solc` environment before storage.
 
 ### Assertion DA Prover Signature
 
-Assertion DA signs an availability proof when it stores an assertion. Deployment uses this proof to check artifact availability.
+Assertion DA returns a prover signature when it stores an assertion. The deployment API calls this an availability proof: it attests to the stored creation data at signing time, not future uptime, policy correctness, or execution by a builder.
 
 ## Current Implementation
 
@@ -43,9 +43,9 @@ The State Oracle checks registration authority and lifecycle timing. See [Managi
 
 ### Retrieving Assertions
 
-Enforcers index the State Oracle's `AssertionAdded` event. They fetch bytecode by assertion ID and cache it before validation.
+Enforcers index the State Oracle's `AssertionAdded` event. They fetch bytecode by assertion ID and cache it before enforcement.
 
-Operators must define how missing or unreadable artifacts affect validation.
+Operators must define how missing or unreadable artifacts affect enforcement.
 
 ## Complete Lifecycle
 
@@ -57,7 +57,7 @@ Production results affect participating builders. Alerting records violations wi
 
 ### Why Off-Chain Storage?
 
-Offchain storage avoids the cost of storing bytecode and metadata on Ethereum. Enforcers cache artifacts for validation.
+Offchain storage avoids the cost of storing bytecode and metadata on Ethereum. Enforcers cache artifacts for enforcement.
 
 ### Why Compilation Happens Off-Chain
 
@@ -72,16 +72,16 @@ The assertion ID binds the creation bytecode and constructor arguments. It does 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Run an Example Policy Locally" icon="rocket" href="/credible/pcl-quickstart">
+  <Card title="Run an Example Policy Locally" icon="rocket" href="./pcl-quickstart">
     Run and inspect your first local assertion tests
   </Card>
-  <Card title="CLI Reference" icon="terminal" href="/credible/cli-reference">
+  <Card title="CLI Reference" icon="terminal" href="./cli-reference">
     Complete reference for pcl commands
   </Card>
-  <Card title="Architecture Overview" icon="diagram-project" href="/credible/architecture-overview">
+  <Card title="Architecture Overview" icon="diagram-project" href="./architecture-overview">
     Understand how Assertion DA fits into the system
   </Card>
-  <Card title="Glossary" icon="book" href="/credible/glossary#assertion-da-data-availability">
+  <Card title="Glossary" icon="book" href="./glossary#assertion-da-data-availability">
     Learn more about Assertion DA terminology
   </Card>
 </CardGroup>

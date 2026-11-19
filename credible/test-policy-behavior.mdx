@@ -79,12 +79,14 @@ The first two rows are test results. The third follows from the rule's logic and
 
 ## 4. Record the Requirement to Review
 
-Define how the policy identifies an approved ownership transfer. Specify the approver, permitted destination, timing, and proof of approval. Define the result when approval cannot be verified.
+Add this requirement to your behavior table: “An approved governance transfer must be permitted, while an unapproved owner change must be rejected.” Record the missing inputs: approver, permitted destination, timing, and proof of approval.
 
-Resolve the exception with your FDE before implementation. Removing the assertion also removes its restriction on harmful transfers.
+That completes this exercise. When adapting the rule for your own protocol, resolve those inputs and the result of unverifiable approval with your reviewers or FDE before implementation.
 
 ## What You Have Verified
 
 The tests show one allowed case and one rejected case. Your review identified an exception the policy needs.
+
+To test a different limitation, continue to [Test the Limits of an Ownership Policy](../assertions-book/assertions/run-an-example). That separate Book exercise uses `credible-std` and shows a temporary ownership change passing an endpoint check.
 
 Use the behavior table when you [prepare for integration](./evaluate-credible-layer). See [Writing Your Own Policies](./writing-your-own-policies) for implementation.

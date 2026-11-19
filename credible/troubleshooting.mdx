@@ -10,7 +10,7 @@ Find the error below, then check its cause and solution.
 | Error | Likely Cause | Quick Fix |
 |-------|--------------|-----------|
 | "Expected 1 assertion to be executed, but 0 were executed" | Transaction reverts or setup after `cl.assertion()` | Check trigger function, move setup before `cl.assertion()` |
-| OutOfGas error | Assertion exceeds the default 3,000,000 gas limit | Optimize loops, add early returns, fail fast |
+| OutOfGas error | Assertion exceeds the active runtime gas budget | Optimize loops, add early returns, fail fast |
 | `vm.load()` not available | Wrong cheatcode | Use `ph.loadStateAt()` with a `ForkId` instead |
 | Function selector errors | Wrong selector or trigger not registered | Use `Protocol.functionName.selector`, check `triggers()` |
 | Call input double-counting | Using `getAllCallInputs()` | Use specific call type function |
@@ -33,7 +33,7 @@ Use [Ethereum Integration Planning](./dapp-integration) and [Guard Testing](./te
 
 ### "Expected 1 assertion to be executed, but 0 were executed"
 
-This error means your assertion never ran on the target transaction. This can occur in local tests, alerting, production, or a platform release backtest.
+In the local harness, this error means the expected assertion function did not run on the monitored call. Missing coverage in Alerting, Production, or a release backtest is a separate observation; do not assume those environments emit this test-harness message.
 
 **Common Causes:**
 
@@ -52,7 +52,7 @@ This error means your assertion never ran on the target transaction. This can oc
 
 **Solution (Testing):**
 
-Move all setup code before `cl.assertion()`. The `cl.assertion()` call registers the assertion to run on the very next transaction, similar to `vm.prank()`.
+Move all setup code before `cl.assertion()`. The `cl.assertion()` call registers the assertion for the next monitored external call, similar to `vm.prank()`.
 
 ```solidity
 // ✅ CORRECT
@@ -122,7 +122,7 @@ These errors occur when the assertion executes but fails due to issues in the as
 
 ### Gas Limit Exceeded
 
-Assertion execution has a default **3,000,000 gas limit**. Node operators can configure this limit. If an assertion exceeds the active limit, it reverts with `OutOfGas` and the Enforcer returns an invalid result even if there's no actual violation. The network then applies its inclusion policy.
+Assertion execution has a **runtime-configured gas budget**. Confirm the active value with the deployment operator. If an assertion exceeds the active limit, it reverts with `OutOfGas` and the Enforcer returns an invalid result even if there's no actual violation. The network then applies its inclusion policy.
 
 **Symptoms:**
 
@@ -301,13 +301,13 @@ function testProtocolFunctionIsolation() public {
 
 **Common Causes:**
 
-- Missing `FOUNDRY_PROFILE=assertions` environment variable (see [Foundry Profile Configuration](/credible/ci-cd-integration#foundry-profile-configuration))
+- Missing `FOUNDRY_PROFILE=assertions` environment variable (see [Foundry Profile Configuration](./ci-cd-integration#foundry-profile-configuration))
 - Incorrect `foundry.toml` configuration
 - Missing dependencies or remappings
 
 **Solution:**
 
-Always set `FOUNDRY_PROFILE=assertions` before running pcl commands:
+Select the assertion profile defined in your project’s `foundry.toml`. For a project with an `assertions` profile:
 
 ```bash
 # ✅ CORRECT
@@ -338,7 +338,7 @@ FOUNDRY_PROFILE=assertions pcl test --match-contract ContractName
 
 ## Release backtesting findings
 
-The platform runs backtesting automatically when you create a release. An **Issue found** result means at least one historical transaction from the last 20,000 blocks would have been invalidated by the release.
+The platform runs backtesting automatically when you create a release. An **Issue found** result means at least one historical transaction in the run’s reported block range would have been invalidated by the release.
 
 Open **Backtesting** in the release and review the matched transaction hash, assertion ID, adopter, incident payload, previous transactions, and block environment. If the finding is benign, tune the assertion and create a new release. If the evidence does not explain the finding, do not deploy the release. See [How to Review Backtesting Results](./backtesting) for the complete workflow.
 
@@ -401,6 +401,6 @@ If you've tried the solutions above and still can't resolve your issue:
 **Related Documentation:**
 
 - [Writing Your Own Policies](./writing-your-own-policies) - Learn assertion patterns
-- [Testing Assertions](/credible/testing-assertions) - Testing best practices
-- [pcl Reference](/credible/cli-reference) - Command-line tool documentation
-- [Cheatcodes Reference](/credible/cheatcodes-reference) - Available Phylax cheatcodes
+- [Testing Assertions](./testing-assertions) - Testing best practices
+- [pcl Reference](./cli-reference) - Command-line tool documentation
+- [Cheatcodes Reference](./cheatcodes-reference) - Available Phylax cheatcodes

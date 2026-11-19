@@ -1,9 +1,10 @@
 ---
 title: "ERC-20 Cumulative Inflow Breaker"
-description: "Configure and test a rolling net inflow limit"
+description: "Configuration, behavior, and limits of a rolling net inflow assertion"
 ---
 
 import Example from "/snippets/ass22-erc20-inflow-breaker.a.mdx";
+
 
 An unusually large deposit or donation can change a vault's exposure or accounting. A cumulative inflow breaker rejects the candidate transaction that takes net inflow above the rolling limit.
 
@@ -19,7 +20,7 @@ An unusually large deposit or donation can change a vault's exposure or accounti
 
 Attach the assertion to the contract that holds the watched tokens. The adopter is set by deployment; it is not a constructor argument in this template. Use separate registrations for different tokens or custody addresses.
 
-The template does not validate constructor inputs. Add checks for the token and policy bounds. The window must be at least 10 seconds and fit in `uint64`. For an outflow cap, a threshold of 10,000 bps cannot reject a drain that only reaches 100%; the [Balancer example](./balancer-outflow) rejects that configuration.
+The template does not validate constructor inputs. Add checks for the token and policy bounds. The window must be at least 10 seconds and fit in `uint64`. Choose the inflow threshold from the protocol’s intended deposit and repayment behavior; it is not an outflow-drain bound.
 
 ## Behavior
 

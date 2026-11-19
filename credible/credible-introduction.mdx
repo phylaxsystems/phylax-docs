@@ -1,11 +1,13 @@
 ---
-title: 'Overview'
+title: 'Credible Layer Overview'
 description: 'Getting started with Phylax'
 ---
 
-Phylax helps DeFi protocols enforce custom security policies before settlement. Policies are implemented as Solidity assertions, checked by participating builders, and paired with guards on protected operations. Enforcement is made available network-wide via a block builder or sequencer integration. Phylax can support a variety of blockchains, and is currently live on Ethereum and Linea.
+Phylax helps DeFi protocols enforce custom security policies before settlement. Policies are implemented as Solidity assertions, checked by participating builders, and paired with guards on protected operations. These docs explain the Ethereum enforcement model; [L2 integration planning](./l2-integrations/overview) describes deployment-specific requirements.
 
-You can write assertions yourself. We highly recommend working with **Phylax sales engineering** to find the policies and integration approach that best fit your protocol. This support is included in your Phylax subscription at no additional cost. You can bring existing assertion code or start with a discussion of your protection needs.
+In these docs, a **policy** is the intended rule and an **assertion** is its executable check. A **circuit breaker** limits cumulative inflow or outflow over a rolling window of per-block buckets; **cumulative-flow breaker** makes that mechanism explicit. See the [terminology reference](./glossary#terminology-across-the-docs) for the related component and lifecycle names.
+
+You can write assertions yourself or work with **Phylax sales engineering** to select policies and plan integration. Agree the support scope with your team. Bring existing assertion code or start with a discussion of your protection needs.
 
 <CardGroup cols={2}>
   <Card title="Should you use Phylax?" icon="circle-question" href="./should-you-use-phylax">
@@ -14,19 +16,25 @@ You can write assertions yourself. We highly recommend working with **Phylax sal
   <Card title="Explore an Example Policy" icon="flask-vial" href="./pcl-quickstart">
     Optionally run a local example to see how assertions behave.
   </Card>
+  <Card title="Write and Test a Policy" icon="code" href="./writing-your-own-policies">
+    Define a rule and its exceptions, implement its assertions, and prepare test evidence.
+  </Card>
+  <Card title="Review and Operate Releases" icon="sliders" href="./use-the-platform">
+    Review a prepared release, authorize deployment, and investigate invalidations.
+  </Card>
 </CardGroup>
 
 ## What You Can Protect
 
 Policies can constrain asset outflows, administrative changes, collateralization, oracle deviations, and relationships between balances or positions. The appropriate rules depend on your protocol and its normal operations.
 
-For example, a rule that rejects every ownership change would also reject a planned transfer to a new governance contract. Policy design must account for legitimate exceptions as well as harmful behavior. Check out the [Use Cases Book](../assertions-book/assertions-book-intro), it has patterns and logic for this.
+For example, a rule that rejects every ownership change would also reject a planned transfer to a new governance contract. Policy design must account for legitimate exceptions as well as harmful behavior. The [Use Cases Book](../assertions-book/assertions-book-intro) describes patterns and their limits.
 
 ## How Ethereum Enforcement Works
 
-Builders that agree to run the Phylax enforcement engine evaluate transactions against your circuit breakers and exclude violating transactions from the blocks they build. Your team defines and approves the rules, which are deployed onchain under a signer set that only you control. No other party can activate or change your rules without your authorization.
+Builders that agree to run the [Assertion Enforcer](./assertion-enforcer) evaluate candidate transactions against your active assertions and exclude violating transactions from the blocks they build. Your team defines and approves the rules through the configured Protocol Manager and signer set. The deployed contracts also define governance, operator, and guardian powers, including manager revocation or assertion removal; review those [administrative boundaries](./credible-layer-contracts#state-oracle-administration) before activation.
 
-Once you protect functions with Phylax circuit breakers, an onchain guard checks that each protected call executes in a credible block. Calls included in a non-participating builder's block revert while the guard's enforcement gate is active. If a transaction interacting with your smart contract and it's routed to a builder that does not evaluate it, the transaction will revert. This ensures that incoming transactions can only settle if it's evaluated by the enforcement engine.
+Once you protect functions with Phylax circuit breakers, an onchain guard checks that each protected call executes in a credible block. Calls included in a non-participating builder's block revert while the guard's enforcement gate is active.
 
 Protection depends on the agreed policies, covered execution paths, deployed guards, and operational configuration. Learn about [Ethereum enforcement](./credible-layer-overview) and its [trust and recovery assumptions](./trust-model).
 
@@ -46,7 +54,7 @@ The technical guides remain available throughout evaluation and integration:
 
 - [Ethereum Architecture](./architecture-overview) explains the components and execution path.
 - [Integration Planning](./dapp-integration) covers guards, routing, authority, and recovery.
-- [Release Review Checks](./release-review-checks) explains the evidence attached to a release.
+- [Release Review Checks](./deploy-assertions-dapp#step-4-review-release-checks) explains the evidence attached to a release.
 - [CLI and API references](./cli-reference) support engineers implementing the agreed plan.
 
-Ethereum builders can use the [builder integration guide](./ethereum-builder-integration). Earlier sequencer designs and workflows live in [L2 and Sequencer Integrations](./l2-integrations/overview).
+Ethereum builders can use the [builder integration guide](./ethereum-builder-integration). Sequencer integration planning and network designs live in [L2 and Sequencer Integrations](./l2-integrations/overview).

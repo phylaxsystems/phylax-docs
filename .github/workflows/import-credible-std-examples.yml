@@ -1,16 +1,10 @@
 name: Import Credible Std Assertion Examples
 
 on:
-  # Option 1: Run when PRs are merged to main
-  pull_request:
-    types: [closed]
-    branches: [main]
-
-  # Option 2: Allow manual triggering
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Dry run (skip git push)"
+        description: "Check the pinned import without creating a PR"
         required: false
         default: true
         type: boolean
@@ -20,93 +14,47 @@ permissions:
   pull-requests: write
 
 jobs:
-  import-credible-std-examples:
-    # For PR events, only run when merged
-    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
+  import:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.GH_TOKEN }}
-
-      - name: Create temporary directory and clone credible-std repository
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      - name: Read reviewed source revision
+        id: source
+        run: node -e 'const m = require("./.github/credible-std-import.json"); console.log(`revision=${m.revision}`)' >> "$GITHUB_OUTPUT"
+      - name: Check out reviewed source
+        uses: actions/checkout@v7
+        with:
+          repository: phylaxsystems/credible-std
+          ref: ${{ steps.source.outputs.revision }}
+          path: .import-source
+          persist-credentials: false
+      - name: Import and verify
         run: |
-          # Create temporary directory
-          TEMP_DIR=$(mktemp -d)
-          echo "TEMP_DIR=$TEMP_DIR" >> $GITHUB_ENV
-
-          # Clone into temporary directory using organization token
-          git clone --depth 1 https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/phylaxsystems/credible-std.git "$TEMP_DIR/credible-std"
-
-          echo "Directory structure:"
-          find "$TEMP_DIR/credible-std/examples/assertions-book" -type d | sort
-          echo "Solidity files found:"
-          find "$TEMP_DIR/credible-std/examples/assertions-book" -name "*.sol" | sort
-
-      - name: Create directories if they don't exist
-        run: mkdir -p snippets
-
-      - name: Copy and convert Solidity files to MDX
-        run: |
-          # Use the specific path to target only .sol files in assertions/src
-          ASSERTIONS_PATH="$TEMP_DIR/credible-std/examples/assertions-book/assertions/src"
-
-          # Check if the directory exists
-          if [ ! -d "$ASSERTIONS_PATH" ]; then
-            echo "Error: Directory $ASSERTIONS_PATH not found"
-            exit 1
-          fi
-
-          echo "Processing Solidity files from $ASSERTIONS_PATH:"
-          find "$ASSERTIONS_PATH" -maxdepth 1 -name "*.sol" -type f | sort
-
-          # Process all Solidity files in the specific directory (not subdirectories)
-          find "$ASSERTIONS_PATH" -maxdepth 1 -name "*.sol" -type f | while read solidity_file; do
-            base_filename=$(basename "$solidity_file" .sol)
-            mdx_file="snippets/${base_filename}.mdx"
-            
-            # Create MDX file with Solidity content wrapped in code blocks
-            echo -e "\`\`\`solidity\n$(cat $solidity_file)\n\`\`\`" > "$mdx_file"
-            
-            echo "Created $mdx_file from $solidity_file"
-          done
-
-          echo "Generated MDX files:"
-          ls -la snippets/*.mdx || echo "No MDX files generated"
-
-      - name: Create Pull Request
-        if: github.event_name != 'workflow_dispatch' || inputs.dry_run == false
-        id: cpr
+          node scripts/import-credible-std.mjs --source .import-source
+          node scripts/import-credible-std.mjs --source .import-source --check
+          git diff --check
+      - name: Show diff
+        run: git diff -- snippets .github/credible-std-import.json
+      - name: Create pull request
+        if: inputs.dry_run == false
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GH_TOKEN }}
-          commit-message: Import assertion examples from phylaxsystems/credible-std
-          title: Update credible-std assertion examples
+          add-paths: |
+            snippets/*.mdx
+            .github/credible-std-import.json
+          commit-message: 'docs: refresh pinned assertion examples'
+          title: 'docs: refresh pinned assertion examples'
           body: |
-            This PR automatically imports Assertions Book examples from
-            [phylaxsystems/credible-std](https://github.com/phylaxsystems/credible-std/tree/master/examples/assertions-book).
-
-            The import was triggered by ${{ github.event_name == 'workflow_dispatch' && 'manual workflow run' || 'PR merge to main' }}.
+            Regenerated assertion snippets from the reviewed commit in
+            `.github/credible-std-import.json`. Review dependent prose and example
+            test results alongside any source-pin change; an import is not proof
+            that every example passes.
           branch: update-credible-std-examples
           delete-branch: true
           base: main
-          reviewers: czepluch
-
-      - name: Show dry-run diff
-        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == true
-        run: git diff -- snippets
-
-      - name: Show pull request details
-        if: steps.cpr.outputs.pull-request-operation != '' && steps.cpr.outputs.pull-request-operation != 'none'
-        run: |
-          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
-          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
-
-      - name: Cleanup temporary directory
-        if: always()
-        run: |
-          # Clean up temporary directory
-          rm -rf "$TEMP_DIR"
-          echo "Temporary directory removed"

@@ -1,5 +1,5 @@
 ---
-title: Optimism FMA Suite
+title: Optimism FMA Catalog
 description: Assertions for Optimism's Failure Mode Analysis
 ---
 
@@ -9,17 +9,19 @@ See the [Phylax fork](https://github.com/phylaxsystems/optimism/tree/feat/fma-as
 
 ## Approach
 
+The checks below describe intended constraints, not demonstrated prevention. The linked fork is a moving source reference, not a tested release.
+
 Each assertion checks a condition identified by the failure mode analysis. For example, state-consistency checks can constrain withdrawals when AnchorStateRegistry reports incorrect state.
 
 ## Assertion Collections Overview
 
 ### [FMA ETH Lockbox Assertions](https://github.com/phylaxsystems/optimism/blob/feat/fma-assertions/packages/contracts-bedrock/assertions/src/fma-eth-lockbox-assertions.a.sol)
 
-This collection validates the **ETHLockbox** contract's security properties, corresponding to the [ETH Lockbox FMA document](https://github.com/phylaxsystems/optimism/blob/feat/fma-assertions/packages/contracts-bedrock/assertions/fma/fma-eth-lockbox.md):
+This collection targets the **ETHLockbox** contract's security properties, corresponding to the [ETH Lockbox FMA document](https://github.com/phylaxsystems/optimism/blob/feat/fma-assertions/packages/contracts-bedrock/assertions/fma/fma-eth-lockbox.md):
 
 #### Key Checks:
-- **FM1: Unauthorized Access Protection** - Ensures only authorized portals can call `lockETH` and `unlockETH` functions
-- **FM2: Drain Prevention** - Prevents the lockbox from being drained to zero balance in a single transaction
+- **FM1: Unauthorized Access Protection** - Checks whether only authorized portals call `lockETH` and `unlockETH` functions
+- **FM2: Drain Bound** - Proposes preventing the lockbox from being drained to zero balance in a single transaction
 - **FM3: Proxy Upgrade Protection** - Monitors for unexpected proxy implementation address changes that could indicate buggy upgrades
 
 #### Risk Context:
@@ -27,11 +29,11 @@ The FMA rates these failures as critical: high impact and low likelihood. Unauth
 
 ### [FMA Interop Portal Assertions](https://github.com/phylaxsystems/optimism/blob/feat/fma-assertions/packages/contracts-bedrock/assertions/src/fma-interop-portal.a.sol)
 
-This collection validates the **OptimismPortal2** and **AnchorStateRegistry** integration, corresponding to the [Interop Portal FMA document](https://github.com/phylaxsystems/optimism/blob/feat/fma-assertions/packages/contracts-bedrock/assertions/fma/fma-interop-portal.md):
+This collection targets the **OptimismPortal2** and **AnchorStateRegistry** integration, corresponding to the [Interop Portal FMA document](https://github.com/phylaxsystems/optimism/blob/feat/fma-assertions/packages/contracts-bedrock/assertions/fma/fma-interop-portal.md):
 
 #### Key Checks:
 - **FM1: AnchorStateRegistry Integrity** - Validates retirement timestamp updates, respected game type changes, anchor state transitions, and blacklist operations
-- **FM2: Migration Logic Safety** - Ensures ETH lockbox and portal migrations maintain fund safety and state consistency
+- **FM2: Migration Logic Safety** - Checks migration conditions intended to preserve fund safety and state consistency
 - **FM4: SuperRoots Toggle Validation** - Validates that `superRootsActive` flag changes follow proper authorization and state requirements
 
 #### Risk Context:
@@ -39,15 +41,15 @@ The FMA rates these failures as low likelihood with high or critical impact. Inc
 
 ### [FMA L2 Message Passing Assertions](https://github.com/phylaxsystems/optimism/blob/feat/fma-assertions/packages/contracts-bedrock/assertions/src/fma-l2-message-passing.a.sol)
 
-This collection validates cross-chain message passing contracts, corresponding to the [Message Passing FMA document](https://github.com/phylaxsystems/optimism/blob/feat/fma-assertions/packages/contracts-bedrock/assertions/fma/fma-message-passing-contracts.md):
+This collection targets cross-chain message passing contracts, corresponding to the [Message Passing FMA document](https://github.com/phylaxsystems/optimism/blob/feat/fma-assertions/packages/contracts-bedrock/assertions/fma/fma-message-passing-contracts.md):
 
 #### Key Checks:
-- **FM1: Destination Chain Validation** - Ensures messages aren't sent to invalid destinations (same chain, zero chain ID, etc.)
+- **FM1: Destination Chain Validation** - Checks for invalid message destinations (same chain, zero chain ID, etc.)
 - **FM2: Message Validation Integrity** - Validates message identifiers and parameters for cross-chain message validation
-- **FM3: Message Relay Completeness** - Ensures sent messages are properly recorded and can be relayed
-- **FM4: Replay Protection** - Prevents duplicate message execution through proper `successfulMessages` tracking
-- **FM5: Reentrancy Protection** - Ensures message relay functions are atomic and non-reentrant
-- **FM6: Repeated Identifier Validation** - Prevents duplicate identifier usage within the same transaction
+- **FM3: Message Relay Completeness** - Checks recording and relay conditions for sent messages
+- **FM4: Replay Protection** - Checks duplicate message execution using `successfulMessages` tracking
+- **FM5: Reentrancy Protection** - Checks relay atomicity and reentrancy conditions
+- **FM6: Repeated Identifier Validation** - Checks for duplicate identifier usage within the same transaction
 
 #### Risk Context:
 The FMA rates these failures as medium likelihood with high or critical impact. Message errors could permit theft, duplicate minting, or lost funds.

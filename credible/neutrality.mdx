@@ -13,7 +13,7 @@ Management authority can affect availability and protection. A restrictive rule 
 
 ## Builder Participation
 
-Ethereum builders need not all adopt the Credible Layer. The Credible Registry authorizes the builders whose markers a guard accepts. Those builders are trusted to perform the applicable validation before marking their blocks.
+Ethereum builders need not all adopt the Credible Layer. The Credible Registry authorizes the builders whose markers a guard accepts. Those builders are trusted to perform the applicable enforcement before marking their blocks.
 
 The guard's restriction can reduce the set of blocks in which an operation succeeds. RPC availability and builder participation therefore affect liveness. Fail-open and bypass paths can restore access while reducing mandatory enforcement.
 
@@ -23,4 +23,4 @@ Review the Protocol Manager, protocol upgrade admins, guard controls, Registry a
 
 A recovery or exit path must remain executable under active rules. Test it before enforcement, including lost keys, restrictive assertions, and builder or Registry outages. See [Trust Model](./trust-model).
 
-The earlier sequencer model and its network-specific boundaries are documented under [L2 and Sequencer Integrations](./l2-integrations/overview).
+The sequencer model and its network-specific boundaries are documented under [L2 and Sequencer Integrations](./l2-integrations/overview).

@@ -150,6 +150,20 @@
 - title: Clear, descriptive page title
 - description: Concise summary for SEO/navigation
 
+## Terminology
+- Use `credible/glossary.mdx` as the shared terminology reference.
+- Policy means the intended rule and exceptions; assertion means an executable check; circuit breaker means an assertion pattern limiting cumulative flows over a rolling window of per-block buckets. Cumulative-flow breaker makes that mechanism explicit.
+- Use invariant for a property at defined observation boundaries, not as a synonym for every policy or failure scenario.
+- Distinguish assertion functions, assertion contracts, and releases. Use Assertion Enforcer for the enforcement component, PhEVM for its execution environment, and sidecar only for a separate-process integration.
+- Distinguish deployment confirmation, activation, Production enforcement, and Alerting observation. Slack and PagerDuty notification delivery is separate from those modes.
+- Distinguish assertion invalidation, builder exclusion, and an onchain revert. A failed assertion can reflect a policy condition or an execution error; investigate before calling it an attack or live prevention.
+- Name the unit: assertion ID identifies creation data; selector identifies a function; adopter identifies an assignment target; release identifies the platform deployment set.
+- Qualify windows and snapshots: activation window versus rolling measurement window; transaction versus call boundary. Use call trace for recorded calls, not call stack or EVM operand stack.
+- Treat assertion specification, lifecycle state, and evidence as separate axes.
+- Keep shared example specifications and evidence summaries in the catalog; do not repeat Example status / Spec / Evidence banners at the top of every example. Keep concrete limitations with the relevant example. Reserve **lifecycle state** for pending/active/deactivated assignments; compilation alone does not establish behavior or deployment readiness.
+- Preserve exact commands, Solidity identifiers, UI labels, source titles, old routes, and compatibility anchors. Explain historical naming where needed instead of globally replacing it.
+- Match evidence terms to the linked result: source review, local test, exploit replay, and live enforcement are different claims.
+
 ## Writing standards
 - Default to second-person voice ("you")
 - Tutorials may occasionally use "we" for shared lesson framing, but do not let the page drift into a generic first-person voice
@@ -173,3 +187,8 @@
 - Use absolute URLs for internal links
 - Include untested code examples
 - Make assumptions - always ask for clarification
+
+## Keep answers on the page
+- Preserve attack mechanisms, worked examples, and inline assertion code in case studies. Links supplement the answer; do not replace it with a catalog handoff.
+- Use enforcement for runtime policy protection and transaction exclusion. Reserve validation for input/configuration checks and testing; preserve exact API identifiers and consensus validator terminology.
+- Do not describe L2 integration designs or workflows as historical, including in span IDs and other tags.

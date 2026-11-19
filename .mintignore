@@ -1,0 +1,3 @@
+# Executable fixtures and their recursive dependencies are not site content.
+examples/
+.import-source/

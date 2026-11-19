@@ -1,6 +1,6 @@
 ---
 title: 'PhEVM'
-description: 'The Phylax EVM - a specialized execution environment for assertion validation'
+description: 'The Phylax EVM - a specialized execution environment for assertion enforcement'
 ---
 
 PhEVM executes assertion bytecode for the [Assertion Enforcer](./assertion-enforcer). It extends the EVM with state snapshots and transaction inspection.
@@ -24,14 +24,14 @@ Assertions can compare values across these execution points.
 
 ### Cheatcodes
 
-PhEVM implements special precompiles called [cheatcodes](/credible/glossary#cheatcodes) that provide capabilities beyond standard EVM operations:
+PhEVM implements special precompiles called [cheatcodes](./glossary#cheatcodes) that provide capabilities beyond standard EVM operations:
 
 - **Snapshot reads**: `loadStateAt` with explicit `ForkId` values for pre-transaction, post-transaction, pre-call, and post-call state
 - **Call introspection**: Access to call inputs, call traces, and execution context
 - **State change tracking**: Monitor storage slot modifications during execution
-- **Log access**: Retrieve transaction logs for validation
+- **Log access**: Retrieve transaction logs for enforcement
 
-These cheatcodes are exposed through the [`credible-std`](/credible/credible-std-overview) library and documented in the [Cheatcodes Reference](/credible/cheatcodes-reference).
+These cheatcodes are exposed through the [`credible-std`](./credible-std-overview) library and documented in the [Cheatcodes Reference](./cheatcodes-reference).
 
 ### Off-Chain Execution
 
@@ -39,10 +39,10 @@ PhEVM runs offchain with these execution properties:
 
 - **Higher gas limits**: Assertions can perform complex computations that would be prohibitively expensive on-chain
 - **Off-chain assertion gas**: Assertion execution does not consume Ethereum block gas. Credible-block markers and on-chain guard checks have separate gas costs.
-- **Parallel execution**: Multiple assertions can be validated simultaneously
+- **Parallel execution**: Multiple assertions can execute simultaneously
 
 ## How It Works
 
 PhEVM receives state snapshots and cached assertion bytecode. It executes matching assertion functions and reports their results. An assertion revert marks the candidate as invalid.
 
-See [Assertion Enforcer](./assertion-enforcer) for the validation process.
+See [Assertion Enforcer](./assertion-enforcer) for the enforcement process.

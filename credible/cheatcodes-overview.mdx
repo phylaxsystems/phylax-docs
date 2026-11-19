@@ -10,7 +10,7 @@ Cheatcodes are native Rust functions exposed to assertions through PhEVM. They p
 Cheatcodes enable functionality that would be impossible or impractical with standard Solidity:
 
 - **Snapshot state access**: Access blockchain state before or after a transaction or call with explicit `ForkId` snapshots
-- **Callstack introspection**: Inspect call traces and execution flow in ways not possible with standard EVM tools
+- **Call trace inspection**: Inspect call traces and execution flow in ways not possible with standard EVM tools
 - **State change tracking**: Monitor specific storage slots and track how they change during transaction execution
 - **Triggering assertions**: Define precise conditions for when assertions should execute with `onFnCall` and `onTxEnd` triggers
 - **Cumulative flow tracking**: Register circuit-breaker triggers that collect ERC20 inflows or outflows into one bucket per block and evaluate the buckets over rolling windows
@@ -23,14 +23,14 @@ The implementation uses native precompiles. These docs use the term **cheatcodes
 
 ## When to Use Cheatcodes
 
-Use cheatcodes when a policy needs execution history or state from another snapshot. See [Use Case Mappings](./use-case-mappings/intro-use-case-mapping) for examples.
+Use cheatcodes when a policy needs execution history or state from another snapshot. See [Transaction Data APIs](./use-case-mappings/intro-use-case-mapping) for examples.
 
 ## Snapshot Read Guidance
 
-Read only the snapshots needed by the policy.
+Read only the snapshots needed by the policy. Specify whether “pre-state” and “post-state” refer to the transaction or the matched call; a transaction-end comparison can miss an intermediate change that was later restored.
 
 <Note>
-Choose the assertion specification supported by your target Ethereum deployment. Reshiram (V2) helpers require V2 support in the enforcer; a local test passing does not establish deployment compatibility. Earlier Linea-specific restrictions are documented in [L2 Platform Notes](./l2-integrations/platform-and-compatibility#assertion-specifications).
+Choose the assertion specification supported by your target deployment. Reshiram (V2) helpers require V2 support in the enforcer; a local test passing does not establish deployment compatibility. See [Assertion Specifications](./credible-std-overview#assertion-specifications) for shared registration and deployment requirements.
 </Note>
 
 Prefer Reshiram snapshot reads for new assertions. Use explicit `PhEvm.ForkId` values with `ph.loadStateAt()` for transaction-wide comparisons, or `ph.context()` with call-scoped `ForkId` values inside an `onFnCall` assertion.
@@ -48,16 +48,16 @@ See [Cheatcodes Reference](./cheatcodes-reference) for API signatures.
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Cheatcodes Reference" icon="book" href="/credible/cheatcodes-reference">
+  <Card title="Cheatcodes Reference" icon="book" href="./cheatcodes-reference">
     Complete API reference for all available cheatcodes
   </Card>
   <Card title="Writing Your Own Policies" icon="code" href="./writing-your-own-policies">
     Define, implement, and test policies for your protocol.
   </Card>
-  <Card title="Use Case Mappings" icon="map" href="/credible/use-case-mappings/intro-use-case-mapping">
-    See practical examples of cheatcodes in action
+  <Card title="Transaction Data APIs" icon="map" href="./use-case-mappings/intro-use-case-mapping">
+    Choose an observation API by task, snapshot scope, and coverage limits.
   </Card>
-  <Card title="Use Cases Book" icon="book-open" href="/assertions-book/assertions-book-intro">
+  <Card title="Use Cases Book" icon="book-open" href="../assertions-book/assertions-book-intro">
     Real-world assertion examples and implementations
   </Card>
 </CardGroup>

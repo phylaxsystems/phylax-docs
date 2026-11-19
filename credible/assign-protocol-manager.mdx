@@ -5,6 +5,10 @@ description: 'Choose the signing account that authorizes circuit breaker deploym
 
 Assign a Protocol Manager wallet to sign releases that deploy, update, or remove your circuit breakers. Your team controls this wallet and its signing policy. Do not hold funds in it.
 
+## Prerequisites
+
+You need an existing platform project and project-admin access. If the project does not exist, [create it first](./deploy-assertions-dapp#step-2-create-a-project), then return here when you are ready to prepare a release. Assign the manager before creating the release; it is not required at initial project creation.
+
 ## Choose the signing account
 
 Use dedicated keys that are entirely independent of the keys used to manage any other component of your business. We recommend a multisig wallet with a diversified signer set. Choose its signers and threshold before setup.
@@ -19,7 +23,7 @@ Your FDE helps define, implement, and test policies. Policy approval and control
 
 Sign in to the [Phylax platform](https://ethereum.phylax.systems) as a project admin.
 
-1. Open your project and expand **Set protocol manager** in the setup checklist.
+1. Open your project’s **Settings → Protocol Manager** before creating the release.
 2. Select **Continue in wallet** and connect the account you chose. If a wallet is already connected, check its address before selecting **Use connected wallet**; select **Connect another wallet** to change it.
 3. Review and sign the wallet-verification message. Complete the required multisig approvals if you use a Safe.
 4. Open **Settings → Protocol Manager** and confirm that the full address matches your chosen account.
@@ -32,7 +36,7 @@ This setup verifies the wallet and records it for the project. See [Managing Pol
 
 ## Sign and deploy circuit breakers
 
-Open a release and [review its policies and checks](./managing-your-circuit-breakers#review-a-release). Connect the assigned Protocol Manager, confirm the environment, and authorize deployment. For a Safe, collect the required approvals and execute the transaction through the Safe.
+Open a release and [review its policies and checks](./deploy-assertions-dapp#step-4-review-release-checks). Connect the assigned Protocol Manager, confirm the environment, and authorize deployment. For a Safe, collect the required approvals and execute the transaction through the Safe.
 
 Wait for the configured activation delay, then check the active policies. See [Review and Deploy Policies](./deploy-assertions-dapp#step-5-authorize-deployment) for the deployment steps.
 

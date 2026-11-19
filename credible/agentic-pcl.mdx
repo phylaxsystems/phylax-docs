@@ -14,9 +14,9 @@ Phylax provides reusable workflows in the [agent-skills repository](https://gith
 - A local protocol repository the agent can inspect and edit
 - For custom integration work, defined policy requirements and assigned review responsibilities
 
-For deployment, you also need a target chain, an RPC endpoint, and access to the protocol manager wallet.
+Creating and testing a local assertion project requires no platform login or signing credentials.
 
-Authenticate with the platform for your target network before starting the agent. See [Deploy Policies with an AI Agent](./agentic-pcl-deploy#1-authenticate-manually) for explicit Ethereum platform selection. The earlier L2 workflow is in [L2 Platform Notes](./l2-integrations/platform-and-compatibility).
+For the deployment workflow, also identify the target chain, RPC endpoint, and authorized Protocol Manager. Follow [Deploy Policies with an AI Agent](./agentic-pcl-deploy#1-authenticate-manually) to authenticate before starting that workflow. The L2 workflow is in [L2 Platform Notes](./l2-integrations/platform-and-compatibility).
 
 <Warning>
 An agent can edit code, create platform resources, and broadcast on-chain transactions. Review its plan and local changes before authorizing remote mutations. Require a successful dry run and explicit approval before any production deployment.
@@ -42,7 +42,7 @@ npx github:phylaxsystems/agent-skills#851cd274972efa6047393eaa61a935ed56f66b3b i
 
 Both commands pin the skill version.
 
-The [agent-skills repository](https://github.com/phylaxsystems/agent-skills) also includes focused skills for invariant design, assertion implementation, testing, trigger optimization, and troubleshooting.
+The [agent-skills repository](https://github.com/phylaxsystems/agent-skills) also includes focused skills for invariant discovery and design, assertion implementation, testing, trigger optimization, and troubleshooting. The `mapping-invariants` skill name is retained; supply the full policy requirements, including failure scenarios and legitimate exceptions, to the workflow.
 
 <Note>
 Restart your agent after installation if it does not discover the new skills in the current session.
@@ -53,7 +53,7 @@ Restart your agent after installation if it does not discover the new skills in 
 | Goal | Skill | What the agent should do |
 | --- | --- | --- |
 | Create an assertion project | `pcl-assertion-workflow` | Inspect the protocol, create the assertion project structure, configure dependencies, and run local tests |
-| Deploy through the platform | `deploy-credible-assertions` | Use the existing authentication, check RPC configuration, create or resolve the platform project, create a release, and activate it on-chain |
+| Deploy through the platform | `deploy-credible-assertions` | Use the existing authentication, check RPC configuration, create or resolve the platform project, review and authorize deployment, then verify activation after the configured delay |
 
 Use the skill name in your request so the intended workflow is unambiguous.
 
@@ -102,6 +102,6 @@ Do not paste a private key into the conversation or commit it to the repository.
     Bootstrap and validate an assertion project locally
   </Card>
   <Card title="Deploy Policies with an AI Agent" icon="rocket" href="./agentic-pcl-deploy">
-    Create a platform project and activate a release on-chain
+    Review and authorize a release, then verify its activation
   </Card>
 </CardGroup>

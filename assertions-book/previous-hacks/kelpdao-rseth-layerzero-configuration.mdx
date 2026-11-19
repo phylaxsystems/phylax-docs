@@ -5,16 +5,9 @@ description: Reported cross-chain verification failure affecting KelpDAO rsETH a
 
 ## What Happened
 
-In April 2026, TechRadar reported that Lazarus Group stole roughly $290 million from KelpDAO through its LayerZero integration. The report described attackers compromising infrastructure used to verify cross-chain transactions and feeding false data that caused fraudulent transfers to be approved.
+LayerZero’s May 18, 2026 incident report describes the April 18 release of 116,500 rsETH after compromise of verifier infrastructure. It describes a social-engineering intrusion, poisoned RPC responses used by the verifier, and disruption of alternative RPCs. A one-verifier configuration made that verifier a critical trust dependency. A configuration-only account omits the infrastructure compromise. [LayerZero incident report](https://layerzero.network/publications/kelpdao-incident-report.pdf).
 
-The same report said LayerZero characterized the incident as isolated to KelpDAO's rsETH configuration and attributed it to a single-DVN setup. KelpDAO disputed that the incident was solely the result of its configuration.
-
-Sources:
-- [TechRadar report on the KelpDAO / LayerZero incident](https://www.techradar.com/pro/security/north-koreas-lazarus-makes-off-with-usd290m-crypto-in-kelp-dao-heist-after-siphoning-funds-using-fraudulent-transactions)
-
-<Warning>
-The public root-cause record is disputed. This page focuses on the observable risk class: a cross-chain configuration or verification failure can create unsafe inflows into protocols that depend on the asset, even when those downstream protocols did not make the configuration change themselves.
-</Warning>
+A single verifier made that verifier’s infrastructure a critical trust dependency. Compromised evidence could therefore be accepted without an independent verifier rejecting it. Downstream markets then faced an asset whose accepted cross-chain history no longer established its backing.
 
 ## Why It Matters
 
@@ -77,4 +70,12 @@ The core idea is to turn external dependency risk into enforceable local limits.
 
 The incident shows why protocols need protections around assets and dependencies they do not fully control. A lending market, vault, or structured product can be harmed by decisions made upstream by a bridge, restaking protocol, verifier set, or token issuer.
 
-Runtime assertions are useful because they can enforce the downstream protocol's own risk boundaries even when the external root cause is complex or disputed.
+Runtime assertions are useful because they can enforce the downstream protocol's own risk boundaries while upstream investigation and recovery proceed.
+
+## Enforcement Boundaries
+
+These policies require an integrated enforcement path, explicit data sources, and tests of legitimate operations. A flow cap bounds exposure; it cannot establish that an upstream message is authentic or a signer’s device is uncompromised.
+
+## Further Sources
+
+- [TechRadar report on the KelpDAO / LayerZero incident](https://www.techradar.com/pro/security/north-koreas-lazarus-makes-off-with-usd290m-crypto-in-kelp-dao-heist-after-siphoning-funds-using-fraudulent-transactions)

@@ -1,0 +1,73 @@
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
+
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
+
+interface ICounter {
+    function add(uint256 amount) external;
+}
+
+/// @notice Reconcile successful counter calls with slot-zero state in the local fixture.
+contract CallInputsAssertion is Assertion {
+    constructor() { registerAssertionSpec(AssertionSpec.Reshiram); }
+    /// @notice Register the transaction-end observation check.
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    /// @notice Revert when the observed transition violates this fixture policy.
+    function check() external view {
+        address target = ph.getAssertionAdopter();
+        PhEvm.CallInputs[] memory calls = ph.getCallInputs(target, ICounter.add.selector);
+        uint256 expected = uint256(ph.loadStateAt(target, bytes32(0), _preTx()));
+        for (uint256 i; i < calls.length; ++i) {
+            expected += abi.decode(calls[i].input, (uint256));
+        }
+        require(uint256(ph.loadStateAt(target, bytes32(0), _postTx())) == expected, "Input mismatch");
+    }
+}
+
+/// @notice Reconcile matching counter events with slot-zero state in the local fixture.
+contract LogsAssertion is Assertion {
+    constructor() { registerAssertionSpec(AssertionSpec.Reshiram); }
+    /// @notice Register the transaction-end observation check.
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    /// @notice Revert when the observed transition violates this fixture policy.
+    function check() external view {
+        address target = ph.getAssertionAdopter();
+        PhEvm.Log[] memory logs = ph.getLogsQuery(PhEvm.LogQuery(address(0), bytes32(0)), _postTx());
+        uint256 expected = uint256(ph.loadStateAt(target, bytes32(0), _preTx()));
+        for (uint256 i; i < logs.length; ++i) {
+            if (logs[i].emitter == target && logs[i].topics.length == 1
+                && logs[i].topics[0] == keccak256("Added(uint256)")) {
+                expected += abi.decode(logs[i].data, (uint256));
+            }
+        }
+        require(uint256(ph.loadStateAt(target, bytes32(0), _postTx())) == expected, "Log mismatch");
+    }
+}
+
+interface IOracleFixture {
+    function updatePrice(uint256 next) external;
+}
+
+/// @notice Bound every covered oracle update against the transaction starting price.
+/// @dev Fixture-specific slot zero and updatePrice write path; not a consumed-price policy.
+contract OracleSnapshotsAssertion is Assertion {
+    constructor() { registerAssertionSpec(AssertionSpec.Reshiram); }
+    /// @notice Register the transaction-end observation check.
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    /// @notice Revert when the observed transition violates this fixture policy.
+    function check() external view {
+        address target = ph.getAssertionAdopter();
+        uint256 start = uint256(ph.loadStateAt(target, bytes32(0), _preTx()));
+        PhEvm.CallInputs[] memory updates = ph.getCallInputs(target, IOracleFixture.updatePrice.selector);
+        uint256 band = start / 10;
+        for (uint256 i; i < updates.length; ++i) {
+            uint256 next = uint256(ph.loadStateAt(target, bytes32(0), _postCall(updates[i].id)));
+            uint256 distance = next > start ? next - start : start - next;
+            require(distance <= band, "Oracle deviation");
+        }
+    }
+}
+```

@@ -3,13 +3,15 @@ title: 'Interface Overview'
 description: 'Boundaries between Ethereum routing, builders, assertion state, credible-block marking, and guards.'
 ---
 
-Ethereum enforcement has two linked paths: preparing assertion policy, and validating and gating protected transactions. The interfaces below keep assertion management, block marking, and contract execution distinct.
+Ethereum enforcement has two linked paths: preparing assertion policy, and enforcing policies on protected transactions. The interfaces below keep assertion management, block marking, and contract execution distinct.
 
 ## Interface Map
 
 ```mermaid
 flowchart TD
-    CLI["pcl / Ethereum platform"] --> SO["State Oracle"]
+    CLI["pcl / Ethereum platform"] --> Release["Release review"]
+    Release --> Manager["Authorized Protocol Manager"]
+    Manager -->|"Signed lifecycle action"| SO["State Oracle"]
     CLI --> DA["Assertion DA"]
     SO --> E["Assertion Enforcer"]
     DA --> E
@@ -28,7 +30,7 @@ flowchart TD
 | Enforcer ↔ State Oracle | Index active rules and their effective times | Enforcer and contracts maintainers |
 | Enforcer ↔ Assertion DA | Prepare and cache assertion artifacts | DA and enforcer maintainers |
 | Credible RPC → Builder | Route top-level submissions | RPC and builder operators |
-| Builder ↔ Enforcer | Supply candidate context and apply validation reports | Builder and enforcer operators |
+| Builder ↔ Enforcer | Supply candidate context and apply assertion results | Builder and enforcer operators |
 | Builder → Credible Registry | Mark blocks under the authorized builder policy | Builder and Registry administrators |
 | Guard → Credible Registry | Check whether the protected operation may execute | Protocol integrators and contracts maintainers |
 

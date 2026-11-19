@@ -1,30 +1,30 @@
 ---
-title: 'Testing vs. Production'
-description: 'How assertion execution differs between testing and on-chain environments'
+title: 'Local Testing vs. Production'
+description: 'How local assertion tests differ from production enforcement and onchain guard checks'
 ---
 
 On Ethereum, the Assertion Enforcer reports failures to the participating builder, which excludes failing candidates before inclusion. The enforcer does not make the inclusion decision. A separate on-chain guard can revert a protected operation in a noncredible block while its gate is closed.
 
-In testing, failed assertions cause **reverts**. This lets you use `vm.expectRevert()` to verify your assertion catches violations and returns the expected error message.
+In local `CredibleTest` tests, failed assertions cause **reverts**. This lets you use `vm.expectRevert()` to verify your assertion catches violations and returns the expected error message.
 
 ## Quick Comparison
 
-| Aspect | Testing | Production |
+| Aspect | Local `CredibleTest` | Production |
 |--------|---------|------------|
 | **When assertion fails** | Transaction reverts | Rejection reported to the network integration |
-| **Which assertion runs** | Specified by `fnSelector` | All matching assertions |
+| **Which assertion runs** | Specified by `fnSelector` | Matching active Production assertions |
 | **Scope** | Next external call only | Matching active assertions for candidates evaluated by participating builders |
 | **Guard behavior** | Requires separate integration tests | On-chain gate checks block credibility; fail-open and bypass conditions depend on the guard |
 
 ## Production: Ethereum Builders Apply the Result
 
-In production, the [Assertion Enforcer](/credible/assertion-enforcer) validates transactions during block building:
+In production, the [Assertion Enforcer](./assertion-enforcer) enforces assertions on transactions during block building:
 
 ```mermaid
 flowchart LR
     TX[Transaction] --> AE[Assertion Enforcer]
     AE --> |Identify triggers| MATCH{Triggers<br/>match?}
-    MATCH --> |Yes| RUN[Run assertions]
+    MATCH --> |Yes| RUN[Run active Production assertions]
     MATCH --> |No| INCLUDE[Eligible for inclusion]
     RUN --> |All pass| INCLUDE
     RUN --> |Any fails| REPORT[Report rejection]
@@ -33,16 +33,18 @@ flowchart LR
     style INCLUDE fill:#27ae60,color:#fff
 ```
 
-All matching assertions execute. The builder excludes failing candidates. Passing validation does not guarantee inclusion. Guards restrict protected operations in other builders' blocks.
+The candidate must pass its matching active Production assertions. The builder excludes failing candidates. Satisfying the enforced assertions does not guarantee inclusion. Guards restrict protected operations in other builders' blocks.
 
 ## Testing: Transactions Revert
 
-In testing, `cl.assertion()` registers an assertion to run on the next external call:
+In local tests, `cl.assertion()` registers an assertion to run on the next external call:
 
 ```mermaid
 flowchart LR
     CL["cl.assertion()"] --> |Register| NEXT[Next external call]
-    NEXT --> RUN[Run specified<br/>assertion function]
+    NEXT --> MATCH{Trigger matches?}
+    MATCH --> |Yes| RUN[Run specified<br/>assertion function]
+    MATCH --> |No| MISSING[Expected assertion did not execute]
     RUN --> |Passes| PERSIST[State persisted]
     RUN --> |Fails| REVERT[Transaction reverts]
     
@@ -53,117 +55,48 @@ flowchart LR
 Key behaviors:
 - You specify the assertion function via `fnSelector`, but triggers still determine if it runs
 - Only the specified assertion runs, not all assertions for the contract
-- Only the next external call is validated, then the registration is consumed
+- Assertions are enforced on only the next external call, then the registration is consumed
 - Reverts simulate drops - use `vm.expectRevert()` to test failure cases
 
 ## The `cl.assertion()` Mental Model
 
-`cl.assertion()` works like `vm.prank()` - it only affects the immediately following external call.
+`cl.assertion()` selects one assertion function for the next monitored external call. An intervening external call consumes the registration. The selected function still needs a matching trigger; selecting it is not a substitute for registering the trigger.
 
-```solidity
-// ✅ CORRECT: cl.assertion() immediately before target call
-function testCorrectOrder() public {
-    // Setup first
-    token.mint(user, 1000);
-    
-    // Register assertion
-    cl.assertion({
-        adopter: address(protocol),
-        createData: type(MyAssertion).creationCode,
-        fnSelector: MyAssertion.assertionFunction.selector
-    });
-    
-    // Target call - assertion runs here
-    vm.prank(user);
-    protocol.deposit(100);
-}
-```
-
-```solidity
-// ❌ WRONG: External call between cl.assertion() and target
-function testWrongOrder() public {
-    cl.assertion({...});
-    
-    // This call consumes the assertion registration!
-    token.mint(user, 1000);
-    
-    // Assertion already consumed - won't run here
-    vm.prank(user);
-    protocol.deposit(100);
-}
-// Results in: "Expected 1 assertion to be executed, but 0 were executed"
-```
+The test wrapper models assertion rejection as a revert so a test can check both the reason and rollback. It does not reproduce Ethereum builder selection, credible-block marking, or an onchain guard decision. See [How to Test Assertions](./testing-assertions#register-an-assertion-for-the-next-external-call) for the setup pattern.
 
 ### State Persistence
 
-When an assertion passes, state changes persist for the rest of the test. You can assert on updated values and register subsequent assertions.
-
-```solidity
-function testStatePersistence() public {
-    // First operation
-    cl.assertion({...});
-    protocol.deposit(100);
-    
-    // State from deposit persists - we can check it
-    assertEq(protocol.balance(user), 100);
-    
-    // Register new assertion for next operation
-    cl.assertion({...});
-    protocol.withdraw(50);
-    
-    // Both operations' effects visible
-    assertEq(protocol.balance(user), 50);
-}
-```
+A passing operation retains its state changes for later calls in the test. A rejected operation rolls back. Each subsequent monitored call needs its own registration. To test several operations as one transaction, use a [batch helper](./testing-assertions#batch-operation-testing-pattern).
 
 ## Common Pitfalls
 
 ### "Expected 1 assertion to be executed, but 0 were executed"
 
-This error means the assertion didn't run. Common causes:
-
-1. External call between `cl.assertion()` and target - the intervening call consumed the assertion registration
-2. Called function doesn't match a registered trigger - see below
-3. Target transaction reverts before assertion runs - the protocol function itself fails
+This local-harness message means the expected function did not execute. It does not demonstrate that the policy accepted or rejected the operation. The [troubleshooting guide](./troubleshooting#assertion-not-executing) covers consumed registrations, trigger mismatches, and protocol reverts.
 
 ### Trigger Mismatch
 
-The `fnSelector` parameter specifies which assertion function to run, but triggers are still evaluated. The assertion only runs if the next external call matches a registered trigger for that assertion function.
+A test can select the right assertion function but call an operation outside that function's registered triggers. A zero-execution result identifies a coverage or test-setup gap. Changing the assertion condition cannot fix a trigger that never selects it; compare the target selector and registration in [Triggers](./triggers).
 
-```solidity
-// In assertion contract
-function triggers() external view override {
-    registerFnCallTrigger(this.assertDeposit.selector, Protocol.deposit.selector);
-    registerFnCallTrigger(this.assertWithdraw.selector, Protocol.withdraw.selector);
-}
-```
+## Alerting and Backtesting
 
-```solidity
-// ✅ CORRECT: deposit() matches the trigger for assertDeposit
-cl.assertion({fnSelector: MyAssertion.assertDeposit.selector});
-protocol.deposit(100);
+Alerting evaluates mirrored live activity without excluding live transactions. Release backtesting evaluates a reported historical range under the proposed release. Neither uses the local test's next-call registration, and neither proves that Production guards or routing work.
 
-// ❌ WRONG: withdraw() has no trigger registered for assertDeposit
-cl.assertion({fnSelector: MyAssertion.assertDeposit.selector});
-protocol.withdraw(50);
-// Results in: "Expected 1 assertion to be executed, but 0 were executed"
-```
-
-To verify trigger behavior against recent real transactions, create a release and review its [automatic platform backtest](/credible/backtesting).
+A clean result needs evidence that relevant transactions exercised the assertions. Use [Backtesting](./backtesting) to review historical coverage and the [integration test plan](./testing-strategy) for the remaining enforcement checks.
 
 ## Related Documentation
 
 <CardGroup cols={2}>
-  <Card title="Testing Assertions" icon="flask" href="/credible/testing-assertions">
+  <Card title="Testing Assertions" icon="flask" href="./testing-assertions">
     Testing patterns
   </Card>
-  <Card title="Triggers" icon="bolt" href="/credible/triggers">
+  <Card title="Triggers" icon="bolt" href="./triggers">
     Production trigger behavior
   </Card>
-  <Card title="Backtesting" icon="clock-rotate-left" href="/credible/backtesting">
+  <Card title="Backtesting" icon="clock-rotate-left" href="./backtesting">
     Review historical findings attached to a platform release
   </Card>
-  <Card title="Troubleshooting" icon="wrench" href="/credible/troubleshooting">
+  <Card title="Troubleshooting" icon="wrench" href="./troubleshooting">
     Common errors
   </Card>
 </CardGroup>

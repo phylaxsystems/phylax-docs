@@ -1,17 +1,17 @@
 ---
-title: 'Sequencer Validation Pipelines'
+title: 'Sequencer Enforcement Pipelines'
 description: 'Integration-specific speculative execution, rollback, response windows, and traffic controls.'
 ---
 
-These validation designs apply to L2 sequencer integrations. Ethereum builders use a [separate integration](../ethereum-builder-integration).
+These enforcement designs apply to L2 sequencer integrations. Ethereum builders use a [separate integration](../ethereum-builder-integration).
 
-## Synchronous and Speculative Validation
+## Synchronous and Speculative Enforcement
 
-A sequencer integration can wait for assertion validation before inclusion. Alternatively, it can use bounded speculative execution: create a checkpoint, execute candidate transactions, and run assertions in parallel workers before the publication boundary.
+A sequencer integration can wait for assertion enforcement before inclusion. Alternatively, it can use bounded speculative execution: create a checkpoint, execute candidate transactions, and run assertions in parallel workers before the publication boundary.
 
 If an assertion rejects a candidate, the integration rolls back to the checkpoint before that transaction, excludes it, and replays later transactions within the speculative window. The Assertion Enforcer returns the report; the sequencer integration owns inclusion, rollback, and replay.
 
-Define the speculative window, publication boundary, validation timeout, and response to worker backlog. Rollback and replay costs must stay bounded under repeated invalid submissions. Parallel workers do not establish a universal zero-latency-overhead guarantee.
+Define the speculative window, publication boundary, enforcement timeout, and response to worker backlog. Rollback and replay costs must stay bounded under repeated invalid submissions. Parallel workers do not establish a universal zero-latency-overhead guarantee.
 
 ## Bounded Response Windows
 

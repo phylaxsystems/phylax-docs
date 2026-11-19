@@ -25,7 +25,7 @@ Documentation for Ethereum enforcement through participating builders, assertion
 
 ### L2 and Sequencer Integrations (`/credible/l2-integrations`)
 
-The separate section preserves sequencer-oriented integration designs, Linea/Besu, OP Stack, validation pipelines, and earlier platform workflows. Confirm deployment support and versions before using them. Redirects in `docs.json` preserve the old network-integration page routes.
+The separate section preserves sequencer-oriented integration designs, Linea/Besu, OP Stack, enforcement pipelines, and L2 platform workflows. Confirm deployment support and versions before using them. Redirects in `docs.json` preserve the old network-integration page routes.
 
 ### Use Cases Book (`/assertions-book`)
 

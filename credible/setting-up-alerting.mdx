@@ -1,9 +1,11 @@
 ---
-title: 'Setting Up Alerting'
-description: 'Send circuit-breaker alerts to your team in Slack.'
+title: 'How to Set Up Notifications'
+description: 'Slack and PagerDuty notification support, with a Slack setup walkthrough.'
 ---
 
-Send circuit-breaker notifications to Slack. You need project integration permissions and permission to create an app in your Slack workspace.
+Phylax supports invalidation notifications through **Slack and PagerDuty**. Notification delivery is separate from the Alerting and Production environments; connecting either integration does not change enforcement mode.
+
+For PagerDuty setup, coordinate the integration with your Phylax team. The walkthrough below covers Slack. You need project integration permissions and permission to create an app in your Slack workspace.
 
 ## 1. Connect Slack
 
@@ -37,4 +39,4 @@ Select **Send Test Notification**. Confirm that **Slack alerts connected** appea
   <img src="/images/platform/slack-test-message.png" alt="Slack test message confirming that alerts are connected and describing the information included in real invalidation alerts" />
 </Frame>
 
-When an alert arrives, follow its investigation link to [inspect the rejection](./investigate-rejected-transaction).
+When an alert arrives, follow its investigation link to [investigate the invalidation](./investigate-rejected-transaction).

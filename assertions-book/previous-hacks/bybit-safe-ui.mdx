@@ -1,126 +1,54 @@
 ---
-title: Bybit - Compromised Safe Wallet UI
-description: Safe Wallet UI was compromised by gaining access to the host machine.
+title: "Bybit Safe Wallet Compromise"
+description: "Attack mechanism and inline Reshiram assertion example for Bybit Safe Wallet Compromise"
 ---
 
 ## What Happened
 
-Bybit suffered from a security breach in Safe's hosting infrastructure losing 1.4bn USD.
+Bybit’s February 26, 2025 forensic update reports compromise of Safe’s environment and manipulation of the signing flow; it reports no compromise of Bybit infrastructure. The incident illustrates why a valid signature does not establish that the signer saw the transaction’s actual effect. [Bybit forensic update](https://www.bybit.com/en/press/post/bybit-confirms-security-integrity-amid-safe-wallet-incident-no-compromise-in-infrastructure-blt9986889e919da8d2).
 
-The attackers, the lazarus group, gained access to the server and was able to modify the served Safe
-Wallet frontend.
-More on the attack: https://x.com/safe/status/1894768522720350673
+## Attack Mechanism
 
-The malicious code was specifically targeting Bybit's next transaction.
-As of today, it is commonly agreed that the signers of the transaction were shown a fake UI, seeming
-to be the intended transaction to sign, but in fact it was a malicious transaction.
+The compromised signing interface displayed a benign transaction while the signers authorized a different payload. That payload executed a delegatecall in the Safe's storage context. The delegatecall changed the Safe proxy's singleton address, replacing the code that governed subsequent withdrawals.
 
-Unfortunately, it is often very hard to verify the correctness of the message that is signed in
-software or hardware wallets.
+The attack crossed two boundaries:
 
-**Attack steps:**
+1. The displayed intent differed from the signed transaction.
+2. The signed transaction changed the wallet's implementation, so later calls no longer followed the original Safe authorization logic.
 
-1. Attackers gained access to the hosting server by compromising a developer's machine.
-2. A malicious frontend was uploaded to the server, which targeted Bybit's next transaction.
-3. The frontend would show the intended transaction but in fact the message to be signed was malicious
-4. The malicious message was a delegate call which would change the implementation of the Safe's proxycontract
+Safe stores its singleton in slot zero. An EIP-1967 implementation-slot check would inspect the wrong location for this proxy. The assertion reads the initial slot value and checks every recorded value against it, including an implementation change that is restored before transaction end. Creating a `ForkId` alone does not select a state: the example passes it to `loadStateAt`.
 
-## Assertion Pattern
-
-In Safe's proxy implementation, the first storage slot is the implementation address.
-
-```solidity
-/**
- * @title Singleton - Base for singleton contracts (should always be the first super contract)
- *        This contract is tightly coupled to our proxy contract (see `proxies/SafeProxy.sol`)
- * @author Richard Meissner - @rmeissner
- */
-abstract contract Singleton {
-    // singleton always has to be the first declared variable to ensure the same location as in the Proxy contract.
-    // It should also always be ensured the address is stored alone (uses a full word)
-    address private singleton;
-}
-```
-
-The malicious transaction was executing a delegate call to a malicious contract, effectively
-changing the implementation address of Bybit's proxy contract.
-A change of the implementation address allows an attacker to almost completely exchange the logic
-of the contract.
-Therefore it was possible to be able to drain all the assets of the Safe without the need of any
-additional approvals by the original owners.
-
-A delegate call can modify the caller's storage, including the implementation slot, even without a dedicated upgrade function.
-
-### How the Assertion Would Have Prevented It
-
-An assertion can reject changes to the Safe implementation slot.
-
-PhEvm precompiles used:
-
-- _forkPreTx_ allowing to fork the state of the contract before a transaction
-- _load_ reading specific storage slots
-- _getStateChangesAddress_ getting all state changes within a transaction for a given slot
+## Assertion Example
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {Assertion} from "../../lib/credible-std/src/Assertion.sol";
-import {AssertionSpec} from "../../lib/credible-std/src/SpecRecorder.sol"; // Credible Layer precompiles
-import {Safe} from "../../lib/safe-contracts/src/Safe.sol"; // Safe contract
-import {PhEvm} from "../../lib/credible-std/src/PhEvm.sol";
+import {Assertion} from "credible-std/Assertion.sol";
+import {AssertionSpec} from "credible-std/SpecRecorder.sol";
+import {PhEvm} from "credible-std/PhEvm.sol";
 
-contract SafeAssertion is Assertion {
-    Safe safe;
-
-    constructor(address payable safe_) {
-        registerAssertionSpec(AssertionSpec.Reshiram);
-        safe = Safe(safe_); // Define address of Safe contract
-    }
-
-    // Define the triggers for the assertions
-    function triggers() public view override {
-        registerTxEndTrigger(this.implementationAddressChange.selector);
-    }
-
-    function implementationAddressChange() external view {
-        PhEvm.ForkId memory preFork = _preTx();
-        address preImplementationAddress = address(uint160(uint256(ph.loadStateAt(address(safe), bytes32(0x0), preFork))));
-
-        address[] memory addresses = getStateChangesAddress(address(safe), bytes32(0x0));
-        for (uint256 i = 0; i < addresses.length; i++) {
-            if (addresses[i] != preImplementationAddress) {
-                revert("Implementation address has changed within transaction");
-            }
+/// @notice Reject any recorded change to the Safe singleton slot, including change-and-restore.
+contract SafeImplementation is Assertion {
+    constructor() { registerAssertionSpec(AssertionSpec.Reshiram); }
+    function triggers() external view override { registerTxEndTrigger(this.check.selector); }
+    function check() external view {
+        address safe = ph.getAssertionAdopter();
+        bytes32 slot = bytes32(0); // Safe singleton; not the EIP-1967 slot.
+        bytes32 initial = ph.loadStateAt(safe, slot, _preTx());
+        bytes32[] memory values = ph.getStateChanges(safe, slot);
+        for (uint256 i; i < values.length; ++i) {
+            require(values[i] == initial, "Safe implementation changed");
         }
     }
 }
 ```
 
-A second assertion can restrict transfers to approved addresses. This example compares the Safe's balance decrease with the recipients' balance increases.
+## What This Check Covers
 
-```solidity
- function assertionSafeDrain() external {
-        PhEvm.ForkId memory preFork = _preTx();
-        uint256 preBalance = address(bybitSafeAddress).balance;
-        uint256[] memory preWhitelistBalances = new uint256[](whitelistedAddresses.length);
-        for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
-            preWhitelistBalances[i] = address(whitelistedAddresses[i]).balance;
-        }
+The singleton slot must match the deployed Safe layout. Freezing it constrains this implementation-replacement path, not every malicious signed transfer. An approved-recipient policy must inspect actual transfers: unrelated deposits into an approved recipient cannot establish where the Safe's funds went.
 
-        PhEvm.ForkId memory postFork = _postTx();
-        uint256 postBalance = address(bybitSafeAddress).balance;
-        if (postBalance > preBalance) {
-            return; // Balance increased, not a hack
-        }
-        uint256 diff = preBalance - postBalance;
-        for (uint256 i = 0; i < whitelistedAddresses.length; i++) {
-            uint256 postWhitelistBalance = address(whitelistedAddresses[i]).balance;
-            if (postWhitelistBalance == preWhitelistBalances[i] + diff) {
-                return; // Balance increased, not a hack
-            }
-        }
-        // None of the whitelisted addresses have increased in balance, so it's a hack
-        revert("Bybit safe address balance decreased");
-    }
-```
+<span id="assertion-pattern" />
+<span id="candidate-implementation-slot-policy" />
+<span id="recipient-and-native-balance-policies" />
+<span id="how-the-assertion-would-have-prevented-it" />
