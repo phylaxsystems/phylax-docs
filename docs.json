@@ -211,7 +211,8 @@
               {
                 "group": "Contract Reference",
                 "pages": [
-                  "credible/credible-layer-contracts"
+                  "credible/credible-layer-contracts",
+                  "credible/contract-addresses"
                 ]
               },
               {
