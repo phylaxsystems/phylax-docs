@@ -11,7 +11,7 @@ Core Concepts,Protocol Invariants,"Properties required to hold at specified obse
 System Architecture,PhEVM (Phylax EVM),"The execution environment for assertion checks, with interfaces for inspecting transaction and call snapshots. Production assertions inspect state; mutable fork switching in the Legacy API selects a snapshot and does not authorize changing protocol state.
 
 Learn more: [PhEVM](./phevm)"
-System Architecture,Assertion DA (Data Availability),"The offchain service storing assertion artifacts for retrieval and integrity checks. Published artifacts can be inspected; service availability, private platform data, and policy correctness are separate concerns. Enforcers cache artifacts for execution.
+System Architecture,Assertion DA (Data Availability),"The mechanism that makes assertion creation data available to enforcers. Ethereum mainnet publishes the bytes in the State Oracle's `AssertionAdded` event. Linea uses an offchain service that serves the artifact by assertion ID. Enforcers prepare assertions in a local Assertion Store for execution.
 
 Learn more: [Assertion Data Availability](./assertion-da)"
 System Architecture,State Oracle,"The onchain contract recording assertion adopters, their Protocol Managers, assertion IDs, and activation/deactivation blocks. Its assertion activation windows describe lifecycle timing; they are not the rolling measurement windows used by cumulative-flow breakers.
@@ -57,13 +57,13 @@ See the [Cheatcodes Reference](./cheatcodes-reference) for state tracking functi
 
 <span id=""callstack"" />"
 Assertion Components,Call Trace,The recorded calls and their nesting during transaction execution. Use **call trace** for recorded execution and **call stack** for the active nested calls at one point. Neither means the EVM operand stack. Older prose may use “callstack” for call inspection.
-Assertion Components,Assertion Bytecode,"The compiled form of an assertion contract. Assertion DA stores the deployable artifact; the enforcer loads it for execution in PhEVM. `pcl` is the development CLI.
+Assertion Components,Assertion Bytecode,"The compiled form of an assertion contract. Registration on Ethereum mainnet publishes the creation bytecode and any encoded constructor arguments on L1. The Assertion Enforcer prepares the contract from those bytes for execution in PhEVM.
 
-See the [pcl Reference](./cli-reference) for build and store commands."
+See [Assertion Data Availability](./assertion-da) for the Ethereum and Linea publication paths."
 Assertion Components,Assertion ID,"An artifact identifier computed as `Keccak256(creation bytecode ++ ABI-encoded constructor arguments)`. It identifies the deployable creation data, not a single assertion function, adopter assignment, or platform release. Use the function selector and execution trace to identify a failing check; use the adopter and activation state to identify where and when the artifact applies.
 
 Learn more: [Assertion Data Availability](./assertion-da#assertion-id)"
-Assertion Components,Assertion DA Prover Signature,"A signature returned by the Assertion DA when an assertion is stored. Deployment uses it to attest to the stored bytecode at signing time; it is not a guarantee of future service availability.
+Assertion Components,Assertion DA Prover Signature,"A signature from Linea's offchain Assertion DA service attesting that it held the creation data for an assertion ID at signing time.
 
 Learn more: [Assertion Data Availability](./assertion-da#assertion-da-prover-signature)"
 Assertion Components,Assertion Adopter,The contract address to which an assertion is assigned in the State Oracle. APIs and UI fields retain the name **adopter**. It can be a protocol contract or an assertion adapter used by a hook; the check may inspect other contracts as well. Adopter registration alone does not establish guard coverage.
@@ -88,7 +88,7 @@ Security Features,Off-chain Execution,"Assertion enforcement performed outside E
 Security Features,Forced Inclusion Transactions,"L2 transaction paths with protocol-level inclusion rules, such as L1-to-L2 deposits or delayed queues. Their assertion handling belongs to the [L2 integration policy](./l2-integrations/network-integration#transaction-source-coverage), not Ethereum builder routing."
 Security Features,Circuit Breaker,"An assertion pattern that collects value flowing into or out of a protected contract into one bucket per block, then limits the cumulative flow across those per-block buckets over a rolling window. Circuit breakers are useful when the goal is to reduce exploit velocity or contain blast radius rather than block one specific function call."
 Security Features,Cumulative-Flow Breaker,"A circuit breaker that limits directional net asset flow over a rolling window of per-block buckets. It measures the configured asset and custody address, not every form of protocol loss. See [Flow-Limit and Anomaly-Gated Policies](../assertions-book/assertions/circuit-breakers)."
-Security Features,Verifiability,"The ability to inspect the rules and registry state behind a protocol's Credible Layer posture. Assertion IDs and registry entries are on-chain, while assertion bytecode is stored in Assertion DA. Public views expose the protocol's visible assertion posture; private project data remains restricted to authorized project users."
+Security Features,Verifiability,"The ability to inspect the rules and registry state behind a protocol's Credible Layer posture. On Ethereum mainnet, anyone can read the assertion creation data from the registration event and check its hash against the assertion ID. Public views show the protocol's visible assertion posture. Access to private project data requires project authorization."
 Prevention,Invalidation,"A reported assertion failure for a candidate or replayed transaction. Inspect the reason: a configured policy condition can fail, but an execution failure such as `OutOfGas` can also invalidate a candidate without establishing that condition. Production enforcement excludes invalidated candidates at the integrated boundary; Alerting and simulation record results without blocking the live transaction. An invalidation is not proof of an attack or of a live prevention.
 
 Learn more: [Investigate an Invalidation](./investigate-rejected-transaction)"
@@ -97,7 +97,7 @@ Prevention,Drop,Exclusion of a candidate transaction by a participating builder 
 Prevention,Prevent,"Blocking a rule-violating effect through the integrated enforcement path. Protection depends on active assertions, trigger coverage, builder behavior, and any required guards; a violation is not necessarily malicious."
 Assertion Lifecycle,Project,"The platform container for a protocol team's contracts, releases, and review results. Project permissions control platform access; they do not themselves confer the Protocol Manager's onchain authority."
 Assertion Lifecycle,Release,"The complete policy set reviewed and deployed together for a project's selected environment. Individual assertions cannot be removed from an active release. Change the set by deploying a replacement release, or remove the whole release."
-Assertion Lifecycle,Apply,"The process of creating a release on the platform using `pcl apply`. This command reads your `credible.toml` configuration, compiles assertion contracts, and creates a release. The platform handles storing assertion bytecode in [Assertion DA](./glossary#assertion-da-data-availability) automatically.
+Assertion Lifecycle,Apply,"The process of creating a release on the platform using `pcl apply`. This command reads your `credible.toml` configuration and compiles assertion contracts for release review. On Ethereum mainnet, a subsequent registration transaction publishes the assertion creation data on L1.
 
 Learn more: [Prepare a Policy Release](./apply-assertions) | [pcl Reference](./cli-reference#apply)"
 Assertion Lifecycle,Deployment,"The process of reviewing a release and signing its onchain transaction for the selected Alerting or Production environment. Transaction confirmation and assertion activation are separate: new assertions begin applying after the configured delay.

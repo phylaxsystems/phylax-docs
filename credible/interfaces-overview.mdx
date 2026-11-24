@@ -12,9 +12,7 @@ flowchart TD
     CLI["pcl / Ethereum platform"] --> Release["Release review"]
     Release --> Manager["Authorized Protocol Manager"]
     Manager -->|"Signed lifecycle action"| SO["State Oracle"]
-    CLI --> DA["Assertion DA"]
-    SO --> E["Assertion Enforcer"]
-    DA --> E
+    SO -->|"L1 events with assignments and creation data"| E["Assertion Enforcer"]
     RPC["Credible RPC"] --> B["Participating builder"]
     B <-->|"Candidate / report"| E
     B -->|"Authorized marker"| CR["Credible Registry"]
@@ -27,8 +25,7 @@ flowchart TD
 | --- | --- | --- |
 | CLI ↔ Platform API | Authentication, project selection, and releases | Platform and CLI maintainers |
 | Authorized manager ↔ State Oracle | Assertion assignments and lifecycle actions | Protocol team and contracts maintainers |
-| Enforcer ↔ State Oracle | Index active rules and their effective times | Enforcer and contracts maintainers |
-| Enforcer ↔ Assertion DA | Prepare and cache assertion artifacts | DA and enforcer maintainers |
+| Enforcer ↔ State Oracle | Index assignments and effective blocks. Prepare assertions from the creation data in L1 registration events. | Enforcer and contracts maintainers |
 | Credible RPC → Builder | Route top-level submissions | RPC and builder operators |
 | Builder ↔ Enforcer | Supply candidate context and apply assertion results | Builder and enforcer operators |
 | Builder → Credible Registry | Mark blocks under the authorized builder policy | Builder and Registry administrators |
@@ -40,7 +37,7 @@ See [Trust Model](./trust-model) for the guarantees and assumptions at each inte
 
 The State Oracle controls assertion authority and timing. The Credible Registry records builder authorization and block markers. Guards check the Registry while preserving ordinary protocol checks.
 
-The platform coordinates release review and operation. Assertion DA supplies artifacts.
+The platform coordinates release review and operation. Registration publishes assertion creation data on Ethereum mainnet.
 
 ## Changes Requiring Review
 

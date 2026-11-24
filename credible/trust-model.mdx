@@ -65,7 +65,7 @@ Each integration should define:
 
 Review deployed contract paths, active policies, and administrative powers to assess coverage. Public code and registry state alone do not establish it. Project permissions control access to private invalidation data.
 
-Assertion DA and local caches supply the bytecode used by enforcers. Integrations need defined behavior when artifacts cannot be prepared or enforcement cannot complete; hot-path enforcement should not depend on a live artifact fetch.
+Ethereum builders can check the creation data in each State Oracle registration event against its assertion ID. Enforcement during block building reads prepared assertions from the builder's local Assertion Store. Each integration needs a policy for missing or unreadable artifacts.
 
 Local tests, release backtesting, and alerting provide evidence about rule behavior. End-to-end guard, routing, and recovery tests establish different parts of the integration. Audit reports apply to their stated revision and scope, not automatically to later changes or protocol-specific wiring.
 

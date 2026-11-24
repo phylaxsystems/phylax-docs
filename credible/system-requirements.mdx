@@ -35,7 +35,8 @@ For an embedded library, enforcement does not require a separate network hop fro
 **Key requirements:**
 - For a separate service, a low-latency link between the node and enforcement workers
 - Prefer private networking; avoid routing over the public internet
-- Stable egress to the chain RPC and Assertion DA service
+- On Ethereum mainnet, access to State Oracle event logs for indexing and rebuilding the local Assertion Store
+- On Linea, access to the chain RPC for assignments and to the offchain Assertion DA service for bytecode
 
 ## Local Development
 
