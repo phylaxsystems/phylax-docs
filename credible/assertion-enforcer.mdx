@@ -110,7 +110,7 @@ Enforcement is deterministic for the same state, transaction, and assertion code
 
 ## Assertion Caching
 
-The enforcer detects assertion registration events and fetches bytecode from [Assertion DA](./assertion-da). Enforcement reads this local cache without fetching artifacts from the network.
+On Ethereum mainnet, the enforcer populates its local Assertion Store from the creation data in the State Oracle's `AssertionAdded` events. It reads prepared assertions from that store when evaluating candidate transactions. See [Assertion Data Availability](./assertion-da#ethereum-mainnet).
 
 ## Learn More
 

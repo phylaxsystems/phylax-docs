@@ -53,7 +53,7 @@ The execution environment for assertion checks, with interfaces for inspecting t
 Learn more: [PhEVM](./phevm)
 
 ### Assertion DA (Data Availability)
-The offchain service storing assertion artifacts for retrieval and integrity checks. Published artifacts can be inspected; service availability, private platform data, and policy correctness are separate concerns. Enforcers cache artifacts for execution.
+The mechanism that makes assertion creation data available to enforcers. Ethereum mainnet publishes the bytes in the State Oracle's `AssertionAdded` event. Linea uses an offchain service that serves the artifact by assertion ID. Enforcers prepare assertions in a local Assertion Store for execution.
 
 Learn more: [Assertion Data Availability](./assertion-da)
 
@@ -141,9 +141,9 @@ See the [Cheatcodes Reference](./cheatcodes-reference) for state tracking functi
 The recorded calls and their nesting during transaction execution. Use **call trace** for recorded execution and **call stack** for the active nested calls at one point. Neither means the EVM operand stack. Older prose may use “callstack” for call inspection.
 
 ### Assertion Bytecode
-The compiled form of an assertion contract. Assertion DA stores the deployable artifact; the enforcer loads it for execution in PhEVM. `pcl` is the development CLI.
+The compiled form of an assertion contract. Registration on Ethereum mainnet publishes the creation bytecode and any encoded constructor arguments on L1. The Assertion Enforcer prepares the contract from those bytes for execution in PhEVM.
 
-See the [pcl Reference](./cli-reference) for build and store commands.
+See [Assertion Data Availability](./assertion-da) for the Ethereum and Linea publication paths.
 
 ### Assertion ID
 An artifact identifier computed as `Keccak256(creation bytecode ++ ABI-encoded constructor arguments)`. It identifies the deployable creation data, not a single assertion function, adopter assignment, or platform release. Use the function selector and execution trace to identify a failing check; use the adopter and activation state to identify where and when the artifact applies.
@@ -151,7 +151,7 @@ An artifact identifier computed as `Keccak256(creation bytecode ++ ABI-encoded c
 Learn more: [Assertion Data Availability](./assertion-da#assertion-id)
 
 ### Assertion DA Prover Signature
-A signature returned by the Assertion DA when an assertion is stored. Deployment uses it to attest to the stored bytecode at signing time; it is not a guarantee of future service availability.
+A signature from Linea's offchain Assertion DA service attesting that it held the creation data for an assertion ID at signing time.
 
 Learn more: [Assertion Data Availability](./assertion-da#assertion-da-prover-signature)
 
@@ -210,7 +210,7 @@ An assertion pattern that collects value flowing into or out of a protected cont
 A circuit breaker that limits directional net asset flow over a rolling window of per-block buckets. It measures the configured asset and custody address, not every form of protocol loss. See [Flow-Limit and Anomaly-Gated Policies](../assertions-book/assertions/circuit-breakers).
 
 ### Verifiability
-The ability to inspect the rules and registry state behind a protocol's Credible Layer posture. Assertion IDs and registry entries are on-chain, while assertion bytecode is stored in Assertion DA. Public views expose the protocol's visible assertion posture; private project data remains restricted to authorized project users.
+The ability to inspect the rules and registry state behind a protocol's Credible Layer posture. On Ethereum mainnet, anyone can read the assertion creation data from the registration event and check its hash against the assertion ID. Public views show the protocol's visible assertion posture. Access to private project data requires project authorization.
 
 ## Prevention
 
@@ -237,7 +237,7 @@ The platform container for a protocol team's contracts, releases, and review res
 The complete policy set reviewed and deployed together for a project's selected environment. Individual assertions cannot be removed from an active release. Change the set by deploying a replacement release, or remove the whole release.
 
 ### Apply
-The process of creating a release on the platform using `pcl apply`. This command reads your `credible.toml` configuration, compiles assertion contracts, and creates a release. The platform handles storing assertion bytecode in [Assertion DA](./glossary#assertion-da-data-availability) automatically.
+The process of creating a release on the platform using `pcl apply`. This command reads your `credible.toml` configuration and compiles assertion contracts for release review. On Ethereum mainnet, a subsequent registration transaction publishes the assertion creation data on L1.
 
 Learn more: [Prepare a Policy Release](./apply-assertions) | [pcl Reference](./cli-reference#apply)
 

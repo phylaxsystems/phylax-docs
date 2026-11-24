@@ -1,73 +1,56 @@
 ---
 title: 'Assertion Data Availability'
-description: 'How assertion bytecode is stored and accessed in the Credible Layer'
+description: 'Where Ethereum builders and the Linea sidecar obtain assertion bytecode and how they check its integrity.'
 ---
 
-Assertion DA stores assertion bytecode and source code. The platform stores these artifacts when you run [`pcl apply`](./apply-assertions). Enforcers retrieve bytecode for execution. Reviewers can inspect the source.
+Ethereum mainnet provides data availability (DA) for assertion bytecode. Builders populate their local Assertion Stores from L1 registration events. On Linea, the sidecar retrieves the bytecode from the offchain Assertion DA service operated by Phylax.
 
-## Purpose
+<span id="purpose" />
+<span id="key-concepts" />
 
-Assertion DA stores artifacts and binds each assertion ID to its deployable creation data.
+## Assertion ID
 
-## Key Concepts
-
-### Assertion ID
-
-The assertion ID is deterministically derived from deployable creation data:
+Both integrations identify the creation data by the same hash.
 
 ```text
 Assertion ID = Keccak256(Creation_Bytecode ++ Encoded_Constructor_Arguments)
 ```
 
-The bytecode and encoded constructor arguments are stored separately in Assertion DA and combined to reconstruct the deployment data. This ID identifies the artifact; a function selector identifies a check inside it. The State Oracle separately records adopter assignments and activation state.
+For an assertion without constructor arguments, the ID is the hash of the creation bytecode alone. The State Oracle records which adopter the artifact applies to and when it becomes active.
 
-Recompute the hash to check artifact integrity. Assertion DA compiles submitted Solidity source in a Dockerized `solc` environment before storage.
+<span id="current-implementation" />
+<span id="how-it-works" />
 
-### Assertion DA Prover Signature
-
-Assertion DA returns a prover signature when it stores an assertion. The deployment API calls this an availability proof: it attests to the stored creation data at signing time, not future uptime, policy correctness, or execution by a builder.
-
-## Current Implementation
-
-Phylax operates the offchain storage service. Assertion artifacts are publicly accessible for review and verification.
-
-## How It Works
+## Ethereum Mainnet
 
 ### Storing Assertions
 
-1. `pcl apply` compiles the assertion contracts.
-2. The platform uploads flattened source code and compiler options to Assertion DA.
-3. Assertion DA generates the assertion ID and availability signature.
+[`pcl apply`](./apply-assertions) prepares a platform release for review, including [source verification](./deploy-assertions-dapp#source-code). The authorized Protocol Manager publishes the creation data on L1 when registering the assertion.
 
-The State Oracle checks registration authority and lifecycle timing. See [Managing Policy Deployments](./managing-policy-deployments).
+The State Oracle's `addAssertion` call carries the full creation data in its `proof` argument. The onchain DA verifier checks `keccak256(proof) == assertionId`. The State Oracle then emits the same bytes in its `AssertionAdded` event. For example, log 458 in [this mainnet registration](https://etherscan.io/tx/0x3e9f0b77dfad8a589e6d029b8b43ebb369dd375700acc204c123748c3039bd97#eventlog) contains 7,155 bytes of creation data in `proof`.
 
 ### Retrieving Assertions
 
-Enforcers index the State Oracle's `AssertionAdded` event. They fetch bytecode by assertion ID and cache it before enforcement.
+The builder reads the event from the configured State Oracle. It checks the verifier address and confirms that the hash of the proof matches the assertion ID. It then prepares the assertion from those bytes and records the assignment and activation block in its local Assertion Store. The Assertion Enforcer reads that store during block building. See [For Ethereum Builders](./ethereum-builder-integration).
 
-Operators must define how missing or unreadable artifacts affect enforcement.
+<span id="design-rationale" />
 
-## Complete Lifecycle
+## Linea
 
-An authorized manager registers the assertion through the State Oracle. After the activation delay, enforcers evaluate it in the selected environment.
+<span id="why-off-chain-storage" />
+<span id="why-compilation-happens-off-chain" />
 
-Production results affect participating builders. Alerting records violations without excluding live transactions. Removal also takes effect after the configured delay. See [Deployment](./deploy-assertions-dapp).
+The offchain DA service compiles the submitted Solidity source and stores the creation bytecode and encoded constructor arguments separately. The Linea sidecar indexes onchain assignments, fetches the corresponding artifact by assertion ID, and combines the bytecode and arguments to check the hash. It caches the prepared assertion locally for enforcement. See [Linea / Besu Integration](./l2-integrations/architecture-linea).
 
-## Design Rationale
+### Assertion DA Prover Signature
 
-### Why Off-Chain Storage?
+The service signs the assertion ID when it stores the artifact. Linea uses that signature as its availability proof, which keeps the registration transaction small even for a large assertion. The signature attests that the service held the creation data at signing time. A sidecar with a missing artifact still needs access to the service to retrieve it.
 
-Offchain storage avoids the cost of storing bytecode and metadata on Ethereum. Enforcers cache artifacts for enforcement.
-
-### Why Compilation Happens Off-Chain
-
-The State Oracle uses the deployment-data hash and availability signature. Compilation and artifact storage remain outside the contract.
+<span id="complete-lifecycle" />
 
 ## Security Considerations
 
-Cached assertions remain available during a DA outage. New registrations, restarts, and missing cache entries can require DA access. An availability signature does not guarantee future uptime.
-
-The assertion ID binds the creation bytecode and constructor arguments. It does not establish policy correctness. Test legitimate activity and recovery before activation.
+A matching hash ties the available bytes to the registered ID. Policy behavior requires [testing](./testing-strategy). On Ethereum, the registration event also records when the assignment takes effect. Builder enforcement depends on the active assignment and the [deployment mode](./deploy-assertions-dapp).
 
 ## Next Steps
 

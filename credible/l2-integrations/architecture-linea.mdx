@@ -42,7 +42,7 @@ flowchart LR
   end
 
   Registry["Registry Data<br/>(On-Chain Events)"]
-  DA["Assertion DA"]
+  DA["Offchain Assertion DA service"]
 
   TxPool --> Builder
   Builder --> Plugin
@@ -62,12 +62,12 @@ flowchart LR
 ## Notes
 
 - The plugin uses Besu’s transaction selection hooks to enforce assertions on transactions during block building.
-- The sidecar relies on registry data (from on-chain events) and assertion data to determine applicable assertions.
+- The sidecar indexes assignments from onchain events, retrieves bytecode by assertion ID from the offchain DA service, and prepares the assertion in its local Assertion Store.
 - This integration does not change core protocol rules; it runs alongside the existing block builder.
 
 ## Related Docs
 
 - [Network Integration Overview](./network-integration)
 - [Assertion Enforcer](../assertion-enforcer)
-- [Assertion DA](../assertion-da)
+- [Assertion data availability on Linea](../assertion-da#linea)
 - [Plan an L2 integration](./network-integration)
