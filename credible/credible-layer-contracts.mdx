@@ -5,9 +5,19 @@ description: 'Ethereum assertion lifecycle, builder authorization, credible-bloc
 
 The State Oracle records assertion policy. The Credible Registry records authorized builders and credible blocks. Guards check the Registry before protected operations execute.
 
-See [Contract Addresses](./contract-addresses) for Ethereum and Linea mainnet deployments.
-
 Registering an assertion does not install a guard or configure transaction routing. See [Ethereum Architecture](./architecture-overview) for the complete execution path.
+
+## Production deployments
+
+Use the State Oracle proxy address when configuring an application. The Ethereum Credible Registry is deployed directly. Its explorer link includes the verified source and ABI.
+
+| Network | Chain ID | Contract | Address |
+| --- | --- | --- | --- |
+| Ethereum mainnet | 1 | State Oracle proxy | [`0x14386aF70E91dFE12aC6243D4B5e087870d7f14D`](https://etherscan.io/address/0x14386aF70E91dFE12aC6243D4B5e087870d7f14D#readProxyContract) |
+| Ethereum mainnet | 1 | Credible Registry | [`0xbac71Fe7a8C78F49Eeb2D33b250988224796AF70`](https://etherscan.io/address/0xbac71Fe7a8C78F49Eeb2D33b250988224796AF70#code) |
+| Linea mainnet | 59144 | State Oracle proxy | [`0x984Ed2269Cdcc0e105675b4a16120Bc0531Bb218`](https://lineascan.build/address/0x984Ed2269Cdcc0e105675b4a16120Bc0531Bb218#readProxyContract) |
+
+The Ethereum Credible Registry was [deployed at block 26,342,900](https://etherscan.io/tx/0x4f4e92bea1994cf6e72c9f30193127a64457a241410a551ee2c65e8a8b38a6a1).
 
 ## Components
 
@@ -44,7 +54,7 @@ Review the deployed roles and timing alongside the [Trust Model](./trust-model).
 
 ### Credible Registry
 
-The Registry and guard behavior below describes [`credible-registry` at `8804c9e`](https://github.com/phylaxsystems/credible-registry/tree/8804c9ece0b9ed2580fee85eaaf8b17dafc1de71). Check the deployed revision before applying these details to an existing integration.
+The table describes the [deployed Ethereum mainnet Registry](#production-deployments). The guard descriptions below use [`credible-registry` at `8804c9e`](https://github.com/phylaxsystems/credible-registry/tree/8804c9ece0b9ed2580fee85eaaf8b17dafc1de71).
 
 | Interface | Behavior |
 | --- | --- |
@@ -55,7 +65,7 @@ The Registry and guard behavior below describes [`credible-registry` at `8804c9e
 
 The marker is a builder attestation. The Registry does not execute assertions or verify a proof of their execution.
 
-Builder additions, removals, and timelock-delay changes use the Registry's scheduling functions. An admin schedules; a guardian can cancel; anyone can execute a mature operation through the corresponding execution function. Each operation waits at least seven days, or the configured delay if longer. Direct builder-role grants, revocations, and renunciation are blocked. A guardian cannot remove a builder immediately.
+Builder additions, removals, and timelock-delay changes use the Registry's scheduling functions. An admin schedules the operation, a guardian can cancel it, and anyone can execute it once the delay has elapsed. On Ethereum mainnet, each operation waits at least **three days** (`MIN_TIMELOCK_DELAY`, 259,200 seconds), or the controller's configured delay if that is longer. Direct builder-role grants, revocations, and renunciation are blocked. A guardian cannot remove a builder immediately.
 
 These permissions are separate from a protocol's Protocol Manager and State Oracle lifecycle.
 
