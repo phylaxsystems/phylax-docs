@@ -17,7 +17,9 @@ Exclude candidates that fail active production assertions. A successful report o
 
 ## 2. Prepare Assertion State and Artifacts
 
-Index assertion assignments and lifecycle events from the State Oracle. Prepare and cache bytecode from Assertion DA before it enters the active execution set. Verify that alerting and production state remain distinct and that scheduled additions and removals take effect at the correct boundary.
+Index lifecycle events from the configured Ethereum mainnet State Oracle. For each `AssertionAdded` event, check that `daVerifier` matches the configured onchain verifier and that `keccak256(proof)` matches `assertionId`. Use the creation data in `proof` to prepare the assertion in the builder's local Assertion Store before its activation block. See [Assertion Data Availability](./assertion-da#ethereum-mainnet).
+
+Verify that alerting and production state remain distinct and that scheduled additions and removals take effect at the correct boundary.
 
 ## 3. Integrate Credible-Block Marking
 

@@ -42,7 +42,7 @@ Networks provide the following integration surfaces:
 - **Transaction-source policy**: the integration defines how user-submitted, system-originated, bridge-originated, delayed, or forced-inclusion-style transaction paths are covered by enforcement
 - **Result routing**: enforcement results are routed back into the block-building or sequencing policy that decides whether a candidate transaction can be included
 - **Assertion-state access**: the enforcer consumes assertion assignments and their effective times from the deployment's on-chain state, such as the State Oracle; this is separate from Ethereum's Credible Registry block markers
-- **Assertion data access**: the enforcer fetches assertion bytecode from Assertion DA
+- **Assertion data access**: identify where the enforcer obtains bytecode for its local Assertion Store. [Linea](./architecture-linea) uses the offchain Assertion DA service.
 - **Operational monitoring**: invalidations, assertion status, alerting, and audit-log events are surfaced via the Phylax platform
 
 ## Integration Policy Decisions

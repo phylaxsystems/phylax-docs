@@ -26,11 +26,10 @@ flowchart LR
   SE[Phylax Sales Engineering] -. Recommended support .-> Scope
   Scope --> Assertion[Implement and Test Assertions]
   Assertion --> Platform[Phylax Platform]
-  Platform --> DA[Assertion DA]
   Platform --> Review[Release Review]
   Review --> Manager[Authorized Protocol Manager]
   Manager -->|Signed deployment| StateOracle[State Oracle]
-  StateOracle --> Enforcer[Assertion Enforcer]
+  StateOracle -->|L1 registration event with bytecode| Enforcer[Assertion Enforcer]
   Enforcer --> Builder[Participating Ethereum Builder]
   Builder --> Outcome[Candidate Inclusion Decision]
   Dev --> Guard[Guard Coverage + RPC Routing]

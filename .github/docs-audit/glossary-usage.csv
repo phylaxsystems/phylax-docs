@@ -5,7 +5,7 @@ Policy,Intended behavior and exceptions,Only invariants; Solidity artifact,credi
 Assertion Contract,Artifact packaging functions and triggers,Adopter; individual check; release,credible/assertions-overview.mdx
 Protocol Invariants,Properties at defined observation boundaries,Every failure scenario; scope as a security category,credible/test-policy-behavior.mdx
 PhEVM (Phylax EVM),Assertion execution environment,Enforcer orchestration; local CLI,credible/phevm.mdx
-Assertion DA (Data Availability),Artifact storage and retrieval,Guaranteed uptime; policy correctness,credible/assertion-da.mdx
+Assertion DA (Data Availability),Ethereum L1 registration data or Linea offchain artifact retrieval,Enforcer's local Assertion Store; policy correctness,credible/assertion-da.mdx
 State Oracle,Assignments and activation/deactivation timing,Credible Registry; flow measurement windows,credible/credible-layer-contracts.mdx
 Credible Registry,Builder authorization and credible-block markers,Assertion assignments or execution,credible/credible-layer-contracts.mdx
 Credible Block,Authorized builder's marker/attestation,Cryptographic proof that checks ran,credible/architecture-overview.mdx
@@ -27,7 +27,7 @@ State Changes,Observed storage writes during execution,Only final value; proof w
 Call Trace,Recorded calls and nesting; retain old callstack anchor,Active call stack; EVM operand stack,credible/cheatcodes-reference.mdx
 Assertion Bytecode,Compiled assertion artifact; distinguish creation data,Policy intent; CLI as execution network,credible/assertion-da.mdx
 Assertion ID,Hash of creation bytecode plus encoded constructor arguments,Function selector; adopter assignment; release ID,credible/assertion-da.mdx
-Assertion DA Prover Signature,Stored-artifact attestation at signing time,Future availability; proof of assertion execution,credible/assertion-da.mdx
+Assertion DA Prover Signature,Linea offchain service attestation at signing time,Ethereum mainnet creation data; future availability; proof of execution,credible/assertion-da.mdx
 Assertion Adopter,Assigned contract address; keep API/UI spelling,Every inspected contract; transaction recipient; guard coverage,credible/credible-layer-contracts.mdx
 Assertion Group,Prefer functions or contract for the intended unit,Platform release or project,credible/assertions-overview.mdx
 Assertion Function,Registered executable check,Contract artifact; ID,credible/triggers.mdx

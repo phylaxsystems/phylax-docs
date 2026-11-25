@@ -13,7 +13,7 @@ For a shorter introduction, see [How Ethereum Enforcement Works](./credible-laye
 | --- | --- |
 | Assertions | Solidity rules and triggers that describe the transaction effects a protocol permits. |
 | State Oracle | Records assertion assignments, Protocol Manager authority, and activation or removal timing. |
-| Assertion DA | Supplies assertion bytecode and source artifacts. |
+| Assertion DA | Ethereum mainnet publishes assertion creation data in the State Oracle's `AssertionAdded` event. |
 | Assertion Enforcer / PhEVM | Evaluates applicable assertions against candidate transaction execution state. |
 | Participating builder | Uses assertion results to exclude failing candidates and marks the blocks it builds under that policy. |
 | Credible Registry | Authorizes builders and records credible-block markers. |
@@ -28,7 +28,7 @@ Assertion registration, guard installation, and transaction routing are separate
 
 Developers create a release with [`pcl apply`](./apply-assertions). The platform stores artifacts and coordinates review. An authorized Protocol Manager signs the change. The State Oracle determines when it takes effect.
 
-The enforcer indexes lifecycle events and caches active assertion bytecode. A pending release does not enforce policies.
+The enforcer indexes L1 lifecycle events and populates its local Assertion Store from the creation data in each registration event. It enforces an assignment once the activation block is reached.
 
 ### Enforcement During Block Building
 

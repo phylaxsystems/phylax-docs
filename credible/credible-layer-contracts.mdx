@@ -15,7 +15,7 @@ Registering an assertion does not install a guard or configure transaction routi
 | --- | --- |
 | State Oracle | Assertion assignments, manager authority, and lifecycle timing. |
 | Admin verifier | Authorization checks when registering an assertion adopter. |
-| DA verifier | Verification of the artifact availability proof used for registration. |
+| DA verifier | Checks the hash of the creation data supplied to `addAssertion` on Ethereum mainnet. |
 | Credible Registry | Builder authorization and credible-block markers. |
 | Credible Block Guard | Restriction on protocol operations that invoke the guard. |
 | Credible Safe Guard | Restriction on Safe owner-authorized transactions through the supported transaction-guard path. |
@@ -34,7 +34,7 @@ The Protocol Manager wallet signs releases for registered contracts. An approved
 
 ### Data Availability Verification
 
-The lifecycle verifies an artifact availability proof before accepting an assertion. The ECDSA verifier uses a signature from the Assertion DA prover. This binds registration to available creation data; it does not prove that a builder subsequently executed the assertion. See [Assertion DA](./assertion-da).
+On Ethereum mainnet, `addAssertion` passes the assertion ID and the `proof` bytes to `DAVerifierOnChain`. The proof is the creation bytecode followed by any ABI-encoded constructor arguments. The verifier accepts it when `keccak256(proof) == assertionId`. The State Oracle emits the proof in `AssertionAdded` so builders can read the bytes from L1. See the [onchain verifier](https://github.com/phylaxsystems/credible-layer-contracts/blob/4f2723352afa1934af0a2a04b7294767226fbd50/src/verification/da/DAVerifierOnChain.sol#L8-L17) and [Assertion Data Availability](./assertion-da#ethereum-mainnet).
 
 ### State Oracle Administration
 

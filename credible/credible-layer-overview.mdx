@@ -41,7 +41,7 @@ Before activation, our FDEs run backtests and test a replica of your protocol on
 
 We prepare releases on the [Ethereum platform](https://ethereum.phylax.systems) and simulate the activation transactions. Management of your policies and protocol remains entirely under your authority. Your signers authorize and execute the actions, and we verify the live protection. No other party can activate or change your rules without your authorization.
 
-The State Oracle records which assertions apply and when additions or removals take effect. Assertion DA supplies the artifacts used by enforcers.
+The State Oracle records which assertions apply and when additions or removals take effect. Each registration publishes the assertion bytecode on Ethereum mainnet. Builders use that bytecode to populate their local Assertion Stores.
 
 Alerting observes assertion behavior without dropping live transactions. Production rules affect inclusion at participating builders. Neither mode installs missing guards or configures submission routes.
 
