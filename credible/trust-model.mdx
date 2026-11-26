@@ -5,6 +5,34 @@ description: 'Enforcement scope, builder and guard assumptions, authorization, a
 
 Ethereum enforcement depends on participating builders, valid block markers, and complete guard coverage. This page defines those assumptions and the recovery tradeoffs.
 
+## Your Control and Phylax's Role
+
+Your protections run in participating builders' infrastructure. The Phylax platform provides the interface and tooling to create and manage them; the builder's Assertion Enforcer performs runtime enforcement.
+
+Protection changes are authorized through onchain contracts. The State Oracle records assertion assignments and lifecycle changes, while the Credible Registry controls builder authorization and credible-block markers. Platform membership and onchain signing authority are separate.
+
+This separation gives you a path to manage protections without the hosted interface. Authorized signers can submit transactions directly to the relevant contracts, subject to the same permissions and delays. It also limits the effect of a platform outage: losing access to the interface does not itself remove active assertions from builders. Builders, their assertion data, chain access, and your integration's guard and routing dependencies must still be available.
+
+### If the Platform Is Compromised
+
+A compromised interface could present a transaction that differs from your intent. For example, it could ask you to authorize an unwanted assertion or remove a protection. Review the destination and decoded transaction data through a trusted signing workflow. A signature authorizes the actual transaction, regardless of what the interface displays.
+
+Recovery depends on the affected authority. The State Oracle's guardian can remove assertions within its permissions, but removal follows the configured delay. It is not an immediate universal off switch. See [State Oracle Administration](./credible-layer-contracts#state-oracle-administration).
+
+Platform compromise can also affect information available to the compromised service or account. The separation of signing authority does not establish a guarantee about customer-data exposure.
+
+### If Administrative Keys Are Compromised
+
+An attacker gains the permissions of the compromised role. State Oracle administration can affect assertion management; Credible Registry administration affects builder authorization. These are separate powers and must be assessed against the deployed contracts. Removing protections can expose a protocol to attacks, while restrictive policies can interrupt its operations.
+
+Timelocks provide a response window for the actions they cover. The Ethereum Credible Registry schedules builder changes, and its guardian can cancel pending operations. Assertion lifecycle changes follow the State Oracle's timing rules. Neither mechanism should be treated as a delay on every administrative or protocol-upgrade action. See [Authority Boundaries](#authority-boundaries).
+
+### What Recovery Can Restore
+
+Recovery aims to restore trusted configuration and enforcement. Depending on the affected component, it can involve removing an unwanted assertion, securing administrative roles, or coordinating a contract migration with builders and protocol operators. A replacement contract alone does not complete recovery: dependent builders and guards must use the intended configuration, and enforcement must be verified again.
+
+Recovery does not reverse finalized transactions or guarantee recovery of losses incurred during an incident. The integration's recovery plan should identify the responsible operators, required permissions, delays, and verification steps. See [Availability and Recovery](#availability-and-recovery) and [Recovery Testing](./testing-strategy#5-rehearse-recovery).
+
 ## Enforcement Scope
 
 - **Deterministic checks**: the same assertion, execution context, and state produce the same result.

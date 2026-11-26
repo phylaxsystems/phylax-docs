@@ -87,6 +87,16 @@ Review additions and removals together to avoid a gap in protection or conflicti
 
 ## Availability, False Positives, and Recovery
 
+### Do I depend on the Phylax platform to keep my protections running?
+
+Runtime enforcement runs within participating builders. A platform outage does not itself remove active assertions. Authorized signers can manage protections through the onchain contracts without the hosted interface, using the same permissions and lifecycle delays. Builder availability, assertion data, guards, and transaction routing remain dependencies.
+
+### What happens if Phylax is compromised, and can the situation be reversed?
+
+The impact depends on what is compromised: the interface can misrepresent a transaction for you to sign, a platform account can expose information within its access, and an administrative key grants the powers of its specific role. Recovery can restore trusted protection configuration, subject to the affected contracts, permissions, and delays; it does not reverse finalized transactions or guarantee recovery of losses.
+
+See [Your Control and Phylax's Role](./trust-model#your-control-and-phylaxs-role) for the authority boundaries and recovery options.
+
 ### What happens if participating builders stop producing credible blocks?
 
 While the gate remains active, protected operations cannot succeed in noncredible blocks. A configured fail-open condition can restore access after a gap in credible blocks. The block-gap condition opens only when the gap is **greater than** the configured threshold.
